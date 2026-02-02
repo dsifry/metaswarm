@@ -78,24 +78,21 @@
 
     /* Theme toggle */
     .theme-toggle {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      z-index: 100;
+      margin-left: auto;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 8px 14px;
+      padding: 6px 10px;
       cursor: pointer;
-      font-size: 14px;
-      color: var(--text-muted);
+      font-size: 20px;
+      line-height: 1;
+      color: var(--text);
       font-family: inherit;
       transition: border-color 0.15s;
     }
 
     .theme-toggle:hover {
       border-color: var(--accent);
-      color: var(--text);
     }
 
     /* Header */
@@ -386,17 +383,16 @@
 </head>
 <body>
 
-<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark mode">
-  <span id="theme-icon">Light mode</span>
-</button>
-
 <div class="container">
 
-  <nav style="display: flex; gap: 24px; padding: 24px 0; font-size: 14px;">
+  <nav style="display: flex; align-items: center; gap: 24px; padding: 24px 0; font-size: 14px;">
     <a href="https://github.com/dsifry/metaswarm">GitHub</a>
     <a href="https://github.com/dsifry/metaswarm/blob/main/INSTALL.md">Install</a>
     <a href="https://github.com/dsifry/metaswarm/blob/main/GETTING_STARTED.md">Getting Started</a>
     <a href="https://github.com/dsifry/metaswarm/blob/main/USAGE.md">Usage</a>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark mode">
+      <span id="theme-icon">&#9788;</span>
+    </button>
   </nav>
 
   <header>
@@ -692,12 +688,17 @@ language-specific and project-specific details.</code></pre>
 </footer>
 
 <script>
+  function setIcon(theme) {
+    // Sun = switch to light, Moon = switch to dark
+    document.getElementById('theme-icon').innerHTML = theme === 'dark' ? '&#9788;' : '&#9790;';
+  }
+
   function toggleTheme() {
     const html = document.documentElement;
     const current = html.getAttribute('data-theme');
     const next = current === 'dark' ? 'light' : 'dark';
     html.setAttribute('data-theme', next);
-    document.getElementById('theme-icon').textContent = next === 'dark' ? 'Light mode' : 'Dark mode';
+    setIcon(next);
     localStorage.setItem('theme', next);
   }
 
@@ -706,7 +707,7 @@ language-specific and project-specific details.</code></pre>
     const saved = localStorage.getItem('theme');
     if (saved) {
       document.documentElement.setAttribute('data-theme', saved);
-      document.getElementById('theme-icon').textContent = saved === 'dark' ? 'Light mode' : 'Dark mode';
+      setIcon(saved);
     }
   })();
 </script>
