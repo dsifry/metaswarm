@@ -101,13 +101,23 @@ This outputs prioritized knowledge:
 
 ## Step 6: Set Up Coverage Enforcement
 
-If your project has test coverage requirements, copy the coverage thresholds template:
+Use the `--with-coverage` flag (or `--with-husky` / `--with-ci` which imply it):
 
 ```bash
-cp .claude/templates/coverage-thresholds.json .coverage-thresholds.json
+npx metaswarm init --with-husky --with-ci
 ```
 
-Edit `.coverage-thresholds.json` to set your coverage command and thresholds. When this file exists, agents will be blocked from creating PRs or marking tasks complete until all coverage thresholds pass. See [USAGE.md](USAGE.md#coverage-enforcement) for full configuration options.
+This copies `.coverage-thresholds.json` to your project root, sets up Husky with a pre-push hook, and creates a CI coverage workflow. Edit `.coverage-thresholds.json` to set your coverage command and thresholds.
+
+You can also set up just the thresholds file:
+
+```bash
+npx metaswarm init --with-coverage
+```
+
+When `.coverage-thresholds.json` exists, agents will be blocked from creating PRs or marking tasks complete until all coverage thresholds pass.
+
+For details on the three enforcement gates, see [docs/coverage-enforcement.md](docs/coverage-enforcement.md).
 
 ## Step 7: Monitor a PR
 

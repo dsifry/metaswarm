@@ -79,13 +79,23 @@ function printHelp() {
 metaswarm v${VERSION}
 
 Usage:
-  metaswarm init       Scaffold orchestration framework into current project
-  metaswarm --help     Show this help
-  metaswarm --version  Show version
+  metaswarm init [flags]   Scaffold orchestration framework into current project
+  metaswarm --help         Show this help
+  metaswarm --version      Show version
+
+Init flags:
+  --with-coverage   Copy coverage-thresholds.json to project root
+  --with-husky      Initialize Husky + install pre-push hook (implies --with-coverage)
+  --with-ci         Create .github/workflows/coverage.yml (implies --with-coverage)
 `);
 }
 
-function init() {
+function init(args) {
+  const flags = new Set(args);
+  const withHusky = flags.has('--with-husky');
+  const withCi = flags.has('--with-ci');
+  const withCoverage = flags.has('--with-coverage') || withHusky || withCi;
+
   console.log(`\nmetaswarm v${VERSION} — init\n`);
 
   // Check git repo
@@ -142,6 +152,66 @@ function init() {
   // chmod +x bin/*.sh
   chmodExec(path.join(CWD, 'bin'));
 
+  // --- Flag-driven setup ---
+
+  // --with-coverage: copy thresholds to project root
+  if (withCoverage) {
+    console.log('');
+    copyFile(
+      path.join(PKG_ROOT, 'templates', 'coverage-thresholds.json'),
+      path.join(CWD, '.coverage-thresholds.json')
+    );
+  }
+
+  // --with-husky: initialize husky + install pre-push hook
+  const huskyDir = path.join(CWD, '.husky');
+  let huskyHookInstalled = false;
+  if (withHusky) {
+    console.log('');
+    if (!fs.existsSync(huskyDir)) {
+      if (!fs.existsSync(path.join(CWD, 'package.json'))) {
+        warn('No package.json found — husky requires an npm project. Run `npm init` first.');
+      } else {
+        try {
+          execSync('npx husky init', { cwd: CWD, stdio: 'inherit' });
+          info('Husky initialized');
+        } catch {
+          warn('npx husky init failed — install husky manually');
+        }
+      }
+    }
+    if (fs.existsSync(huskyDir)) {
+      const prePushSrc = path.join(PKG_ROOT, 'templates', 'pre-push');
+      const prePushDest = path.join(huskyDir, 'pre-push');
+      if (copyFile(prePushSrc, prePushDest)) {
+        fs.chmodSync(prePushDest, 0o755);
+      }
+      huskyHookInstalled = true;
+    }
+  } else if (fs.existsSync(huskyDir)) {
+    // Auto-install pre-push hook if husky already exists
+    const prePushDest = path.join(huskyDir, 'pre-push');
+    if (!fs.existsSync(prePushDest)) {
+      const prePushSrc = path.join(PKG_ROOT, 'templates', 'pre-push');
+      fs.copyFileSync(prePushSrc, prePushDest);
+      fs.chmodSync(prePushDest, 0o755);
+      info('.husky/pre-push (coverage enforcement hook installed)');
+    } else {
+      skip('.husky/pre-push');
+    }
+  } else {
+    warn('No .husky/ directory found. Run `metaswarm init --with-husky` to set up Husky with coverage enforcement.');
+  }
+
+  // --with-ci: create GitHub Actions coverage workflow
+  if (withCi) {
+    console.log('');
+    copyFile(
+      path.join(PKG_ROOT, 'templates', 'ci-coverage-job.yml'),
+      path.join(CWD, '.github', 'workflows', 'coverage.yml')
+    );
+  }
+
   // Run bd init if available
   if (hasBd) {
     console.log('');
@@ -154,6 +224,11 @@ function init() {
   }
 
   // Summary
+  const extras = [];
+  if (withCoverage) extras.push('coverage thresholds (.coverage-thresholds.json)');
+  if (huskyHookInstalled) extras.push('Husky pre-push hook');
+  if (withCi) extras.push('CI coverage workflow (.github/workflows/coverage.yml)');
+
   console.log(`
 Done! Next steps:
 
@@ -162,6 +237,9 @@ Done! Next steps:
   3. Run: claude /project:orchestrate
   4. See GETTING_STARTED.md in the metaswarm package for details
 `);
+  if (extras.length) {
+    console.log(`  Set up: ${extras.join(', ')}\n`);
+  }
 }
 
 // --- Main ---
@@ -170,7 +248,7 @@ const args = process.argv.slice(2);
 const cmd = args[0];
 
 if (cmd === 'init') {
-  init();
+  init(args.slice(1));
 } else if (cmd === '--version' || cmd === '-v') {
   console.log(VERSION);
 } else {

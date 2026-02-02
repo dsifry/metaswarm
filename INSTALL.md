@@ -7,6 +7,18 @@ cd your-project
 npx metaswarm init
 ```
 
+Optional flags for coverage enforcement:
+
+```bash
+npx metaswarm init --with-husky --with-ci
+```
+
+| Flag | What it does |
+|---|---|
+| `--with-coverage` | Copies `coverage-thresholds.json` to project root |
+| `--with-husky` | Initializes Husky + installs pre-push hook (implies `--with-coverage`) |
+| `--with-ci` | Creates `.github/workflows/coverage.yml` (implies `--with-coverage`) |
+
 This single command:
 - Copies agent definitions → `.claude/plugins/metaswarm/skills/beads/agents/`
 - Copies ORCHESTRATION.md → `.claude/plugins/metaswarm/skills/beads/SKILL.md`
@@ -18,6 +30,7 @@ This single command:
 - Copies templates → `.claude/templates/`
 - Generates `plugin.json`
 - Makes `bin/*.sh` executable
+- Installs `.husky/pre-push` hook if `.husky/` directory exists (for coverage enforcement)
 - Runs `bd init` (if BEADS CLI is available)
 
 Existing files are never overwritten — if a file already exists, it is skipped with a message.
