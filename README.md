@@ -95,29 +95,24 @@ metaswarm/
 └── CONTRIBUTING.md
 ```
 
-## Quick Start
+## Install
 
 ```bash
-# 1. Install BEADS CLI
-curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
+cd your-project
+npx metaswarm init
+```
 
-# 2. Clone metaswarm
-git clone https://github.com/dsifry/metaswarm.git
+That's it. One command. No global installs, no cloning repos, no manual file copying.
 
-# 3. Copy into your project (see INSTALL.md for details)
-cp -r metaswarm/agents/ your-project/.claude/agents/
-cp -r metaswarm/skills/ your-project/.claude/skills/
-cp -r metaswarm/commands/ your-project/.claude/commands/
-cp -r metaswarm/rubrics/ your-project/.claude/rubrics/
+`npx metaswarm init` scaffolds everything into your project — 18 agent personas, 5 orchestration skills, 7 slash commands, 5 quality rubrics, knowledge base templates, automation scripts, and the plugin manifest. It also initializes BEADS task tracking. Existing files are never overwritten.
 
-# 4. Initialize BEADS in your project
-cd your-project && bd init
+Then prime your first agent:
 
-# 5. Prime your first agent
+```bash
 bd prime
 ```
 
-See [INSTALL.md](INSTALL.md) for detailed setup and [GETTING_STARTED.md](GETTING_STARTED.md) for your first orchestrated workflow.
+See [INSTALL.md](INSTALL.md) for prerequisites, alternative installation methods, and customization. See [GETTING_STARTED.md](GETTING_STARTED.md) for your first orchestrated workflow.
 
 ## Self-Learning System
 
@@ -166,9 +161,9 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-- [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+
-- Node.js 20+ (for scripts)
-- GitHub CLI (`gh`) for PR automation
+- Node.js 18+ (for `npx metaswarm init` and automation scripts)
+- [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+ — for task tracking (recommended)
+- GitHub CLI (`gh`) — for PR automation (recommended)
 
 ## License
 

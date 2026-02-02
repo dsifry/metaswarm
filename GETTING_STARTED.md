@@ -2,15 +2,18 @@
 
 This guide walks you through your first metaswarm-orchestrated workflow.
 
-## Step 1: Initialize Your Knowledge Base
-
-The knowledge base is what makes agents smarter over time. Start by seeding it with your project's patterns.
+## Step 1: Install metaswarm
 
 ```bash
-# Initialize BEADS in your project
-bd init
+cd your-project
+npx metaswarm init
+```
 
-# The knowledge/ directory should have template files:
+That's it — one command installs everything. 18 agents, 5 skills, 7 commands, 5 rubrics, knowledge templates, automation scripts, and BEADS task tracking, all scaffolded into your project.
+
+Verify it worked:
+
+```bash
 ls .beads/knowledge/
 # patterns.jsonl  gotchas.jsonl  decisions.jsonl  ...
 ```

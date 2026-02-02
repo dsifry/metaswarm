@@ -1,33 +1,44 @@
 # Installation
 
+## Quick Install
+
+```bash
+cd your-project
+npx metaswarm init
+```
+
+One command. That's all you need. No global installs, no cloning, no manual setup.
+
+This single command:
+- Copies agent definitions → `.claude/plugins/metaswarm/skills/beads/agents/`
+- Copies ORCHESTRATION.md → `.claude/plugins/metaswarm/skills/beads/SKILL.md`
+- Copies skills → `.claude/plugins/metaswarm/skills/`
+- Copies commands → `.claude/commands/`
+- Copies rubrics → `.claude/rubrics/`
+- Copies knowledge templates → `.beads/knowledge/`
+- Copies scripts → `scripts/` and `bin/`
+- Copies templates → `.claude/templates/`
+- Generates `plugin.json`
+- Makes `bin/*.sh` executable
+- Runs `bd init` (if BEADS CLI is available)
+
+Existing files are never overwritten — if a file already exists, it is skipped with a message.
+
 ## Prerequisites
 
-### Required
+You only need **Node.js 18+** to run `npx metaswarm init`. The following are needed for the full workflow:
 
 1. **Claude Code** — [Install Claude Code](https://docs.anthropic.com/en/docs/claude-code)
-
 2. **BEADS CLI** (`bd`) — Git-native issue tracking
    ```bash
    curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
-   bd --version  # Should show v0.40+
    ```
-
-3. **GitHub CLI** (`gh`) — PR automation
+3. **GitHub CLI** (`gh`) — For PR automation
    ```bash
    brew install gh   # macOS
    gh auth login
    ```
-
-4. **Node.js 20+** — For automation scripts
-   ```bash
-   node --version  # Should show v20+
-   ```
-
-5. **Superpowers Plugin** — Required skill dependencies (see [External Dependencies](#external-dependencies))
-
-### Optional
-
-- **Slack** — For agent notifications (see `templates/beads-developer-setup.md`)
+4. **Superpowers Plugin** (optional) — See [External Dependencies](#external-dependencies)
 
 ## External Dependencies
 
@@ -49,51 +60,30 @@ metaswarm's skills reference these external skills from the [superpowers](https:
 
 **Without superpowers**: metaswarm still works — the core orchestration (agents, BEADS, review gates, rubrics) is self-contained. The superpowers references are in skill trigger chains and can be removed or replaced with your own equivalents.
 
-## Installation Methods
+## Alternative Installation Methods
 
-### Method 1: Copy Into Your Project (Recommended)
+### Manual Copy
+
+If you prefer to copy files manually:
 
 ```bash
-# Clone metaswarm
 git clone https://github.com/dsifry/metaswarm.git /tmp/metaswarm-install
-
-# Navigate to your project
 cd your-project
 
-# Copy agent definitions
 mkdir -p .claude/plugins/metaswarm/skills/beads/agents
 cp /tmp/metaswarm-install/agents/* .claude/plugins/metaswarm/skills/beads/agents/
 cp /tmp/metaswarm-install/ORCHESTRATION.md .claude/plugins/metaswarm/skills/beads/SKILL.md
-
-# Copy skills
 cp -r /tmp/metaswarm-install/skills/* .claude/plugins/metaswarm/skills/
-
-# Copy commands (these become /project:command-name in Claude Code)
-mkdir -p .claude/commands
-cp /tmp/metaswarm-install/commands/* .claude/commands/
-
-# Copy rubrics
-mkdir -p .claude/rubrics
-cp /tmp/metaswarm-install/rubrics/* .claude/rubrics/
-
-# Copy automation scripts
-mkdir -p scripts bin
-cp /tmp/metaswarm-install/scripts/* scripts/
-cp /tmp/metaswarm-install/bin/* bin/
+mkdir -p .claude/commands && cp /tmp/metaswarm-install/commands/* .claude/commands/
+mkdir -p .claude/rubrics && cp /tmp/metaswarm-install/rubrics/* .claude/rubrics/
+mkdir -p scripts bin && cp /tmp/metaswarm-install/scripts/* scripts/ && cp /tmp/metaswarm-install/bin/* bin/
 chmod +x bin/*.sh
-
-# Initialize BEADS
+mkdir -p .beads/knowledge && cp /tmp/metaswarm-install/knowledge/* .beads/knowledge/
 bd init
-
-# Set up knowledge base
-mkdir -p .beads/knowledge
-cp /tmp/metaswarm-install/knowledge/* .beads/knowledge/
-
-# Clean up
 rm -rf /tmp/metaswarm-install
 ```
 
-### Method 2: Git Submodule
+### Method 3: Git Submodule
 
 ```bash
 cd your-project
@@ -105,7 +95,7 @@ ln -s .metaswarm/commands/* .claude/commands/
 ln -s .metaswarm/rubrics/* .claude/rubrics/
 ```
 
-### Method 3: Reference Only
+### Method 4: Reference Only
 
 Copy only what you need. Start with:
 
@@ -116,31 +106,16 @@ Copy only what you need. Start with:
 
 ## Plugin Registration
 
-Create `.claude/plugins/metaswarm/.claude-plugin/plugin.json`:
+If you used `npx metaswarm init`, the plugin manifest is generated automatically at `.claude/plugins/metaswarm/.claude-plugin/plugin.json`.
+
+For manual installations, create that file:
 
 ```json
 {
   "name": "metaswarm",
-  "version": "1.0.0",
-  "description": "Multi-agent orchestration framework",
-  "skills": [
-    {
-      "name": "beads",
-      "path": "skills/beads/SKILL.md"
-    },
-    {
-      "name": "design-review-gate",
-      "path": "skills/design-review-gate/SKILL.md"
-    },
-    {
-      "name": "pr-shepherd",
-      "path": "skills/pr-shepherd/SKILL.md"
-    },
-    {
-      "name": "handling-pr-comments",
-      "path": "skills/handling-pr-comments/SKILL.md"
-    }
-  ]
+  "version": "0.1.0",
+  "description": "Multi-agent orchestration framework for Claude Code",
+  "skills": ["skills/beads/SKILL.md"]
 }
 ```
 
