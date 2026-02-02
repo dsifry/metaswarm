@@ -172,6 +172,79 @@ All files in `knowledge/` use JSONL format:
 | `codebase-facts.jsonl` | Code-specific behaviors | "Auth middleware runs before route handlers" |
 | `api-behaviors.jsonl` | External API quirks | "Rate limit is 100 req/min on free tier" |
 
+## Coverage Enforcement
+
+metaswarm supports configurable test coverage thresholds that block PR creation and task completion. This ensures agents cannot ship code that drops coverage below your project's standards.
+
+### Setup
+
+Copy the template to your project root:
+
+```bash
+cp templates/coverage-thresholds.json .coverage-thresholds.json
+```
+
+### Configuration
+
+Edit `.coverage-thresholds.json` to set your thresholds and coverage command:
+
+```json
+{
+  "thresholds": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "enforcement": {
+    "command": "pnpm test:coverage",
+    "blockPRCreation": true,
+    "blockTaskCompletion": true
+  }
+}
+```
+
+| Field | Description |
+|---|---|
+| `thresholds.lines` | Minimum line coverage percentage |
+| `thresholds.branches` | Minimum branch coverage percentage |
+| `thresholds.functions` | Minimum function coverage percentage |
+| `thresholds.statements` | Minimum statement coverage percentage |
+| `enforcement.command` | Shell command to run coverage (e.g., `pytest --cov`, `cargo tarpaulin`, `go test -cover`) |
+| `enforcement.blockPRCreation` | If `true`, agents cannot create a PR until all thresholds pass |
+| `enforcement.blockTaskCompletion` | If `true`, agents cannot mark a task complete until all thresholds pass |
+
+### How Agents Use It
+
+When `.coverage-thresholds.json` exists in the project root:
+
+1. **Before pushing or creating a PR**, agents run the `enforcement.command`
+2. If any threshold is not met, the agent **stops and fixes coverage** before proceeding
+3. The task-completion-checklist enforces this as a blocking gate
+
+### Single Source of Truth
+
+Your test runner config (e.g., `vitest.config.ts`, `jest.config.js`, `pyproject.toml`) can read thresholds directly from `.coverage-thresholds.json` to avoid duplication. Example for Vitest:
+
+```typescript
+import fs from "node:fs";
+import path from "node:path";
+
+const coverageConfig = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, ".coverage-thresholds.json"), "utf-8"),
+);
+
+export default defineConfig({
+  test: {
+    coverage: {
+      thresholds: coverageConfig.thresholds,
+    },
+  },
+});
+```
+
+This way both agents and CI enforce the same thresholds from a single file.
+
 ## Rubrics
 
 Quality standards used by review agents:

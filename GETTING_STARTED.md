@@ -99,7 +99,17 @@ This outputs prioritized knowledge:
 3. **PATTERNS** — Best practices
 4. **DECISIONS** — Architectural constraints
 
-## Step 6: Monitor a PR
+## Step 6: Set Up Coverage Enforcement
+
+If your project has test coverage requirements, copy the coverage thresholds template:
+
+```bash
+cp .claude/templates/coverage-thresholds.json .coverage-thresholds.json
+```
+
+Edit `.coverage-thresholds.json` to set your coverage command and thresholds. When this file exists, agents will be blocked from creating PRs or marking tasks complete until all coverage thresholds pass. See [USAGE.md](USAGE.md#coverage-enforcement) for full configuration options.
+
+## Step 7: Monitor a PR
 
 After creating a PR, let the PR Shepherd monitor it:
 
@@ -113,7 +123,7 @@ The shepherd:
 - Resolves threads
 - Reports when ready to merge
 
-## Step 7: Extract Learnings
+## Step 8: Extract Learnings
 
 After a PR is merged, extract learnings for the knowledge base:
 

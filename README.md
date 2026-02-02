@@ -88,7 +88,7 @@ metaswarm/
 │   └── ...
 ├── scripts/                  # Automation scripts
 ├── bin/                      # Shell utilities
-├── templates/                # Setup templates
+├── templates/                # Setup templates (including coverage-thresholds.json)
 ├── INSTALL.md
 ├── GETTING_STARTED.md
 ├── USAGE.md
@@ -154,7 +154,7 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 3. **Recursive Orchestration** — Orchestrators spawn sub-orchestrators for any level of complexity
 4. **Agent Ownership** — Each agent owns its lifecycle; the orchestrator delegates, not micromanages
 5. **BEADS as Source of Truth** — All task state lives in BEADS; agents coordinate via database, not messages
-6. **Test-First Always** — TDD is mandatory, not optional
+6. **Test-First Always** — TDD is mandatory, not optional. Coverage thresholds are enforced as a blocking gate before PR creation via `.coverage-thresholds.json`
 7. **Git-Native Everything** — Issues, knowledge, specs all in version control
 8. **Human-in-the-Loop** — Automatic escalation after 3 failed iterations or ambiguous decisions
 

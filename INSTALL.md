@@ -185,7 +185,29 @@ Add initial entries to each JSONL file. See `knowledge/README.md` for the schema
 - **2-3 decisions** — Key architectural choices and their rationale
 - **1-2 gotchas** — Known pitfalls specific to your stack
 
-#### 4. Task Completion Checklist (in `templates/task-completion-checklist.md`)
+#### 4. Coverage Thresholds (in `templates/coverage-thresholds.json`)
+
+Copy this file to your project root as `.coverage-thresholds.json` and adjust the thresholds for your project:
+
+```json
+{
+  "thresholds": {
+    "lines": 100,
+    "branches": 100,
+    "functions": 100,
+    "statements": 100
+  },
+  "enforcement": {
+    "command": "pnpm test:coverage",
+    "blockPRCreation": true,
+    "blockTaskCompletion": true
+  }
+}
+```
+
+Set `enforcement.command` to your project's coverage command (e.g., `pytest --cov`, `cargo tarpaulin`, `go test -cover`). When this file exists, agents must pass all thresholds before pushing or creating PRs.
+
+#### 5. Task Completion Checklist (in `templates/task-completion-checklist.md`)
 
 Replace the validation commands with your project's equivalents:
 
@@ -195,6 +217,7 @@ Replace the validation commands with your project's equivalents:
 - [ ] `your-lint-command` passes
 - [ ] `your-type-check-command` passes (if applicable)
 - [ ] `your-build-command` succeeds
+- [ ] `your-coverage-command` passes (if .coverage-thresholds.json exists)
 ```
 
 ## Verify Installation
