@@ -7,8 +7,6 @@ cd your-project
 npx metaswarm init
 ```
 
-One command. That's all you need. No global installs, no cloning, no manual setup.
-
 This single command:
 - Copies agent definitions → `.claude/plugins/metaswarm/skills/beads/agents/`
 - Copies ORCHESTRATION.md → `.claude/plugins/metaswarm/skills/beads/SKILL.md`
