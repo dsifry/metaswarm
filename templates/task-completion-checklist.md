@@ -124,10 +124,20 @@ bin/pr-comments-filter.sh <PR_NUMBER>
 
 **CRITICAL**: Run lint, typecheck, and format checks BEFORE every `git push` to avoid CI/CD failures.
 
+**Coverage enforcement** (required for all implementation tasks):
+
+```bash
+# Must pass BEFORE creating a PR — thresholds from .coverage-thresholds.json
+pnpm test:coverage
+```
+
+If a `.coverage-thresholds.json` file exists in the project root, coverage thresholds are enforced as a blocking gate. Do NOT push or create a PR if coverage is below any threshold. Fix coverage first.
+
 ### 8. Agent Full-Lifecycle PR Ownership (MANDATORY for worktree agents)
 
 When working as a task agent in a worktree (spawned by an orchestrator), you own the **complete lifecycle** -- not just implementation. Do NOT return to the orchestrator after committing. You must:
 
+- [ ] **Coverage gate (BLOCKS PR creation)**: If `.coverage-thresholds.json` exists, run the coverage command and verify ALL thresholds are met. **Do NOT push or create a PR if coverage is below any threshold. Fix coverage first.**
 - [ ] Push branch to remote: `git push -u origin HEAD`
 - [ ] Create PR: `gh pr create --title "..." --body "..."`
 - [ ] Shepherd PR through CI (monitor checks, fix failures)
