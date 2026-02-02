@@ -400,6 +400,12 @@
     <p class="tagline">A self-improving multi-agent orchestration framework for Claude Code. 18 specialized agents coordinate through the full development lifecycle, from GitHub issue to merged PR, with TDD, spec-driven development, and 100% test coverage.</p>
   </header>
 
+  <!-- QUICK INSTALL -->
+  <section style="padding: 32px 0; text-align: center;">
+    <pre style="display: inline-block; text-align: left; font-size: 18px; padding: 20px 32px; margin: 0;"><code><span class="cmd">cd</span> your-project
+<span class="cmd">npx</span> metaswarm init</code></pre>
+  </section>
+
   <!-- THE PROBLEM -->
   <section>
     <h2>The Problem</h2>
@@ -548,8 +554,13 @@
       <li>Node.js 20+</li>
     </ul>
 
-    <h3>The Fast Way</h3>
-    <p>Give this prompt to Claude Code in your project. It will clone metaswarm, install it, and adapt it to your language, framework, and conventions:</p>
+    <h3>Install</h3>
+    <pre><code><span class="cmd">cd</span> your-project
+<span class="cmd">npx</span> metaswarm init</code></pre>
+    <p>That scaffolds all 18 agents, skills, commands, rubrics, knowledge templates, and scripts into your project. Existing files are never overwritten.</p>
+
+    <h3>Then Customize</h3>
+    <p>Give this prompt to Claude Code in your project. It will adapt metaswarm to your language, framework, and conventions:</p>
 
     <div class="prompt-box">
       <h3>Copy this into Claude Code</h3>
