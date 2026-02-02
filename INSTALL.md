@@ -31,7 +31,7 @@
 
 ## External Dependencies
 
-metaswarm's skills reference these external skills from the [superpowers](https://github.com/mhornbacher/superpowers-marketplace) Claude Code plugin:
+metaswarm's skills reference these external skills from the [superpowers](https://github.com/obra/superpowers) Claude Code plugin:
 
 | Skill | Used By | Purpose |
 |---|---|---|
@@ -44,7 +44,7 @@ metaswarm's skills reference these external skills from the [superpowers](https:
 **Install superpowers** (follow their README for current instructions):
 ```bash
 # The superpowers plugin installs into ~/.claude/plugins/
-# See: https://github.com/mhornbacher/superpowers-marketplace
+# See: https://github.com/obra/superpowers
 ```
 
 **Without superpowers**: metaswarm still works — the core orchestration (agents, BEADS, review gates, rubrics) is self-contained. The superpowers references are in skill trigger chains and can be removed or replaced with your own equivalents.
