@@ -1,0 +1,17 @@
+# BEADS runtime
+.beads/beads.db
+.beads/daemon.lock
+.beads/daemon.pid
+.beads/daemon.log
+.beads/temp/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

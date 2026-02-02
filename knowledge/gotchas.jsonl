@@ -1,0 +1,4 @@
+# Schema: gotchas.jsonl - Common pitfalls and surprises
+# Each line is a JSON object with: id, type, fact, recommendation, confidence, provenance[], tags[], affectedFiles[], affectedServices[], createdAt, updatedAt, usageCount, helpfulCount, outdatedReports
+# Example entry:
+{"id":"gotcha-example-001","type":"gotcha","fact":"Example: Truthy check on numeric values fails for explicit zero - if (value) is false when value === 0.","recommendation":"Use !== undefined or !== null instead of truthy checks when the value could legitimately be 0 or empty string.","confidence":"high","provenance":[{"source":"coderabbit","reference":"PR review","date":"2026-01-09"}],"tags":["javascript","type-coercion","validation"],"affectedFiles":["**/*.ts"],"affectedServices":[],"createdAt":"2026-01-09T00:00:00Z","updatedAt":"2026-01-09T00:00:00Z","usageCount":0,"helpfulCount":0,"outdatedReports":0}

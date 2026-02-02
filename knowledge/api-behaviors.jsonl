@@ -1,0 +1,4 @@
+# Schema: api-behaviors.jsonl - External API quirks and behaviors
+# Each line is a JSON object with: id, type, fact, recommendation, confidence, provenance[], tags[], affectedFiles[], affectedServices[], createdAt, updatedAt, usageCount, helpfulCount, outdatedReports
+# Example entry:
+{"id":"api-example-001","type":"api_behavior","fact":"Example: Prisma findMany returns an empty array [] when no records match, not null.","recommendation":"Check .length instead of checking for null/undefined.","confidence":"high","provenance":[{"source":"documentation","reference":"Prisma docs","date":"2026-01-09"}],"tags":["prisma","database","queries"],"affectedFiles":["src/lib/services/**/*.ts"],"affectedServices":[],"createdAt":"2026-01-09T00:00:00Z","updatedAt":"2026-01-09T00:00:00Z","usageCount":0,"helpfulCount":0,"outdatedReports":0}

@@ -1,0 +1,4 @@
+# Schema: patterns.jsonl - Reusable patterns and best practices
+# Each line is a JSON object with: id, type, fact, recommendation, confidence, provenance[], tags[], affectedFiles[], affectedServices[], createdAt, updatedAt, usageCount, helpfulCount, outdatedReports
+# Example entry:
+{"id":"pattern-example-001","type":"pattern","fact":"Example: Use mock factories for all test data instead of manual mock objects with 'as Type' assertions.","recommendation":"Create centralized mock factory functions (createMockUser, createMockOrg, etc.) and import them in tests.","confidence":"high","provenance":[{"source":"documentation","reference":"Testing guide","date":"2026-01-09"}],"tags":["testing","mocks","factories"],"affectedFiles":["**/*.test.ts"],"affectedServices":[],"createdAt":"2026-01-09T00:00:00Z","updatedAt":"2026-01-09T00:00:00Z","usageCount":0,"helpfulCount":0,"outdatedReports":0}

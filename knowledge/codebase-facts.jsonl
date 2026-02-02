@@ -1,0 +1,4 @@
+# Schema: codebase-facts.jsonl - Facts about how the code works
+# Each line is a JSON object with: id, type, fact, recommendation, confidence, provenance[], tags[], affectedFiles[], affectedServices[], createdAt, updatedAt, usageCount, helpfulCount, outdatedReports
+# Example entry:
+{"id":"fact-example-001","type":"code_quirk","fact":"Example: The UserService caches results for 5 minutes, so updates may not appear immediately in queries.","recommendation":"Use cache invalidation after writes, or query with { fresh: true } option.","confidence":"medium","provenance":[{"source":"agent","reference":"discovered during debugging","date":"2026-01-15"}],"tags":["caching","user-service"],"affectedFiles":["src/lib/services/user.service.ts"],"affectedServices":["UserService"],"createdAt":"2026-01-15T00:00:00Z","updatedAt":"2026-01-15T00:00:00Z","usageCount":0,"helpfulCount":0,"outdatedReports":0}
