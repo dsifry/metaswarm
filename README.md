@@ -119,6 +119,39 @@ bd prime
 
 See [INSTALL.md](INSTALL.md) for detailed setup and [GETTING_STARTED.md](GETTING_STARTED.md) for your first orchestrated workflow.
 
+## Self-Learning System
+
+metaswarm doesn't just execute — it learns from every session and gets smarter over time.
+
+### Automatic Reflection
+
+After every PR merge, the self-reflect workflow (`/project:self-reflect`) analyzes what happened:
+
+- **Code review feedback** — Extracts patterns, gotchas, and anti-patterns from reviewer comments (both human and automated) and writes them back to the knowledge base as structured JSONL entries
+- **Build and test failures** — Captures what broke and why, so agents avoid the same mistakes in future tasks
+- **Architectural decisions** — Records the rationale behind choices so future agents understand the "why", not just the "what"
+
+### Conversation Introspection
+
+The reflection system also introspects into the Claude Code session itself, looking for:
+
+- **User repetition** — When a user corrects the same behavior multiple times or repeats instructions, this signals an opportunity for a new skill or command. The system flags these as candidates for automation.
+- **User disagreements** — When a user rejects or overrides Claude's recommendation, the system captures the user's preferred approach as a knowledge base entry, so agents align with the user's intent in future sessions.
+- **Friction points** — Repeated manual steps that could be codified into reusable workflows.
+
+These signals feed back into the knowledge base and can generate proposals for new skills, updated rubrics, or revised agent behaviors.
+
+### Selective Knowledge Priming
+
+The knowledge base grows continuously, but agents don't load all of it. The `bd prime` command uses **selective retrieval** — filtering by affected files, keywords, and work type to load only the relevant subset:
+
+```bash
+# Only loads knowledge relevant to auth files and implementation work
+bd prime --files "src/api/auth/**" --keywords "authentication" --work-type implementation
+```
+
+This means the knowledge base can grow to hundreds or thousands of entries without consuming context window. Agents get precisely the facts they need — the 5 critical gotchas for the files they're about to touch, not the entire institutional memory.
+
 ## Design Principles
 
 1. **Knowledge-Driven Development** — Agents prime from the knowledge base before every task, reducing repeated mistakes
