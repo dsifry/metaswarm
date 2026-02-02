@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,17 +7,57 @@
   <meta name="description" content="A self-improving multi-agent orchestration framework for Claude Code. 18 agents, TDD, 100% coverage, spec-driven development. Production-proven.">
   <style>
     :root {
+      --bg: #ffffff;
+      --surface: #f6f8fa;
+      --border: #d1d9e0;
+      --text: #1f2328;
+      --text-muted: #59636e;
+      --accent: #0969da;
+      --accent-subtle: #ddf4ff;
+      --accent-fg: #0969da;
+      --green: #1a7f37;
+      --orange: #9a6700;
+      --purple: #8250df;
+      --red: #d1242f;
+      --step-num-text: #ffffff;
+      --parallel-bg: #ddf4ff;
+      --parallel-text: #0969da;
+      --prompt-border: #0969da;
+      --callout-border: #0969da;
+      --cta-bg: #0969da;
+      --cta-text: #ffffff;
+      --cta-hover-bg: #0550ae;
+      --cta-hover-text: #ffffff;
+      --toggle-bg: var(--surface);
+      --toggle-border: var(--border);
+      --toggle-text: var(--text-muted);
+    }
+
+    [data-theme="dark"] {
       --bg: #0d1117;
       --surface: #161b22;
       --border: #30363d;
       --text: #e6edf3;
-      --text-muted: #8b949e;
+      --text-muted: #b1bac4;
       --accent: #58a6ff;
-      --accent-subtle: #1f6feb;
-      --green: #3fb950;
-      --orange: #d29922;
-      --purple: #bc8cff;
+      --accent-subtle: #1c2d40;
+      --accent-fg: #58a6ff;
+      --green: #56d364;
+      --orange: #e3b341;
+      --purple: #d2a8ff;
       --red: #f85149;
+      --step-num-text: #0d1117;
+      --parallel-bg: #1c2d40;
+      --parallel-text: #58a6ff;
+      --prompt-border: #58a6ff;
+      --callout-border: #58a6ff;
+      --cta-bg: #238636;
+      --cta-text: #ffffff;
+      --cta-hover-bg: #2ea043;
+      --cta-hover-text: #ffffff;
+      --toggle-bg: var(--surface);
+      --toggle-border: var(--border);
+      --toggle-text: var(--text-muted);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -36,6 +76,28 @@
       padding: 0 24px;
     }
 
+    /* Theme toggle */
+    .theme-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 100;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-muted);
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
     /* Header */
     header {
       padding: 48px 0 32px;
@@ -52,26 +114,9 @@
     header h1 span { color: var(--accent); }
 
     header .tagline {
-      font-size: 20px;
+      font-size: 18px;
       color: var(--text-muted);
       max-width: 640px;
-    }
-
-    .badges {
-      margin-top: 20px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 16px;
-      font-size: 13px;
-      font-weight: 500;
-      border: 1px solid var(--border);
-      color: var(--text-muted);
     }
 
     /* Sections */
@@ -105,7 +150,7 @@
 
     p strong { color: var(--text); }
 
-    a { color: var(--accent); text-decoration: none; }
+    a { color: var(--accent-fg); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
     /* Code blocks */
@@ -155,18 +200,13 @@
       gap: 14px;
     }
 
-    .pipeline-step:first-child {
-      border-radius: 8px 8px 0 0;
-    }
-
-    .pipeline-step:last-child {
-      border-radius: 0 0 8px 8px;
-    }
+    .pipeline-step:first-child { border-radius: 8px 8px 0 0; }
+    .pipeline-step:last-child { border-radius: 0 0 8px 8px; }
 
     .step-num {
       font-size: 12px;
       font-weight: 700;
-      color: var(--bg);
+      color: var(--step-num-text);
       background: var(--accent);
       width: 24px;
       height: 24px;
@@ -190,8 +230,8 @@
     }
 
     .parallel-badge {
-      background: var(--accent-subtle);
-      color: var(--accent);
+      background: var(--parallel-bg);
+      color: var(--parallel-text);
       padding: 2px 8px;
       border-radius: 4px;
       font-size: 11px;
@@ -264,7 +304,7 @@
     /* Prompt box */
     .prompt-box {
       background: var(--surface);
-      border: 2px solid var(--accent-subtle);
+      border: 2px solid var(--prompt-border);
       border-radius: 8px;
       padding: 24px;
       margin: 24px 0;
@@ -272,7 +312,7 @@
 
     .prompt-box h3 {
       margin-top: 0;
-      color: var(--accent);
+      color: var(--accent-fg);
       font-size: 14px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -286,7 +326,7 @@
     /* Callout */
     .callout {
       background: var(--surface);
-      border-left: 3px solid var(--accent);
+      border-left: 3px solid var(--callout-border);
       padding: 16px 20px;
       margin: 20px 0;
       border-radius: 0 8px 8px 0;
@@ -303,7 +343,7 @@
     }
 
     footer a { color: var(--text-muted); }
-    footer a:hover { color: var(--accent); }
+    footer a:hover { color: var(--accent-fg); }
 
     .footer-links {
       display: flex;
@@ -315,8 +355,8 @@
     /* CTA */
     .cta {
       display: inline-block;
-      background: var(--accent-subtle);
-      color: var(--text);
+      background: var(--cta-bg);
+      color: var(--cta-text);
       padding: 12px 28px;
       border-radius: 8px;
       font-weight: 600;
@@ -326,8 +366,8 @@
     }
 
     .cta:hover {
-      background: var(--accent);
-      color: var(--bg);
+      background: var(--cta-hover-bg);
+      color: var(--cta-hover-text);
       text-decoration: none;
     }
 
@@ -347,19 +387,15 @@
 </head>
 <body>
 
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark mode">
+  <span id="theme-icon">Light mode</span>
+</button>
+
 <div class="container">
 
   <header>
     <h1><span>meta</span>swarm</h1>
     <p class="tagline">A self-improving multi-agent orchestration framework for Claude Code. 18 agents, one pipeline, from GitHub issue to merged PR. Production-proven with 100% test coverage, TDD, and spec-driven development.</p>
-    <div class="badges">
-      <span class="badge">Claude Code</span>
-      <span class="badge">BEADS</span>
-      <span class="badge">18 Agents</span>
-      <span class="badge">100% Coverage</span>
-      <span class="badge">TDD</span>
-      <span class="badge">MIT License</span>
-    </div>
     <div style="margin-top: 20px;">
       <a href="https://github.com/dsifry/metaswarm" class="cta" style="font-size: 14px; padding: 10px 20px;">View on GitHub</a>
     </div>
@@ -439,9 +475,9 @@
     <p>The knowledge base can grow to hundreds or thousands of entries without filling your context window, because agents do not load all of it. <code>bd prime</code> uses selective retrieval, filtered by the files you are touching, the keywords that matter, and the type of work you are doing. You get the five gotchas relevant to the auth middleware you are about to change, not the entire institutional memory of the project.</p>
   </section>
 
-  <!-- WHAT'S IN THE BOX -->
+  <!-- WHAT'S INCLUDED -->
   <section>
-    <h2>What You Get</h2>
+    <h2>Components</h2>
     <div class="features">
       <div class="feature">
         <h4>18 Agent Personas</h4>
@@ -648,6 +684,26 @@ language-specific and project-specific details.</code></pre>
     <p>MIT License. Built by <a href="https://linkedin.com/in/dsifry">Dave Sifry</a>, founder of Technorati, Linuxcare, and Warmstart. Former tech exec at Lyft and Reddit.</p>
   </div>
 </footer>
+
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    document.getElementById('theme-icon').textContent = next === 'dark' ? 'Light mode' : 'Dark mode';
+    localStorage.setItem('theme', next);
+  }
+
+  // Restore saved preference, default to dark
+  (function() {
+    const saved = localStorage.getItem('theme');
+    if (saved) {
+      document.documentElement.setAttribute('data-theme', saved);
+      document.getElementById('theme-icon').textContent = saved === 'dark' ? 'Light mode' : 'Dark mode';
+    }
+  })();
+</script>
 
 </body>
 </html>
