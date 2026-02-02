@@ -1,0 +1,35 @@
+{
+  "name": "metaswarm",
+  "version": "0.1.0",
+  "description": "A self-improving multi-agent orchestration framework for Claude Code",
+  "bin": {
+    "metaswarm": "cli/metaswarm.js"
+  },
+  "files": [
+    "cli/",
+    "agents/",
+    "skills/",
+    "commands/",
+    "rubrics/",
+    "knowledge/",
+    "scripts/",
+    "bin/",
+    "templates/",
+    "ORCHESTRATION.md"
+  ],
+  "keywords": [
+    "claude-code",
+    "agents",
+    "orchestration",
+    "tdd",
+    "beads"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dsifry/metaswarm"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

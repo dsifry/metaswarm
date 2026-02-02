@@ -43,13 +43,28 @@ Rubrics in `rubrics/` define quality standards for reviews. Contributions should
 
 The `knowledge/` directory contains schema templates. Improvements to the schema, documentation, or example entries are welcome.
 
+## Testing the CLI
+
+After making changes, test the CLI locally:
+
+```bash
+# Test in a fresh directory
+mkdir /tmp/test-project && cd /tmp/test-project && git init
+node /path/to/metaswarm/cli/metaswarm.js init
+
+# Or use npm link for npx-style testing
+cd /path/to/metaswarm && npm link
+cd /tmp/test-project && npx metaswarm init
+```
+
 ## Pull Request Process
 
 1. Fork the repository
 2. Create a branch (`feat/`, `fix/`, `docs/`)
 3. Make your changes
-4. Ensure all Markdown is well-formed
-5. Submit a PR with a clear description
+4. Test the CLI if you changed `cli/` or file mappings
+5. Ensure all Markdown is well-formed
+6. Submit a PR with a clear description
 
 ## Code of Conduct
 
