@@ -434,8 +434,8 @@
   <!-- THE PROBLEM -->
   <section>
     <h2>The Problem</h2>
-    <p>Claude Code is good at writing code. It is not good at running a software project.</p>
-    <p>A production codebase needs more than implementation. It needs research into what already exists, a plan that fits the codebase, a security review, a design review, tests, a PR, CI monitoring, review comment handling, and someone to close the loop and capture what was learned. That is seven or eight distinct jobs. A single agent session cannot hold all of that context, and it definitely cannot review its own work objectively.</p>
+    <p>Claude Code is good at writing code. It is not good at building and maintaining a production codebase.</p>
+    <p>A production codebase needs more than just code. It needs research into what already exists, a plan that fits the codebase, a security review, a design review, tests, a PR, CI monitoring, review comment handling, and someone to close the loop and capture what was learned. That is seven or eight distinct jobs. A single agent session cannot hold all of that context, and it definitely cannot review its own work objectively.</p>
     <p>So you end up doing the coordination yourself. You are the orchestrator. You prime the agent with context, tell it what to build, review the output, fix what it missed, create the PR, babysit CI, respond to review comments, and then do it all again for the next feature. The agent is a fast typist, but you are still the project manager.</p>
     <p>metaswarm fixes that. It is a full orchestration layer for Claude Code that breaks the work into phases, assigns each phase to a specialist agent, iterates through multiple reviews from other agents blocking until they approve, and coordinates the handoffs, all the way through PR creation and shepherding through external code agent review, integrating with tools like CodeRabbit, Greptile, and other external code review agents. You describe what you want built. The system figures out how to build it, reviews its own plan, implements it with TDD, shepherds the PR through CI and review, and writes down what it learned for next time.</p>
   </section>
@@ -571,6 +571,37 @@
     </table>
   </section>
 
+  <!-- DETERMINISTIC ENFORCEMENT -->
+  <section>
+    <h2>Agents Skip Checklists. Gates Don't.</h2>
+    <p>The hardest problem in agent-driven development is not getting agents to write code. It is getting them to maintain standards. You can put "run coverage before pushing" in a checklist. Agents will skip it. They will misread thresholds, run the wrong command, or decide the step does not apply. We shipped multiple PRs with coverage regressions before we accepted that procedural enforcement is not enforcement. It is a suggestion.</p>
+    <p>The fix is deterministic gates: automated checks that block bad code regardless of whether an agent follows instructions. metaswarm supports three enforcement points, all driven by a single config file:</p>
+
+    <div class="features">
+      <div class="feature">
+        <h4>Pre-Push Hook</h4>
+        <p>A Husky git hook that runs lint, typecheck, format checks, and your coverage command before every <code>git push</code>. If coverage drops, the push is rejected. No agent can bypass it.</p>
+      </div>
+      <div class="feature">
+        <h4>CI Coverage Job</h4>
+        <p>A GitHub Actions workflow that reads the same config and blocks merge on failure. Even if an agent somehow pushes, it cannot merge.</p>
+      </div>
+      <div class="feature">
+        <h4>Agent Completion Gate</h4>
+        <p>The task-completion checklist reads the enforcement command from config. The weakest gate on its own, but combined with the other two, coverage regressions are caught at every level.</p>
+      </div>
+      <div class="feature">
+        <h4>One Config File</h4>
+        <p><code>.coverage-thresholds.json</code> defines your thresholds and enforcement command. All three gates read from it. Change your test runner once, all gates update automatically.</p>
+      </div>
+    </div>
+
+    <p>Setting it up is one command:</p>
+    <pre><code><span class="cmd">npx</span> metaswarm init <span class="flag">--with-husky</span> <span class="flag">--with-ci</span></code></pre>
+    <p>This initializes Husky, installs the pre-push hook, creates the CI workflow, and copies the coverage thresholds config to your project root. Each flag is opt-in: use <code>--with-coverage</code> alone for just the config file, <code>--with-husky</code> for the git hook, or <code>--with-ci</code> for the GitHub Actions workflow. Use all three for the full enforcement stack.</p>
+    <p>The thresholds work with any test runner. Set <code>enforcement.command</code> to <code>pnpm test:coverage</code>, <code>pytest --cov</code>, <code>cargo tarpaulin</code>, or whatever your project uses. See <a href="https://github.com/dsifry/metaswarm/blob/main/docs/coverage-enforcement.md">coverage-enforcement.md</a> for the full setup guide.</p>
+  </section>
+
   <!-- SETUP -->
   <section>
     <h2>Set It Up</h2>
@@ -585,8 +616,10 @@
 
     <h3>Install</h3>
     <pre><code><span class="cmd">cd</span> your-project
-<span class="cmd">npx</span> metaswarm init</code></pre>
-    <p>That scaffolds all 18 agents, skills, commands, rubrics, knowledge templates, and scripts into your project. Existing files are never overwritten.</p>
+<span class="cmd">npx</span> metaswarm init
+<span class="comment"># Or with coverage enforcement gates:</span>
+<span class="cmd">npx</span> metaswarm init <span class="flag">--with-husky</span> <span class="flag">--with-ci</span></code></pre>
+    <p>That scaffolds all 18 agents, skills, commands, rubrics, knowledge templates, and scripts into your project. The flags optionally set up pre-push hooks and CI coverage enforcement. Existing files are never overwritten.</p>
 
     <h3>Then Customize</h3>
     <p>Give this prompt to Claude Code in your project. It will adapt metaswarm to your language, framework, and conventions:</p>
