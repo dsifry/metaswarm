@@ -6,6 +6,11 @@ set -e
 
 echo "▶ Running pre-push checks..."
 
+# --- Kill stale test runners ---
+echo "  ✓ Kill stale test runners"
+pkill -f vitest 2>/dev/null || true
+pkill -f jest 2>/dev/null || true
+
 # --- Lint ---
 echo "  ✓ Lint"
 if command -v pnpm &>/dev/null && [ -f package.json ]; then

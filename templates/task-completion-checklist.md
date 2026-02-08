@@ -124,20 +124,30 @@ bin/pr-comments-filter.sh <PR_NUMBER>
 
 **CRITICAL**: Run lint, typecheck, and format checks BEFORE every `git push` to avoid CI/CD failures.
 
-**Coverage enforcement** (required for all implementation tasks):
+**Kill stale test runners** (prevents orphaned processes from accumulating):
 
 ```bash
-# Must pass BEFORE creating a PR — thresholds from .coverage-thresholds.json
-pnpm test:coverage
+pkill -f vitest 2>/dev/null || true
+pkill -f jest 2>/dev/null || true
 ```
 
-If a `.coverage-thresholds.json` file exists in the project root, coverage thresholds are enforced as a blocking gate. Do NOT push or create a PR if coverage is below any threshold. Fix coverage first.
+**Coverage enforcement** (required for all implementation tasks):
+
+If a `.coverage-thresholds.json` file exists in the project root, read `enforcement.command` from it and run that command. Do NOT hardcode a specific coverage command — always read from the file:
+
+```bash
+# Read the enforcement command dynamically
+CMD=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.coverage-thresholds.json','utf-8')).enforcement.command)")
+eval "$CMD"
+```
+
+Coverage thresholds are enforced as a blocking gate. Do NOT push or create a PR if coverage is below any threshold. Fix coverage first.
 
 ### 8. Agent Full-Lifecycle PR Ownership (MANDATORY for worktree agents)
 
 When working as a task agent in a worktree (spawned by an orchestrator), you own the **complete lifecycle** -- not just implementation. Do NOT return to the orchestrator after committing. You must:
 
-- [ ] **Coverage gate (BLOCKS PR creation)**: If `.coverage-thresholds.json` exists, run the coverage command and verify ALL thresholds are met. **Do NOT push or create a PR if coverage is below any threshold. Fix coverage first.**
+- [ ] **Coverage gate (BLOCKS PR creation)**: If `.coverage-thresholds.json` exists, read `enforcement.command` from it and run that command. Verify ALL thresholds are met. **Do NOT push or create a PR if coverage is below any threshold. Fix coverage first.**
 - [ ] Push branch to remote: `git push -u origin HEAD`
 - [ ] Create PR: `gh pr create --title "..." --body "..."`
 - [ ] Shepherd PR through CI (monitor checks, fix failures)

@@ -1,20 +1,25 @@
 # Coverage Enforcement CI Job
 #
-# Copy this job into your GitHub Actions workflow file (e.g., .github/workflows/ci.yml).
-# Then add "coverage" to the `needs:` array of your merge-gating job so PRs
-# cannot merge until coverage thresholds pass.
+# Two strategies are provided:
 #
-# Example:
-#   jobs:
-#     build: ...
-#     coverage: <this job>
-#     gate:
-#       needs: [build, coverage]
-#       runs-on: ubuntu-latest
-#       steps:
-#         - run: echo "All gates passed"
+# Strategy A: Simple (single job)
+#   Use when your test suite runs in < 2 minutes.
+#   Copy the "coverage-simple" job below.
+#
+# Strategy B: Shard and merge (fast, for large test suites)
+#   Use when your test suite takes > 2 minutes.
+#   Collect coverage alongside sharded test runs, then merge results
+#   in a lightweight job. This avoids re-running the entire test suite
+#   for coverage (which can add 4-5 minutes to your CI pipeline).
+#
+# In both cases, add "coverage" to the `needs:` array of your
+# merge-gating job so PRs cannot merge until thresholds pass.
 
-coverage:
+# ──────────────────────────────────────────────────────
+# Strategy A: Simple (single job, runs all tests with coverage)
+# ──────────────────────────────────────────────────────
+
+coverage-simple:
   name: Coverage Enforcement
   runs-on: ubuntu-latest
   steps:
@@ -22,7 +27,7 @@ coverage:
 
     - uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: "22"
 
     - name: Install dependencies
       run: npm ci
@@ -41,3 +46,68 @@ coverage:
     - name: Run coverage enforcement
       if: steps.read-cmd.outputs.skip != 'true'
       run: ${{ steps.read-cmd.outputs.cmd }}
+
+# ──────────────────────────────────────────────────────
+# Strategy B: Shard and merge (for large test suites)
+# ──────────────────────────────────────────────────────
+#
+# Prerequisites:
+#   1. vitest.config.unit.ts must include coverage settings:
+#        coverage: {
+#          provider: "v8",
+#          reporter: ["json"],
+#          reportsDirectory: "coverage/shard",
+#          exclude: sharedCoverageExclude,
+#          reportOnFailure: true,
+#        }
+#
+#   2. A merge script (e.g., scripts/merge-coverage.ts) that:
+#      - Reads all coverage JSON files from a directory
+#      - Merges them with istanbul-lib-coverage
+#      - Checks thresholds from .coverage-thresholds.json
+#      - Exits non-zero if any threshold is not met
+#
+# Add these steps to your existing test shard jobs:
+
+# --- In your test-unit shard job, AFTER running tests: ---
+
+#     - name: Run unit tests with coverage (shard ${{ matrix.shard }}/N)
+#       run: pnpm test:unit --shard=${{ matrix.shard }}/N --coverage
+#
+#     - name: Rename coverage for unique shard identification
+#       if: ${{ !cancelled() }}
+#       run: mv coverage/shard/coverage-final.json coverage/shard/shard-${{ matrix.shard }}.json
+#
+#     - name: Upload coverage data
+#       if: ${{ !cancelled() }}
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: coverage-shard-${{ matrix.shard }}
+#         path: coverage/shard/shard-${{ matrix.shard }}.json
+#         retention-days: 1
+
+# --- Then add this lightweight merge job: ---
+
+coverage-merge:
+  name: Coverage
+  runs-on: ubuntu-latest
+  needs: [test-unit]  # wait for all shards to finish
+  steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "22"
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Download coverage from all shards
+      uses: actions/download-artifact@v4
+      with:
+        path: coverage/shards
+        pattern: coverage-shard-*
+        merge-multiple: true
+
+    - name: Merge coverage and check thresholds
+      run: npx tsx scripts/merge-coverage.ts coverage/shards
