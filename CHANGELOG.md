@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+### Changed
+- Updated `docs/index.html` site to reflect v0.3.0 changes: 9-phase pipeline with orchestrated execution loop, "Trust Nothing, Verify Everything" section, dual-mode code reviewer, updated component counts (6 skills, 6 rubrics), proactive human checkpoints
+
 ## 0.3.0
 
 ### Added

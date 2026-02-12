@@ -443,7 +443,7 @@
   <!-- THE PIPELINE -->
   <section>
     <h2>The Pipeline</h2>
-    <p>Every feature goes through eight phases. Each phase is handled by a specialist agent (or a group of them). The Issue Orchestrator manages the handoffs.</p>
+    <p>Every feature goes through nine phases. Each phase is handled by a specialist agent (or a group of them). The Issue Orchestrator manages the handoffs.</p>
 
     <div class="pipeline">
       <div class="pipeline-step">
@@ -464,26 +464,32 @@
       </div>
       <div class="pipeline-step">
         <div class="step-num">4</div>
-        <span class="step-label">Implement</span>
-        <span class="step-detail">Coder agent builds with TDD (red-green-refactor)</span>
+        <span class="step-label">Decompose</span>
+        <span class="step-detail">Break plan into work units with DoD items, file scopes, dependency graph</span>
       </div>
       <div class="pipeline-step">
         <div class="step-num">5</div>
-        <span class="step-label">Code Review + Security Audit</span>
-        <span class="step-detail">Two reviewers check the implementation independently</span>
+        <span class="step-label">Orchestrated Execution</span>
+        <span class="step-detail">Per work unit: Implement &rarr; Validate &rarr; Adversarial Review &rarr; Commit</span>
+        <span class="parallel-badge">4-phase loop</span>
       </div>
       <div class="pipeline-step">
         <div class="step-num">6</div>
+        <span class="step-label">Final Review</span>
+        <span class="step-detail">Cross-unit integration check, full test suite, type check</span>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">7</div>
         <span class="step-label">PR Creation</span>
         <span class="step-detail">Creates PR with structured description and test plan</span>
       </div>
       <div class="pipeline-step">
-        <div class="step-num">7</div>
+        <div class="step-num">8</div>
         <span class="step-label">PR Shepherd</span>
         <span class="step-detail">Monitors CI, handles review comments, resolves threads</span>
       </div>
       <div class="pipeline-step">
-        <div class="step-num">8</div>
+        <div class="step-num">9</div>
         <span class="step-label">Close + Learn</span>
         <span class="step-detail">Extracts learnings back into the knowledge base</span>
       </div>
@@ -505,6 +511,35 @@
     <p>The knowledge base can grow to hundreds or thousands of entries without filling your context window, because agents do not load all of it. <code>bd prime</code> uses selective retrieval, filtered by the files you are touching, the keywords that matter, and the type of work you are doing. You get the five gotchas relevant to the auth middleware you are about to change, not the entire institutional memory of the project.</p>
   </section>
 
+  <!-- ORCHESTRATED EXECUTION -->
+  <section>
+    <h2>Trust Nothing. Verify Everything.</h2>
+    <p>The hardest problem after getting agents to follow checklists is getting them to honestly report results. A coding agent that says "all tests pass" might have skipped the tests entirely, run the wrong suite, or misread the output. We learned this the hard way: agents self-certify success even when things are broken.</p>
+    <p>Orchestrated Execution fixes that. For complex tasks with a written spec, the orchestrator breaks the work into <strong>work units</strong>, each with enumerated Definition of Done items, and runs every unit through a 4-phase loop:</p>
+
+    <div class="features">
+      <div class="feature">
+        <h4>1. Implement</h4>
+        <p>A coding agent builds against the spec using TDD. When it reports "done", the orchestrator does not believe it.</p>
+      </div>
+      <div class="feature">
+        <h4>2. Validate</h4>
+        <p>The orchestrator runs <code>tsc</code>, <code>eslint</code>, and <code>vitest</code> itself. Independently. Never asks the coding agent "did the tests pass?" and accepts the answer.</p>
+      </div>
+      <div class="feature">
+        <h4>3. Adversarial Review</h4>
+        <p>A fresh review agent checks each DoD item with file:line evidence. Binary PASS/FAIL, not subjective quality vibes. If it fails, a <em>new</em> reviewer is spawned for re-review. No anchoring bias.</p>
+      </div>
+      <div class="feature">
+        <h4>4. Commit</h4>
+        <p>Only after adversarial PASS. The commit message includes the verified DoD items. If there is a human checkpoint, the system pauses and waits for you before continuing.</p>
+      </div>
+    </div>
+
+    <p>On failure: fix, re-validate, spawn a <strong>fresh</strong> reviewer (never the same one), and retry up to three times before escalating to a human with the full failure history. The fresh reviewer rule matters: without it, the reviewer checks "did they fix what I found?" instead of independently verifying the contract. Anchoring bias is real, even for AI agents.</p>
+    <p>This is not needed for every task. A typo fix or a small bug does not need a 4-phase loop. But for multi-unit features with a spec, risky schema changes, or anything where "it works, trust me" is not good enough, orchestrated execution is the difference between shipping and hoping.</p>
+  </section>
+
   <!-- WHAT'S INCLUDED -->
   <section>
     <h2>Components</h2>
@@ -514,16 +549,16 @@
         <p>Researcher, Architect, PM, Designer, Security, CTO, Coder, Code Reviewer, Security Auditor, PR Shepherd, Test Automator, Knowledge Curator, and more. Each has a defined role, process, and output format.</p>
       </div>
       <div class="feature">
-        <h4>5 Orchestration Skills</h4>
-        <p>Design review gate, PR shepherd, PR comment handling, brainstorming extension, and issue creation. These are the coordination behaviors that tie agents together.</p>
+        <h4>6 Orchestration Skills</h4>
+        <p>Orchestrated execution loop, design review gate, PR shepherd, PR comment handling, brainstorming extension, and issue creation. These are the coordination behaviors that tie agents together.</p>
       </div>
       <div class="feature">
         <h4>7 Slash Commands</h4>
         <p><code>/project:prime</code>, <code>/project:start-task</code>, <code>/project:review-design</code>, <code>/project:self-reflect</code>, <code>/project:pr-shepherd</code>, and more. These are your entry points.</p>
       </div>
       <div class="feature">
-        <h4>5 Quality Rubrics</h4>
-        <p>Standardized review criteria for code, architecture, security, test coverage, and implementation plans. These are what the review agents score against.</p>
+        <h4>6 Quality Rubrics</h4>
+        <p>Standardized review criteria for code, architecture, security, test coverage, implementation plans, and adversarial spec compliance. These are what the review agents score against.</p>
       </div>
       <div class="feature">
         <h4>Coverage Enforcement</h4>
@@ -558,7 +593,7 @@
         <tr><td>Security Design</td><td>Review</td><td>Threat modeling, STRIDE analysis, auth review</td></tr>
         <tr><td>CTO</td><td>Review</td><td>TDD readiness, codebase alignment, final approval</td></tr>
         <tr><td>Coder</td><td>Implement</td><td>TDD implementation with 100% coverage</td></tr>
-        <tr><td>Code Reviewer</td><td>Review</td><td>Pattern enforcement, test verification</td></tr>
+        <tr><td>Code Reviewer</td><td>Review</td><td>Dual-mode: collaborative (suggestions) or adversarial (spec compliance)</td></tr>
         <tr><td>Security Auditor</td><td>Review</td><td>Vulnerability scanning, OWASP checks</td></tr>
         <tr><td>PR Shepherd</td><td>Delivery</td><td>CI monitoring, comment handling, thread resolution</td></tr>
         <tr><td>Knowledge Curator</td><td>Learning</td><td>Extracts learnings, updates knowledge base</td></tr>
@@ -619,7 +654,7 @@
 <span class="cmd">npx</span> metaswarm init
 <span class="comment"># Or with coverage enforcement gates:</span>
 <span class="cmd">npx</span> metaswarm init <span class="flag">--with-husky</span> <span class="flag">--with-ci</span></code></pre>
-    <p>That scaffolds all 18 agents, skills, commands, rubrics, knowledge templates, and scripts into your project. The flags optionally set up pre-push hooks and CI coverage enforcement. Existing files are never overwritten.</p>
+    <p>That scaffolds all 18 agents, 6 skills, 7 commands, 6 rubrics, knowledge templates, and scripts into your project. The flags optionally set up pre-push hooks and CI coverage enforcement. Existing files are never overwritten.</p>
 
     <h3>Then Customize</h3>
     <p>Give this prompt to Claude Code in your project. It will adapt metaswarm to your language, framework, and conventions:</p>
@@ -692,8 +727,8 @@ language-specific and project-specific details.</code></pre>
     <h3>Knowledge base is selective, not exhaustive</h3>
     <p>When an agent starts work, <code>bd prime</code> loads knowledge filtered by the files being touched and the type of work being done. A coder working on auth routes gets auth-related gotchas. A security reviewer gets the OWASP-related patterns. The knowledge base can grow to thousands of entries without any agent needing to read all of them.</p>
 
-    <h3>Human escalation is built in</h3>
-    <p>The design review gate gives agents three iterations to converge. If they cannot agree, or if requirements are ambiguous, the system stops and asks a human. Tasks get marked as blocked in BEADS with a <code>waiting:human</code> label, and if you have Slack configured, you get a DM. The system does not guess when it should ask.</p>
+    <h3>Human checkpoints are proactive, not reactive</h3>
+    <p>The design review gate gives agents three iterations to converge. If they cannot agree, or if requirements are ambiguous, the system stops and asks a human. But orchestrated execution goes further: you define <strong>planned checkpoints</strong> in the spec (after schema changes, after security-sensitive code, at natural boundaries). The orchestrator pauses at those points and presents a report. It waits for you. This is not a notification. It is a gate. The system does not guess when it should ask, and it does not continue without your explicit approval.</p>
   </section>
 
   <!-- CODE REVIEW INTEGRATION -->
