@@ -466,7 +466,7 @@ after the database schema and after the AI integration.
 When all work units pass, create a PR.</code></pre>
     </div>
 
-    <p>The Issue Orchestrator takes over. It researches your project, plans the implementation, runs five agents in parallel to review the plan, breaks it into work units, and executes each through the 4-phase loop: implement with TDD, validate independently, adversarial review against the spec, and commit only after PASS. It pauses for your review at the checkpoints you specified. When everything passes, it creates and shepherds the PR.</p>
+    <p>The Issue Orchestrator takes over. It researches your project, plans the implementation, runs a pre-flight validation checklist, then six agents review the plan in parallel. It identifies external dependencies and prompts you for API keys. It breaks the plan into work units, and executes each through the 4-phase loop: implement with TDD, validate independently (with blocking coverage enforcement), adversarial review against the spec, and commit only after PASS. Quality gates are blocking state transitions &mdash; there is no path from FAIL to COMMIT. It pauses for your review at the checkpoints you specified. When everything passes, it creates and shepherds the PR.</p>
     <p>You described what you wanted. The system figured out how to build it.</p>
   </section>
 
@@ -482,7 +482,7 @@ When all work units pass, create a PR.</code></pre>
   <!-- THE PIPELINE -->
   <section>
     <h2>The Pipeline</h2>
-    <p>Every feature goes through nine phases. Each phase is handled by a specialist agent (or a group of them). The Issue Orchestrator manages the handoffs.</p>
+    <p>Every feature goes through eleven phases. Each phase is handled by a specialist agent (or a group of them). The Issue Orchestrator manages the handoffs.</p>
 
     <div class="pipeline">
       <div class="pipeline-step">
@@ -497,44 +497,54 @@ When all work units pass, create a PR.</code></pre>
       </div>
       <div class="pipeline-step">
         <div class="step-num">3</div>
-        <span class="step-label">Design Review Gate</span>
-        <span class="step-detail">PM, Architect, Designer, Security, CTO review in parallel</span>
-        <span class="parallel-badge">5 agents parallel</span>
+        <span class="step-label">Plan Validation</span>
+        <span class="step-detail">Pre-flight checklist: architecture, deps, API contracts, security, UI/UX, external deps</span>
       </div>
       <div class="pipeline-step">
         <div class="step-num">4</div>
+        <span class="step-label">Design Review Gate</span>
+        <span class="step-detail">PM, Architect, Designer, Security, UX Reviewer, CTO review in parallel</span>
+        <span class="parallel-badge">6 agents parallel</span>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">5</div>
         <span class="step-label">Decompose</span>
         <span class="step-detail">Break plan into work units with DoD items, file scopes, dependency graph</span>
       </div>
       <div class="pipeline-step">
-        <div class="step-num">5</div>
+        <div class="step-num">6</div>
+        <span class="step-label">External Dependency Check</span>
+        <span class="step-detail">Identifies required API keys/credentials, prompts user to configure them</span>
+      </div>
+      <div class="pipeline-step">
+        <div class="step-num">7</div>
         <span class="step-label">Orchestrated Execution</span>
         <span class="step-detail">Per work unit: Implement &rarr; Validate &rarr; Adversarial Review &rarr; Commit</span>
         <span class="parallel-badge">4-phase loop</span>
       </div>
       <div class="pipeline-step">
-        <div class="step-num">6</div>
+        <div class="step-num">8</div>
         <span class="step-label">Final Review</span>
-        <span class="step-detail">Cross-unit integration check, full test suite, type check</span>
+        <span class="step-detail">Cross-unit integration check, full test suite, coverage enforcement</span>
       </div>
       <div class="pipeline-step">
-        <div class="step-num">7</div>
+        <div class="step-num">9</div>
         <span class="step-label">PR Creation</span>
         <span class="step-detail">Creates PR with structured description and test plan</span>
       </div>
       <div class="pipeline-step">
-        <div class="step-num">8</div>
+        <div class="step-num">10</div>
         <span class="step-label">PR Shepherd</span>
         <span class="step-detail">Monitors CI, handles review comments, resolves threads</span>
       </div>
       <div class="pipeline-step">
-        <div class="step-num">9</div>
+        <div class="step-num">11</div>
         <span class="step-label">Close + Learn</span>
         <span class="step-detail">Extracts learnings back into the knowledge base</span>
       </div>
     </div>
 
-    <p>The Design Review Gate is the part that surprised me. Five agents review the plan simultaneously, each from a different perspective. All five have to approve before implementation starts. If they do not agree after three rounds, the system escalates to a human. This catches real problems. Not theoretical ones.</p>
+    <p>The Design Review Gate is the part that surprised me. Six agents review the plan simultaneously, each from a different perspective &mdash; including a UX Reviewer that verifies user flows and integration work units. All six have to approve before implementation starts. If they do not agree after three rounds, the system escalates to a human. This catches real problems. Not theoretical ones.</p>
   </section>
 
   <!-- SELF-LEARNING -->
@@ -563,7 +573,7 @@ When all work units pass, create a PR.</code></pre>
       </div>
       <div class="feature">
         <h4>2. Validate</h4>
-        <p>The orchestrator runs <code>tsc</code>, <code>eslint</code>, and <code>vitest</code> itself. Independently. Never asks the coding agent "did the tests pass?" and accepts the answer.</p>
+        <p>The orchestrator runs <code>tsc</code>, <code>eslint</code>, <code>vitest</code>, and coverage enforcement from <code>.coverage-thresholds.json</code> itself. Independently. Quality gates are blocking state transitions &mdash; not advisory. Never asks the coding agent "did the tests pass?"</p>
       </div>
       <div class="feature">
         <h4>3. Adversarial Review</h4>
@@ -649,7 +659,7 @@ When all work units pass, create a PR.</code></pre>
   <section>
     <h2>Agents Skip Checklists. Gates Don't.</h2>
     <p>The hardest problem in agent-driven development is not getting agents to write code. It is getting them to maintain standards. You can put "run coverage before pushing" in a checklist. Agents will skip it. They will misread thresholds, run the wrong command, or decide the step does not apply. We shipped multiple PRs with coverage regressions before we accepted that procedural enforcement is not enforcement. It is a suggestion.</p>
-    <p>The fix is deterministic gates: automated checks that block bad code regardless of whether an agent follows instructions. metaswarm supports three enforcement points, all driven by a single config file:</p>
+    <p>The fix is twofold. First, quality gates in the orchestrated execution loop are defined as <strong>blocking state transitions</strong>, not advisory recommendations. There is no instruction path from FAIL to COMMIT. FAIL always means retry or escalate. Second, deterministic gates: automated checks that block bad code regardless of whether an agent follows instructions. metaswarm supports three enforcement points, all driven by a single config file:</p>
 
     <div class="features">
       <div class="feature">
@@ -693,7 +703,7 @@ When all work units pass, create a PR.</code></pre>
 <span class="cmd">npx</span> metaswarm init
 <span class="comment"># Or with coverage enforcement gates:</span>
 <span class="cmd">npx</span> metaswarm init <span class="flag">--with-husky</span> <span class="flag">--with-ci</span></code></pre>
-    <p>That scaffolds all 18 agents, 6 skills, 7 commands, 6 rubrics, knowledge templates, and scripts into your project. The flags optionally set up pre-push hooks and CI coverage enforcement. Existing files are never overwritten.</p>
+    <p>That scaffolds all 18 agents, 6 skills, 7 commands, 6 rubrics, knowledge templates, scripts, <code>.gitignore</code>, <code>.env.example</code>, and <code>SERVICE-INVENTORY.md</code> into your project. If a <code>.gitignore</code> already exists, it warns if <code>.env</code> is not ignored. The flags optionally set up pre-push hooks and CI coverage enforcement. Existing files are never overwritten.</p>
 
     <h3>Then Customize</h3>
     <p>Give this prompt to Claude Code in your project. It will adapt metaswarm to your language, framework, and conventions:</p>
