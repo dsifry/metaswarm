@@ -88,10 +88,15 @@ Skills are orchestration behaviors that coordinate multiple agents.
 
 The 4-phase execution loop for rigorous, spec-driven implementation. Decomposes work into units and runs each through IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT.
 
+- **Plan validation (pre-flight)**: Checklist catches structural issues (architecture, dependencies, API contracts, security, UI/UX, external deps) before design review
 - **Work unit decomposition**: Break plan into discrete units with DoD items, file scopes, and dependency graphs
 - **Independent validation**: Orchestrator runs tsc, eslint, vitest directly — never trusts subagent self-reports
+- **Quality gate enforcement**: Gates are blocking state transitions, not advisory. FAIL means retry or escalate, never skip.
+- **Coverage enforcement**: Reads `.coverage-thresholds.json` and runs the enforcement command. BLOCKING gate.
 - **Adversarial review**: Fresh reviewer checks each DoD item with file:line evidence. Binary PASS/FAIL
-- **Human checkpoints**: Planned pauses at critical boundaries (schema, security, new patterns)
+- **Human checkpoints**: Planned pauses at critical boundaries (schema, security, external service credentials, new patterns)
+- **Project context document**: Maintained by orchestrator, passed to each coder subagent to prevent context loss
+- **Service inventory tracking**: `SERVICE-INVENTORY.md` updated after each commit to track services, factories, and shared modules
 - **Final comprehensive review**: Cross-unit integration check after all units pass
 - **Recovery protocol**: DIAGNOSE → CLASSIFY → RETRY (max 3) → ESCALATE with failure history
 
@@ -101,14 +106,14 @@ Uses the `adversarial-review-rubric.md` for reviews (distinct from the collabora
 
 **Path**: `skills/design-review-gate/SKILL.md`
 
-Spawns 5 agents in parallel to review a design document:
+Spawns 6 agents in parallel to review a design document:
 
 ```text
 /project:review-design <path-to-spec>
 ```
 
-- PM, Architect, Designer, Security, CTO review simultaneously
-- All 5 must APPROVE
+- PM, Architect, Designer, Security, UX Reviewer, CTO review simultaneously
+- All 6 must APPROVE
 - Max 3 iterations before human escalation
 - Catches architectural issues before implementation begins
 
@@ -325,7 +330,9 @@ The full orchestration lifecycle:
 |---|---|---|
 | 1. Research | Researcher | Codebase analysis, pattern inventory |
 | 2. Planning | Architect | Implementation plan with tasks |
-| 3. Design Review | PM + Architect + Designer + Security + CTO (parallel) | APPROVE/REVISE verdicts |
+| 2a. External Dependency Detection | Issue Orchestrator | Identifies API keys/credentials, prompts user |
+| 2b. Plan Validation | Issue Orchestrator | Pre-flight checklist (architecture, deps, API contracts, security, UI/UX) |
+| 3. Design Review | PM + Architect + Designer + Security + UX Reviewer + CTO (parallel) | APPROVE/REVISE verdicts |
 | 4. Work Unit Decomposition | Issue Orchestrator | Work units with DoD items, file scopes, dependency graph |
 | 5. Orchestrated Execution | Coder + Orchestrator + Adversarial Reviewer (per unit) | IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT loop |
 | 6. Final Comprehensive Review | Issue Orchestrator | Cross-unit integration check, full test suite |

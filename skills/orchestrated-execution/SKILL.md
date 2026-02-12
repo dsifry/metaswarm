@@ -27,7 +27,82 @@ This skill defines a generalized 4-phase execution loop that any orchestrator ca
 
 ---
 
-## 1. Work Unit Decomposition
+## 1. Plan Validation (Pre-Flight Checklist)
+
+Before submitting a plan to the Design Review Gate, the orchestrator MUST verify every item on this checklist. This prevents expensive design review cycles on fundamentally broken plans.
+
+> **Note**: The `Plan` subagent type cannot write files (it has read-only access by design). If you spawn an Architect as a Plan subagent, it will return the plan as text in its response. The orchestrator must write the plan to `PLAN.md` itself.
+
+### Architecture Checklist
+- [ ] Every data access goes through a service layer (no direct DB calls from routes/handlers)
+- [ ] Each work unit has a single responsibility (max ~5 files created/modified)
+- [ ] Error handling strategy specified (typed error hierarchy, how errors cross layer boundaries)
+- [ ] No hard-coded configuration — environment variables for all external service config
+
+### Dependency Graph Checklist
+- [ ] Each WU's dependencies are minimal (only depends on what it actually imports/uses)
+- [ ] No unnecessary serialization — WUs that CAN be parallel ARE marked parallel
+- [ ] No circular dependencies
+- [ ] Integration WUs exist to wire components into the app shell (not just built in isolation)
+
+### API Contract Checklist
+If the plan includes HTTP endpoints or WebSocket protocols, verify:
+- [ ] Every HTTP endpoint specifies: method, path, request schema, all response status codes, error response shapes
+- [ ] WebSocket message types fully specified (client-to-server AND server-to-client message type tables)
+- [ ] Protocol concerns documented: heartbeat, reconnection, acknowledgment strategy
+- [ ] Response codes are explicit (not "returns the todo" but "returns 201 with the created todo")
+
+### Security Checklist
+- [ ] Trust boundaries identified (which inputs are untrusted?)
+- [ ] Input validation specified for every endpoint/handler (schema, max size)
+- [ ] Rate limiting specified for expensive operations (AI API calls, file uploads)
+- [ ] Authentication/authorization requirements documented
+- [ ] Secrets management documented (.env pattern, .gitignore verification)
+
+### UI/UX Checklist
+If the plan includes a user interface:
+- [ ] User flows documented with trigger, steps, and visible outcome (see UI-FLOWS.md template)
+- [ ] Text-based wireframes for each screen showing layout and interactive elements
+- [ ] Empty states, loading states, and error states defined for each view
+- [ ] Integration work units explicitly created to wire components into the app shell
+- [ ] Component hierarchy documented (what renders what, where)
+
+### External Dependencies Checklist
+- [ ] All external services identified (APIs, SDKs, third-party services)
+- [ ] Required credentials/config documented (env var names, how to obtain)
+- [ ] Human checkpoint planned BEFORE work units that depend on external services
+- [ ] Graceful degradation specified for when credentials are missing
+- [ ] `.env.example` includes all required env vars
+
+### Completeness Checklist
+- [ ] All human checkpoints from the spec are included
+- [ ] All features from the spec have at least one work unit
+- [ ] Tooling is consistent (one package manager, matching config files across WUs)
+- [ ] No WU exceeds ~5 files or ~3 distinct concerns
+- [ ] WUs that are too large are split with explicit dependencies between parts
+
+**If any checklist item fails, fix the plan BEFORE submitting to Design Review Gate.**
+
+### Required Plan Sections
+
+Every plan submitted for Design Review MUST include these sections:
+
+1. **Work Unit Decomposition** — WU list with DoD items, file scopes, dependencies
+2. **API Contract** (if applicable) — structured endpoint/protocol specs:
+   ```markdown
+   ### POST /api/todos
+   - **Request Body**: `{ title: string }` (required, 1-500 chars, trimmed)
+   - **Success**: `201 Created` -> `{ id, title, completed, createdAt, updatedAt }`
+   - **Errors**: `400` (validation) / `500` (internal)
+   ```
+3. **Security Considerations** — trust boundaries, input validation table, rate limiting table, secrets management
+4. **User Flows** (if UI exists) — text wireframes and interaction flows (use UI-FLOWS.md template)
+5. **External Dependencies** — services, credentials, setup instructions
+6. **Human Checkpoints** — named pause points with review criteria
+
+---
+
+## 2. Work Unit Decomposition
 
 A **work unit** is the atomic unit of orchestrated execution. Before entering the 4-phase loop, decompose the implementation plan into work units.
 
@@ -79,7 +154,7 @@ bd dep add <wu-003> <wu-002>
 
 ---
 
-## 2. The 4-Phase Execution Loop
+## 3. The 4-Phase Execution Loop
 
 For each work unit, execute these four phases in sequence. **Do not skip phases.** Do not combine phases. Do not proceed to the next phase until the current phase produces a clear outcome.
 
@@ -105,7 +180,7 @@ The coding subagent executes against the work unit spec.
 
 **Orchestrator actions:**
 
-1. Spawn a coding subagent with the work unit spec, DoD items, and file scope
+1. Spawn a coding subagent with the work unit spec, DoD items, file scope, and the **Project Context Document**
 2. The subagent implements the change following TDD (test first, then implementation)
 3. The subagent reports completion — **but the orchestrator does NOT trust this report**
 
@@ -122,6 +197,9 @@ ${dodItems.map((item, i) => `${i+1}. ${item}`).join('\n')}
 
 ## File Scope
 You may ONLY modify these files: ${fileScope.join(', ')}
+
+## Project Context
+${projectContext}
 
 ## Rules
 - Follow TDD: write failing test first, then implement to make it pass
@@ -148,8 +226,13 @@ npx eslint <changed-files>
 # 3. Run tests (full suite, not just new tests)
 npx vitest run
 
-# 4. Coverage check (if configured)
-npx vitest run --coverage
+# 4. Coverage enforcement (BLOCKING — read .coverage-thresholds.json)
+# If .coverage-thresholds.json exists, read the enforcement command and run it
+# This is NOT optional. Coverage below threshold = VALIDATION FAIL.
+if [ -f .coverage-thresholds.json ]; then
+  CMD=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.coverage-thresholds.json','utf-8')).enforcement.command)")
+  eval "$CMD"
+fi
 
 # 5. Verify file scope was respected
 git diff --name-only | while read file; do
@@ -241,10 +324,76 @@ Reviewed-by: adversarial-review (PASS)"
 **After commit:**
 - Update BEADS task status: `bd close <wu-task-id> --reason "4-phase loop complete. PASS."`
 - If this work unit has a **human checkpoint** flag, pause and report before continuing
+- Update the **Project Context Document** with completed work unit details
+
+**After commit, update SERVICE-INVENTORY.md:**
+If this work unit created or modified services, factories, database tables, or shared modules, update `SERVICE-INVENTORY.md` with the new entries. This document is read by subsequent coder agents to avoid duplicating existing services.
 
 ---
 
-## 3. Parallel Work Unit Execution
+## 4. Quality Gate Enforcement
+
+Quality gates are BLOCKING STATE TRANSITIONS, not advisory recommendations. The orchestrator CANNOT advance to the next phase without gate passage.
+
+### State Machine
+
+```
+IMPLEMENT ──→ VALIDATE ──→ REVIEW ──→ COMMIT
+                 │            │
+                 ↓            ↓
+              FAIL:         FAIL:
+           fix + re-run   fix + re-validate
+                          + FRESH re-review
+                 │            │
+              (max 3)      (max 3)
+                 │            │
+                 ↓            ↓
+              ESCALATE     ESCALATE
+             (to human)   (to human)
+```
+
+### Transition Rules (MUST, not SHOULD)
+
+1. **IMPLEMENT → VALIDATE**: Always. No exceptions.
+2. **VALIDATE → REVIEW**: ONLY if ALL validation checks pass:
+   - Tests pass (exit code 0)
+   - Coverage meets `.coverage-thresholds.json` thresholds
+   - Type checking passes
+   - Lint passes
+   - File scope respected
+3. **REVIEW → COMMIT**: ONLY if adversarial review returns PASS
+4. **FAIL → retry**: Fix the issue, then re-run the FAILED gate (not skip it)
+5. **Re-review after fix**: MUST spawn a FRESH reviewer (new instance, no memory)
+6. **Max retries**: 3 attempts per gate, then ESCALATE to human with full failure history
+
+### On FAIL: Mandatory Re-Review Protocol
+
+1. Fix the issue identified by the reviewer
+2. Re-run Phase 2 (VALIDATE) — ALL quality gates, not just the one that failed
+3. **MANDATORY**: Spawn a NEW adversarial reviewer (fresh instance, no memory of previous review)
+4. Only COMMIT after the fresh reviewer returns PASS
+5. Max 3 retry cycles before ESCALATE to human
+
+Track each attempt visibly: "Re-review attempt 1/3", "Re-review attempt 2/3", etc.
+
+### What the Orchestrator MUST NOT Do
+
+- "Coverage is close enough at 92%, proceeding to commit"
+- "Adversarial review found issues but they're minor, committing anyway"
+- "Fix applied, skipping re-review since the fix is straightforward"
+- "5 FAILs encountered, moving to next work unit without resolution"
+- "Tests pass but coverage command failed — proceeding anyway"
+
+### What the Orchestrator MUST Do
+
+- "VALIDATION FAIL: coverage at 87%, threshold is 100%. Returning to IMPLEMENT."
+- "ADVERSARIAL REVIEW FAIL. Spawning fresh reviewer for re-review. Attempt 2 of 3."
+- "Max retries (3) exceeded for WU-004. Escalating to human with failure history."
+- "Fix applied. Re-running validation. Re-running adversarial review with FRESH reviewer."
+
+---
+
+## 5. Parallel Work Unit Execution
 
 When multiple work units have no dependencies on each other, execute them in parallel — but with structured convergence points.
 
@@ -270,9 +419,45 @@ Fan-out ──────┼──── WU-002: REVIEW ───────�
 4. **Sequential commits**: Commit work units one at a time to maintain clean git history
 5. **If any FAIL**: Only re-run the failed work unit's loop — don't re-run passed units
 
+**Stale notification handling:** When parallel subagent results arrive after the orchestrator has moved past their work unit (e.g., at a checkpoint), acknowledge them briefly in one line. Do NOT print a full "still waiting at checkpoint" block for each stale notification — this clutters the conversation and wastes context window.
+
 ---
 
-## 4. Human Checkpoints (Proactive)
+## 6. Project Context Document
+
+The orchestrator MUST maintain a project context document that grows with each work unit. This is passed to every coder subagent to prevent context loss.
+
+### Context Document Structure
+
+```markdown
+# Project Context (Maintained by Orchestrator)
+
+## Tooling
+- Package manager: <npm/pnpm/yarn>
+- Test runner: <vitest/jest> (<config-file>)
+- Linter: <eslint> (<config-file>)
+- Build: <vite/webpack/tsc> (<config-file>)
+
+## Completed Work Units
+| WU | Title | Key Files | Services Created |
+|----|-------|-----------|-----------------|
+
+## Established Patterns
+- <pattern-1>: <description>
+- <pattern-2>: <description>
+
+## Active Services
+See SERVICE-INVENTORY.md
+```
+
+**Update rules:**
+- After each Phase 4 (COMMIT), add the completed work unit to the table
+- After each Phase 1 (IMPLEMENT), update patterns if new ones emerge
+- Pass this document to every coder subagent alongside the work unit spec
+
+---
+
+## 7. Human Checkpoints (Proactive)
 
 Human checkpoints are **planned pauses**, not reactive escalations. They are defined in the spec before execution begins.
 
@@ -283,6 +468,9 @@ Human checkpoints are **planned pauses**, not reactive escalations. They are def
 - After the first work unit in a new architectural pattern
 - Before any destructive or irreversible operation
 - At natural boundaries the human specified in the issue
+- Before work units that depend on external services (APIs, SDKs requiring credentials)
+  - Present: service name, required env vars, how to obtain credentials
+  - Ask: "Do you have these configured? [Y/n]"
 
 ### Checkpoint Report Format
 
@@ -316,7 +504,7 @@ When reaching a checkpoint, present this report and **wait for explicit human ap
 
 ---
 
-## 5. Final Comprehensive Review
+## 8. Final Comprehensive Review
 
 After ALL work units are complete and committed, run a final comprehensive review across the entire change set. This catches cross-unit integration issues that per-unit reviews miss.
 
@@ -336,7 +524,10 @@ npx tsc --noEmit
 npx eslint .
 
 # 5. Coverage — verify overall coverage thresholds
-npx vitest run --coverage
+if [ -f .coverage-thresholds.json ]; then
+  CMD=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.coverage-thresholds.json','utf-8')).enforcement.command)")
+  eval "$CMD"
+fi
 
 # 6. Commit history — verify clean, logical commits
 git log main..HEAD --oneline
@@ -350,6 +541,7 @@ git log main..HEAD --oneline
 - [ ] API contracts between work units are consistent
 - [ ] No leftover TODO/FIXME markers from implementation
 - [ ] File scope boundaries were respected (no unexpected file changes)
+- [ ] SERVICE-INVENTORY.md is up to date with all created services
 
 ### Final Report Format
 
@@ -379,7 +571,7 @@ git log main..HEAD --oneline
 
 ---
 
-## 6. Recovery Protocol
+## 9. Recovery Protocol
 
 When things go wrong during the 4-phase loop, follow this structured recovery.
 
@@ -446,7 +638,7 @@ After 3 failed attempts, escalate to human with full context:
 
 ---
 
-## 7. Anti-Patterns
+## 10. Anti-Patterns
 
 These are explicit DON'Ts. Violating any of these undermines the entire orchestration pattern.
 
@@ -460,25 +652,45 @@ These are explicit DON'Ts. Violating any of these undermines the entire orchestr
 | 6 | **Combining phases** — "implement and validate in one step" | Removes the independence that makes validation meaningful | Run each phase as a distinct step with its own output |
 | 7 | **Continuing past a checkpoint without human response** | Defeats the purpose of proactive checkpoints | Wait. If urgent, escalate — don't skip |
 | 8 | **Skipping final comprehensive review** — "all units passed individually" | Per-unit reviews can't catch cross-unit integration issues | Always run the final review after all units are committed |
+| 9 | **Skipping coverage enforcement** — "tests pass, coverage doesn't matter" | Coverage thresholds exist for a reason; low coverage means untested paths | Read .coverage-thresholds.json and run the enforcement command. Block on failure. |
+| 10 | **Building UI components in isolation** — all components tested but never wired into the app | Users can't interact with components that aren't rendered | Plan must include integration WUs that wire components into the app shell |
+| 11 | **Proceeding without external credentials** — building features that require API keys without verifying the user has them | Features will fail at runtime; user discovers this after 10+ commits | Checkpoint before external-service WUs to verify credentials are configured |
+| 12 | **Advisory quality gates** — treating FAIL as a suggestion rather than a blocking transition | Undermines the entire trust model; equivalent to skipping the gate | Quality gates are state transitions. FAIL means retry or escalate, never skip. |
 
 ---
 
 ## Quick Reference: Orchestrator Checklist
 
+Before execution (Plan Validation):
+
+- [ ] Run pre-flight checklist (architecture, dependencies, API contracts, security, UI/UX, external deps)
+- [ ] Verify all required plan sections are present
+- [ ] Fix any checklist failures BEFORE submitting to Design Review Gate
+
 For each work unit:
 
-- [ ] Spawn coding subagent with spec, DoD, and file scope
+- [ ] Spawn coding subagent with spec, DoD, file scope, and **Project Context Document**
 - [ ] Wait for implementation to complete
-- [ ] **Independently** run: tsc, eslint, vitest (do NOT ask subagent)
+- [ ] **Independently** run: tsc, eslint, vitest, coverage enforcement (do NOT ask subagent)
 - [ ] Verify file scope with `git diff --name-only`
 - [ ] Spawn **fresh** adversarial reviewer with spec and DoD
 - [ ] If PASS: commit with DoD verification in message
-- [ ] If FAIL: fix → re-validate → spawn **new** reviewer (max 3 retries)
+- [ ] If FAIL: fix → re-validate → spawn **new** reviewer (max 3 retries, then ESCALATE)
 - [ ] If human checkpoint: present report and wait
 - [ ] Update BEADS task status
+- [ ] Update **SERVICE-INVENTORY.md** if services/factories/modules were created
+- [ ] Update **Project Context Document** with completed work unit
+
+Quality Gate Rules:
+
+- [ ] VALIDATE → REVIEW: ONLY if ALL checks pass (tests, coverage, types, lint, file scope)
+- [ ] REVIEW → COMMIT: ONLY if adversarial review returns PASS
+- [ ] FAIL at any gate: retry (max 3), then ESCALATE — never skip
+- [ ] Re-review after fix: MUST use FRESH reviewer (new instance, no memory)
 
 After all work units:
 
-- [ ] Run final comprehensive review
+- [ ] Run final comprehensive review (with coverage enforcement)
+- [ ] Verify SERVICE-INVENTORY.md is complete
 - [ ] Present final report
 - [ ] Proceed to PR creation

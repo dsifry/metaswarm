@@ -100,10 +100,12 @@ That's it. The Issue Orchestrator takes over:
 
 1. **Research** — Scans your (empty) project, notes the tech stack from the issue
 2. **Plan** — Architect agent creates an implementation plan with work units
-3. **Design Review** — 5 agents review the plan in parallel (PM, Architect, Designer, Security, CTO)
-4. **Decompose** — Breaks the plan into work units with DoD items and dependencies
-5. **Execute** — For each work unit: implement with TDD, validate independently, adversarial review against DoD
-6. **Checkpoints** — Pauses after schema setup and AI integration for your review
+3. **Plan Validation** — Pre-flight checklist catches structural issues (missing service layer, wrong dependencies, oversized WUs) before spending agent cycles
+4. **Design Review** — 6 agents review the plan in parallel (PM, Architect, Designer, Security, UX Reviewer, CTO)
+5. **Decompose** — Breaks the plan into work units with DoD items and dependencies
+6. **External Dependency Check** — Identifies required API keys/credentials and prompts you to configure them
+7. **Execute** — For each work unit: implement with TDD, validate independently, adversarial review against DoD. Quality gates are blocking state transitions, not advisory.
+8. **Checkpoints** — Pauses after schema setup and AI integration for your review
 7. **Final Review** — Cross-unit integration check after all units pass
 8. **PR** — Creates the PR and starts shepherding
 
@@ -152,6 +154,8 @@ You described what you wanted. The system figured out how to build it.
 - **Be specific about DoD items.** "Users can create todos" is better than "todo functionality works." Agents verify exactly what you write.
 - **Name your tech stack.** Don't make agents guess. Say "Hono + React + SQLite", not "pick a framework."
 - **Set file scope.** Tell agents where code should live. This prevents sprawl and makes adversarial review effective.
+- **Include user flows.** Describe what the user sees and does, not just what the code does. Include text wireframes if the app has a UI. This prevents building components that are never wired into the app.
+- **List external dependencies.** If your app needs API keys (e.g., Anthropic, Stripe), say so in the spec. The orchestrator will prompt you to configure them before building features that depend on them.
 - **Use human checkpoints.** Put them after risky or foundational work (database schema, auth, AI integration). You can always continue quickly, but you can't easily undo.
 - **Start with a working spec, not a vague idea.** If you're not sure what you want yet, use `/project:brainstorm` first to refine the idea, then create the issue from the brainstorming output.
 
@@ -207,14 +211,15 @@ For a more complex feature, trigger the parallel review manually:
 > /project:review-design docs/specs/my-feature.md
 ```
 
-Five agents review in parallel:
+Six agents review in parallel:
 - **PM**: Validates use cases and scope
 - **Architect**: Checks service design and patterns
 - **Designer**: Reviews API/UX design
 - **Security**: Threat modeling (STRIDE)
+- **UX Reviewer**: Verifies user flows, integration work units, and component wiring
 - **CTO**: TDD readiness and alignment
 
-Each produces an APPROVE/REVISE verdict. All five must approve, or the plan iterates (max 3 rounds before human escalation).
+Each produces an APPROVE/REVISE verdict. All six must approve, or the plan iterates (max 3 rounds before human escalation).
 
 ## Step 4.5: Orchestrated Execution (for Complex Tasks)
 

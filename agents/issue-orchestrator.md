@@ -91,6 +91,38 @@ bd dep add <review-task> <plan-task>
 # May iterate multiple times until approved
 ```
 
+### Phase 2a: External Dependency Detection
+
+Before work unit decomposition, scan the spec and plan for external service dependencies:
+
+```bash
+# Identify external services from the plan
+# Look for: API SDKs, third-party services, credentials requirements
+# For each external dependency, document:
+#   - Service name and purpose
+#   - Required env vars (ANTHROPIC_API_KEY, STRIPE_SECRET_KEY, etc.)
+#   - How to obtain credentials (link to docs/dashboard)
+#   - Whether features can be stubbed without them
+
+# If external dependencies found, trigger a human checkpoint:
+```
+
+**External Dependency Checkpoint:**
+
+```markdown
+## Checkpoint: External Service Configuration
+
+This project requires the following credentials:
+
+| Service | Env Var | Purpose | Obtain At |
+|---------|---------|---------|-----------|
+| Anthropic API | ANTHROPIC_API_KEY | AI chat | https://console.anthropic.com/settings/keys |
+
+Are these configured in your .env file? [Y/n]
+```
+
+**Do NOT proceed to implementation of work units that depend on external services until the user confirms credentials are available.**
+
 ### Phase 2b: Work Unit Decomposition
 
 After the architect creates the implementation plan and design review approves it, decompose into work units before implementation begins.
@@ -171,6 +203,13 @@ You may ONLY modify these files: ${fileScope.join(', ')}
 - Do NOT modify files outside your file scope
 - Do NOT self-certify — the orchestrator will validate independently
 - When complete, report what you changed and what tests you added
+
+## Project Context
+${projectContext}
+
+## Existing Services (read SERVICE-INVENTORY.md before implementing)
+Check SERVICE-INVENTORY.md for existing services, factories, and modules.
+Do NOT recreate services that already exist — extend or import them.
 ```
 
 **Adversarial Reviewer spawn template:**
@@ -207,6 +246,11 @@ Run: git diff main..HEAD -- ${fileScope.join(' ')}
 3. **Max 3 retries per work unit**: After 3 FAILs, escalate (see Recovery Protocol)
 4. **Respect file scope**: Verify with `git diff --name-only` after each implementation
 5. **Parallel where possible**: Independent work units can run Phase 3.1 simultaneously
+6. **Maintain project context**: After each work unit COMMIT, update the project context document with:
+   - Completed work unit summary (title, key files, services created)
+   - New patterns discovered during implementation
+   - Updated SERVICE-INVENTORY.md entries
+   Pass this context document to every subsequent coder subagent alongside the work unit spec.
 
 ### Phase 3.5: Final Comprehensive Review
 
@@ -416,12 +460,20 @@ Plan Complete
     ├── PM Agent (approve/reject)
     ├── Architect Agent (approve/reject)
     ├── Designer Agent (approve/reject)
+    ├── UX Reviewer (approve/reject) — NEW
     ├── Security Agent (approve/reject)
     └── CTO Agent (approve/reject)
     │
     ALL APPROVED? → Proceed to implementation
     ANY REJECTED? → Iterate (max 3x) → Escalate to human
 ```
+
+**UX Reviewer responsibilities** (Issue #12):
+- Does every user flow have a clear trigger and visible outcome?
+- Are all screens described with component hierarchy (what renders what, where)?
+- Are empty states, loading states, and error states defined for each view?
+- Is there an explicit **integration work unit** that wires components into the app shell?
+- Does the plan include a UI-FLOWS.md section (or reference the template)?
 
 Track approval state with labels:
 
@@ -495,6 +547,10 @@ Before closing the epic, verify ALL of the following:
 - [ ] PR is merged to main
 - [ ] GitHub Issue is closed
 - [ ] Learnings extracted (Knowledge Curator spawned)
+- [ ] External dependencies identified and user confirmed credentials available
+- [ ] UI/UX flows documented and integration work units completed
+- [ ] SERVICE-INVENTORY.md updated after each work unit commit
+- [ ] Project context document maintained and passed to each coder subagent
 
 ---
 
