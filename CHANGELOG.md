@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.0
+
+### Added
+- **Orchestrated Execution skill** (`skills/orchestrated-execution/SKILL.md`): 4-phase execution loop (IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT) for rigorous, spec-driven implementation of complex tasks
+- **Adversarial Review rubric** (`rubrics/adversarial-review-rubric.md`): Binary PASS/FAIL spec compliance verification with evidence requirements (file:line citations), distinct from collaborative code review
+- **Dual-mode Code Review Agent**: Collaborative mode (existing, APPROVED/CHANGES REQUIRED) and Adversarial mode (new, PASS/FAIL against DoD contract with fresh reviewer rule)
+- **Work Unit Decomposition** in Issue Orchestrator: Break implementation plans into discrete work units with DoD items, file scopes, and dependency graphs
+- **Final Comprehensive Review** phase: Cross-unit integration check after all work units pass individually
+- **Problem Definition Phase** in start-task command: Ensures clear scope, DoD items, file scope, and human checkpoints before implementation
+- **"Choosing a Workflow" decision guide** in USAGE.md: Helps users pick the right level of process for their task
+- **Recovery protocol**: Structured DIAGNOSE → CLASSIFY → RETRY (max 3) → ESCALATE with failure history
+
+### Changed
+- Issue Orchestrator workflow now uses 4-phase orchestrated execution loop instead of linear implementation flow (backward compatible — linear flow still works for tasks without DoD items)
+- Workflow phases expanded from 8 to 9 (added Work Unit Decomposition, Orchestrated Execution, Final Review)
+- README architecture diagram updated to show orchestrated execution loop
+- Design principles updated: added "Trust Nothing, Verify Everything" and expanded "Human-in-the-Loop" to include proactive checkpoints
+- GETTING_STARTED.md: added Step 4.5 explaining orchestrated execution with when-to-use and when-not-to-use guidance
+- Updated counts: 6 skills (was 5), 6 rubrics (was 5)
+
 ## 0.2.0
 
 ### Added

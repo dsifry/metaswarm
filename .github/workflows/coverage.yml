@@ -1,0 +1,43 @@
+# Coverage Enforcement CI Job
+#
+# Copy this job into your GitHub Actions workflow file (e.g., .github/workflows/ci.yml).
+# Then add "coverage" to the `needs:` array of your merge-gating job so PRs
+# cannot merge until coverage thresholds pass.
+#
+# Example:
+#   jobs:
+#     build: ...
+#     coverage: <this job>
+#     gate:
+#       needs: [build, coverage]
+#       runs-on: ubuntu-latest
+#       steps:
+#         - run: echo "All gates passed"
+
+coverage:
+  name: Coverage Enforcement
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "22"
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Read coverage command from .coverage-thresholds.json
+      id: read-cmd
+      run: |
+        if [ ! -f .coverage-thresholds.json ]; then
+          echo "No .coverage-thresholds.json found — skipping coverage enforcement"
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        CMD=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.coverage-thresholds.json','utf-8')).enforcement.command)")
+        echo "cmd=$CMD" >> "$GITHUB_OUTPUT"
+
+    - name: Run coverage enforcement
+      if: steps.read-cmd.outputs.skip != 'true'
+      run: ${{ steps.read-cmd.outputs.cmd }}

@@ -115,57 +115,33 @@ See `your-project:design-review-gate` skill for full details.
 
 After design review approval, implementation follows the **4-phase execution loop** per work unit. This replaces the previous linear "implement then review" flow with rigorous independent validation and adversarial review.
 
-### Core Principle
-
-**Trust nothing. Verify everything. Review adversarially.**
-
-### The 4-Phase Loop
+### The Pattern
 
 For each work unit (a discrete, spec-driven change with DoD items):
 
 1. **IMPLEMENT** — Coding subagent executes against the spec using TDD
 2. **VALIDATE** — Orchestrator independently runs quality gates (tsc, eslint, vitest). **Never trust subagent self-reports.**
-3. **ADVERSARIAL REVIEW** — Fresh review subagent checks against spec contract. Binary PASS/FAIL with file:line evidence. Uses `adversarial-review-rubric.md`.
+3. **ADVERSARIAL REVIEW** — Fresh review subagent checks against spec contract. Binary PASS/FAIL. Uses `adversarial-review-rubric.md`.
 4. **COMMIT** — Only after adversarial PASS
 
 On FAIL: fix → re-validate → spawn **fresh** reviewer (max 3 retries → escalate to human).
 
-### When to Use Orchestrated Execution
+### Key Principles
 
-- The task has a **written spec** with enumerable Definition of Done items
-- The implementation involves **multiple work units** (3+ logical changes)
-- You need **independent verification** — subagent self-reports aren't sufficient
-- The changes are **high-stakes** (schema changes, security, new architectural patterns)
-- You want **proactive human checkpoints** at planned review points
+- **Trust nothing, verify everything**: The orchestrator runs validation commands directly, never asks the coding subagent "did the tests pass?"
+- **Spec as contract**: DoD items are the contract. Adversarial reviewers check exact compliance with file:line evidence.
+- **Fresh reviewers**: On re-review after FAIL, a NEW reviewer instance is spawned with no memory of the previous review. Prevents anchoring bias.
+- **Human checkpoints**: Planned pauses at critical boundaries (schema changes, security code, first use of new patterns). The orchestrator waits for explicit human approval before continuing.
 
-### When NOT to Use It
+### Final Comprehensive Review
 
-- Single-file bug fixes or copy changes
-- Tasks without a written spec or DoD items
-- Quick prototyping or exploratory work
-- Tasks where the overhead of decomposition exceeds the work itself
+After all work units pass individually, a final cross-unit review catches integration issues:
+- Combined diff across all work units
+- Full test suite (not just per-unit tests)
+- Cross-unit type consistency and import conflicts
+- Coverage thresholds
 
-For simple tasks, the standard linear flow (implement → code review → PR) works fine.
-
-### Key Concepts
-
-**Work Unit Decomposition**: Break the implementation plan into discrete work units, each with:
-- A spec section and enumerated DoD items
-- A declared file scope (which files it may modify)
-- Dependencies on other work units
-- An optional human checkpoint flag
-
-**Independent Validation**: The orchestrator runs `tsc`, `eslint`, and `vitest` directly — it does NOT ask the coding subagent "did the tests pass?" and accept the answer.
-
-**Adversarial Review**: Fundamentally different from collaborative code review. The reviewer is an independent auditor checking spec compliance, not a helpful colleague suggesting improvements. Binary PASS/FAIL verdict. Evidence required (file:line references).
-
-**Fresh Reviewer Rule**: On re-review after FAIL, a NEW reviewer instance is spawned with no memory of the previous review. This prevents anchoring bias.
-
-**Human Checkpoints**: Planned pauses at critical boundaries (schema changes, security code, first use of new patterns). The orchestrator waits for explicit human approval before continuing.
-
-**Final Comprehensive Review**: After all work units pass, a cross-unit review catches integration issues that per-unit reviews miss.
-
-See `orchestrated-execution` skill for the complete pattern, including work unit structure, parallel execution, recovery protocol, and anti-patterns.
+See `orchestrated-execution` skill for the full pattern, including work unit decomposition, parallel execution, recovery protocol, and anti-patterns.
 
 ---
 
@@ -223,6 +199,7 @@ GitHub Issue #123 (agent-ready label)
 │        └─────────────────────────────────┘                     │
 │                                                                │
 │   Trust nothing. Verify everything. Review adversarially.      │
+│   See: orchestrated-execution skill for full details           │
 └───────────────────────────────────────────────────────────────┘
         │
         ▼
