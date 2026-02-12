@@ -7,12 +7,13 @@ A self-improving multi-agent orchestration framework for [Claude Code](https://d
 metaswarm is an extraction of a production-tested agentic orchestration system. It has been proven in the field writing production-level code with 100% test coverage, mandatory TDD, multi-reviewed spec-driven development, and SDLC best practices across hundreds of PRs. It provides:
 
 - **18 specialized agent personas** (Researcher, Architect, Coder, Security Auditor, PR Shepherd, etc.)
-- **A structured 8-phase workflow**: Research → Plan → Design Review Gate → Implement → Code Review → PR Creation → PR Shepherd → Closure & Learning
+- **A structured 9-phase workflow**: Research → Plan → Design Review Gate → Work Unit Decomposition → Orchestrated Execution → Final Review → PR Creation → PR Shepherd → Closure & Learning
+- **4-Phase Orchestrated Execution Loop**: Each work unit runs through IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT. The orchestrator validates independently (never trusts subagent self-reports), and adversarial reviewers check DoD compliance with file:line evidence
 - **Parallel Design Review Gate**: 5 specialist agents (PM, Architect, Designer, Security, CTO) review in parallel with a 3-iteration cap before human escalation
 - **Recursive orchestration**: Swarm Coordinators spawn Issue Orchestrators, which spawn sub-orchestrators for complex epics (swarm of swarms)
 - **Git-native task tracking**: Uses [BEADS](https://github.com/steveyegge/beads) (`bd` CLI) for issue/task management, dependencies, and knowledge priming
 - **Knowledge base**: JSONL-based fact store for patterns, gotchas, decisions, and anti-patterns — agents prime from this before every task
-- **Quality rubrics**: Standardized review criteria for code, architecture, security, testing, and planning
+- **Quality rubrics**: Standardized review criteria for code, architecture, security, testing, planning, and adversarial spec compliance
 - **PR lifecycle automation**: Autonomous CI monitoring, review comment handling, and thread resolution
 
 ## Architecture
@@ -31,14 +32,21 @@ GitHub Issue (agent-ready label)
 ┌─────────────────────────────────┐
 │  Issue Orchestrator              │
 │  - Create BEADS epic             │
-│  - Decompose into tasks          │
+│  - Decompose into work units     │
 └─────────────────────────────────┘
         │
         ▼
   Research → Plan → Design Review Gate (5 parallel reviewers)
         │
         ▼
-  Implement (TDD) → Code Review + Security Audit
+  Work Unit Decomposition (DoD items, file scopes, dependency graph)
+        │
+        ▼
+  Orchestrated Execution Loop (per work unit):
+    IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT
+        │
+        ▼
+  Final Comprehensive Review (cross-unit integration)
         │
         ▼
   PR Creation → PR Shepherd (auto-monitors to merge)
@@ -63,6 +71,7 @@ metaswarm/
 │   ├── pr-shepherd-agent.md
 │   └── ... (18 total)
 ├── skills/                   # Orchestration skills
+│   ├── orchestrated-execution/ # 4-phase execution loop (IMPLEMENT→VALIDATE→REVIEW→COMMIT)
 │   ├── design-review-gate/   # Parallel 5-agent review
 │   ├── pr-shepherd/          # PR lifecycle automation
 │   ├── handling-pr-comments/ # Review comment workflow
@@ -76,6 +85,7 @@ metaswarm/
 │   └── ...
 ├── rubrics/                  # Quality review standards
 │   ├── code-review-rubric.md
+│   ├── adversarial-review-rubric.md  # Binary PASS/FAIL spec compliance
 │   ├── architecture-rubric.md
 │   ├── security-review-rubric.md
 │   ├── plan-review-rubric.md
@@ -104,7 +114,7 @@ npx metaswarm init
 
 That's it. One command. No global installs, no cloning repos, no manual file copying.
 
-`npx metaswarm init` scaffolds everything into your project — 18 agent personas, 5 orchestration skills, 7 slash commands, 5 quality rubrics, knowledge base templates, automation scripts, and the plugin manifest. It also initializes BEADS task tracking. Existing files are never overwritten.
+`npx metaswarm init` scaffolds everything into your project — 18 agent personas, 6 orchestration skills, 7 slash commands, 6 quality rubrics, knowledge base templates, automation scripts, and the plugin manifest. It also initializes BEADS task tracking. Existing files are never overwritten.
 
 Then prime your first agent:
 
@@ -150,13 +160,14 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 ## Design Principles
 
 1. **Knowledge-Driven Development** — Agents prime from the knowledge base before every task, reducing repeated mistakes
-2. **Parallel Review Gates** — Independent specialist reviewers run concurrently, not sequentially
-3. **Recursive Orchestration** — Orchestrators spawn sub-orchestrators for any level of complexity
-4. **Agent Ownership** — Each agent owns its lifecycle; the orchestrator delegates, not micromanages
-5. **BEADS as Source of Truth** — All task state lives in BEADS; agents coordinate via database, not messages
-6. **Test-First Always** — TDD is mandatory, not optional. Coverage thresholds are enforced as a blocking gate before PR creation via `.coverage-thresholds.json`
-7. **Git-Native Everything** — Issues, knowledge, specs all in version control
-8. **Human-in-the-Loop** — Automatic escalation after 3 failed iterations or ambiguous decisions
+2. **Trust Nothing, Verify Everything** — Orchestrators validate independently (run tests themselves, never trust subagent self-reports) and review adversarially against written spec contracts
+3. **Parallel Review Gates** — Independent specialist reviewers run concurrently, not sequentially
+4. **Recursive Orchestration** — Orchestrators spawn sub-orchestrators for any level of complexity
+5. **Agent Ownership** — Each agent owns its lifecycle; the orchestrator delegates, not micromanages
+6. **BEADS as Source of Truth** — All task state lives in BEADS; agents coordinate via database, not messages
+7. **Test-First Always** — TDD is mandatory, not optional. Coverage thresholds are enforced as a blocking gate before PR creation via `.coverage-thresholds.json`
+8. **Git-Native Everything** — Issues, knowledge, specs all in version control
+9. **Human-in-the-Loop** — Proactive checkpoints at planned review points, plus automatic escalation after 3 failed iterations or ambiguous decisions
 
 ## Requirements
 

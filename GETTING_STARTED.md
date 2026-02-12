@@ -9,7 +9,7 @@ cd your-project
 npx metaswarm init
 ```
 
-That's it — one command installs everything. 18 agents, 5 skills, 7 commands, 5 rubrics, knowledge templates, automation scripts, and BEADS task tracking, all scaffolded into your project.
+That's it — one command installs everything. 18 agents, 6 skills, 7 commands, 6 rubrics, knowledge templates, automation scripts, and BEADS task tracking, all scaffolded into your project.
 
 Verify it worked:
 
@@ -78,6 +78,29 @@ Five agents review in parallel:
 - **CTO**: TDD readiness and alignment
 
 Each produces an APPROVE/REVISE verdict. All five must approve, or the plan iterates (max 3 rounds before human escalation).
+
+## Step 4.5: Orchestrated Execution (for Complex Tasks)
+
+When your task has a **written spec with Definition of Done items** (e.g., after the Design Review Gate approves a plan), use orchestrated execution for rigorous, verified implementation.
+
+The orchestrator breaks the plan into **work units** and runs each through a 4-phase loop:
+
+```text
+IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT
+```
+
+What makes this different from just "implement and review":
+
+1. **Independent validation** — The orchestrator runs tests and type checks itself, never trusting the coding agent's self-report
+2. **Adversarial review** — A fresh reviewer checks each DoD item with file:line evidence. Binary PASS/FAIL, not subjective quality assessment
+3. **Fresh reviewers** — On re-review after failure, a new reviewer is spawned with zero memory of the previous review
+4. **Human checkpoints** — Planned pauses at critical boundaries (schema changes, security code) where you review before the agent continues
+
+**When to use it**: Multi-unit features with a spec, risky changes, anything where "it works, trust me" isn't good enough.
+
+**When NOT to use it**: Single-file fixes, quick prototypes, tasks without a clear spec. For these, the simple task flow in Step 3 is the right choice.
+
+See `skills/orchestrated-execution/SKILL.md` for the full pattern, and `rubrics/adversarial-review-rubric.md` for how adversarial reviews differ from standard code reviews.
 
 ## Step 5: Use Knowledge Priming
 
