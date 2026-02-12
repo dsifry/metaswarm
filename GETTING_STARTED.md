@@ -24,6 +24,143 @@ Add your first knowledge entry:
 echo '{"id": "pattern-001", "type": "pattern", "fact": "All API routes require authentication middleware", "recommendation": "Always add authMiddleware() to new route handlers", "confidence": "high", "tags": ["api", "auth"]}' >> .beads/knowledge/patterns.jsonl
 ```
 
+## One-Shot Build: From Empty Repo to Working App
+
+The fastest way to see metaswarm in action is to give it a project to build from scratch. Here's the full recipe.
+
+### 1. Set up the project
+
+```bash
+mkdir my-new-app && cd my-new-app
+git init
+npm init -y        # or whatever your stack needs
+npx metaswarm init --with-husky --with-ci
+
+# Create the GitHub repo
+gh repo create my-new-app --public --source=. --push
+```
+
+### 2. Write a spec as a GitHub Issue
+
+Create an issue that describes what you want built. The more specific the better — include acceptance criteria (Definition of Done items) so the agents know exactly what "done" means.
+
+```bash
+gh issue create --title "Build a real-time collaborative todo list with AI chat" --body "$(cat <<'SPEC'
+## Overview
+
+Build a web-based todo list application with real-time sync across tabs/devices
+and an AI chat interface powered by the Claude SDK that lets users manage their
+todos through natural language.
+
+## Tech Stack
+
+- **Backend**: Node.js with Hono framework
+- **Frontend**: React with Vite
+- **Database**: SQLite via better-sqlite3
+- **Real-time**: Server-Sent Events (SSE)
+- **AI**: Anthropic Claude SDK (@anthropic-ai/sdk)
+- **Testing**: Vitest
+
+## Definition of Done
+
+1. Users can create, complete, and delete todo items via the UI
+2. Todo items persist in SQLite and survive server restarts
+3. Changes sync in real-time across multiple browser tabs via SSE
+4. Users can chat with an AI assistant that can read and modify their todos
+5. AI responses stream in real-time (not buffered)
+6. All API endpoints have input validation
+7. 100% test coverage on backend services
+8. CI pipeline runs tests and lint on every push
+9. Clean responsive UI that works on mobile
+
+## File Scope
+
+- src/server/ — Backend API and SSE
+- src/client/ — React frontend
+- src/shared/ — Shared types
+- src/server/**/*.test.ts — Backend tests
+SPEC
+)"
+```
+
+### 3. Tell Claude Code to build it
+
+Open Claude Code in the project directory and give it one prompt:
+
+```text
+Work on issue #1. Use the full metaswarm orchestration workflow:
+research the codebase, create an implementation plan, run the design
+review gate, decompose into work units, and execute each through the
+4-phase loop (implement, validate, adversarial review, commit).
+Set human checkpoints after the database schema and after the AI
+integration. When all work units pass, create a PR.
+```
+
+That's it. The Issue Orchestrator takes over:
+
+1. **Research** — Scans your (empty) project, notes the tech stack from the issue
+2. **Plan** — Architect agent creates an implementation plan with work units
+3. **Design Review** — 5 agents review the plan in parallel (PM, Architect, Designer, Security, CTO)
+4. **Decompose** — Breaks the plan into work units with DoD items and dependencies
+5. **Execute** — For each work unit: implement with TDD, validate independently, adversarial review against DoD
+6. **Checkpoints** — Pauses after schema setup and AI integration for your review
+7. **Final Review** — Cross-unit integration check after all units pass
+8. **PR** — Creates the PR and starts shepherding
+
+### 4. Review at checkpoints
+
+The orchestrator will pause at the checkpoints you specified. You'll see a report like:
+
+```text
+## Checkpoint: Database Schema Complete
+
+### Completed Work Units
+| WU   | Title              | Review          |
+| ---- | ------------------ | --------------- |
+| WU-1 | Project scaffolding| Adversarial PASS|
+| WU-2 | SQLite schema      | Adversarial PASS|
+
+### What Comes Next
+- WU-3: REST API endpoints
+- WU-4: SSE real-time sync
+- WU-5: AI chat integration
+
+Action required: Reply to continue, or provide feedback.
+```
+
+Review what was built, give feedback if needed, then reply to continue.
+
+### 5. Merge and ship
+
+After all work units pass and the final comprehensive review is clean, the PR Shepherd monitors CI and handles any review comments. When everything is green, you merge.
+
+### What just happened
+
+In one prompt, metaswarm:
+- Decomposed your spec into discrete work units with dependency ordering
+- Implemented each unit with TDD (tests first, then code)
+- Independently validated every unit (ran tsc, eslint, vitest itself — never trusted the coding agent)
+- Had a fresh adversarial reviewer verify each unit against the spec with file:line evidence
+- Paused for your review at the critical points you specified
+- Ran a final cross-unit integration check
+- Created and shepherded a PR
+
+You described what you wanted. The system figured out how to build it.
+
+### Tips for writing good one-shot specs
+
+- **Be specific about DoD items.** "Users can create todos" is better than "todo functionality works." Agents verify exactly what you write.
+- **Name your tech stack.** Don't make agents guess. Say "Hono + React + SQLite", not "pick a framework."
+- **Set file scope.** Tell agents where code should live. This prevents sprawl and makes adversarial review effective.
+- **Use human checkpoints.** Put them after risky or foundational work (database schema, auth, AI integration). You can always continue quickly, but you can't easily undo.
+- **Start with a working spec, not a vague idea.** If you're not sure what you want yet, use `/project:brainstorm` first to refine the idea, then create the issue from the brainstorming output.
+
+---
+
+## The Pieces (Step by Step)
+
+The rest of this guide walks through metaswarm's components individually. If you just ran the one-shot build above, you've already seen all of these in action.
+
 ## Step 2: Create Your First Tracked Issue
 
 ```bash

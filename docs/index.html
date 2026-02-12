@@ -431,6 +431,45 @@
   }
   </script>
 
+  <!-- ONE-SHOT EXAMPLE -->
+  <section>
+    <h2>One Prompt. Full App.</h2>
+    <p>Install metaswarm, create a GitHub Issue with your spec, and give Claude Code one prompt. The system handles the rest.</p>
+
+    <h3>Set up</h3>
+    <pre><code><span class="cmd">mkdir</span> my-app <span class="cmd">&amp;&amp; cd</span> my-app <span class="cmd">&amp;&amp;</span> git init <span class="cmd">&amp;&amp;</span> npm init -y
+<span class="cmd">npx</span> metaswarm init <span class="flag">--with-husky</span> <span class="flag">--with-ci</span>
+<span class="cmd">gh</span> repo create my-app <span class="flag">--public</span> <span class="flag">--source=.</span> <span class="flag">--push</span></code></pre>
+
+    <h3>Write a spec as a GitHub Issue</h3>
+    <p>Describe what you want built. Include a tech stack, Definition of Done items, and file scope. The more specific the spec, the better the agents perform.</p>
+    <pre><code><span class="cmd">gh</span> issue create <span class="flag">--title</span> <span class="string">"Build a real-time todo list with AI chat"</span> <span class="flag">--body</span> <span class="string">"
+## Tech Stack
+Node.js + Hono, React + Vite, SQLite, SSE, Claude SDK
+
+## Definition of Done
+1. CRUD operations for todo items via REST API
+2. Persistent storage in SQLite
+3. Real-time sync across browser tabs via SSE
+4. AI chat that can read and modify todos
+5. 100% test coverage on backend
+6. CI pipeline for tests and lint
+"</span></code></pre>
+
+    <h3>Give Claude Code one prompt</h3>
+    <div class="prompt-box">
+      <h3>Copy this into Claude Code</h3>
+      <pre><code>Work on issue #1. Use the full metaswarm orchestration workflow:
+research, plan, design review gate, decompose into work units,
+and execute each through the 4-phase loop. Set human checkpoints
+after the database schema and after the AI integration.
+When all work units pass, create a PR.</code></pre>
+    </div>
+
+    <p>The Issue Orchestrator takes over. It researches your project, plans the implementation, runs five agents in parallel to review the plan, breaks it into work units, and executes each through the 4-phase loop: implement with TDD, validate independently, adversarial review against the spec, and commit only after PASS. It pauses for your review at the checkpoints you specified. When everything passes, it creates and shepherds the PR.</p>
+    <p>You described what you wanted. The system figured out how to build it.</p>
+  </section>
+
   <!-- THE PROBLEM -->
   <section>
     <h2>The Problem</h2>

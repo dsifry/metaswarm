@@ -122,7 +122,15 @@ Then prime your first agent:
 bd prime
 ```
 
-See [INSTALL.md](INSTALL.md) for prerequisites, alternative installation methods, and customization. See [GETTING_STARTED.md](GETTING_STARTED.md) for your first orchestrated workflow.
+Then create a GitHub Issue with your spec and tell Claude Code:
+
+```text
+Work on issue #1. Use the full metaswarm orchestration workflow.
+```
+
+The system researches, plans, reviews, implements with TDD, validates independently, adversarially reviews against your spec, and creates a PR. See [GETTING_STARTED.md](GETTING_STARTED.md) for the full one-shot build recipe and walkthrough.
+
+See [INSTALL.md](INSTALL.md) for prerequisites, alternative installation methods, and customization.
 
 ## Self-Learning System
 

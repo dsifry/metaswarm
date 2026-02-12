@@ -1,6 +1,6 @@
 {
   "name": "metaswarm",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A self-improving multi-agent orchestration framework for Claude Code",
   "bin": {
     "metaswarm": "cli/metaswarm.js"

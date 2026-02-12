@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2
+
+### Added
+- "One-Shot Build" recipe in GETTING_STARTED.md: end-to-end example from empty repo to working app in one prompt
+- "One Prompt. Full App." section on docs site with copyable setup and prompt
+- Quick one-shot example in README.md install section
+- Tips for writing effective one-shot specs (DoD items, tech stack, file scope, checkpoints)
+
 ## 0.3.1
 
 ### Changed
