@@ -7,19 +7,24 @@ cd your-project
 npx metaswarm init
 ```
 
-Optional flags for coverage enforcement:
+Optional flag for git hooks:
 
 ```bash
-npx metaswarm init --with-husky --with-ci
+npx metaswarm init --with-husky
 ```
 
 | Flag | What it does |
 |---|---|
-| `--with-coverage` | Copies `coverage-thresholds.json` to project root |
-| `--with-husky` | Initializes Husky + installs pre-push hook (implies `--with-coverage`) |
-| `--with-ci` | Creates `.github/workflows/coverage.yml` (implies `--with-coverage`) |
+| `--with-husky` | Initializes Husky + installs pre-push hook |
 
 This single command:
+- Creates `CLAUDE.md` → Project instructions for Claude Code (tells Claude about metaswarm)
+- Creates `.coverage-thresholds.json` → 100% coverage enforcement (lines, branches, functions, statements)
+- Creates `.gitignore` → Standard Node.js/TypeScript ignores (`.env`, `node_modules/`, `coverage/`, etc.)
+  - If `.gitignore` already exists, warns if `.env` is not ignored (secret key protection)
+- Creates `.env.example` → Documentation template for environment variables
+- Creates `SERVICE-INVENTORY.md` → Living document tracking services, factories, and shared modules
+- Creates `.github/workflows/ci.yml` → CI pipeline (lint, typecheck, test, coverage)
 - Copies agent definitions → `.claude/plugins/metaswarm/skills/beads/agents/`
 - Copies ORCHESTRATION.md → `.claude/plugins/metaswarm/skills/beads/SKILL.md`
 - Copies skills → `.claude/plugins/metaswarm/skills/`

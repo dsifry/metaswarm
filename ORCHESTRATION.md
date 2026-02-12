@@ -71,9 +71,10 @@ Design Document Created
 │  Spawns in PARALLEL:                            │
 │  • Architect Agent (technical architecture)     │
 │  • Designer Agent (UX/API design)               │
+│  • UX Reviewer (user flows, integration WUs)    │
 │  • CTO Agent (TDD readiness)                    │
 │                                                  │
-│  ALL THREE must approve to proceed              │
+│  ALL must approve to proceed                    │
 └─────────────────────────────────────────────────┘
         │
         ├── Any NEEDS_REVISION? → Iterate on design (max 3x)
@@ -99,6 +100,7 @@ The gate is automatically triggered when:
 | Architect       | Service architecture, dependencies, patterns, integration  |
 | Designer        | API design, UX flows, developer experience, consistency    |
 | Security Design | Threat modeling, auth/authz, data protection, OWASP Top 10 |
+| UX Reviewer     | User flows, text wireframes, integration WUs, empty/error states |
 | CTO             | TDD readiness, codebase alignment, completeness, risks     |
 
 ### Iteration Protocol
@@ -119,16 +121,20 @@ After design review approval, implementation follows the **4-phase execution loo
 
 **Trust nothing. Verify everything. Review adversarially.**
 
+### Plan Validation (Pre-Flight)
+
+Before submitting to the Design Review Gate, the orchestrator runs a pre-flight checklist covering architecture, dependency graph, API contracts, security, UI/UX, and external dependencies. This catches structural issues (missing service layer, wrong dependency graph, oversized WUs) before spending agent cycles on review.
+
 ### The 4-Phase Loop
 
 For each work unit (a discrete, spec-driven change with DoD items):
 
-1. **IMPLEMENT** — Coding subagent executes against the spec using TDD
-2. **VALIDATE** — Orchestrator independently runs quality gates (tsc, eslint, vitest). **Never trust subagent self-reports.**
+1. **IMPLEMENT** — Coding subagent executes against the spec using TDD, with the Project Context Document
+2. **VALIDATE** — Orchestrator independently runs quality gates (tsc, eslint, vitest, coverage enforcement from `.coverage-thresholds.json`). **Never trust subagent self-reports.** Quality gates are **blocking state transitions**, not advisory.
 3. **ADVERSARIAL REVIEW** — Fresh review subagent checks against spec contract. Binary PASS/FAIL with file:line evidence. Uses `adversarial-review-rubric.md`.
-4. **COMMIT** — Only after adversarial PASS
+4. **COMMIT** — Only after adversarial PASS. Updates `SERVICE-INVENTORY.md` and Project Context Document.
 
-On FAIL: fix → re-validate → spawn **fresh** reviewer (max 3 retries → escalate to human).
+On FAIL: fix → re-validate → spawn **fresh** reviewer (max 3 retries → escalate to human). There is NO path from FAIL to COMMIT without passing through the retry loop.
 
 ### When to Use Orchestrated Execution
 
@@ -193,16 +199,30 @@ GitHub Issue #123 (agent-ready label)
 └─────────────────────────────────────┘
         │
         ▼
-┌───────────────────────────────────────────────────────────────┐
-│              DESIGN REVIEW GATE (PARALLEL)                     │
-│                                                                │
-│  ┌─────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────┐ │
-│  │   PM    │ │ Architect│ │ Designer │ │ Security │ │  CTO  │ │
-│  │(users)  │ │  (tech)  │ │ (UX/API) │ │ (threats)│ │ (TDD) │ │
-│  └─────────┘ └──────────┘ └──────────┘ └──────────┘ └───────┘ │
-│                                                                │
-│  ALL FIVE must approve (max 3 iterations)                      │
-└───────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│   External Dependency Detection      │
+│   Scans spec for API keys/creds     │
+│   Prompts user to configure them    │
+└─────────────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────────────┐
+│   Plan Validation (Pre-Flight)       │
+│   Architecture, deps, API contracts  │
+│   Security, UI/UX, external deps    │
+└─────────────────────────────────────┘
+        │
+        ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    DESIGN REVIEW GATE (PARALLEL)                          │
+│                                                                           │
+│  ┌─────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐ ┌───────┐ │
+│  │   PM    │ │ Architect│ │ Designer │ │ Security │ │UX Revw.│ │  CTO  │ │
+│  │(users)  │ │  (tech)  │ │ (UX/API) │ │ (threats)│ │(flows) │ │ (TDD) │ │
+│  └─────────┘ └──────────┘ └──────────┘ └──────────┘ └────────┘ └───────┘ │
+│                                                                           │
+│  ALL SIX must approve (max 3 iterations)                                  │
+└──────────────────────────────────────────────────────────────────────────┘
         │
         ▼
 ┌─────────────────────────────────────┐
@@ -602,9 +622,15 @@ Each sub-epic's orchestrator follows the same workflow (research → plan → re
 
 Before closing an epic, verify ALL:
 
+- [ ] Plan validation (pre-flight) passed before design review
+- [ ] External dependencies identified and user prompted for credentials
 - [ ] Work units decomposed with DoD items and file scopes
 - [ ] Each work unit passed the 4-phase execution loop
-- [ ] All adversarial reviews resulted in PASS
+- [ ] All quality gates enforced as blocking state transitions (no advisory skips)
+- [ ] Coverage thresholds met per `.coverage-thresholds.json`
+- [ ] All adversarial reviews resulted in PASS (with fresh reviewer on re-review)
+- [ ] `SERVICE-INVENTORY.md` updated with all new services/factories/modules
+- [ ] Project Context Document maintained and passed to each coder subagent
 - [ ] Final comprehensive review completed (cross-unit integration)
 - [ ] All human checkpoints acknowledged
 - [ ] All BEADS tasks under epic are closed
@@ -692,6 +718,15 @@ bd sync --from-main
 ├── plan-review-rubric.md       # Used by CTO Agent
 ├── code-review-rubric.md       # Used by Code Review Agent (collaborative mode)
 └── adversarial-review-rubric.md # Used by Code Review Agent (adversarial mode)
+
+.claude/templates/
+├── CLAUDE.md                   # Full CLAUDE.md template for new projects
+├── CLAUDE-append.md            # Metaswarm section to append to existing CLAUDE.md
+├── UI-FLOWS.md                 # User flow and wireframe documentation template
+├── .gitignore                  # Standard Node.js/TypeScript ignores
+├── .env.example                # Environment variable documentation template
+├── SERVICE-INVENTORY.md        # Service/factory/module tracking template
+└── ci.yml                      # CI pipeline template
 
 .beads/
 ├── beads.db                    # SQLite database

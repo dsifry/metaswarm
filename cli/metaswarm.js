@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const readline = require('readline');
 
 const PKG_ROOT = path.resolve(__dirname, '..');
 const CWD = process.cwd();
@@ -13,15 +14,15 @@ const VERSION = require(path.join(PKG_ROOT, 'package.json')).version;
 // --- Helpers ---
 
 function warn(msg) {
-  console.log(`  ⚠  ${msg}`);
+  console.log(`  \u26a0  ${msg}`);
 }
 
 function info(msg) {
-  console.log(`  ✓  ${msg}`);
+  console.log(`  \u2713  ${msg}`);
 }
 
 function skip(msg) {
-  console.log(`  ·  ${msg} (already exists, skipped)`);
+  console.log(`  \u00b7  ${msg} (already exists, skipped)`);
 }
 
 function which(cmd) {
@@ -62,6 +63,13 @@ function copyDir(srcDir, destDir) {
   }
 }
 
+function hasExistingWorkflows() {
+  const workflowDir = path.join(CWD, '.github', 'workflows');
+  if (!fs.existsSync(workflowDir)) return false;
+  const files = fs.readdirSync(workflowDir);
+  return files.some(f => f.endsWith('.yml') || f.endsWith('.yaml'));
+}
+
 function chmodExec(dir) {
   if (!fs.existsSync(dir)) return;
   for (const f of fs.readdirSync(dir)) {
@@ -71,6 +79,18 @@ function chmodExec(dir) {
     }
   }
 }
+
+function askUser(question) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise(resolve => {
+    rl.question(question, answer => {
+      rl.close();
+      resolve(answer.trim().toLowerCase());
+    });
+  });
+}
+
+const METASWARM_MARKER = '## metaswarm';
 
 // --- Commands ---
 
@@ -84,19 +104,15 @@ Usage:
   metaswarm --version      Show version
 
 Init flags:
-  --with-coverage   Copy coverage-thresholds.json to project root
-  --with-husky      Initialize Husky + install pre-push hook (implies --with-coverage)
-  --with-ci         Create .github/workflows/coverage.yml (implies --with-coverage)
+  --with-husky      Initialize Husky + install pre-push hook
 `);
 }
 
-function init(args) {
+async function init(args) {
   const flags = new Set(args);
   const withHusky = flags.has('--with-husky');
-  const withCi = flags.has('--with-ci');
-  const withCoverage = flags.has('--with-coverage') || withHusky || withCi;
 
-  console.log(`\nmetaswarm v${VERSION} — init\n`);
+  console.log(`\nmetaswarm v${VERSION} \u2014 init\n`);
 
   // Check git repo
   if (!fs.existsSync(path.join(CWD, '.git'))) {
@@ -106,8 +122,8 @@ function init(args) {
   // Check prerequisites
   const hasBd = which('bd');
   const hasGh = which('gh');
-  if (!hasBd) warn('bd CLI not found — BEADS integration will be skipped');
-  if (!hasGh) warn('gh CLI not found — GitHub operations won\'t be available');
+  if (!hasBd) warn('bd CLI not found \u2014 BEADS integration will be skipped');
+  if (!hasGh) warn('gh CLI not found \u2014 GitHub operations won\'t be available');
 
   console.log('');
 
@@ -133,6 +149,88 @@ function init(args) {
     path.join(CWD, '.claude/plugins/metaswarm/skills/beads/SKILL.md')
   );
 
+  // CLAUDE.md — three-way handling:
+  //   1. No CLAUDE.md → create full template
+  //   2. CLAUDE.md exists with metaswarm section → skip (idempotent)
+  //   3. CLAUDE.md exists without metaswarm section → ask to append
+  const claudeMdPath = path.join(CWD, 'CLAUDE.md');
+  if (!fs.existsSync(claudeMdPath)) {
+    // Fresh project — create full template
+    copyFile(
+      path.join(PKG_ROOT, 'templates', 'CLAUDE.md'),
+      claudeMdPath
+    );
+  } else {
+    const existing = fs.readFileSync(claudeMdPath, 'utf-8');
+    if (existing.includes(METASWARM_MARKER)) {
+      skip('CLAUDE.md (metaswarm section already present)');
+    } else {
+      console.log('');
+      console.log('  Found existing CLAUDE.md. metaswarm needs to add its workflow');
+      console.log('  instructions so Claude Code knows about the orchestration framework.');
+      console.log('');
+      const answer = await askUser('  Add metaswarm section to your CLAUDE.md? [Y/n] ');
+      if (answer === '' || answer === 'y' || answer === 'yes') {
+        const appendContent = fs.readFileSync(
+          path.join(PKG_ROOT, 'templates', 'CLAUDE-append.md'), 'utf-8'
+        );
+        fs.appendFileSync(claudeMdPath, '\n' + appendContent);
+        info('CLAUDE.md (appended metaswarm section)');
+      } else {
+        skip('CLAUDE.md (user declined \u2014 see .claude/templates/CLAUDE.md for reference)');
+      }
+    }
+  }
+
+  // .coverage-thresholds.json — 100% coverage enforcement
+  // copyFile already skips if file exists; safe for existing projects
+  const createdThresholds = copyFile(
+    path.join(PKG_ROOT, 'templates', 'coverage-thresholds.json'),
+    path.join(CWD, '.coverage-thresholds.json')
+  );
+
+  // .gitignore — standard ignores for Node.js/TypeScript projects
+  const gitignorePath = path.join(CWD, '.gitignore');
+  if (!fs.existsSync(gitignorePath)) {
+    copyFile(
+      path.join(PKG_ROOT, 'templates', '.gitignore'),
+      gitignorePath
+    );
+  } else {
+    // Safety check: warn if .env is not ignored (Issue #8)
+    const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
+    if (!gitignoreContent.includes('.env')) {
+      warn('.gitignore does not ignore .env files — secret keys could be accidentally committed!');
+      warn('Add ".env" to your .gitignore to protect secrets.');
+    } else {
+      skip('.gitignore');
+    }
+  }
+
+  // .env.example — environment variable documentation template
+  copyFile(
+    path.join(PKG_ROOT, 'templates', '.env.example'),
+    path.join(CWD, '.env.example')
+  );
+
+  // SERVICE-INVENTORY.md — tracks services and factories across work units
+  copyFile(
+    path.join(PKG_ROOT, 'templates', 'SERVICE-INVENTORY.md'),
+    path.join(CWD, 'SERVICE-INVENTORY.md')
+  );
+
+  // .github/workflows/ci.yml — CI pipeline
+  // Only create if no existing workflows — don't add a second CI pipeline
+  let createdCi = false;
+  if (hasExistingWorkflows()) {
+    skip('.github/workflows/ci.yml (existing CI workflows detected \u2014 see .claude/templates/ci.yml to merge manually)');
+  } else {
+    createdCi = copyFile(
+      path.join(PKG_ROOT, 'templates', 'ci.yml'),
+      path.join(CWD, '.github', 'workflows', 'ci.yml')
+    );
+  }
+
   // Generate plugin.json
   const pluginJsonPath = path.join(CWD, '.claude/plugins/metaswarm/.claude-plugin/plugin.json');
   if (fs.existsSync(pluginJsonPath)) {
@@ -154,15 +252,6 @@ function init(args) {
 
   // --- Flag-driven setup ---
 
-  // --with-coverage: copy thresholds to project root
-  if (withCoverage) {
-    console.log('');
-    copyFile(
-      path.join(PKG_ROOT, 'templates', 'coverage-thresholds.json'),
-      path.join(CWD, '.coverage-thresholds.json')
-    );
-  }
-
   // --with-husky: initialize husky + install pre-push hook
   const huskyDir = path.join(CWD, '.husky');
   let huskyHookInstalled = false;
@@ -170,13 +259,13 @@ function init(args) {
     console.log('');
     if (!fs.existsSync(huskyDir)) {
       if (!fs.existsSync(path.join(CWD, 'package.json'))) {
-        warn('No package.json found — husky requires an npm project. Run `npm init` first.');
+        warn('No package.json found \u2014 husky requires an npm project. Run `npm init` first.');
       } else {
         try {
           execSync('npx husky init', { cwd: CWD, stdio: 'inherit' });
           info('Husky initialized');
         } catch {
-          warn('npx husky init failed — install husky manually');
+          warn('npx husky init failed \u2014 install husky manually');
         }
       }
     }
@@ -203,15 +292,6 @@ function init(args) {
     warn('No .husky/ directory found. Run `metaswarm init --with-husky` to set up Husky with coverage enforcement.');
   }
 
-  // --with-ci: create GitHub Actions coverage workflow
-  if (withCi) {
-    console.log('');
-    copyFile(
-      path.join(PKG_ROOT, 'templates', 'ci-coverage-job.yml'),
-      path.join(CWD, '.github', 'workflows', 'coverage.yml')
-    );
-  }
-
   // Run bd init if available
   if (hasBd) {
     console.log('');
@@ -219,26 +299,26 @@ function init(args) {
       execSync('bd init', { cwd: CWD, stdio: 'inherit' });
       info('bd init completed');
     } catch {
-      warn('bd init failed — you can run it manually later');
+      warn('bd init failed \u2014 you can run it manually later');
     }
   }
 
   // Summary
-  const extras = [];
-  if (withCoverage) extras.push('coverage thresholds (.coverage-thresholds.json)');
-  if (huskyHookInstalled) extras.push('Husky pre-push hook');
-  if (withCi) extras.push('CI coverage workflow (.github/workflows/coverage.yml)');
-
-  console.log(`
-Done! Next steps:
-
-  1. Review the scaffolded files
-  2. Add to .gitignore if needed
-  3. Run: claude /project:orchestrate
-  4. See GETTING_STARTED.md in the metaswarm package for details
-`);
-  if (extras.length) {
-    console.log(`  Set up: ${extras.join(', ')}\n`);
+  console.log('\nDone! Next steps:\n');
+  console.log('  1. Review CLAUDE.md and customize for your project');
+  if (createdThresholds) {
+    console.log('  2. Review .coverage-thresholds.json \u2014 defaults to 100% coverage.');
+    console.log('     Update enforcement.command for your test runner and adjust thresholds if needed.');
+  }
+  if (createdCi) {
+    console.log('  3. Review .github/workflows/ci.yml and adjust for your build tools');
+  }
+  console.log('  4. Add your API keys/secrets to .env (see .env.example for required vars)');
+  console.log('  5. Run: claude /project:start-task');
+  console.log('  6. See GETTING_STARTED.md in the metaswarm package for details');
+  console.log('');
+  if (huskyHookInstalled) {
+    console.log('  Set up: Husky pre-push hook\n');
   }
 }
 
