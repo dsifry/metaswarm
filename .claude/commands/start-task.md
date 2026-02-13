@@ -128,10 +128,11 @@ If it's a complex task:
 
 When the task has a spec with Definition of Done items, use the orchestrated execution pattern:
 
-1. **Decompose** the implementation plan into work units (each with DoD items, file scope, dependencies)
-2. **Execute** the 4-phase loop per work unit: IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT
-3. **Final review** after all work units: cross-unit integration check
-4. **Create PR** after final review passes
+1. **Create implementation plan** — decompose into work units with DoD items, file scopes, dependencies
+2. **Plan Review Gate** — submit plan to adversarial review (3 reviewers: Feasibility, Completeness, Scope & Alignment must all PASS). See `skills/plan-review-gate/SKILL.md`
+3. **Execute** the 4-phase loop per work unit: IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT
+4. **Final review** after all work units: cross-unit integration check
+5. **Create PR** after final review passes
 
 See the `orchestrated-execution` skill for the full pattern. Key principles:
 - **Trust nothing, verify everything**: Run quality gates independently, never trust subagent self-reports

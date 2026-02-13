@@ -131,6 +131,7 @@ async function init(args) {
   const COPIES = [
     ['agents', '.claude/plugins/metaswarm/skills/beads/agents'],
     ['skills', '.claude/plugins/metaswarm/skills'],
+    ['guides', '.claude/guides'],
     ['commands', '.claude/commands'],
     ['rubrics', '.claude/rubrics'],
     ['knowledge', '.beads/knowledge'],

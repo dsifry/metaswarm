@@ -40,6 +40,46 @@ Triggered when:
 
 ---
 
+## Coordination Mode
+
+At workflow start, check which coordination tools are available:
+
+```
+IF TeamCreate AND SendMessage available → Team Mode
+ELSE → Task Mode (default, current behavior)
+```
+
+**Single check at start. Do not switch modes mid-workflow.**
+
+### Task Mode (Default)
+
+Fire-and-forget `Task()` subagents. Each subagent gets full context in its prompt. No cross-agent communication. This is the existing behavior and requires no changes.
+
+### Team Mode
+
+When Team tools are available:
+
+1. **Create team**: `TeamCreate("issue-{issue-number}")` (e.g., `issue-123`)
+2. **Spawn specialists as named teammates**:
+   - `researcher` — persistent across research phase
+   - `architect` — persistent across planning phase
+   - `coder` — **persistent across work units** (retains context from WU-001 → WU-002, no cold start)
+   - `shepherd` — persistent through PR lifecycle, sends async status updates via `SendMessage`
+3. **Direct handoffs**: Researcher sends findings directly to architect via `SendMessage` (no orchestrator bottleneck)
+4. **Async updates**: Teammates report progress via `SendMessage`; orchestrator receives and coordinates
+
+**MANDATORY**: Adversarial reviewers are ALWAYS fresh `Task()` instances — never teammates, never resumed, never given prior context. This applies in BOTH modes without exception. See `guides/agent-coordination.md` for details.
+
+### BEADS + Team TaskList Bridging (Team Mode Only)
+
+- BEADS = canonical durable record (source of truth)
+- Team TaskList = ephemeral dispatch mechanism
+- **Only the orchestrator updates BEADS** (prevents race conditions)
+- Teammates report via `SendMessage` or `TaskUpdate`
+- Bridge: Create BEADS task → Create Team task with `beads_id` metadata → Teammate completes → Orchestrator closes BEADS task
+
+---
+
 ## Workflow
 
 ### Phase 0: Knowledge Priming (CRITICAL)

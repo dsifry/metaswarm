@@ -4,6 +4,17 @@ Use when a PR has been created and needs to be monitored through to merge - hand
 
 **IMPORTANT**: This skill is designed for the **agent working in a worktree**, NOT the orchestrator. The agent handles its own PR monitoring so the orchestrator remains free for other work.
 
+## Coordination Mode Note
+
+This skill supports both coordination modes:
+
+- **Task Mode** (default): Runs as a single long-running `Task()` with `run_in_background: true`. Orchestrator checks via `TaskOutput(block: false)`.
+- **Team Mode**: Runs as a persistent `shepherd` teammate in the `issue-{number}` team. Sends async status updates via `SendMessage` (CI failure, review comments, all-green, PR merged). Orchestrator can respond with instructions (e.g., "defer that comment, create an issue instead"). Responds to `shutdown_request` for graceful exit.
+
+All monitoring, fixing, and review handling logic is identical in both modes. See `guides/agent-coordination.md` for mode detection.
+
+---
+
 ## When to Activate
 
 Activate this skill when ANY of these conditions are true:

@@ -490,7 +490,7 @@ const [reviewResult, securityResult] = await Promise.all([
 bd prime
 
 # Prime for specific files you'll modify
-bd prime --files "src/lib/ (example path)services/ (example path)*.ts" "src/api/ (example path)routes/ (example path)*.ts"
+bd prime --files "src/lib/services/*.ts" "src/api/routes/*.ts"
 
 # Prime for specific topic
 bd prime --keywords "authentication" "jwt"

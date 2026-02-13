@@ -52,6 +52,19 @@ metaswarm provides 18 specialized agents, each with a defined role in the softwa
 | **SRE** | `agents/sre-agent.md` | Infrastructure monitoring, performance optimization. |
 | **Customer Service** | `agents/customer-service-agent.md` | User support and issue triage. |
 
+## Guides
+
+metaswarm ships 6 development guides in the `guides/` directory. These are reference documents for agents and humans working in the project.
+
+| Guide | File | Covers |
+|---|---|---|
+| **Agent Coordination** | `guides/agent-coordination.md` | Team Mode, persistent teammates, inter-agent messaging, context retention across sessions |
+| **Git Workflow** | `guides/git-workflow.md` | Branch naming, commit conventions, PR creation, merge strategies |
+| **Testing Patterns** | `guides/testing-patterns.md` | TDD workflow, mock strategies, coverage enforcement, test organization |
+| **Coding Standards** | `guides/coding-standards.md` | Language idioms, naming conventions, error handling, code organization |
+| **Worktree Development** | `guides/worktree-development.md` | Parallel development with git worktrees, port allocation, conflict detection |
+| **Build Validation** | `guides/build-validation.md` | Pre-push checks, CI pipeline, build verification, release readiness |
+
 ## Choosing a Workflow
 
 Not every task needs the full orchestration machinery. Use the right level of process for the task at hand:
@@ -62,6 +75,10 @@ Not every task needs the full orchestration machinery. Use the right level of pr
 | **Simple task** | Bug fix, small feature, validation | `/project:start-task` → simple flow | TDD only |
 | **Complex task** (no spec) | New feature, refactor, optimization | `/project:start-task` → BEADS epic → linear implementation | Design Review Gate |
 | **Complex task** (with spec & DoD) | Multi-unit feature, risky change, multi-agent work | `/project:start-task` → BEADS epic → orchestrated execution | **Orchestrated Execution** |
+
+### Team Mode
+
+metaswarm automatically detects **Team Mode** when multiple Claude Code sessions are active on the same repository (e.g., in different worktrees or terminals). In Team Mode, agents behave as persistent teammates with context retention across sessions and direct inter-agent messaging for coordination. Mode detection is automatic — no configuration needed. See `guides/agent-coordination.md` for the full Team Mode protocol.
 
 **When to use Orchestrated Execution:**
 
@@ -147,6 +164,18 @@ Systematic workflow for addressing review feedback:
 - Addresses actionable items
 - Marks out-of-scope items with rationale
 - Resolves threads after addressing
+
+### Plan Review Gate
+
+**Path**: `skills/plan-review-gate/SKILL.md`
+
+Validates every implementation plan through 3 adversarial reviewers before execution begins:
+
+- **Feasibility Reviewer**: Assesses technical viability, dependency risks, and resource constraints
+- **Completeness Reviewer**: Checks for missing work units, untested edge cases, and gaps in the Definition of Done
+- **Scope & Alignment Reviewer**: Verifies the plan stays within the issue scope and aligns with codebase conventions
+
+All 3 reviewers must APPROVE before the plan proceeds to implementation. Sits between the planning phase and the Design Review Gate in the workflow pipeline.
 
 ## Commands
 

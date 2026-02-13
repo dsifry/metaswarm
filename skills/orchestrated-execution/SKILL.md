@@ -16,6 +16,24 @@ This skill defines a generalized 4-phase execution loop that any orchestrator ca
 
 ---
 
+## Coordination Mode Note
+
+This skill is mode-agnostic — the 4-phase execution loop works identically in both Task Mode and Team Mode. The differences:
+
+- **Phase 1 (IMPLEMENT)**: In Team Mode, the coding subagent may be a persistent teammate (retains context across work units). In Task Mode, it's a fresh `Task()` per work unit.
+- **Phase 3 (ADVERSARIAL REVIEW)**: ALWAYS a fresh `Task()` instance in BOTH modes. Never a teammate, never resumed.
+- **All quality gates**: Unchanged regardless of mode.
+
+See `guides/agent-coordination.md` for full mode detection and coordination details.
+
+---
+
+## Plan Review Gate
+
+After drafting an implementation plan (Step 1: Plan Validation), submit it to the **Plan Review Gate** before presenting to the user. The gate spawns 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) — all must PASS. See `skills/plan-review-gate/SKILL.md` for details.
+
+---
+
 ## When to Use This Skill
 
 - **Complex tasks** decomposed into multiple work units

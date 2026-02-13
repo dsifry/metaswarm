@@ -27,7 +27,8 @@ This single command:
 - Creates `.github/workflows/ci.yml` → CI pipeline (lint, typecheck, test, coverage)
 - Copies agent definitions → `.claude/plugins/metaswarm/skills/beads/agents/`
 - Copies ORCHESTRATION.md → `.claude/plugins/metaswarm/skills/beads/SKILL.md`
-- Copies skills → `.claude/plugins/metaswarm/skills/`
+- Copies skills → `.claude/plugins/metaswarm/skills/` (including `plan-review-gate/`)
+- Copies guides → `guides/` (agent-coordination, git-workflow, testing-patterns, coding-standards, worktree-development, build-validation)
 - Copies commands → `.claude/commands/`
 - Copies rubrics → `.claude/rubrics/`
 - Copies knowledge templates → `.beads/knowledge/`
@@ -90,6 +91,7 @@ mkdir -p .claude/plugins/metaswarm/skills/beads/agents
 cp /tmp/metaswarm-install/agents/* .claude/plugins/metaswarm/skills/beads/agents/
 cp /tmp/metaswarm-install/ORCHESTRATION.md .claude/plugins/metaswarm/skills/beads/SKILL.md
 cp -r /tmp/metaswarm-install/skills/* .claude/plugins/metaswarm/skills/
+mkdir -p guides && cp /tmp/metaswarm-install/guides/* guides/
 mkdir -p .claude/commands && cp /tmp/metaswarm-install/commands/* .claude/commands/
 mkdir -p .claude/rubrics && cp /tmp/metaswarm-install/rubrics/* .claude/rubrics/
 mkdir -p scripts bin && cp /tmp/metaswarm-install/scripts/* scripts/ && cp /tmp/metaswarm-install/bin/* bin/

@@ -9,7 +9,7 @@ cd your-project
 npx metaswarm init
 ```
 
-That's it — one command installs everything. 18 agents, 6 skills, 7 commands, 6 rubrics, knowledge templates, automation scripts, and BEADS task tracking, all scaffolded into your project.
+That's it — one command installs everything. 18 agents, 7 skills, 7 commands, 6 rubrics, 6 development guides, knowledge templates, automation scripts, and BEADS task tracking, all scaffolded into your project.
 
 Verify it worked:
 
@@ -100,7 +100,8 @@ That's it. The Issue Orchestrator takes over:
 
 1. **Research** — Scans your (empty) project, notes the tech stack from the issue
 2. **Plan** — Architect agent creates an implementation plan with work units
-3. **Plan Validation** — Pre-flight checklist catches structural issues (missing service layer, wrong dependencies, oversized WUs) before spending agent cycles
+3. **Plan Review Gate** — 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) validate the plan before it reaches the Design Review Gate
+3a. **Plan Validation** — Pre-flight checklist catches structural issues (missing service layer, wrong dependencies, oversized WUs) before spending agent cycles
 4. **Design Review** — 6 agents review the plan in parallel (PM, Architect, Designer, Security, UX Reviewer, CTO)
 5. **Decompose** — Breaks the plan into work units with DoD items and dependencies
 6. **External Dependency Check** — Identifies required API keys/credentials and prompts you to configure them
@@ -198,10 +199,15 @@ This triggers the full pipeline:
 1. **Prime** — Loads relevant knowledge for the task
 2. **Research** — Explores your codebase for related patterns
 3. **Plan** — Creates an implementation plan
-4. **Review** (if complex) — Runs the Design Review Gate
-5. **Implement** — TDD implementation
-6. **Review** — Code review + security audit
-7. **PR** — Creates PR with auto-shepherd
+4. **Plan Review Gate** — 3 adversarial reviewers validate the plan (Feasibility, Completeness, Scope & Alignment)
+5. **Design Review** (if complex) — Runs the 6-agent Design Review Gate
+6. **Implement** — TDD implementation
+7. **Review** — Code review + security audit
+8. **PR** — Creates PR with auto-shepherd
+
+**Team Mode**: If multiple Claude Code sessions are active on the same repository, metaswarm automatically detects this and enables Team Mode with persistent teammates and direct inter-agent messaging. No configuration needed — see `guides/agent-coordination.md` for details.
+
+**Development Guides**: The `guides/` directory contains 6 reference guides covering coding standards, testing patterns, git workflow, worktree development, build validation, and agent coordination. Agents load these automatically when relevant.
 
 ## Step 4: Try the Design Review Gate
 

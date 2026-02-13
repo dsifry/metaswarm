@@ -21,6 +21,20 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 | `/project:brainstorm` | Refine an idea before implementation |
 | `/project:create-issue` | Create a well-structured GitHub Issue |
 
+### Quality Gates
+
+- **Design Review Gate** — Parallel 5-agent review after design is drafted (`/project:review-design`)
+- **Plan Review Gate** — Automatic adversarial review after any implementation plan is drafted. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before presenting the plan. See `.claude/plugins/metaswarm/skills/plan-review-gate/SKILL.md`
+- **Coverage Gate** — `.coverage-thresholds.json` defines thresholds. BLOCKING gate before PR creation
+
+### Team Mode
+
+When `TeamCreate` and `SendMessage` tools are available, the orchestrator uses Team Mode for parallel agent dispatch. Otherwise it falls back to Task Mode (existing workflow, unchanged). See `.claude/guides/agent-coordination.md` for details.
+
+### Guides
+
+Development patterns and standards are documented in `.claude/guides/` — covering agent coordination, build validation, coding standards, git workflow, testing patterns, and worktree development.
+
 ### Testing & Quality
 
 - **TDD is mandatory** — Write tests first, watch them fail, then implement

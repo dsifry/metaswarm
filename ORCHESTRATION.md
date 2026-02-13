@@ -113,6 +113,28 @@ See `your-project:design-review-gate` skill for full details.
 
 ---
 
+## Team Mode Coordination
+
+When multiple Claude Code sessions are active on the same repository (e.g., parallel worktrees), metaswarm automatically enters **Team Mode**. In Team Mode, agents behave as persistent teammates with context retention across sessions and direct inter-agent messaging for coordination. Mode detection is automatic based on the presence of concurrent sessions.
+
+For the full Team Mode protocol — including message routing, context sharing, and conflict resolution — see `guides/agent-coordination.md`.
+
+---
+
+## Plan Review Gate
+
+After the Architect creates an implementation plan and before it reaches the Design Review Gate, the plan passes through the **Plan Review Gate**. Three adversarial reviewers validate the plan independently:
+
+| Reviewer | Focus |
+| --- | --- |
+| **Feasibility** | Technical viability, dependency risks, resource constraints |
+| **Completeness** | Missing work units, untested edge cases, gaps in Definition of Done |
+| **Scope & Alignment** | Plan stays within issue scope, aligns with codebase conventions |
+
+All 3 must APPROVE before the plan proceeds. See `skills/plan-review-gate/SKILL.md` for the full skill definition.
+
+---
+
 ## Orchestrated Execution
 
 After design review approval, implementation follows the **4-phase execution loop** per work unit. This replaces the previous linear "implement then review" flow with rigorous independent validation and adversarial review.
@@ -196,6 +218,15 @@ GitHub Issue #123 (agent-ready label)
 ┌─────────────────────────────────────┐
 │       Planning Phase                 │
 │  Architect Agent creates plan        │
+└─────────────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────────────┐
+│       Plan Review Gate               │
+│  3 adversarial reviewers:            │
+│  Feasibility, Completeness,         │
+│  Scope & Alignment                   │
+│  ALL 3 must approve                  │
 └─────────────────────────────────────┘
         │
         ▼
@@ -533,7 +564,7 @@ const [reviewResult, securityResult] = await Promise.all([
 bd prime
 
 # Prime for specific files you'll modify
-bd prime --files "src/lib/ (example path)services/ (example path)*.ts" "src/api/ (example path)routes/ (example path)*.ts"
+bd prime --files "src/lib/services/*.ts" "src/api/routes/*.ts"
 
 # Prime for specific topic
 bd prime --keywords "authentication" "jwt"
@@ -710,6 +741,17 @@ bd sync --from-main
 
 .claude/plugins/your-project/skills/brainstorming-extension/
 └── SKILL.md                    # Hooks brainstorming to review gate
+
+.claude/plugins/your-project/skills/plan-review-gate/
+└── SKILL.md                    # 3 adversarial reviewers validate plans
+
+guides/
+├── agent-coordination.md       # Team Mode, inter-agent messaging
+├── git-workflow.md             # Branch naming, commit conventions
+├── testing-patterns.md         # TDD workflow, mock strategies
+├── coding-standards.md         # Language idioms, naming conventions
+├── worktree-development.md     # Parallel development with worktrees
+└── build-validation.md         # Pre-push checks, CI pipeline
 
 .claude/commands/
 └── review-design.md            # /project:review-design command

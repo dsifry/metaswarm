@@ -173,7 +173,7 @@ For each changed file, evaluate against the rubric:
 
 - Tests exist for new code (100% coverage required)
 - Tests verify results, not just presence (no `toBeDefined()` alone)
-- Mock factories from `src/test-utils/factories/ (example path)` used (never inline mock objects)
+- Mock factories from `src/test-utils/factories/` used (never inline mock objects)
 - DI wiring uses `as never` (not verbose `as unknown as ConstructorParameters<...>`)
 - No real API calls (constructor DI with mocked deps)
 - Edge cases tested (every branch, error handler, fallback)
@@ -203,9 +203,9 @@ Organize issues by severity:
 
 ### Files Reviewed
 
-- `src/lib/ (example path)services/ (example path)auth.service.ts` (modified)
-- `src/lib/ (example path)services/ (example path)auth.service.test.ts` (added)
-- `src/api/ (example path)routes/ (example path)auth.ts` (modified)
+- `src/lib/services/auth.service.ts` (modified)
+- `src/lib/services/auth.service.test.ts` (added)
+- `src/api/routes/auth.ts` (modified)
 
 ### Summary
 
@@ -222,7 +222,7 @@ None found.
 
 #### 1. Missing Error Handling in API Route
 
-**File**: `src/api/ (example path)routes/ (example path)auth.ts:34`
+**File**: `src/api/routes/auth.ts:34`
 **Issue**: The `authenticateUser` call can throw but isn't wrapped in try-catch.
 **Impact**: Unhandled errors will crash the request with a 500 error.
 **Fix**:
@@ -245,13 +245,13 @@ return c.json({ error: "Internal error" }, 500);
 
 #### 2. N+1 Query in Token Refresh
 
-**File**: `src/lib/ (example path)services/ (example path)auth.service.ts:78`
+**File**: `src/lib/services/auth.service.ts:78`
 **Issue**: Fetching user sessions in a loop.
 **Suggestion**: Use batch query with `where: { userId: { in: userIds } }`.
 
 #### 3. Consider Extracting Validation
 
-**File**: `src/api/ (example path)routes/ (example path)auth.ts:12-25`
+**File**: `src/api/routes/auth.ts:12-25`
 **Issue**: Validation logic inline in route handler.
 **Suggestion**: Extract to Zod schema for reusability.
 
@@ -426,7 +426,7 @@ This prevents anchoring bias where a reviewer checks "did they fix what I found?
 
 - [ ] Tests exist for new code (100% coverage)
 - [ ] Tests verify results, not presence
-- [ ] Mock factories from `src/test-utils/factories/ (example path)` used
+- [ ] Mock factories from `src/test-utils/factories/` used
 - [ ] DI wiring uses `as never`
 - [ ] No real API calls
 - [ ] Edge cases tested

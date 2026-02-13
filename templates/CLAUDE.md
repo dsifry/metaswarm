@@ -48,6 +48,26 @@ If a GitHub Issue specifies different coverage requirements, update `.coverage-t
 
 The validation phase of orchestrated execution reads `.coverage-thresholds.json` and runs the enforcement command. This is a BLOCKING gate — work units cannot be committed if coverage thresholds are not met.
 
+## Quality Gates
+
+- **Design Review Gate**: Parallel 5-agent review after design is drafted (`/project:review-design`)
+- **Plan Review Gate**: Automatic adversarial review after any implementation plan is drafted. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before the plan is presented to the user. See `.claude/plugins/metaswarm/skills/plan-review-gate/SKILL.md`
+- **Coverage Gate**: Reads `.coverage-thresholds.json` and runs the enforcement command — BLOCKING gate before PR creation
+
+## Team Mode
+
+When `TeamCreate` and `SendMessage` tools are available, the orchestrator uses Team Mode for parallel agent dispatch. Otherwise it falls back to Task Mode (the existing workflow, unchanged). See `.claude/guides/agent-coordination.md` for details.
+
+## Guides
+
+Development patterns and standards are documented in `.claude/guides/`:
+- `agent-coordination.md` — Team Mode vs Task Mode, agent dispatch patterns
+- `build-validation.md` — Build and validation workflow
+- `coding-standards.md` — Code style and conventions
+- `git-workflow.md` — Branching, commits, and PR conventions
+- `testing-patterns.md` — TDD patterns and coverage enforcement
+- `worktree-development.md` — Git worktree-based parallel development
+
 ## Code Quality
 
 <!-- TODO: Update these for your project's language and tools -->
