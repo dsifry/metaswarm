@@ -177,6 +177,35 @@ Validates every implementation plan through 3 adversarial reviewers before execu
 
 All 3 reviewers must APPROVE before the plan proceeds to implementation. Sits between the planning phase and the Design Review Gate in the workflow pipeline.
 
+### External Tools
+
+**Path**: `skills/external-tools/SKILL.md`
+
+Delegates implementation and review tasks to external AI CLI tools (OpenAI Codex CLI, Google Gemini CLI) for cost savings and cross-model adversarial review:
+
+- **Adapter protocol**: Uniform shell adapter interface (health, implement, review) with structured JSON output
+- **Cross-model review**: Writer is always reviewed by a different AI model, eliminating single-model blind spots
+- **Availability-aware escalation**: Model A (2 tries) → Model B (2 tries) → Claude (1 try) → user alert. Degrades gracefully with 0, 1, or 2 tools
+- **Sandboxed execution**: Isolated git worktrees, minimal environment (`env -i`), timeout protection
+- **Budget enforcement**: Per-task and per-session USD circuit breakers
+- **Health checks**: `/project:external-tools-health` verifies installation, authentication, and reachability
+
+Configuration: `.metaswarm/external-tools.yaml`. See `templates/external-tools-setup.md` for setup.
+
+### Visual Review
+
+**Path**: `skills/visual-review/SKILL.md`
+
+Captures screenshots of web pages and UIs using Playwright for visual inspection and iteration:
+
+- **Playwright screenshots**: Captures at configurable viewport sizes (desktop, tablet, mobile)
+- **Reveal.js support**: Captures individual slides by hash navigation
+- **Remote support**: HTTP file server for headless/SSH environments where `open` is unavailable
+- **Review checklist**: Layout, typography, colors, spacing, content, responsiveness
+- **Fix-and-recapture loop**: Make fixes, re-capture affected pages, verify visually
+
+Prerequisites: `npx playwright install chromium`
+
 ## Commands
 
 | Command | Description |
@@ -188,6 +217,7 @@ All 3 reviewers must APPROVE before the plan proceeds to implementation. Sits be
 | `/project:pr-shepherd <pr>` | Monitor PR through to merge |
 | `/project:handle-pr-comments <pr>` | Address PR review feedback |
 | `/project:create-issue` | Create a GitHub issue with agent instructions |
+| `/project:external-tools-health` | Check status of external AI tools (Codex, Gemini) |
 
 ## BEADS CLI Reference
 
@@ -341,6 +371,7 @@ Quality standards used by review agents:
 | `security-review-rubric.md` | Security Auditor | OWASP Top 10, auth, data handling |
 | `plan-review-rubric.md` | CTO Agent | TDD readiness, completeness, alignment |
 | `test-coverage-rubric.md` | Test Automator | Coverage, edge cases, mock quality |
+| `external-tool-review-rubric.md` | Cross-model adversarial reviewers | Binary PASS/FAIL for cross-model review, file:line evidence |
 
 ## Scripts
 
@@ -350,6 +381,7 @@ Quality standards used by review agents:
 | `scripts/beads-self-reflect.ts` | Generate knowledge base statistics |
 | `bin/pr-comments-check.sh` | Verify all review comments addressed |
 | `bin/pr-comments-filter.sh` | Filter actionable vs non-actionable comments |
+| `bin/external-tools-verify.sh` | End-to-end verification of external tools setup (15 checks) |
 
 ## Workflow Phases
 
@@ -363,7 +395,7 @@ The full orchestration lifecycle:
 | 2b. Plan Validation | Issue Orchestrator | Pre-flight checklist (architecture, deps, API contracts, security, UI/UX) |
 | 3. Design Review | PM + Architect + Designer + Security + UX Reviewer + CTO (parallel) | APPROVE/REVISE verdicts |
 | 4. Work Unit Decomposition | Issue Orchestrator | Work units with DoD items, file scopes, dependency graph |
-| 5. Orchestrated Execution | Coder + Orchestrator + Adversarial Reviewer (per unit) | IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT loop |
+| 5. Orchestrated Execution | Coder (or External Tool) + Orchestrator + Adversarial Reviewer (per unit) | IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT loop (optionally delegates to Codex/Gemini) |
 | 6. Final Comprehensive Review | Issue Orchestrator | Cross-unit integration check, full test suite |
 | 7. PR Creation | Issue Orchestrator | GitHub PR |
 | 8. PR Shepherd | PR Shepherd | CI fixes, comment responses |

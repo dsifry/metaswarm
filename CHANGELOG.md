@@ -1,5 +1,71 @@
 # Changelog
 
+## 0.6.0
+
+### Added
+- **External AI tool delegation** (`skills/external-tools/`): Delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI. Cross-model adversarial review ensures the writer is always reviewed by a different model. Availability-aware escalation chain: Model A (2 tries) → Model B (2 tries) → Claude (1 try) → user alert
+- **Codex CLI adapter** (`skills/external-tools/adapters/codex.sh`): Shell adapter for OpenAI Codex CLI with health, implement, and review commands
+- **Gemini CLI adapter** (`skills/external-tools/adapters/gemini.sh`): Shell adapter for Google Gemini CLI with health, implement, and review commands
+- **Shared adapter helpers** (`skills/external-tools/adapters/_common.sh`): 14 shared helper functions including `safe_invoke()` with macOS-compatible timeout fallback, worktree management, cost extraction, structured JSON output, and error classification
+- **Cross-model review rubric** (`rubrics/external-tool-review-rubric.md`): Binary PASS/FAIL rubric for cross-model adversarial review with file:line evidence requirements
+- **External tools config template** (`templates/external-tools.yaml`): Per-project configuration for adapter settings, routing strategy, and budget limits
+- **External tools setup guide** (`templates/external-tools-setup.md`): User-facing installation and authentication guide for Codex and Gemini CLI
+- **`/project:external-tools-health` command** (`commands/external-tools-health.md`): Slash command to check external tool availability and authentication status
+- **External tools verification script** (`bin/external-tools-verify.sh`): End-to-end verification with 15 checks covering shared helpers, both adapters, and file existence
+- **External tools detection in start-task**: `/project:start-task` now auto-detects installed external tools and suggests enabling them
+- **External tools onboarding**: Added external tools sections to INSTALL.md, GETTING_STARTED.md, and CLAUDE.md template
+- **`metaswarm init` copies external-tools.yaml**: Copies config template to `.metaswarm/` during project initialization (disabled by default)
+
+### Changed
+- Updated counts: 8 skills (was 7), 8 commands (was 8), 7 rubrics (was 7)
+- CLAUDE.md template now includes external tools section
+- Start-task command includes external tools availability check as step 0.5
+
+## 0.5.1
+
+### Added
+- **Visual review skill** (`skills/visual-review/SKILL.md`): Playwright-based screenshot capture for reviewing web UIs, presentations (Reveal.js slides), and rendered pages. Supports local files, localhost servers, and deployed URLs with responsive viewport testing
+- **Visual review remote support**: HTTP file server fallback for headless/remote environments where `open` command is unavailable
+
+### Changed
+- CLAUDE.md template now includes visual review reference
+
+## 0.5.0
+
+### Added
+- **Team Mode** support with dual-mode coordination: uses `TeamCreate`/`SendMessage` when available, falls back to `Task` mode automatically
+- **Plan Review Gate** (`skills/plan-review-gate/SKILL.md`): 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) validate every implementation plan before execution begins
+- **6 development guides** (`guides/`): agent-coordination, git-workflow, testing-patterns, coding-standards, worktree-development, build-validation
+- **Adversarial plan review rubric** (`rubrics/plan-review-rubric.md`)
+- Previously untracked framework files now included (commands, plugin copies, rubrics, templates, scripts)
+
+### Fixed
+- 132 "(example path)" rendering bugs across 19 agent files
+
+### Changed
+- Updated counts: 7 skills (was 6), 8 commands (was 7), 7 rubrics (was 6)
+- CLI scaffolding updated with new templates and guides
+
+## 0.4.1
+
+### Changed
+- Site updates for v0.4.0 process improvements
+
+## 0.4.0
+
+### Added
+- **Plan validation pre-flight checklist**: Catches structural issues (architecture, dependencies, API contracts, security, UI/UX, external dependencies) before design review
+- **UX Reviewer**: Added as 6th design review agent to verify user flows and integration work units
+- **Project context document**: Maintained by orchestrator, passed to each coder subagent to prevent context loss
+- **`SERVICE-INVENTORY.md` tracking**: Tracks services, factories, and shared modules across work units
+- **External dependency detection**: Scans specs for API keys/credentials and prompts users before implementation
+- **New templates**: `.gitignore`, `.env.example`, `SERVICE-INVENTORY.md`, `UI-FLOWS.md`, `CLAUDE.md`, `CLAUDE-append.md`, `ci.yml`
+
+### Changed
+- Quality gates converted from advisory recommendations to **blocking state transitions** with explicit state machine
+- Coverage enforcement reads `.coverage-thresholds.json` as a blocking gate
+- 12 anti-patterns documented (up from 8), including: skipping coverage, building UI in isolation, advisory quality gates, proceeding without external credentials
+
 ## 0.3.2
 
 ### Added

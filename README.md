@@ -1,6 +1,6 @@
 # metaswarm
 
-A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Coordinate 18 specialized AI agents through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
+A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Coordinate 18 specialized AI agents and 8 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
 
 ## What Is This?
 
@@ -14,6 +14,8 @@ metaswarm is an extraction of a production-tested agentic orchestration system. 
 - **Git-native task tracking**: Uses [BEADS](https://github.com/steveyegge/beads) (`bd` CLI) for issue/task management, dependencies, and knowledge priming
 - **Knowledge base**: JSONL-based fact store for patterns, gotchas, decisions, and anti-patterns — agents prime from this before every task
 - **Quality rubrics**: Standardized review criteria for code, architecture, security, testing, planning, and adversarial spec compliance
+- **External AI tool delegation**: Optionally delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI for cost savings and cross-model adversarial review
+- **Visual review**: Playwright-based screenshot capture for reviewing web UIs, presentations, and rendered pages
 - **PR lifecycle automation**: Autonomous CI monitoring, review comment handling, and thread resolution
 
 ## Architecture
@@ -44,6 +46,8 @@ GitHub Issue (agent-ready label)
         ▼
   Orchestrated Execution Loop (per work unit):
     IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT
+    (Optionally delegates IMPLEMENT to Codex/Gemini CLI)
+    (Cross-model REVIEW: writer always reviewed by different model)
         │
         ▼
   Final Comprehensive Review (cross-unit integration)
@@ -76,7 +80,9 @@ metaswarm/
 │   ├── pr-shepherd/          # PR lifecycle automation
 │   ├── handling-pr-comments/ # Review comment workflow
 │   ├── brainstorming-extension/
-│   └── create-issue/
+│   ├── create-issue/
+│   ├── external-tools/      # Cross-model AI delegation (Codex, Gemini CLI)
+│   └── visual-review/       # Playwright-based screenshot review
 ├── commands/                 # Claude Code slash commands
 │   ├── prime.md              # Knowledge priming
 │   ├── start-task.md         # Begin tracked work
@@ -97,7 +103,7 @@ metaswarm/
 │   ├── decisions.jsonl
 │   └── ...
 ├── scripts/                  # Automation scripts
-├── bin/                      # Shell utilities
+├── bin/                      # Shell utilities (verify scripts, cost estimation)
 ├── templates/                # Setup templates (including coverage-thresholds.json)
 ├── INSTALL.md
 ├── GETTING_STARTED.md
@@ -114,7 +120,7 @@ npx metaswarm init
 
 That's it. One command. No global installs, no cloning repos, no manual file copying.
 
-`npx metaswarm init` scaffolds everything into your project — 18 agent personas, 6 orchestration skills, 7 slash commands, 6 quality rubrics, knowledge base templates, automation scripts, and the plugin manifest. It also initializes BEADS task tracking. Existing files are never overwritten.
+`npx metaswarm init` scaffolds everything into your project — 18 agent personas, 8 orchestration skills, 8 slash commands, 7 quality rubrics, knowledge base templates, automation scripts, and the plugin manifest. It also initializes BEADS task tracking. Existing files are never overwritten.
 
 Then prime your first agent:
 
@@ -168,7 +174,7 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 ## Design Principles
 
 1. **Knowledge-Driven Development** — Agents prime from the knowledge base before every task, reducing repeated mistakes
-2. **Trust Nothing, Verify Everything** — Orchestrators validate independently (run tests themselves, never trust subagent self-reports) and review adversarially against written spec contracts
+2. **Trust Nothing, Verify Everything** — Orchestrators validate independently (run tests themselves, never trust subagent self-reports), review adversarially against written spec contracts, and optionally use cross-model review via external AI tools
 3. **Parallel Review Gates** — Independent specialist reviewers run concurrently, not sequentially
 4. **Recursive Orchestration** — Orchestrators spawn sub-orchestrators for any level of complexity
 5. **Agent Ownership** — Each agent owns its lifecycle; the orchestrator delegates, not micromanages
@@ -183,6 +189,9 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 - Node.js 18+ (for `npx metaswarm init` and automation scripts)
 - [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+ — for task tracking (recommended)
 - GitHub CLI (`gh`) — for PR automation (recommended)
+- OpenAI Codex CLI (`codex`) — for external tool delegation (optional)
+- Google Gemini CLI (`gemini`) — for external tool delegation (optional)
+- Playwright — for visual review skill (optional, `npx playwright install chromium`)
 
 ## License
 

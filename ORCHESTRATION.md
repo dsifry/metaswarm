@@ -153,7 +153,7 @@ For each work unit (a discrete, spec-driven change with DoD items):
 
 1. **IMPLEMENT** — Coding subagent executes against the spec using TDD, with the Project Context Document
 2. **VALIDATE** — Orchestrator independently runs quality gates (tsc, eslint, vitest, coverage enforcement from `.coverage-thresholds.json`). **Never trust subagent self-reports.** Quality gates are **blocking state transitions**, not advisory.
-3. **ADVERSARIAL REVIEW** — Fresh review subagent checks against spec contract. Binary PASS/FAIL with file:line evidence. Uses `adversarial-review-rubric.md`.
+3. **ADVERSARIAL REVIEW** — Fresh review subagent checks against spec contract. Binary PASS/FAIL with file:line evidence. Uses `adversarial-review-rubric.md`. When external tools are configured, cross-model review ensures the writer is always reviewed by a different AI model (see External Tools section below).
 4. **COMMIT** — Only after adversarial PASS. Updates `SERVICE-INVENTORY.md` and Project Context Document.
 
 On FAIL: fix → re-validate → spawn **fresh** reviewer (max 3 retries → escalate to human). There is NO path from FAIL to COMMIT without passing through the retry loop.
@@ -194,6 +194,61 @@ For simple tasks, the standard linear flow (implement → code review → PR) wo
 **Final Comprehensive Review**: After all work units pass, a cross-unit review catches integration issues that per-unit reviews miss.
 
 See `orchestrated-execution` skill for the complete pattern, including work unit structure, parallel execution, recovery protocol, and anti-patterns.
+
+---
+
+## External AI Tools (Optional)
+
+When external AI CLI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator can delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI. This enables cost savings through cheaper models and cross-model adversarial review that eliminates single-model blind spots.
+
+### How It Integrates
+
+External tools slot directly into the existing 4-phase execution loop:
+
+- **Phase 1 (IMPLEMENT)**: The orchestrator may delegate to an external tool instead of spawning a Claude subagent. The tool works in an isolated git worktree.
+- **Phase 2 (VALIDATE)**: Unchanged — the orchestrator independently runs all quality gates regardless of who implemented.
+- **Phase 3 (ADVERSARIAL REVIEW)**: Cross-model review — the writer is always reviewed by a different model (e.g., Codex writes, Gemini + Claude review).
+- **Phase 4 (COMMIT)**: Unchanged — merge worktree branch after all phases pass.
+
+### Escalation Chain
+
+The orchestrator adapts based on tool availability:
+
+| Available Tools | Escalation Chain | Max Attempts |
+|---|---|---|
+| Both Codex + Gemini | A(2) → B(2) → Claude(1) → user | 5 |
+| One tool only | Tool(2) → Claude(1) → user | 3 |
+| No tools | Claude → user (existing behavior) | unchanged |
+
+Each escalated model receives the previous model's branch as a reference. See `skills/external-tools/SKILL.md` for the full skill definition.
+
+### Health Check
+
+```bash
+/project:external-tools-health
+```
+
+Checks installation, authentication, and reachability of all configured adapters.
+
+---
+
+## Visual Review
+
+The `visual-review` skill enables agents to take screenshots of web pages, presentations, and UIs using Playwright for visual inspection. This bridges the gap where agents cannot see rendered output.
+
+### Usage
+
+The skill is triggered when tasks involve visual output (web UIs, Reveal.js presentations, landing pages, email templates). It captures screenshots at configurable viewport sizes, and agents analyze them for layout, typography, colors, spacing, and content issues.
+
+### Prerequisites
+
+```bash
+npx playwright install chromium
+```
+
+For remote/headless environments, the skill serves screenshots via HTTP file server so users can view them in their local browser.
+
+See `skills/visual-review/SKILL.md` for the complete workflow.
 
 ---
 
@@ -745,6 +800,16 @@ bd sync --from-main
 .claude/plugins/your-project/skills/plan-review-gate/
 └── SKILL.md                    # 3 adversarial reviewers validate plans
 
+.claude/plugins/your-project/skills/external-tools/
+├── SKILL.md                    # External AI tool delegation
+└── adapters/
+    ├── _common.sh              # Shared adapter helpers (14 functions)
+    ├── codex.sh                # OpenAI Codex CLI adapter
+    └── gemini.sh               # Google Gemini CLI adapter
+
+.claude/plugins/your-project/skills/visual-review/
+└── SKILL.md                    # Playwright-based visual review
+
 guides/
 ├── agent-coordination.md       # Team Mode, inter-agent messaging
 ├── git-workflow.md             # Branch naming, commit conventions
@@ -759,7 +824,8 @@ guides/
 .claude/rubrics/
 ├── plan-review-rubric.md       # Used by CTO Agent
 ├── code-review-rubric.md       # Used by Code Review Agent (collaborative mode)
-└── adversarial-review-rubric.md # Used by Code Review Agent (adversarial mode)
+├── adversarial-review-rubric.md # Used by Code Review Agent (adversarial mode)
+└── external-tool-review-rubric.md  # Used by cross-model adversarial review
 
 .claude/templates/
 ├── CLAUDE.md                   # Full CLAUDE.md template for new projects
