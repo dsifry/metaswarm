@@ -1,0 +1,31 @@
+# External Tools Configuration
+# Copy to .metaswarm/external-tools.yaml in your project root to enable.
+# If this file is absent, external tools are not used (pure metaswarm behavior).
+
+adapters:
+  codex:
+    enabled: true
+    model: "gpt-5.3-codex"          # Model to use for Codex CLI invocations
+    timeout_seconds: 300             # Max seconds per invocation before kill
+    sandbox: none                    # docker | platform | none
+    auth_env_var: "OPENAI_API_KEY"   # Environment variable holding the API key
+  gemini:
+    enabled: true
+    model: "pro"                     # Model alias: pro | flash | flash-lite
+    timeout_seconds: 300
+    sandbox: none
+    auth_env_var: "GEMINI_API_KEY"   # Or use Google login (no key needed)
+
+routing:
+  # How to pick the implementer for a task:
+  #   cheapest-available: prefer the cheapest tool that passes health check
+  #   round-robin: alternate between tools
+  #   <tool-name>: always use a specific tool
+  default_implementer: "cheapest-available"
+
+  # Order for escalation when a tool fails after max retries
+  escalation_order: ["codex", "gemini", "claude"]
+
+budget:
+  per_task_usd: 2.00               # Circuit breaker: max spend per task before user alert
+  per_session_usd: 20.00           # Circuit breaker: max total spend per session
