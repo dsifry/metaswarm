@@ -32,6 +32,7 @@ This triggers the full pipeline: Research → Plan → Design Review Gate → Wo
 | `/project:handle-pr-comments` | Handle PR review comments |
 | `/project:brainstorm` | Refine an idea before implementation |
 | `/project:create-issue` | Create a well-structured GitHub Issue |
+| `/project:external-tools-health` | Check status of external AI tools (Codex, Gemini) |
 
 ### Visual Review
 
@@ -57,6 +58,12 @@ The validation phase of orchestrated execution reads `.coverage-thresholds.json`
 - **Design Review Gate**: Parallel 5-agent review after design is drafted (`/project:review-design`)
 - **Plan Review Gate**: Automatic adversarial review after any implementation plan is drafted. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before the plan is presented to the user. See `.claude/plugins/metaswarm/skills/plan-review-gate/SKILL.md`
 - **Coverage Gate**: Reads `.coverage-thresholds.json` and runs the enforcement command — BLOCKING gate before PR creation
+
+## External Tools (Optional)
+
+If external AI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator
+can delegate implementation and review tasks to Codex CLI and Gemini CLI for cost savings
+and cross-model adversarial review. See `templates/external-tools-setup.md` for setup.
 
 ## Team Mode
 
