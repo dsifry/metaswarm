@@ -86,6 +86,8 @@ create_secure_tmp() {
 #   Wraps a command with timeout, captures stdout and stderr to separate files.
 #   Usage: safe_invoke <timeout_secs> <stdout_file> <stderr_file> <cmd> [args...]
 #   Returns the command's exit code (124 for timeout).
+#   Note: Uses coreutils `timeout` or `gtimeout` if available, otherwise falls
+#   back to a background process with kill for macOS compatibility.
 # ---------------------------------------------------------------------------
 safe_invoke() {
   local timeout_secs="${1:?safe_invoke: timeout_secs required}"
@@ -94,7 +96,32 @@ safe_invoke() {
   shift 3
 
   local exit_code=0
-  timeout "${timeout_secs}" "$@" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
+
+  # Try coreutils timeout (Linux) or gtimeout (macOS via brew install coreutils)
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "${timeout_secs}" "$@" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
+  elif command -v gtimeout >/dev/null 2>&1; then
+    gtimeout "${timeout_secs}" "$@" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
+  else
+    # macOS fallback: run in background, kill after timeout
+    "$@" >"$stdout_file" 2>"$stderr_file" &
+    local pid=$!
+    local elapsed=0
+    while kill -0 "$pid" 2>/dev/null; do
+      if [[ "$elapsed" -ge "$timeout_secs" ]]; then
+        kill -TERM "$pid" 2>/dev/null || true
+        sleep 1
+        kill -KILL "$pid" 2>/dev/null || true
+        wait "$pid" 2>/dev/null || true
+        exit_code=124  # Match coreutils timeout exit code
+        return "$exit_code"
+      fi
+      sleep 1
+      elapsed=$((elapsed + 1))
+    done
+    wait "$pid" 2>/dev/null || exit_code=$?
+  fi
+
   return "$exit_code"
 }
 
