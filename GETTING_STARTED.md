@@ -351,6 +351,30 @@ Append JSONL entries to the appropriate file in `knowledge/`:
 {"id": "gotcha-my-api", "type": "gotcha", "fact": "The payments API returns 200 even on failure", "recommendation": "Always check the response body status field, not HTTP status", "confidence": "high", "tags": ["payments", "api"]}
 ```
 
+## Optional: Set Up External Tools
+
+metaswarm can delegate work to Codex (OpenAI) and Gemini (Google) for cost savings and cross-model adversarial review. This is optional — skip this section if you only want to use Claude.
+
+1. **Install** the CLIs:
+   ```bash
+   npm i -g @openai/codex @google/gemini-cli
+   ```
+
+2. **Authenticate** each tool:
+   - Codex: set `OPENAI_API_KEY` in your `.env`
+   - Gemini: run `gemini` once to log in with Google, or set `GEMINI_API_KEY`
+   - See [`templates/external-tools-setup.md`](templates/external-tools-setup.md) for full details
+
+3. **Copy the config** into your project:
+   ```bash
+   mkdir -p .metaswarm && cp templates/external-tools.yaml .metaswarm/
+   ```
+
+4. **Verify** everything works:
+   ```text
+   /project:external-tools-health
+   ```
+
 ## What's Next
 
 - [USAGE.md](USAGE.md) — Full reference for all agents, skills, and commands
