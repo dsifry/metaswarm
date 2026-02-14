@@ -27,6 +27,23 @@ Before starting any new task:
 - [ ] If yes, run: `gh pr list --author @me --state open`
 - [ ] Check each PR for new CodeRabbit comments
 
+### 0.5. External Tools Check (informational only — never blocks the task)
+
+Check if external AI tools (Codex, Gemini) are available for cost savings and cross-model review:
+
+- Run the health check scripts to detect installed tools:
+  ```bash
+  command -v codex >/dev/null 2>&1 && echo "codex: available" || echo "codex: not found"
+  command -v gemini >/dev/null 2>&1 && echo "gemini: available" || echo "gemini: not found"
+  ```
+- **If tools are detected but `.metaswarm/external-tools.yaml` does not exist**: Suggest the user enable them:
+  > "External tools (Codex/Gemini) are installed but not configured. Run `mkdir -p .metaswarm && cp templates/external-tools.yaml .metaswarm/` to enable cost-saving delegation."
+- **If no tools are detected**: Briefly mention they can be installed:
+  > "Optional: Install Codex and Gemini CLIs for cost savings and cross-model review — see `templates/external-tools-setup.md`."
+- **If tools are configured and working**: No message needed — proceed silently.
+
+This check is informational only. Always proceed to the task regardless of the result.
+
 ### 1. Task Assessment
 
 **Use extended thinking** to analyze the task complexity before asking the user.
