@@ -220,6 +220,22 @@ async function init(args) {
     path.join(CWD, 'SERVICE-INVENTORY.md')
   );
 
+  // .metaswarm/external-tools.yaml — external tools config (disabled by default)
+  const extToolsDest = path.join(CWD, '.metaswarm', 'external-tools.yaml');
+  if (fs.existsSync(extToolsDest)) {
+    skip('.metaswarm/external-tools.yaml');
+  } else {
+    const extToolsSrc = path.join(PKG_ROOT, 'templates', 'external-tools.yaml');
+    if (fs.existsSync(extToolsSrc)) {
+      mkdirp(path.join(CWD, '.metaswarm'));
+      let extToolsContent = fs.readFileSync(extToolsSrc, 'utf-8');
+      // Disable both adapters by default so users opt in explicitly
+      extToolsContent = extToolsContent.replace(/enabled: true/g, 'enabled: false');
+      fs.writeFileSync(extToolsDest, extToolsContent);
+      info('.metaswarm/external-tools.yaml (adapters disabled by default)');
+    }
+  }
+
   // .github/workflows/ci.yml — CI pipeline
   // Only create if no existing workflows — don't add a second CI pipeline
   let createdCi = false;
@@ -317,6 +333,7 @@ async function init(args) {
   console.log('  4. Add your API keys/secrets to .env (see .env.example for required vars)');
   console.log('  5. Run: claude /project:start-task');
   console.log('  6. See GETTING_STARTED.md in the metaswarm package for details');
+  console.log('  7. (Optional) Set up external tools for cost savings: templates/external-tools-setup.md');
   console.log('');
   if (huskyHookInstalled) {
     console.log('  Set up: Husky pre-push hook\n');
