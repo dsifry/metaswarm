@@ -77,6 +77,26 @@ metaswarm's skills reference these external skills from the [superpowers](https:
 
 **Without superpowers**: metaswarm still works — the core orchestration (agents, BEADS, review gates, rubrics) is self-contained. The superpowers references are in skill trigger chains and can be removed or replaced with your own equivalents.
 
+## Optional: External AI Tools
+
+metaswarm can delegate implementation and review tasks to **Codex CLI** (OpenAI) and **Gemini CLI** (Google) for cost savings and cross-model adversarial review. This is entirely optional — metaswarm works fine without any external tools.
+
+**Quick setup:**
+
+```bash
+npm i -g @openai/codex @google/gemini-cli
+```
+
+After installing, see [`templates/external-tools-setup.md`](templates/external-tools-setup.md) for the full configuration guide (authentication, model selection, budget controls, and routing options).
+
+To verify your setup, run the health check command in Claude Code:
+
+```text
+/project:external-tools-health
+```
+
+This checks that each tool is installed, authenticated, and responsive.
+
 ## Alternative Installation Methods
 
 ### Manual Copy
