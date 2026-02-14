@@ -103,15 +103,27 @@ npx playwright screenshot --viewport-size "768,1024" "<URL>" /tmp/visual-review/
 npx playwright screenshot --viewport-size "1920,1080" "<URL>" /tmp/visual-review/desktop.png
 ```
 
-### Phase 3: Review Screenshots
+### Phase 3: Show and Review Screenshots
 
-Use the Read tool to view each screenshot:
+**IMPORTANT:** The agent can see screenshots via the Read tool, but the **user cannot**. Always open screenshots for the user so they can see what you see:
+
+```bash
+# Open a specific screenshot for the user
+open /tmp/visual-review/slide-2.png
+
+# Open all screenshots at once (for batch review)
+open /tmp/visual-review/slide-*.png
+```
+
+Then use the Read tool yourself to analyze each screenshot:
 
 ```
 Read /tmp/visual-review/slide-0.png
 Read /tmp/visual-review/slide-1.png
 ...
 ```
+
+**Always do both:** `open` for the user + `Read` for the agent. The user and agent should be looking at the same thing and able to discuss what they see.
 
 For each screenshot, evaluate:
 - **Layout** — Is content centered/aligned as intended?
@@ -169,6 +181,7 @@ After making fixes:
 | Treating fragment-hidden content as a bug | Fragments are designed to reveal on click | Note it as expected |
 | Forgetting to create output directory | Screenshots fail silently | Always `mkdir -p /tmp/visual-review` first |
 | Taking too many screenshots at once | Floods context window | Review in batches of 4-6 |
+| Only using Read without `open` | User can't see what the agent sees | Always `open` for the user + `Read` for yourself |
 
 ## Integration Points
 
