@@ -113,17 +113,42 @@ Read /tmp/visual-review/slide-1.png
 ...
 ```
 
-**Showing screenshots to the user:** The agent can see screenshots via Read, but the user cannot. When the user wants to see what you see — or when you want to discuss a visual issue together — use `open` to show them:
+**Showing screenshots to the user:** The agent can see screenshots via Read, but the user cannot. When the user wants to see what you see — or when you want to discuss a visual issue together — there are two approaches depending on the environment:
+
+**Local machine (has a display):**
 
 ```bash
-# Open a specific screenshot for the user
+# Open a specific screenshot
 open /tmp/visual-review/slide-2.png
 
 # Open all screenshots at once
 open /tmp/visual-review/slide-*.png
 ```
 
-This is useful when collaborating on visual issues, when the user asks what something looks like, or when you want confirmation on a subjective design choice.
+**Remote/headless machine (SSH, tmux, etc.):**
+
+Serve the screenshots directory over HTTP so the user can view them in their local browser:
+
+```bash
+# Start a simple file server on port 8080 (runs in background)
+python3 -m http.server 8080 --directory /tmp/visual-review &
+
+# User can now browse to:
+#   http://<hostname>:8080/
+#   http://<hostname>:8080/slide-2.png
+#   etc.
+```
+
+This serves the entire `/tmp/visual-review/` directory with an auto-generated file listing. The user can click through all screenshots in their browser. Stop the server when done:
+
+```bash
+# Stop the background server
+kill %1
+# Or find and kill by port
+lsof -ti:8080 | xargs kill
+```
+
+Use whichever approach fits the environment. This is useful when collaborating on visual issues, when the user asks what something looks like, or when you want confirmation on a subjective design choice.
 
 For each screenshot, evaluate:
 - **Layout** — Is content centered/aligned as intended?
