@@ -105,17 +105,7 @@ npx playwright screenshot --viewport-size "1920,1080" "<URL>" /tmp/visual-review
 
 ### Phase 3: Show and Review Screenshots
 
-**IMPORTANT:** The agent can see screenshots via the Read tool, but the **user cannot**. Always open screenshots for the user so they can see what you see:
-
-```bash
-# Open a specific screenshot for the user
-open /tmp/visual-review/slide-2.png
-
-# Open all screenshots at once (for batch review)
-open /tmp/visual-review/slide-*.png
-```
-
-Then use the Read tool yourself to analyze each screenshot:
+Use the Read tool to analyze each screenshot:
 
 ```
 Read /tmp/visual-review/slide-0.png
@@ -123,7 +113,17 @@ Read /tmp/visual-review/slide-1.png
 ...
 ```
 
-**Always do both:** `open` for the user + `Read` for the agent. The user and agent should be looking at the same thing and able to discuss what they see.
+**Showing screenshots to the user:** The agent can see screenshots via Read, but the user cannot. When the user wants to see what you see — or when you want to discuss a visual issue together — use `open` to show them:
+
+```bash
+# Open a specific screenshot for the user
+open /tmp/visual-review/slide-2.png
+
+# Open all screenshots at once
+open /tmp/visual-review/slide-*.png
+```
+
+This is useful when collaborating on visual issues, when the user asks what something looks like, or when you want confirmation on a subjective design choice.
 
 For each screenshot, evaluate:
 - **Layout** — Is content centered/aligned as intended?
@@ -181,7 +181,7 @@ After making fixes:
 | Treating fragment-hidden content as a bug | Fragments are designed to reveal on click | Note it as expected |
 | Forgetting to create output directory | Screenshots fail silently | Always `mkdir -p /tmp/visual-review` first |
 | Taking too many screenshots at once | Floods context window | Review in batches of 4-6 |
-| Only using Read without `open` | User can't see what the agent sees | Always `open` for the user + `Read` for yourself |
+| Not offering to `open` when discussing visuals | User can't see what you're describing | Use `open` when collaborating on visual issues |
 
 ## Integration Points
 
