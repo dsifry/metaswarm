@@ -33,6 +33,10 @@ This triggers the full pipeline: Research → Plan → Design Review Gate → Wo
 | `/project:brainstorm` | Refine an idea before implementation |
 | `/project:create-issue` | Create a well-structured GitHub Issue |
 
+### Visual Review
+
+Use the `visual-review` skill to take screenshots of web pages, presentations, or UIs for visual inspection. Requires Playwright (`npx playwright install chromium`). See `skills/visual-review/SKILL.md`.
+
 ## Testing
 
 - **TDD is mandatory** — Write tests first, watch them fail, then implement

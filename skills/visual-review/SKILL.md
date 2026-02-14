@@ -130,22 +130,23 @@ open /tmp/visual-review/slide-*.png
 Serve the screenshots directory over HTTP so the user can view them in their local browser:
 
 ```bash
-# Start a simple file server on port 8080 (runs in background)
-python3 -m http.server 8080 --directory /tmp/visual-review &
+# Start a simple file server (runs in background)
+# Use a high port (>10000) to avoid conflicts with dev tools
+python3 -m http.server 18080 --directory /tmp/visual-review &
 
 # User can now browse to:
-#   http://<hostname>:8080/
-#   http://<hostname>:8080/slide-2.png
+#   http://<hostname>:18080/
+#   http://<hostname>:18080/slide-2.png
 #   etc.
 ```
 
-This serves the entire `/tmp/visual-review/` directory with an auto-generated file listing. The user can click through all screenshots in their browser. Stop the server when done:
+Pick any open high-numbered port (18080, 19090, etc.) — low ports like 8080 are often taken by dev tools. This serves the entire `/tmp/visual-review/` directory with an auto-generated file listing. The user can click through all screenshots in their browser. Stop the server when done:
 
 ```bash
 # Stop the background server
 kill %1
 # Or find and kill by port
-lsof -ti:8080 | xargs kill
+lsof -ti:18080 | xargs kill
 ```
 
 Use whichever approach fits the environment. This is useful when collaborating on visual issues, when the user asks what something looks like, or when you want confirmation on a subjective design choice.
