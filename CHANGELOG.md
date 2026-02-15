@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.1
+
+### Fixed
+- `npx metaswarm init --full` crashed because npm strips `.gitignore` files from packages. Renamed template to `gitignore` (no dot) so it ships correctly.
+
 ## 0.7.0
 
 ### Added

@@ -319,7 +319,7 @@ async function install(args) {
   const gitignorePath = path.join(CWD, '.gitignore');
   if (!fs.existsSync(gitignorePath)) {
     copyFile(
-      path.join(PKG_ROOT, 'templates', '.gitignore'),
+      path.join(PKG_ROOT, 'templates', 'gitignore'),
       gitignorePath
     );
   } else {
