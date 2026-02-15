@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>metaswarm - Multi-Agent Orchestration for Claude Code</title>
-  <meta name="description" content="A self-improving multi-agent orchestration framework for Claude Code. 18 agents, TDD, 100% coverage, spec-driven development. Production-proven.">
+  <meta name="description" content="A self-improving multi-agent orchestration framework for Claude Code. 18 agents, 9 skills, 9 commands. TDD, cross-model adversarial review, spec-driven development. Production-proven.">
   <style>
     :root {
       --bg: #ffffff;
@@ -397,11 +397,12 @@
 
   <header>
     <h1><a href="https://github.com/dsifry/metaswarm" style="color: inherit; text-decoration: none;"><span>meta</span>swarm</a></h1>
-    <p class="tagline">A self-improving multi-agent orchestration framework for Claude Code. 18 specialized agents coordinate through the full development lifecycle, from GitHub issue to merged PR, with TDD, spec-driven development, and 100% test coverage.</p>
+    <p class="tagline">A self-improving multi-agent orchestration framework for Claude Code. 18 specialized agents coordinate through the full development lifecycle, from GitHub issue to merged PR, with TDD, cross-model adversarial review, and spec-driven development.</p>
   </header>
 
   <!-- QUICK INSTALL -->
   <section style="padding: 32px 0;">
+    <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 12px;">Step 1: Bootstrap</p>
     <div style="position: relative;">
       <pre style="font-size: 18px; padding: 20px 24px; margin: 0;"><code><span class="cmd">cd</span> your-project
 <span class="cmd">npx</span> metaswarm init</code></pre>
@@ -410,25 +411,39 @@
       </button>
       <span id="copy-tooltip" style="position: absolute; top: -32px; right: 12px; left: auto; transform: translateX(0) translateY(4px); background: var(--text); color: var(--bg); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; white-space: nowrap; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none;">Copied!</span>
     </div>
+    <p style="color: var(--text-muted); font-size: 15px; margin-top: 20px; margin-bottom: 12px;">Step 2: Open Claude Code and run</p>
+    <div style="position: relative;">
+      <pre style="font-size: 18px; padding: 20px 24px; margin: 0;"><code>/project:metaswarm-setup</code></pre>
+      <button onclick="copySetup()" style="position: absolute; top: 12px; right: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; cursor: pointer; color: var(--text-muted); font-size: 16px; line-height: 1; transition: color 0.15s, border-color 0.15s;" aria-label="Copy to clipboard" title="Copy to clipboard" id="copy-btn-setup">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
+      </button>
+    </div>
+    <p style="color: var(--text-muted); font-size: 14px; margin-top: 12px;">Claude detects your language, framework, test runner, linter, and CI &mdash; then installs and customizes everything automatically. Supports TypeScript, Python, Go, Rust, Java, Ruby, and JavaScript.</p>
   </section>
 
   <script>
-  function copyInstall() {
-    navigator.clipboard.writeText('npx metaswarm init');
-    var btn = document.getElementById('copy-btn');
+  function copyText(text, btnId) {
+    navigator.clipboard.writeText(text);
+    var btn = document.getElementById(btnId);
+    var origHTML = btn.innerHTML;
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>';
     btn.style.color = 'var(--green)';
-    // Show tooltip
+    setTimeout(function() {
+      btn.innerHTML = origHTML;
+      btn.style.color = 'var(--text-muted)';
+    }, 2000);
+  }
+  function copyInstall() {
+    copyText('npx metaswarm init', 'copy-btn');
     var tooltip = document.getElementById('copy-tooltip');
     tooltip.style.opacity = '1';
     tooltip.style.transform = 'translateX(-50%) translateY(0)';
     setTimeout(function() {
-      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>';
-      btn.style.color = 'var(--text-muted)';
       tooltip.style.opacity = '0';
       tooltip.style.transform = 'translateX(-50%) translateY(4px)';
     }, 2000);
   }
+  function copySetup() { copyText('/project:metaswarm-setup', 'copy-btn-setup'); }
   </script>
 
   <!-- ONE-SHOT EXAMPLE -->
@@ -438,8 +453,9 @@
 
     <h3>Set up</h3>
     <pre><code><span class="cmd">mkdir</span> my-app <span class="cmd">&amp;&amp; cd</span> my-app <span class="cmd">&amp;&amp;</span> git init <span class="cmd">&amp;&amp;</span> npm init -y
-<span class="cmd">npx</span> metaswarm init <span class="flag">--with-husky</span> <span class="flag">--with-ci</span>
-<span class="cmd">gh</span> repo create my-app <span class="flag">--public</span> <span class="flag">--source=.</span> <span class="flag">--push</span></code></pre>
+<span class="cmd">npx</span> metaswarm init
+<span class="cmd">gh</span> repo create my-app <span class="flag">--public</span> <span class="flag">--source=.</span> <span class="flag">--push</span>
+<span class="comment"># Then in Claude Code: /project:metaswarm-setup</span></code></pre>
 
     <h3>Write a spec as a GitHub Issue</h3>
     <p>Describe what you want built. Include a tech stack, Definition of Done items, and file scope. The more specific the spec, the better the agents perform.</p>
@@ -519,7 +535,7 @@ When all work units pass, create a PR.</code></pre>
       <div class="pipeline-step">
         <div class="step-num">7</div>
         <span class="step-label">Orchestrated Execution</span>
-        <span class="step-detail">Per work unit: Implement &rarr; Validate &rarr; Adversarial Review &rarr; Commit</span>
+        <span class="step-detail">Per work unit: Implement &rarr; Validate &rarr; Adversarial Review &rarr; Commit. Can delegate to Codex/Gemini CLIs.</span>
         <span class="parallel-badge">4-phase loop</span>
       </div>
       <div class="pipeline-step">
@@ -589,6 +605,46 @@ When all work units pass, create a PR.</code></pre>
     <p>This is not needed for every task. A typo fix or a small bug does not need a 4-phase loop. But for multi-unit features with a spec, risky schema changes, or anything where "it works, trust me" is not good enough, orchestrated execution is the difference between shipping and hoping.</p>
   </section>
 
+  <!-- EXTERNAL AI TOOLS -->
+  <section>
+    <h2>Cross-Model Adversarial Review</h2>
+    <p>A coding agent reviewing its own output has an inherent bias. metaswarm can delegate implementation and review tasks to external AI tools &mdash; OpenAI Codex CLI and Google Gemini CLI &mdash; with one rule: <strong>the writer is always reviewed by a different model.</strong></p>
+
+    <div class="features">
+      <div class="feature">
+        <h4>Cross-Model Review</h4>
+        <p>If Claude writes the code, Codex or Gemini reviews it. If Codex writes it, Claude or Gemini reviews. The reviewer never shares the writer's biases.</p>
+      </div>
+      <div class="feature">
+        <h4>Availability-Aware Escalation</h4>
+        <p>Model A (2 tries) &rarr; Model B (2 tries) &rarr; Claude (1 try) &rarr; user alert. If Codex is down, Gemini takes over automatically.</p>
+      </div>
+      <div class="feature">
+        <h4>Shell Adapters</h4>
+        <p>Each external tool has a shell adapter with health checks, implement, and review commands. The shared helper library includes timeout handling, worktree management, cost extraction, and error classification.</p>
+      </div>
+      <div class="feature">
+        <h4>Opt-In, Per-Project</h4>
+        <p>Configure via <code>.metaswarm/external-tools.yaml</code>. Each adapter is disabled by default. Enable the ones you have installed and authenticated.</p>
+      </div>
+    </div>
+
+    <p>This is not about replacing Claude. It is about eliminating the blind spots that any single model has when reviewing its own work. Cross-model review catches different classes of bugs because the models have different training biases.</p>
+  </section>
+
+  <!-- VISUAL REVIEW -->
+  <section>
+    <h2>Visual Review</h2>
+    <p>Agents are good at reading code. They are bad at knowing if the UI looks right. The visual review skill uses Playwright to capture screenshots of your web UI at multiple viewports, then brings those screenshots into the Claude Code conversation for visual inspection.</p>
+    <ul>
+      <li><strong>Local files, localhost servers, and deployed URLs</strong> &mdash; works with any web content</li>
+      <li><strong>Responsive viewport testing</strong> &mdash; captures at desktop, tablet, and mobile widths</li>
+      <li><strong>Reveal.js presentations</strong> &mdash; captures individual slides</li>
+      <li><strong>Remote/headless environments</strong> &mdash; falls back to an HTTP file server when <code>open</code> is unavailable</li>
+    </ul>
+    <p>Use it after implementing UI changes, before creating a PR, or anytime you need to verify that rendered output matches the spec.</p>
+  </section>
+
   <!-- WHAT'S INCLUDED -->
   <section>
     <h2>Components</h2>
@@ -598,16 +654,16 @@ When all work units pass, create a PR.</code></pre>
         <p>Researcher, Architect, PM, Designer, Security, CTO, Coder, Code Reviewer, Security Auditor, PR Shepherd, Test Automator, Knowledge Curator, and more. Each has a defined role, process, and output format.</p>
       </div>
       <div class="feature">
-        <h4>6 Orchestration Skills</h4>
-        <p>Orchestrated execution loop, design review gate, PR shepherd, PR comment handling, brainstorming extension, and issue creation. These are the coordination behaviors that tie agents together.</p>
+        <h4>9 Orchestration Skills</h4>
+        <p>Orchestrated execution, design review gate, plan review gate, PR shepherd, PR comment handling, external AI tools delegation, visual review, brainstorming extension, and issue creation.</p>
       </div>
       <div class="feature">
-        <h4>7 Slash Commands</h4>
-        <p><code>/project:prime</code>, <code>/project:start-task</code>, <code>/project:review-design</code>, <code>/project:self-reflect</code>, <code>/project:pr-shepherd</code>, and more. These are your entry points.</p>
+        <h4>9 Slash Commands</h4>
+        <p><code>/project:metaswarm-setup</code>, <code>/project:metaswarm-update-version</code>, <code>/project:start-task</code>, <code>/project:prime</code>, <code>/project:review-design</code>, <code>/project:self-reflect</code>, <code>/project:pr-shepherd</code>, <code>/project:create-issue</code>, <code>/project:handle-pr-comments</code>.</p>
       </div>
       <div class="feature">
-        <h4>6 Quality Rubrics</h4>
-        <p>Standardized review criteria for code, architecture, security, test coverage, implementation plans, and adversarial spec compliance. These are what the review agents score against.</p>
+        <h4>8 Quality Rubrics</h4>
+        <p>Standardized review criteria for code, architecture, security, test coverage, implementation plans, adversarial plan review, adversarial spec compliance, and external tool review.</p>
       </div>
       <div class="feature">
         <h4>Coverage Enforcement</h4>
@@ -628,6 +684,14 @@ When all work units pass, create a PR.</code></pre>
       <div class="feature">
         <h4>Plan Review Gate</h4>
         <p>3 adversarial reviewers &mdash; Feasibility, Completeness, and Scope &amp; Alignment &mdash; validate every implementation plan before it reaches the Design Review Gate. All 3 must approve.</p>
+      </div>
+      <div class="feature">
+        <h4>Claude-Guided Setup</h4>
+        <p>Auto-detects your language, framework, test runner, linter, formatter, type checker, package manager, CI system, and git hooks. Supports 7 languages, 15+ frameworks, and all major toolchains. Customizes everything interactively.</p>
+      </div>
+      <div class="feature">
+        <h4>Self-Update</h4>
+        <p>Run <code>/project:metaswarm-update-version</code> to check for new versions, view the changelog, update all component files, and re-detect your project context. User customizations are preserved.</p>
       </div>
       <div class="feature">
         <h4>6 Development Guides</h4>
@@ -692,10 +756,9 @@ When all work units pass, create a PR.</code></pre>
       </div>
     </div>
 
-    <p>Setting it up is one command:</p>
-    <pre><code><span class="cmd">npx</span> metaswarm init <span class="flag">--with-husky</span> <span class="flag">--with-ci</span></code></pre>
-    <p>This initializes Husky, installs the pre-push hook, creates the CI workflow, and copies the coverage thresholds config to your project root. Each flag is opt-in: use <code>--with-coverage</code> alone for just the config file, <code>--with-husky</code> for the git hook, or <code>--with-ci</code> for the GitHub Actions workflow. Use all three for the full enforcement stack.</p>
-    <p>The thresholds work with any test runner. Set <code>enforcement.command</code> to <code>pnpm test:coverage</code>, <code>pytest --cov</code>, <code>cargo tarpaulin</code>, or whatever your project uses. See <a href="https://github.com/dsifry/metaswarm/blob/main/docs/coverage-enforcement.md">coverage-enforcement.md</a> for the full setup guide.</p>
+    <p>The guided setup (<code>/project:metaswarm-setup</code>) detects your test runner and configures coverage enforcement automatically. For manual setup, use:</p>
+    <pre><code><span class="cmd">npx</span> metaswarm init <span class="flag">--full</span> <span class="flag">--with-husky</span></code></pre>
+    <p>The thresholds work with any test runner. The setup skill maps your detected test runner to the correct coverage command automatically &mdash; <code>pnpm test:coverage</code>, <code>pytest --cov</code>, <code>cargo tarpaulin</code>, <code>go test -cover</code>, or whatever your project uses. See <a href="https://github.com/dsifry/metaswarm/blob/main/docs/coverage-enforcement.md">coverage-enforcement.md</a> for the full setup guide.</p>
   </section>
 
   <!-- SETUP -->
@@ -704,74 +767,33 @@ When all work units pass, create a PR.</code></pre>
     <h3>Prerequisites</h3>
     <ul>
       <li><a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a></li>
-      <li><a href="https://github.com/steveyegge/beads">BEADS CLI</a> (<code>bd</code>) v0.40+</li>
+      <li><a href="https://github.com/steveyegge/beads">BEADS CLI</a> (<code>bd</code>) v0.40+ (optional &mdash; for knowledge base)</li>
       <li><a href="https://github.com/obra/superpowers">Superpowers</a> plugin (optional but recommended)</li>
       <li>GitHub CLI (<code>gh</code>)</li>
-      <li>Node.js 20+</li>
+      <li>Node.js 18+</li>
     </ul>
 
-    <h3>Install</h3>
+    <h3>Recommended: Claude-Guided Setup</h3>
     <pre><code><span class="cmd">cd</span> your-project
-<span class="cmd">npx</span> metaswarm init
-<span class="comment"># Or with coverage enforcement gates:</span>
-<span class="cmd">npx</span> metaswarm init <span class="flag">--with-husky</span> <span class="flag">--with-ci</span></code></pre>
-    <p>That scaffolds all 18 agents, 6 skills, 7 commands, 6 rubrics, knowledge templates, scripts, <code>.gitignore</code>, <code>.env.example</code>, and <code>SERVICE-INVENTORY.md</code> into your project. If a <code>.gitignore</code> already exists, it warns if <code>.env</code> is not ignored. The flags optionally set up pre-push hooks and CI coverage enforcement. Existing files are never overwritten.</p>
-
-    <h3>Then Customize</h3>
-    <p>Give this prompt to Claude Code in your project. It will adapt metaswarm to your language, framework, and conventions:</p>
-
+<span class="cmd">npx</span> metaswarm init</code></pre>
+    <p>This copies three files: the setup command, the update command, and a minimal <code>CLAUDE.md</code> reference. Then open Claude Code and run:</p>
     <div class="prompt-box">
-      <h3>Copy this into Claude Code</h3>
-      <pre><code>Clone https://github.com/dsifry/metaswarm into /tmp/metaswarm-install
-and set up the multi-agent orchestration framework in this project:
-
-1. Copy agents, skills, commands, rubrics, and knowledge templates
-   into the right .claude/ directories (see metaswarm's INSTALL.md
-   for the exact paths).
-
-2. Create the plugin.json registration file.
-
-3. Initialize BEADS with bd init and set up the knowledge directory.
-
-4. Read this project's config files (package.json, Cargo.toml,
-   pyproject.toml, go.mod, or whatever exists) to understand our
-   language, framework, test runner, and linter.
-
-5. Customize the agent definitions and rubrics for our specific
-   stack. Replace generic test/lint/build commands with ours.
-   Add our framework's patterns to the architecture rubric.
-
-6. Seed the knowledge base with 3-5 initial patterns, 2-3
-   architectural decisions, and 1-2 gotchas from this codebase.
-
-7. Clean up the temp clone when done.
-
-Do not change the orchestration workflow itself. Only adapt the
-language-specific and project-specific details.</code></pre>
+      <h3>In Claude Code</h3>
+      <pre><code>/project:metaswarm-setup</code></pre>
     </div>
+    <p>Claude detects your project's language, framework, test runner, linter, formatter, type checker, package manager, CI system, and git hooks. It installs all components, customizes <code>CLAUDE.md</code> with your actual commands, configures coverage thresholds for your test runner, and sets up <code>.gitignore</code> for your language. You answer 3&ndash;5 targeted questions. Everything else is automatic.</p>
+    <p>Supports: TypeScript, Python, Go, Rust, Java, Ruby, JavaScript. 16 frameworks including Next.js, React, Angular, SvelteKit, Express, NestJS, FastAPI, Django, Gin, and more.</p>
 
-    <h3>The Manual Way</h3>
-    <pre><code><span class="comment"># Install BEADS</span>
-<span class="cmd">curl</span> -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
+    <h3>Updating</h3>
+    <p>When a new version is available, run in Claude Code:</p>
+    <pre><code>/project:metaswarm-update-version</code></pre>
+    <p>This checks the npm registry, shows what changed, updates all component files (preserving your customizations), re-detects your project context, and refreshes your project profile.</p>
 
-<span class="comment"># Clone and copy</span>
-<span class="cmd">git clone</span> https://github.com/dsifry/metaswarm.git /tmp/metaswarm-install
-<span class="cmd">mkdir</span> -p .claude/plugins/metaswarm/skills/beads/agents
-<span class="cmd">cp</span> /tmp/metaswarm-install/agents/* .claude/plugins/metaswarm/skills/beads/agents/
-<span class="cmd">cp</span> /tmp/metaswarm-install/ORCHESTRATION.md .claude/plugins/metaswarm/skills/beads/SKILL.md
-<span class="cmd">cp</span> -r /tmp/metaswarm-install/skills/* .claude/plugins/metaswarm/skills/
-<span class="cmd">cp</span> -r /tmp/metaswarm-install/commands/* .claude/commands/
-<span class="cmd">cp</span> -r /tmp/metaswarm-install/rubrics/* .claude/rubrics/
+    <h3>Manual / CI Installation</h3>
+    <pre><code><span class="cmd">npx</span> metaswarm init <span class="flag">--full</span></code></pre>
+    <p>For CI pipelines or non-interactive environments. Runs init + install in one step, copying all 18 agents, 9 skills, 9 commands, 8 rubrics, knowledge templates, guides, scripts, and configuration files. Existing files are never overwritten. Add <code>--with-husky</code> for pre-push coverage enforcement hooks.</p>
 
-<span class="comment"># Initialize BEADS and knowledge base</span>
-<span class="cmd">bd</span> init
-<span class="cmd">mkdir</span> -p .beads/knowledge
-<span class="cmd">cp</span> /tmp/metaswarm-install/knowledge/* .beads/knowledge/
-
-<span class="comment"># Clean up</span>
-<span class="cmd">rm</span> -rf /tmp/metaswarm-install</code></pre>
-
-    <p>See <a href="https://github.com/dsifry/metaswarm/blob/main/INSTALL.md">INSTALL.md</a> for the full guide, including customization checklists for TypeScript, Python, Rust, and Go projects.</p>
+    <p>See <a href="https://github.com/dsifry/metaswarm/blob/main/INSTALL.md">INSTALL.md</a> for the full guide.</p>
   </section>
 
   <!-- HOW IT WORKS -->
