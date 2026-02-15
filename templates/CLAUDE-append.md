@@ -5,8 +5,8 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 
 ### Workflow
 
-- **Non-trivial tasks** (features, multi-file changes): Create a GitHub Issue with a spec, then tell Claude: `Work on issue #N. Use the full metaswarm orchestration workflow.`
-- **Simple tasks** (single-file fixes, quick changes): `/project:start-task`
+- **Most tasks**: `/project:start-task` — primes context, guides scoping, picks the right level of process
+- **Complex features** (multi-file, spec-driven): Describe what you want built with a Definition of Done, then tell Claude: `Use the full metaswarm orchestration workflow.`
 
 ### Available Commands
 

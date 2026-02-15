@@ -21,7 +21,7 @@ metaswarm is an extraction of a production-tested agentic orchestration system. 
 ## Architecture
 
 ```text
-GitHub Issue (agent-ready label)
+Your prompt (spec with DoD items) or GitHub Issue
         │
         ▼
 ┌─────────────────────────────────┐

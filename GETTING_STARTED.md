@@ -49,35 +49,22 @@ The fastest way to see metaswarm in action is to give it a project to build from
 mkdir my-new-app && cd my-new-app
 git init
 npm init -y        # or whatever your stack needs
-npx metaswarm init --with-husky --with-ci
-
-# Create the GitHub repo
-gh repo create my-new-app --public --source=. --push
+npx metaswarm init
+# In Claude Code: /project:metaswarm-setup
 ```
 
-### 2. Write a spec as a GitHub Issue
+### 2. Tell Claude what to build
 
-Create an issue that describes what you want built. The more specific the better — include acceptance criteria (Definition of Done items) so the agents know exactly what "done" means.
+Open Claude Code and give it one prompt with your spec. Include a tech stack, Definition of Done items, and where you want human checkpoints. The more specific the spec, the better the agents perform.
 
-```bash
-gh issue create --title "Build a real-time collaborative todo list with AI chat" --body "$(cat <<'SPEC'
-## Overview
+```text
+I want you to build a real-time collaborative todo list with AI chat.
 
-Build a web-based todo list application with real-time sync across tabs/devices
-and an AI chat interface powered by the Claude SDK that lets users manage their
-todos through natural language.
+Tech stack: Node.js + Hono, React + Vite, SQLite via better-sqlite3,
+Server-Sent Events for real-time sync, Anthropic Claude SDK for AI chat,
+Vitest for testing.
 
-## Tech Stack
-
-- **Backend**: Node.js with Hono framework
-- **Frontend**: React with Vite
-- **Database**: SQLite via better-sqlite3
-- **Real-time**: Server-Sent Events (SSE)
-- **AI**: Anthropic Claude SDK (@anthropic-ai/sdk)
-- **Testing**: Vitest
-
-## Definition of Done
-
+Definition of Done:
 1. Users can create, complete, and delete todo items via the UI
 2. Todo items persist in SQLite and survive server restarts
 3. Changes sync in real-time across multiple browser tabs via SSE
@@ -88,22 +75,13 @@ todos through natural language.
 8. CI pipeline runs tests and lint on every push
 9. Clean responsive UI that works on mobile
 
-## File Scope
-
+File scope:
 - src/server/ — Backend API and SSE
 - src/client/ — React frontend
 - src/shared/ — Shared types
 - src/server/**/*.test.ts — Backend tests
-SPEC
-)"
-```
 
-### 3. Tell Claude Code to build it
-
-Open Claude Code in the project directory and give it one prompt:
-
-```text
-Work on issue #1. Use the full metaswarm orchestration workflow:
+Use the full metaswarm orchestration workflow:
 research the codebase, create an implementation plan, run the design
 review gate, decompose into work units, and execute each through the
 4-phase loop (implement, validate, adversarial review, commit).
@@ -111,9 +89,9 @@ Set human checkpoints after the database schema and after the AI
 integration. When all work units pass, create a PR.
 ```
 
-That's it. The Issue Orchestrator takes over:
+That's it. The orchestrator takes over:
 
-1. **Research** — Scans your (empty) project, notes the tech stack from the issue
+1. **Research** — Scans your project, notes the tech stack from your prompt
 2. **Plan** — Architect agent creates an implementation plan with work units
 3. **Plan Review Gate** — 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) validate the plan before it reaches the Design Review Gate
 3a. **Plan Validation** — Pre-flight checklist catches structural issues (missing service layer, wrong dependencies, oversized WUs) before spending agent cycles
@@ -173,7 +151,7 @@ You described what you wanted. The system figured out how to build it.
 - **Include user flows.** Describe what the user sees and does, not just what the code does. Include text wireframes if the app has a UI. This prevents building components that are never wired into the app.
 - **List external dependencies.** If your app needs API keys (e.g., Anthropic, Stripe), say so in the spec. The orchestrator will prompt you to configure them before building features that depend on them.
 - **Use human checkpoints.** Put them after risky or foundational work (database schema, auth, AI integration). You can always continue quickly, but you can't easily undo.
-- **Start with a working spec, not a vague idea.** If you're not sure what you want yet, use `/project:brainstorm` first to refine the idea, then create the issue from the brainstorming output.
+- **Start with a working spec, not a vague idea.** If you're not sure what you want yet, use `/project:brainstorm` first to refine the idea, then use the brainstorming output as your spec.
 
 ---
 

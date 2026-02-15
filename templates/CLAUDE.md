@@ -4,21 +4,24 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agen
 
 ## How to Work in This Project
 
-### For non-trivial tasks (features, multi-file changes)
-
-Create a GitHub Issue with a spec, then:
-
-```text
-Work on issue #N. Use the full metaswarm orchestration workflow.
-```
-
-This triggers the full pipeline: Research → Plan → Design Review Gate → Work Unit Decomposition → Orchestrated Execution (4-phase loop per unit) → Final Review → PR.
-
-### For simple tasks (single-file fixes, quick changes)
+### Starting work
 
 ```text
 /project:start-task
 ```
+
+This is the default entry point. It primes the agent with relevant knowledge, guides you through scoping, and picks the right level of process for the task.
+
+### For complex features (multi-file, spec-driven)
+
+Describe what you want built, include a Definition of Done, and ask for the full workflow:
+
+```text
+I want you to build [description]. [Tech stack, DoD items, file scope.]
+Use the full metaswarm orchestration workflow.
+```
+
+This triggers the full pipeline: Research → Plan → Design Review Gate → Work Unit Decomposition → Orchestrated Execution (4-phase loop per unit) → Final Review → PR.
 
 ### Available Commands
 
