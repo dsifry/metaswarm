@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.0
+
+### Added
+- **Claude-guided installation** (`/project:metaswarm-setup`): Interactive setup that detects your project's language, framework, test runner, linter, formatter, package manager, CI system, and git hooks — then customizes everything automatically. Supports 7 languages (TypeScript, Python, Go, Rust, Java, Ruby, JavaScript), 15+ frameworks, and all major toolchains
+- **Self-update command** (`/project:metaswarm-update-version`): Check for new metaswarm versions, show changelog, update files, re-detect project context, and refresh the project profile
+- **Project profile** (`.metaswarm/project-profile.json`): Stores detection results, user choices, and derived commands for future reference and updates
+- **`npx metaswarm install`** CLI command: Separate heavy file-copy operation that can be invoked by the setup skill or run directly
+
+### Changed
+- **`npx metaswarm init` is now a thin bootstrap**: Copies only 3 files (metaswarm-setup command, metaswarm-update-version command, minimal CLAUDE.md reference) instead of 60+ files. Points user to `/project:metaswarm-setup` for interactive guided setup
+- **`npx metaswarm init --full`** preserves the legacy behavior (init + install in one step) for CI/scripting environments
+- README.md install section rewritten around two-step guided flow
+- INSTALL.md restructured: "Recommended: Claude-Guided Setup" as primary, "Manual / CI Installation" as fallback
+- GETTING_STARTED.md quickstart updated to the new flow
+- CLAUDE.md template updated with both new commands
+
 ## 0.6.0
 
 ### Added
