@@ -114,29 +114,24 @@ metaswarm/
 ## Install
 
 ```bash
-cd your-project
 npx metaswarm init
 ```
 
-That's it. One command. No global installs, no cloning repos, no manual file copying.
-
-`npx metaswarm init` scaffolds everything into your project — 18 agent personas, 8 orchestration skills, 8 slash commands, 7 quality rubrics, knowledge base templates, automation scripts, and the plugin manifest. It also initializes BEADS task tracking. Existing files are never overwritten.
-
-Then prime your first agent:
-
-```bash
-bd prime
-```
-
-Then create a GitHub Issue with your spec and tell Claude Code:
+Then open Claude Code and run:
 
 ```text
-Work on issue #1. Use the full metaswarm orchestration workflow.
+/project:metaswarm-setup
 ```
 
-The system researches, plans, reviews, implements with TDD, validates independently, adversarially reviews against your spec, and creates a PR. See [GETTING_STARTED.md](GETTING_STARTED.md) for the full one-shot build recipe and walkthrough.
+That's it. Claude detects your project's language, framework, test runner, and tools, then configures everything interactively — 18 agent personas, 8 orchestration skills, 8 slash commands, 7 quality rubrics, knowledge base templates, and automation scripts. All customized for your stack.
 
-See [INSTALL.md](INSTALL.md) for prerequisites, alternative installation methods, and customization.
+For non-interactive or CI environments:
+
+```bash
+npx metaswarm init --full
+```
+
+See [INSTALL.md](INSTALL.md) for prerequisites and manual setup options.
 
 ## Self-Learning System
 

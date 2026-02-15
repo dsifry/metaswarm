@@ -5,11 +5,26 @@ This guide walks you through your first metaswarm-orchestrated workflow.
 ## Step 1: Install metaswarm
 
 ```bash
-cd your-project
 npx metaswarm init
 ```
 
-That's it — one command installs everything. 18 agents, 7 skills, 7 commands, 6 rubrics, 6 development guides, knowledge templates, automation scripts, and BEADS task tracking, all scaffolded into your project.
+Then open Claude Code in your project and run:
+
+```text
+/project:metaswarm-setup
+```
+
+Claude detects your project's language, framework, test runner, and tools, then configures everything interactively. When setup completes, you're ready to start your first task:
+
+```text
+/project:start-task
+```
+
+For non-interactive or CI environments, use the legacy one-command install:
+
+```bash
+npx metaswarm init --full
+```
 
 Verify it worked:
 

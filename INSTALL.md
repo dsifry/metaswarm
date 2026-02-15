@@ -1,23 +1,53 @@
 # Installation
 
-## Quick Install
+## Recommended: Claude-Guided Setup
+
+The fastest way to set up metaswarm:
+
+1. Bootstrap the setup commands:
+   ```bash
+   npx metaswarm init
+   ```
+
+2. Open Claude Code in your project and run:
+   ```text
+   /project:metaswarm-setup
+   ```
+
+3. Claude will:
+   - Detect your language, framework, test runner, linter, and CI system
+   - Ask 3-5 targeted questions (coverage thresholds, external tools, etc.)
+   - Install all metaswarm components
+   - Customize CLAUDE.md, coverage config, and .gitignore for your stack
+   - Set up external AI tools and visual review if requested
+   - Write a project profile for future updates
+
+4. To update metaswarm later:
+   ```text
+   /project:metaswarm-update-version
+   ```
+
+### Manual / CI Installation
+
+For non-interactive environments or scripting:
 
 ```bash
-cd your-project
-npx metaswarm init
+npx metaswarm init --full
 ```
+
+This runs the legacy installer that copies all files with default configuration. You'll need to manually customize CLAUDE.md and coverage settings for your project.
 
 Optional flag for git hooks:
 
 ```bash
-npx metaswarm init --with-husky
+npx metaswarm init --full --with-husky
 ```
 
 | Flag | What it does |
 |---|---|
 | `--with-husky` | Initializes Husky + installs pre-push hook |
 
-This single command:
+`npx metaswarm init --full` performs the following:
 - Creates `CLAUDE.md` → Project instructions for Claude Code (tells Claude about metaswarm)
 - Creates `.coverage-thresholds.json` → 100% coverage enforcement (lines, branches, functions, statements)
 - Creates `.gitignore` → Standard Node.js/TypeScript ignores (`.env`, `node_modules/`, `coverage/`, etc.)
