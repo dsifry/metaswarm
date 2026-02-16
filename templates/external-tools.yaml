@@ -6,7 +6,7 @@ adapters:
   codex:
     enabled: true
     model: "gpt-5.3-codex"          # Model to use for Codex CLI invocations
-    timeout_seconds: 300             # Max seconds per invocation before kill
+    timeout_seconds: 3600            # Max seconds per invocation before kill (1 hour — Codex tasks can run long)
     sandbox: none                    # docker | platform | none
     auth_env_var: "OPENAI_API_KEY"   # Environment variable holding the API key
   gemini:
@@ -22,6 +22,47 @@ routing:
   #   round-robin: alternate between tools
   #   <tool-name>: always use a specific tool
   default_implementer: "cheapest-available"
+
+  # Task-type routing: override default_implementer for specific categories.
+  # Matching is keyword-based — if the task description or file paths contain
+  # any of the listed patterns, the specified tool is used instead.
+  task_routing:
+    gemini:
+      # Gemini for front-end / UI tasks
+      patterns:
+        - "dashboard"
+        - "frontend"
+        - "front-end"
+        - "UI"
+        - "component"
+        - "page"
+        - "layout"
+        - "CSS"
+        - "styles"
+        - "tailwind"
+        - "React"
+        - "Next.js"
+        - "app/*/page"
+        - "components/"
+      file_patterns:
+        - "*.tsx"
+        - "*.jsx"
+        - "*.css"
+        - "*.scss"
+        - "app/**/page.tsx"
+        - "components/**"
+    codex:
+      # Codex for backend / infrastructure tasks (default for everything else)
+      patterns:
+        - "runner"
+        - "API"
+        - "backend"
+        - "database"
+        - "migration"
+        - "CLI"
+        - "script"
+        - "connector"
+        - "SDK"
 
   # Order for escalation when a tool fails after max retries
   escalation_order: ["codex", "gemini", "claude"]
