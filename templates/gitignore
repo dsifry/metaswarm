@@ -8,3 +8,9 @@ coverage/
 .env.*.local
 .DS_Store
 *.log
+
+# Metaswarm — ephemeral prompt files (must not be committed to git)
+*codex-prompt*.md
+*gemini-prompt*.md
+.agent-state.json
+.orchestrator-state.json
