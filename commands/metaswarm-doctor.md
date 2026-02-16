@@ -1,14 +1,12 @@
-# Doctor
+# Metaswarm Doctor
 
-Post-install and post-upgrade health check. Verifies the full metaswarm stack is working and reports actionable diagnostics.
+Health check and diagnostics. Verifies the full metaswarm stack is working and reports actionable findings. Run after setup, after upgrades, or to debug issues.
 
 ## Usage
 
 ```text
-/project:doctor
+/project:metaswarm-doctor
 ```
-
-Run this after `metaswarm install`, after upgrading, or whenever something feels off.
 
 ## Steps
 
@@ -27,7 +25,7 @@ Read `CLAUDE.md`:
 
 - Search for `<!-- TODO` markers (case-insensitive)
 - If any TODO markers remain: **WARN** — "CLAUDE.md still has TODO placeholders that need customization: {list locations}"
-- Check that the test command lines (`Test command:`, `Coverage command:`) don't contain placeholder values like `npm test` if the project uses a different runner (cross-reference with `.metaswarm/project-profile.json` commands)
+- Cross-reference test commands with `.metaswarm/project-profile.json` `commands.test` and `commands.coverage` — warn only if they don't match the profile (don't flag `npm test` generically since it's valid for some projects)
 - Record result: PASS / WARN
 
 ### 3. Coverage Configuration
@@ -63,7 +61,7 @@ Check if external tools are configured by reading `.metaswarm/external-tools.yam
 
 ### 5. Git Hooks (if configured)
 
-Check `.metaswarm/project-profile.json` → `choices.git_hooks`:
+Check `.metaswarm/project-profile.json` -> `choices.git_hooks`:
 
 - If `false` or not set: **SKIP**
 - If `true`:
@@ -91,11 +89,14 @@ Scan for active or abandoned worktrees from external tool runs:
 - Run via Bash: `ls -d /tmp/worktree-* 2>/dev/null || true`
 - If no worktrees found: **SKIP** — "No active worktrees."
 - For each worktree found:
-  - Run via Bash: `.claude/plugins/metaswarm/skills/external-tools/adapters/codex.sh status <worktree>` (ignore errors for non-codex worktrees)
+  - **First**, read `.agent-state.json` to determine which adapter owns the worktree:
+    - If `"agent": "codex-delegated"` -> use `codex.sh status`
+    - If `"agent": "gemini-delegated"` -> use `gemini.sh status`
+    - If no `.agent-state.json` exists -> try both adapters, use whichever finds PID files
+  - Run the appropriate adapter's `status` command
   - Run via Bash: `git -C <worktree> log --oneline -3 2>/dev/null || echo "no commits"`
-  - Check for `.agent-state.json` in the worktree — if present, read and report issue number and status
   - Classify worktree as:
-    - **Running**: Codex/adapter PID is alive
+    - **Running**: adapter/child PID is alive
     - **Completed**: Has commits but no running process
     - **Abandoned**: No commits and no running process
   - Report summary table:
@@ -103,11 +104,14 @@ Scan for active or abandoned worktrees from external tool runs:
 ```
 Active Worktrees:
   /tmp/worktree-abc123   Running    Issue #42   codex PID 12345
-  /tmp/worktree-def456   Completed  Issue #18   3 commits, no running process
-  /tmp/worktree-ghi789   Abandoned  Unknown     No commits, no process — safe to clean up
+  /tmp/worktree-def456   Completed  Issue #18   3 commits (gemini)
+  /tmp/worktree-ghi789   Abandoned  Unknown     No commits, no process
 ```
 
-- If abandoned worktrees found: suggest cleanup command for each: `codex.sh cleanup <path>`
+- If abandoned worktrees found: suggest cleanup using the correct adapter:
+  - Codex worktrees: `codex.sh cleanup <path>`
+  - Gemini worktrees: `gemini.sh cleanup <path>`
+  - Unknown: either adapter's `cleanup` works (both use `cleanup_worktree` from `_common.sh`)
 
 ### 8. Summary
 
@@ -116,14 +120,14 @@ Print a final checklist with pass/warn/fail per section:
 ```
 metaswarm doctor results:
 
-  [PASS] Project Profile         — v0.7.0, all fields present
-  [PASS] CLAUDE.md               — No TODO markers remaining
-  [PASS] Coverage Config         — 100% thresholds, enforcement command set
-  [PASS] External Tools: Codex   — ready (gpt-5.3-codex)
-  [WARN] External Tools: Gemini  — not installed
-  [PASS] Git Hooks               — .husky/pre-push executable
-  [SKIP] BEADS                   — Not configured
-  [SKIP] Active Agents           — No worktrees found
+  [PASS] Project Profile         - v0.7.0, all fields present
+  [PASS] CLAUDE.md               - No TODO markers remaining
+  [PASS] Coverage Config         - 100% thresholds, enforcement command set
+  [PASS] External Tools: Codex   - ready (gpt-5.3-codex)
+  [WARN] External Tools: Gemini  - not installed
+  [PASS] Git Hooks               - .husky/pre-push executable
+  [SKIP] BEADS                   - Not configured
+  [SKIP] Active Agents           - No worktrees found
 
   Result: 5 passed, 1 warning, 0 failed
 
@@ -133,6 +137,8 @@ metaswarm doctor results:
 
 If everything passes: "All checks passed! Your metaswarm installation is healthy."
 
-If there are failures: "Some checks failed. Address the issues above, then re-run `/project:doctor`."
+If there are failures: "Some checks failed. Address the issues above, then re-run `/project:metaswarm-doctor`."
 
 If there are only warnings: "All critical checks passed. Warnings above are optional improvements."
+
+**Tip:** If the session ended unexpectedly during a delegated run, running `/project:metaswarm-doctor` will discover orphaned worktrees and suggest cleanup commands.

@@ -2,10 +2,12 @@
 
 A variant of `start-task` that forces all implementation work through Google Gemini CLI via agent teams. Use this for frontend-heavy, UI/component tasks where Gemini excels.
 
+Requires Team Mode (`TeamCreate`/`SendMessage` tools). If Team tools are not available, use `/project:start-task` instead.
+
 ## Usage
 
 ```text
-/project:start-task-delegated-gemini <task-description-or-issue-url>
+/project:metaswarm-start-task-delegated-gemini <task-description-or-issue-url>
 ```
 
 ## When to Use
@@ -51,20 +53,20 @@ For each worktree found:
    cat <worktree>/.agent-state.json 2>/dev/null || echo "no state file"
    ```
 
-2. Check for existing commits:
+2. Check if Gemini is still running:
    ```bash
-   git -C <worktree> log --oneline -3 2>/dev/null || echo "no commits"
+   .claude/plugins/metaswarm/skills/external-tools/adapters/gemini.sh status <worktree>
    ```
 
-3. Check if any Gemini processes are still active (look for adapter PID files):
+3. Check for existing commits:
    ```bash
-   cat <worktree>/.gemini-adapter.pid 2>/dev/null && kill -0 "$(cat <worktree>/.gemini-adapter.pid)" 2>/dev/null && echo "RUNNING" || echo "NOT_RUNNING"
+   git -C <worktree> log --oneline -3 2>/dev/null || echo "no commits"
    ```
 
 **Decision logic:**
 - If a worktree has a **running Gemini process**: DO NOT restart. Resume monitoring from where it left off (skip to Step 4 monitoring loop for that work unit).
 - If a worktree has **commits but no running process**: Gemini finished. Skip to Step 5 validation for that work unit.
-- If a worktree has **no commits and no running process**: Abandoned. Clean it up and proceed normally.
+- If a worktree has **no commits and no running process**: Abandoned. Clean it up with `gemini.sh cleanup <path>` and proceed normally.
 
 Report findings to the user before continuing:
 
@@ -94,7 +96,6 @@ Ask the user to confirm:
 > **Task**: {summary}
 > **Work units**: {N} units identified
 > **Delegation**: All implementation via Gemini CLI
-> **Estimated time**: {N} units × ~5-15 min each (Gemini is typically faster than Codex)
 >
 > Proceed?
 
@@ -110,41 +111,41 @@ For each work unit, prepare:
 
 ### 3. Prompt Preparation & Gemini Launch
 
-For each work unit, spawn a sub-agent (via Task tool with `subagent_type: "general-purpose"`) that does the following:
+For each work unit, spawn a sub-agent (via Task tool with `subagent_type: "general-purpose"` and `model: "opus"`) that does the following:
 
 #### 3.1 — Write the Prompt File
 
-Create a self-contained markdown prompt at `/tmp/gemini-prompt-{unit-id}.md` with:
+Create a self-contained markdown prompt at `/tmp/gemini-prompt-<unit-id>.md` with:
 
 ```markdown
-# Task: {work unit title}
+# Task: <work unit title>
 
 ## Context
-{Issue body or task description}
-{Relevant CLAUDE.md sections — coding standards, test patterns}
+<Issue body or task description>
+<Relevant CLAUDE.md sections - coding standards, test patterns>
 
 ## Files to Modify
-{List of files with brief description of needed changes}
+<List of files with brief description of needed changes>
 
 ## Current Code
-{Paste relevant code snippets from context files}
+<Paste relevant code snippets from context files>
 
 ## Definition of Done
-{Specific criteria from work unit decomposition}
+<Specific criteria from work unit decomposition>
 
 ## UI/Frontend Specifics
-{Component hierarchy, design tokens, responsive requirements, accessibility}
-{Reference existing component patterns in the codebase}
+<Component hierarchy, design tokens, responsive requirements, accessibility>
+<Reference existing component patterns in the codebase>
 
 ## Testing Requirements
 - Write tests FIRST (TDD)
-- Test command: {from project profile}
-- Coverage command: {from project profile}
+- Test command: <from project profile>
+- Coverage command: <from project profile>
 - All tests must pass before committing
 - Include component/snapshot tests where appropriate
 
 ## Coding Standards
-{From CLAUDE.md — language-specific rules, lint, format requirements}
+<From CLAUDE.md - language-specific rules, lint, format requirements>
 
 ## IMPORTANT
 - Only modify files listed above. Do not touch other files.
@@ -155,34 +156,47 @@ Create a self-contained markdown prompt at `/tmp/gemini-prompt-{unit-id}.md` wit
 
 #### 3.2 — Create Worktree & Launch Gemini
 
+First, clean up any stale worktree or branch from a previous run:
+
 ```bash
 ADAPTER=".claude/plugins/metaswarm/skills/external-tools/adapters/gemini.sh"
-
-# Create worktree
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-WORKTREE="/tmp/worktree-{unit-id}"
-git worktree add -b "external/gemini/{unit-id}" "$WORKTREE" HEAD
+WORKTREE="/tmp/worktree-<unit-id>"
+BRANCH="external/gemini/<unit-id>"
 
-# Write agent state file for discoverability
-cat > "$WORKTREE/.agent-state.json" << 'EOF'
-{
-  "issue": "{issue-number-or-id}",
-  "unit": "{unit-id}",
-  "status": "gemini_running",
-  "started_at": "{ISO timestamp}",
-  "log_path": "{will be set by adapter}",
-  "agent": "gemini-delegated"
-}
-EOF
+# Clean up stale worktree/branch if they exist
+if [ -d "$WORKTREE" ]; then
+  $ADAPTER cleanup "$WORKTREE"
+fi
+git branch -D "$BRANCH" 2>/dev/null || true
+git worktree prune 2>/dev/null || true
 
-# Launch Gemini
+# Create fresh worktree
+git worktree add -b "$BRANCH" "$WORKTREE" HEAD
+
+# Record the base SHA for later reset/diff operations
+BASE_SHA="$(git -C "$WORKTREE" rev-parse HEAD)"
+```
+
+Write the agent state file for discoverability. Use actual values, not template placeholders:
+
+```bash
+# Write .agent-state.json with real values (not a heredoc template)
+printf '{"issue":"%s","unit":"%s","status":"gemini_running","base_sha":"%s","started_at":"%s","log_path":"","agent":"gemini-delegated","attempt":1,"updated_at":"%s","last_check":""}\n' \
+  "$ISSUE_NUM" "$UNIT_ID" "$BASE_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  > "$WORKTREE/.agent-state.json"
+```
+
+Launch Gemini:
+
+```bash
 $ADAPTER implement \
   --worktree "$WORKTREE" \
-  --prompt-file "/tmp/gemini-prompt-{unit-id}.md" \
+  --prompt-file "/tmp/gemini-prompt-<unit-id>.md" \
   --timeout 3600
 ```
 
-#### 3.3 — Write Agent State
+#### 3.3 — Update Agent State
 
 After launching, update `.agent-state.json` with the actual log path from the adapter's output.
 
@@ -190,33 +204,30 @@ After launching, update `.agent-state.json` with the actual log path from the ad
 
 **This is the most important behavioral instruction.** After launching Gemini, the sub-agent MUST actively monitor. It must NOT go idle. It must NOT wait for the team lead to check on it.
 
-The sub-agent runs this loop:
+The sub-agent implements this loop using sequential Bash tool calls. Each iteration is a single Bash call that sleeps then checks status:
 
 ```
 WHILE Gemini is running:
-  1. Wait 3 minutes (sleep 180)
+  1. Issue a single Bash tool call (with timeout 200000ms):
+     sleep 180 && .claude/plugins/metaswarm/skills/external-tools/adapters/gemini.sh status <worktree>
 
-  2. Check Gemini adapter status:
-     - Check if adapter PID is still alive: kill -0 "$(cat <worktree>/.gemini-adapter.pid)" 2>/dev/null
-     - Check log file for recent output
+  2. Parse the JSON response:
+     - If "child_alive": true -> Gemini still working. Continue loop.
+     - If "child_alive": false -> Gemini finished (or crashed). Exit loop.
 
-  3. Parse status:
-     - If adapter alive → Gemini still working. Continue loop.
-     - If adapter dead → Gemini finished (or crashed). Exit loop.
+  3. Optionally check recent log output:
+     tail -20 ~/.claude/sessions/gemini-implement-*.json 2>/dev/null | tail -5
 
-  4. Check recent log output for progress:
-     tail -20 ~/.claude/sessions/gemini-implement-*.jsonl 2>/dev/null | tail -5
+  4. Update .agent-state.json with current status and timestamp
 
-  5. Update .agent-state.json with current status and timestamp
-
-  6. If more than 20 minutes have elapsed with no new log output:
+  5. If more than 20 minutes have elapsed with no new log output:
      WARN — Gemini may be stuck. Log this but continue monitoring.
 
-  7. Continue loop
+  6. Continue loop
 END WHILE
 ```
 
-**After Gemini finishes** (adapter process exits):
+**After Gemini finishes** (child_alive becomes false):
 
 - Read the adapter's JSON output to check exit code
 - If exit code 0: proceed to Step 5 (validation)
@@ -231,15 +242,15 @@ After Gemini completes successfully, the sub-agent validates independently. Gemi
 
 ```bash
 git -C <worktree> log --oneline -5
-git -C <worktree> diff --stat HEAD~1 HEAD
+git -C <worktree> diff --stat $BASE_SHA HEAD
 ```
 
-If no commits or no changed files: **FAIL** — Gemini didn't produce output.
+If no commits beyond BASE_SHA or no changed files: **FAIL** — Gemini didn't produce output.
 
 #### 5.2 — Run Tests
 
 ```bash
-cd <worktree> && {test command from project profile}
+cd <worktree> && <test command from project profile>
 ```
 
 If tests fail: record failures for retry context.
@@ -247,19 +258,19 @@ If tests fail: record failures for retry context.
 #### 5.3 — Run Linter (if configured)
 
 ```bash
-cd <worktree> && {lint command from project profile}
+cd <worktree> && <lint command from project profile>
 ```
 
 #### 5.4 — Run Type Checker (if configured)
 
 ```bash
-cd <worktree> && {typecheck command from project profile}
+cd <worktree> && <typecheck command from project profile>
 ```
 
 #### 5.5 — Check Coverage (if thresholds set)
 
 ```bash
-cd <worktree> && {coverage command from project profile}
+cd <worktree> && <coverage command from project profile>
 ```
 
 Compare against `.coverage-thresholds.json`.
@@ -269,7 +280,7 @@ Compare against `.coverage-thresholds.json`.
 Check that only files within the work unit's defined scope were modified:
 
 ```bash
-git -C <worktree> diff --name-only HEAD~1 HEAD
+git -C <worktree> diff --name-only $BASE_SHA HEAD
 ```
 
 Compare against the allowed file list from work unit decomposition. Flag any out-of-scope changes.
@@ -293,13 +304,16 @@ Write a new prompt that includes:
 
 #### 6.2 — Reset Worktree
 
+Reset to the original base SHA (handles any number of commits Gemini may have made):
+
 ```bash
-git -C <worktree> reset --hard HEAD~1  # Undo Gemini's commit
+BASE_SHA="$(jq -r '.base_sha' <worktree>/.agent-state.json)"
+git -C <worktree> reset --hard "$BASE_SHA"
 ```
 
 #### 6.3 — Re-launch Gemini
 
-Same as Step 3.2 but with the retry prompt and `--attempt N+1`.
+Same as Step 3.2 (Gemini launch only) but with the retry prompt and `--attempt N+1`.
 
 #### 6.4 — Monitor Again
 
@@ -334,13 +348,10 @@ Run the full test suite, linter, type checker, and coverage check on the merged 
 
 #### 8.3 — Cleanup Worktrees
 
-For each worktree, remove it safely:
+For each worktree:
 
 ```bash
-# Scrub build artifacts, then remove worktree
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-git -C "$REPO_ROOT" worktree remove <worktree> 2>/dev/null || rm -rf <worktree>
-git -C "$REPO_ROOT" worktree prune
+.claude/plugins/metaswarm/skills/external-tools/adapters/gemini.sh cleanup <worktree>
 ```
 
 #### 8.4 — Report
@@ -365,23 +376,24 @@ These rules MUST be included in every sub-agent's prompt. They are non-negotiabl
 
 ### Rule 1: Active Monitoring — NEVER Go Idle
 
-> After launching Gemini, check adapter PID status every 3 minutes and `tail -20 <log>` to check progress. Do NOT go idle. Do NOT wait for the team lead to check on you. You are responsible for monitoring your Gemini instance until completion or failure.
+> After launching Gemini, poll `gemini.sh status <worktree>` every 3 minutes. Use a single Bash tool call per iteration: `sleep 180 && gemini.sh status <worktree>`. Also `tail -20 <log>` to check progress. Do NOT go idle. Do NOT wait for the team lead to check on you. You are responsible for monitoring your Gemini instance until completion or failure.
 
 ### Rule 2: Context-Loss Resilience
 
-> Before starting ANY work, check for existing worktrees at `/tmp/worktree-*`. Check each for `.agent-state.json` and running processes. If a worktree already has a running Gemini process or completed commits, DO NOT restart — resume monitoring or validation from where it left off. Write your state to `<worktree>/.agent-state.json` so the lead can discover your progress after context compaction.
+> Before starting ANY work, check for existing worktrees at `/tmp/worktree-*`. Read `.agent-state.json` in each to understand what it is. Run `gemini.sh status <worktree>` for each. If a worktree already has a running Gemini process or completed commits, DO NOT restart — resume monitoring or validation from where it left off. Write your state to `<worktree>/.agent-state.json` so the lead can discover your progress after context compaction.
 
 ### Rule 3: Self-Contained State
 
-> Write your issue number, work unit ID, status, and log path to `<worktree>/.agent-state.json` after every state transition. This file is how the team lead discovers what you're doing if context is lost. Format:
+> Write your issue number, work unit ID, status, base SHA, and log path to `<worktree>/.agent-state.json` after every state transition. This file is how the team lead discovers what you're doing if context is lost. Schema:
 > ```json
 > {
 >   "issue": "42",
 >   "unit": "wu-frontend-dashboard",
->   "status": "monitoring|gemini_completed|validating|validated|gemini_failed|retrying|escalated_to_claude",
+>   "status": "gemini_running|monitoring|gemini_completed|validating|validated|gemini_failed|retrying|escalated_to_claude",
+>   "base_sha": "abc123def",
 >   "started_at": "2025-01-15T10:30:00Z",
 >   "updated_at": "2025-01-15T10:45:00Z",
->   "log_path": "~/.claude/sessions/gemini-implement-20250115T103000-12345.jsonl",
+>   "log_path": "~/.claude/sessions/gemini-implement-20250115T103000-12345.json",
 >   "agent": "gemini-delegated",
 >   "attempt": 1,
 >   "last_check": "2025-01-15T10:45:00Z"

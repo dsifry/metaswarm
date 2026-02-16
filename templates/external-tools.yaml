@@ -12,7 +12,7 @@ adapters:
   gemini:
     enabled: true
     model: "pro"                     # Model alias: pro | flash | flash-lite
-    timeout_seconds: 300
+    timeout_seconds: 3600            # Max seconds per invocation before kill (1 hour — matches codex ceiling)
     sandbox: none
     auth_env_var: "GEMINI_API_KEY"   # Or use Google login (no key needed)
 

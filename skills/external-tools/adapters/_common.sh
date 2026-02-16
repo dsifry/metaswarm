@@ -315,7 +315,12 @@ verify_scope() {
 
   local violations_found=0
   local changed_files
-  changed_files="$(git -C "$worktree_path" diff --name-only HEAD 2>/dev/null || true)"
+  # Try committed diff first (HEAD~1..HEAD) since tools commit before calling verify_scope,
+  # then fall back to uncommitted diff (HEAD) for pre-commit verification.
+  changed_files="$(git -C "$worktree_path" diff --name-only HEAD~1 HEAD 2>/dev/null || true)"
+  if [[ -z "$changed_files" ]]; then
+    changed_files="$(git -C "$worktree_path" diff --name-only HEAD 2>/dev/null || true)"
+  fi
 
   if [[ -z "$changed_files" ]]; then
     return 0
@@ -325,8 +330,8 @@ verify_scope() {
     [[ -z "$file" ]] && continue
     # Check if the file path starts with the context_dir prefix
     if [[ "$file" != "${context_dir}"* && "$file" != "${context_dir}/"* ]]; then
-      # Out of scope — revert this file
-      git -C "$worktree_path" checkout HEAD -- "$file" 2>/dev/null || true
+      # Out of scope — revert to pre-commit version (HEAD~1, since tool already committed)
+      git -C "$worktree_path" checkout HEAD~1 -- "$file" 2>/dev/null || true
       violations_found=1
     fi
   done <<< "$changed_files"

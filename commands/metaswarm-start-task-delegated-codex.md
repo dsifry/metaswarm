@@ -2,10 +2,12 @@
 
 A variant of `start-task` that forces all implementation work through OpenAI Codex CLI via agent teams. Use this for backend-heavy, multi-issue parallel execution where cost savings matter.
 
+Requires Team Mode (`TeamCreate`/`SendMessage` tools). If Team tools are not available, use `/project:start-task` instead.
+
 ## Usage
 
 ```text
-/project:start-task-delegated-codex <task-description-or-issue-url>
+/project:metaswarm-start-task-delegated-codex <task-description-or-issue-url>
 ```
 
 ## When to Use
@@ -45,19 +47,19 @@ ls -d /tmp/worktree-* 2>/dev/null || echo "NONE"
 
 For each worktree found:
 
-1. Check if Codex is still running:
+1. Check for agent state:
+   ```bash
+   cat <worktree>/.agent-state.json 2>/dev/null || echo "no state file"
+   ```
+
+2. Check if Codex is still running:
    ```bash
    .claude/plugins/metaswarm/skills/external-tools/adapters/codex.sh status <worktree>
    ```
 
-2. Check for existing commits:
+3. Check for existing commits:
    ```bash
    git -C <worktree> log --oneline -3 2>/dev/null || echo "no commits"
-   ```
-
-3. Check for agent state:
-   ```bash
-   cat <worktree>/.agent-state.json 2>/dev/null || echo "no state file"
    ```
 
 **Decision logic:**
@@ -93,7 +95,7 @@ Ask the user to confirm:
 > **Task**: {summary}
 > **Work units**: {N} units identified
 > **Delegation**: All implementation via Codex CLI
-> **Estimated time**: {N} units × ~10-20 min each (Codex running in parallel)
+> **Estimated time**: {N} units x ~10-20 min each (Codex running in parallel)
 >
 > Proceed?
 
@@ -108,36 +110,36 @@ For each work unit, prepare:
 
 ### 3. Prompt Preparation & Codex Launch
 
-For each work unit, spawn a sub-agent (via Task tool with `subagent_type: "general-purpose"`) that does the following:
+For each work unit, spawn a sub-agent (via Task tool with `subagent_type: "general-purpose"` and `model: "opus"`) that does the following:
 
 #### 3.1 — Write the Prompt File
 
-Create a self-contained markdown prompt at `/tmp/codex-prompt-{unit-id}.md` with:
+Create a self-contained markdown prompt at `/tmp/codex-prompt-<unit-id>.md` with:
 
 ```markdown
-# Task: {work unit title}
+# Task: <work unit title>
 
 ## Context
-{Issue body or task description}
-{Relevant CLAUDE.md sections — coding standards, test patterns}
+<Issue body or task description>
+<Relevant CLAUDE.md sections - coding standards, test patterns>
 
 ## Files to Modify
-{List of files with brief description of needed changes}
+<List of files with brief description of needed changes>
 
 ## Current Code
-{Paste relevant code snippets from context files — Codex can't read your repo without this}
+<Paste relevant code snippets from context files - Codex can't read your repo without this>
 
 ## Definition of Done
-{Specific criteria from work unit decomposition}
+<Specific criteria from work unit decomposition>
 
 ## Testing Requirements
 - Write tests FIRST (TDD)
-- Test command: {from project profile}
-- Coverage command: {from project profile}
+- Test command: <from project profile>
+- Coverage command: <from project profile>
 - All tests must pass before committing
 
 ## Coding Standards
-{From CLAUDE.md — language-specific rules, lint, format requirements}
+<From CLAUDE.md - language-specific rules, lint, format requirements>
 
 ## IMPORTANT
 - Only modify files listed above. Do not touch other files.
@@ -147,34 +149,47 @@ Create a self-contained markdown prompt at `/tmp/codex-prompt-{unit-id}.md` with
 
 #### 3.2 — Create Worktree & Launch Codex
 
+First, clean up any stale worktree or branch from a previous run:
+
 ```bash
 ADAPTER=".claude/plugins/metaswarm/skills/external-tools/adapters/codex.sh"
-
-# Create worktree (the adapter handles branch creation)
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-WORKTREE="/tmp/worktree-{unit-id}"
-git worktree add -b "external/codex/{unit-id}" "$WORKTREE" HEAD
+WORKTREE="/tmp/worktree-<unit-id>"
+BRANCH="external/codex/<unit-id>"
 
-# Write agent state file for discoverability
-cat > "$WORKTREE/.agent-state.json" << 'EOF'
-{
-  "issue": "{issue-number-or-id}",
-  "unit": "{unit-id}",
-  "status": "codex_running",
-  "started_at": "{ISO timestamp}",
-  "log_path": "{will be set by adapter}",
-  "agent": "codex-delegated"
-}
-EOF
+# Clean up stale worktree/branch if they exist
+if [ -d "$WORKTREE" ]; then
+  $ADAPTER cleanup "$WORKTREE"
+fi
+git branch -D "$BRANCH" 2>/dev/null || true
+git worktree prune 2>/dev/null || true
 
-# Launch Codex
+# Create fresh worktree
+git worktree add -b "$BRANCH" "$WORKTREE" HEAD
+
+# Record the base SHA for later reset/diff operations
+BASE_SHA="$(git -C "$WORKTREE" rev-parse HEAD)"
+```
+
+Write the agent state file for discoverability. Use actual values, not template placeholders:
+
+```bash
+# Write .agent-state.json with real values (not a heredoc template)
+printf '{"issue":"%s","unit":"%s","status":"codex_running","base_sha":"%s","started_at":"%s","log_path":"","agent":"codex-delegated","attempt":1,"updated_at":"%s","last_check":""}\n' \
+  "$ISSUE_NUM" "$UNIT_ID" "$BASE_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  > "$WORKTREE/.agent-state.json"
+```
+
+Launch Codex:
+
+```bash
 $ADAPTER implement \
   --worktree "$WORKTREE" \
-  --prompt-file "/tmp/codex-prompt-{unit-id}.md" \
+  --prompt-file "/tmp/codex-prompt-<unit-id>.md" \
   --timeout 3600
 ```
 
-#### 3.3 — Write Agent State
+#### 3.3 — Update Agent State
 
 After launching, update `.agent-state.json` with the actual log path from the adapter's output.
 
@@ -182,29 +197,27 @@ After launching, update `.agent-state.json` with the actual log path from the ad
 
 **This is the most important behavioral instruction.** After launching Codex, the sub-agent MUST actively monitor. It must NOT go idle. It must NOT wait for the team lead to check on it.
 
-The sub-agent runs this loop:
+The sub-agent implements this loop using sequential Bash tool calls. Each iteration is a single Bash call that sleeps then checks status:
 
 ```
 WHILE Codex is running:
-  1. Wait 3 minutes (sleep 180)
+  1. Issue a single Bash tool call (with timeout 200000ms):
+     sleep 180 && .claude/plugins/metaswarm/skills/external-tools/adapters/codex.sh status <worktree>
 
-  2. Check Codex status:
-     .claude/plugins/metaswarm/skills/external-tools/adapters/codex.sh status <worktree>
+  2. Parse the JSON response:
+     - If "child_alive": true -> Codex still working. Continue loop.
+     - If "child_alive": false -> Codex finished (or crashed). Exit loop.
 
-  3. Parse the JSON response:
-     - If "child_alive": true → Codex still working. Continue loop.
-     - If "child_alive": false → Codex finished (or crashed). Exit loop.
-
-  4. Check recent log output for progress:
+  3. Optionally check recent log output:
      tail -20 ~/.claude/sessions/codex-implement-*.jsonl 2>/dev/null | tail -5
 
-  5. Update .agent-state.json with current status and timestamp
+  4. Update .agent-state.json with current status and timestamp
 
-  6. If more than 30 minutes have elapsed with no new log output:
-     WARN — Codex may be stuck. Log this but continue monitoring
-     (Codex tasks legitimately take 30+ minutes for large changes)
+  5. If more than 30 minutes have elapsed with no new log output:
+     WARN — Codex may be stuck. Log this but continue monitoring.
+     (Codex tasks legitimately take 30+ minutes for large changes.)
 
-  7. Continue loop
+  6. Continue loop
 END WHILE
 ```
 
@@ -223,15 +236,15 @@ After Codex completes successfully, the sub-agent validates independently. Codex
 
 ```bash
 git -C <worktree> log --oneline -5
-git -C <worktree> diff --stat HEAD~1 HEAD
+git -C <worktree> diff --stat $BASE_SHA HEAD
 ```
 
-If no commits or no changed files: **FAIL** — Codex didn't produce output.
+If no commits beyond BASE_SHA or no changed files: **FAIL** — Codex didn't produce output.
 
 #### 5.2 — Run Tests
 
 ```bash
-cd <worktree> && {test command from project profile}
+cd <worktree> && <test command from project profile>
 ```
 
 If tests fail: record failures for retry context.
@@ -239,19 +252,19 @@ If tests fail: record failures for retry context.
 #### 5.3 — Run Linter (if configured)
 
 ```bash
-cd <worktree> && {lint command from project profile}
+cd <worktree> && <lint command from project profile>
 ```
 
 #### 5.4 — Run Type Checker (if configured)
 
 ```bash
-cd <worktree> && {typecheck command from project profile}
+cd <worktree> && <typecheck command from project profile>
 ```
 
 #### 5.5 — Check Coverage (if thresholds set)
 
 ```bash
-cd <worktree> && {coverage command from project profile}
+cd <worktree> && <coverage command from project profile>
 ```
 
 Compare against `.coverage-thresholds.json`.
@@ -261,7 +274,7 @@ Compare against `.coverage-thresholds.json`.
 Check that only files within the work unit's defined scope were modified:
 
 ```bash
-git -C <worktree> diff --name-only HEAD~1 HEAD
+git -C <worktree> diff --name-only $BASE_SHA HEAD
 ```
 
 Compare against the allowed file list from work unit decomposition. Flag any out-of-scope changes.
@@ -285,13 +298,16 @@ Write a new prompt that includes:
 
 #### 6.2 — Reset Worktree
 
+Reset to the original base SHA (handles any number of commits Codex may have made):
+
 ```bash
-git -C <worktree> reset --hard HEAD~1  # Undo Codex's commit
+BASE_SHA="$(jq -r '.base_sha' <worktree>/.agent-state.json)"
+git -C <worktree> reset --hard "$BASE_SHA"
 ```
 
 #### 6.3 — Re-launch Codex
 
-Same as Step 3.2 but with the retry prompt and `--attempt N+1`.
+Same as Step 3.2 (Codex launch only) but with the retry prompt and `--attempt N+1`.
 
 #### 6.4 — Monitor Again
 
@@ -354,20 +370,21 @@ These rules MUST be included in every sub-agent's prompt. They are non-negotiabl
 
 ### Rule 1: Active Monitoring — NEVER Go Idle
 
-> After launching Codex, poll `codex.sh status <worktree>` every 3 minutes and `tail -20 <log>` to check progress. Do NOT go idle. Do NOT wait for the team lead to check on you. You are responsible for monitoring your Codex instance until completion or failure.
+> After launching Codex, poll `codex.sh status <worktree>` every 3 minutes. Use a single Bash tool call per iteration: `sleep 180 && codex.sh status <worktree>`. Also `tail -20 <log>` to check progress. Do NOT go idle. Do NOT wait for the team lead to check on you. You are responsible for monitoring your Codex instance until completion or failure.
 
 ### Rule 2: Context-Loss Resilience
 
-> Before starting ANY work, check for existing worktrees at `/tmp/worktree-*`. Run `codex.sh status <worktree>` for each. If a worktree already has a running Codex process or completed commits, DO NOT restart — resume monitoring or validation from where it left off. Write your state to `<worktree>/.agent-state.json` so the lead can discover your progress after context compaction.
+> Before starting ANY work, check for existing worktrees at `/tmp/worktree-*`. Read `.agent-state.json` in each to understand what it is. Run `codex.sh status <worktree>` for each. If a worktree already has a running Codex process or completed commits, DO NOT restart — resume monitoring or validation from where it left off. Write your state to `<worktree>/.agent-state.json` so the lead can discover your progress after context compaction.
 
 ### Rule 3: Self-Contained State
 
-> Write your issue number, work unit ID, status, and log path to `<worktree>/.agent-state.json` after every state transition. This file is how the team lead discovers what you're doing if context is lost. Format:
+> Write your issue number, work unit ID, status, base SHA, and log path to `<worktree>/.agent-state.json` after every state transition. This file is how the team lead discovers what you're doing if context is lost. Schema:
 > ```json
 > {
 >   "issue": "42",
 >   "unit": "wu-backend-auth",
->   "status": "monitoring|codex_completed|validating|validated|codex_failed|retrying|escalated_to_claude",
+>   "status": "codex_running|monitoring|codex_completed|validating|validated|codex_failed|retrying|escalated_to_claude",
+>   "base_sha": "abc123def",
 >   "started_at": "2025-01-15T10:30:00Z",
 >   "updated_at": "2025-01-15T10:45:00Z",
 >   "log_path": "~/.claude/sessions/codex-implement-20250115T103000-12345.jsonl",

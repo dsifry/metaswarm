@@ -211,6 +211,17 @@ cmd_implement() {
   monitor_codex_output "$stdout_file" &
   local monitor_pid=$!
 
+  # Trap to clean up on unexpected exit (SIGTERM, SIGINT, etc.)
+  _implement_cleanup() {
+    kill "$monitor_pid" 2>/dev/null || true
+    local _child
+    _child="$(cat "$child_pidfile" 2>/dev/null || true)"
+    [[ -n "$_child" ]] && kill "$_child" 2>/dev/null || true
+    rm -f "$worktree_prompt" "$adapter_pidfile" "$child_pidfile"
+    rm -rf "$tmp_dir"
+  }
+  trap _implement_cleanup EXIT TERM INT
+
   # Record start time
   local start_time
   start_time="$(date +%s)"
@@ -229,6 +240,9 @@ cmd_implement() {
     "$TOOL_CMD" exec --full-auto --json -C "$XT_WORKTREE" \
       "Read and follow all instructions in the file .codex-prompt.md in the current directory. This file contains your complete task specification." \
     || exit_code=$?
+
+  # Disable trap — we handle cleanup explicitly below
+  trap - EXIT TERM INT
 
   # Stop the monitor
   kill "$monitor_pid" 2>/dev/null; wait "$monitor_pid" 2>/dev/null || true
@@ -595,7 +609,7 @@ Options (implement):
   --worktree <path>       Path to the git worktree (required)
   --prompt-file <path>    Path to the prompt file (required)
   --attempt <N>           Attempt number (default: 1)
-  --timeout <seconds>     Timeout in seconds (default: 300)
+  --timeout <seconds>     Timeout in seconds (default: 3600)
   --context-dir <dir>     Restrict changes to this directory
 
 Options (review):
@@ -603,7 +617,7 @@ Options (review):
   --rubric-file <path>    Path to the review rubric file (required)
   --spec-file <path>      Path to the specification file (required)
   --attempt <N>           Attempt number (default: 1)
-  --timeout <seconds>     Timeout in seconds (default: 300)
+  --timeout <seconds>     Timeout in seconds (default: 3600)
 
 Options (status):
   <worktree-path>         Path to the worktree to check
