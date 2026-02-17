@@ -50,7 +50,6 @@ Use the `visual-review` skill to take screenshots of web pages, presentations, o
 
 - **TDD is mandatory** — Write tests first, watch them fail, then implement
 - **100% test coverage required** — Lines, branches, functions, and statements. Enforced via `.coverage-thresholds.json` as a blocking gate before PR creation and task completion
-<!-- TODO: Update these commands for your project's test runner -->
 - Test command: `npm test`
 - Coverage command: `npm run test:coverage`
 
@@ -89,9 +88,7 @@ Development patterns and standards are documented in `.claude/guides/`:
 
 ## Code Quality
 
-<!-- TODO: Update these for your project's language and tools -->
-- TypeScript strict mode, no `any` types
-- ESLint + Prettier
+- Modern ES modules, strict mode
 - All quality gates must pass before PR creation
 
 ## Key Decisions

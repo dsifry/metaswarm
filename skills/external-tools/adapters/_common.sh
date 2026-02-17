@@ -29,7 +29,7 @@ parse_args() {
   XT_RUBRIC_FILE=""
   XT_SPEC_FILE=""
   XT_ATTEMPT="1"
-  XT_TIMEOUT="300"
+  XT_TIMEOUT="3600"
   XT_CONTEXT_DIR=""
 
   while [[ $# -gt 0 ]]; do
@@ -55,7 +55,7 @@ parse_args() {
         shift 2
         ;;
       --timeout)
-        XT_TIMEOUT="${2:-300}"
+        XT_TIMEOUT="${2:-3600}"
         shift 2
         ;;
       --context-dir)
@@ -95,31 +95,48 @@ safe_invoke() {
   local stderr_file="${3:?safe_invoke: stderr_file required}"
   shift 3
 
-  local exit_code=0
+  local heartbeat_interval=300  # Print status every 5 minutes
 
-  # Try coreutils timeout (Linux) or gtimeout (macOS via brew install coreutils)
-  if command -v timeout >/dev/null 2>&1; then
-    timeout "${timeout_secs}" "$@" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
-  elif command -v gtimeout >/dev/null 2>&1; then
-    gtimeout "${timeout_secs}" "$@" >"$stdout_file" 2>"$stderr_file" || exit_code=$?
-  else
-    # macOS fallback: run in background, kill after timeout
-    "$@" >"$stdout_file" 2>"$stderr_file" &
-    local pid=$!
-    local elapsed=0
-    while kill -0 "$pid" 2>/dev/null; do
-      if [[ "$elapsed" -ge "$timeout_secs" ]]; then
-        kill -TERM "$pid" 2>/dev/null || true
-        sleep 1
-        kill -KILL "$pid" 2>/dev/null || true
-        wait "$pid" 2>/dev/null || true
-        exit_code=124  # Match coreutils timeout exit code
-        return "$exit_code"
-      fi
-      sleep 1
-      elapsed=$((elapsed + 1))
-    done
-    wait "$pid" 2>/dev/null || exit_code=$?
+  # Run the command in background with heartbeat monitoring.
+  # This avoids blocking for long-running Codex tasks and gives the
+  # calling agent periodic status updates.
+  "$@" >"$stdout_file" 2>"$stderr_file" &
+  local pid=$!
+
+  # Write child PID to file if SAFE_INVOKE_PIDFILE is set, so callers
+  # (and external agents) can reliably find the actual process.
+  if [[ -n "${SAFE_INVOKE_PIDFILE:-}" ]]; then
+    printf '%d\n' "$pid" > "$SAFE_INVOKE_PIDFILE"
+  fi
+
+  local elapsed=0
+  local exit_code=0
+  local next_heartbeat=$heartbeat_interval
+
+  while kill -0 "$pid" 2>/dev/null; do
+    if [[ "$elapsed" -ge "$timeout_secs" ]]; then
+      printf '[safe_invoke] Timeout after %ds — killing process %d\n' "$elapsed" "$pid" >&2
+      kill -TERM "$pid" 2>/dev/null || true
+      sleep 2
+      kill -KILL "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+      exit_code=124  # Match coreutils timeout exit code
+      return "$exit_code"
+    fi
+    if [[ "$elapsed" -ge "$next_heartbeat" ]]; then
+      local mins=$(( elapsed / 60 ))
+      local max_mins=$(( timeout_secs / 60 ))
+      printf '[safe_invoke] Still running... %dm / %dm elapsed\n' "$mins" "$max_mins" >&2
+      next_heartbeat=$(( next_heartbeat + heartbeat_interval ))
+    fi
+    sleep 5
+    elapsed=$(( elapsed + 5 ))
+  done
+  wait "$pid" 2>/dev/null || exit_code=$?
+
+  if [[ "$exit_code" -eq 0 ]]; then
+    local mins=$(( elapsed / 60 ))
+    printf '[safe_invoke] Completed successfully in %dm %ds\n' "$mins" $(( elapsed % 60 )) >&2
   fi
 
   return "$exit_code"
@@ -218,6 +235,74 @@ create_worktree() {
 }
 
 # ---------------------------------------------------------------------------
+# recover_git_index()
+#   Removes stale index.lock left by sandboxed tools (Codex/Gemini) that
+#   couldn't complete their git operations. Without this, the adapter's
+#   post-run `git add -A` silently fails, and all work is lost when
+#   scrub_worktree resets the working tree.
+#   Usage: recover_git_index <worktree_path>
+# ---------------------------------------------------------------------------
+recover_git_index() {
+  local wt="${1:?recover_git_index: worktree_path required}"
+  [[ -d "$wt" ]] || return 0
+
+  # Get the git dir for this worktree (follows the .git file pointer)
+  local git_dir
+  git_dir="$(git -C "$wt" rev-parse --git-dir 2>/dev/null || true)"
+  [[ -z "$git_dir" ]] && return 0
+
+  # Resolve relative paths
+  if [[ "$git_dir" != /* ]]; then
+    git_dir="$(cd "$wt" && cd "$git_dir" && pwd)"
+  fi
+
+  # Remove stale index.lock
+  local lockfile="${git_dir}/index.lock"
+  if [[ -f "$lockfile" ]]; then
+    printf '[adapter] Removing stale index.lock: %s\n' "$lockfile" >&2
+    rm -f "$lockfile"
+  fi
+
+  # If the index itself is missing or corrupted, rebuild it from HEAD
+  local indexfile="${git_dir}/index"
+  if [[ ! -f "$indexfile" ]] || ! git -C "$wt" status >/dev/null 2>&1; then
+    printf '[adapter] Rebuilding git index from HEAD\n' >&2
+    git -C "$wt" read-tree HEAD 2>/dev/null || true
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# scrub_worktree()
+#   Removes untracked files and resets modified files in a worktree so it can
+#   be removed with plain `git worktree remove` (no --force).
+#   Avoids `git clean -f` which may be blocked by safety tools.
+#   Usage: scrub_worktree <worktree_path>
+# ---------------------------------------------------------------------------
+scrub_worktree() {
+  local wt="${1:?scrub_worktree: worktree_path required}"
+  [[ -d "$wt" ]] || return 0
+
+  # Remove common build artifact directories that Codex may have created
+  for artifact in node_modules dist .next .nuxt .turbo coverage __pycache__ .mypy_cache .pytest_cache target vendor build .gradle; do
+    rm -rf "${wt}/${artifact}" 2>/dev/null || true
+  done
+
+  # Reset any modified tracked files to HEAD
+  git -C "$wt" checkout -- . 2>/dev/null || true
+
+  # Remove remaining untracked files via git ls-files
+  # (safer alternative to git clean -f)
+  local untracked
+  untracked="$(git -C "$wt" ls-files --others --exclude-standard 2>/dev/null || true)"
+  if [[ -n "$untracked" ]]; then
+    while IFS= read -r f; do
+      [[ -z "$f" ]] && continue
+      rm -rf "${wt}/${f}" 2>/dev/null || true
+    done <<< "$untracked"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # cleanup_worktree()
 #   Removes a worktree and optionally its branch.
 #   Usage: cleanup_worktree <repo_root> <worktree_path> [--keep-branch]
@@ -233,8 +318,12 @@ cleanup_worktree() {
     branch_name="$(git -C "$worktree_path" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
   fi
 
-  # Remove the worktree
-  git -C "$repo_root" worktree remove --force "$worktree_path" >/dev/null 2>&1 || true
+  # Scrub untracked/modified files so we don't need --force
+  scrub_worktree "$worktree_path"
+
+  # Remove the worktree (try without --force first, fall back to rm)
+  git -C "$repo_root" worktree remove "$worktree_path" >/dev/null 2>&1 \
+    || rm -rf "$worktree_path" 2>/dev/null || true
   git -C "$repo_root" worktree prune >/dev/null 2>&1 || true
 
   # Remove the branch unless --keep-branch was specified
@@ -263,7 +352,12 @@ verify_scope() {
 
   local violations_found=0
   local changed_files
-  changed_files="$(git -C "$worktree_path" diff --name-only HEAD 2>/dev/null || true)"
+  # Try committed diff first (HEAD~1..HEAD) since tools commit before calling verify_scope,
+  # then fall back to uncommitted diff (HEAD) for pre-commit verification.
+  changed_files="$(git -C "$worktree_path" diff --name-only HEAD~1 HEAD 2>/dev/null || true)"
+  if [[ -z "$changed_files" ]]; then
+    changed_files="$(git -C "$worktree_path" diff --name-only HEAD 2>/dev/null || true)"
+  fi
 
   if [[ -z "$changed_files" ]]; then
     return 0
@@ -273,8 +367,8 @@ verify_scope() {
     [[ -z "$file" ]] && continue
     # Check if the file path starts with the context_dir prefix
     if [[ "$file" != "${context_dir}"* && "$file" != "${context_dir}/"* ]]; then
-      # Out of scope — revert this file
-      git -C "$worktree_path" checkout HEAD -- "$file" 2>/dev/null || true
+      # Out of scope — revert to pre-commit version (HEAD~1, since tool already committed)
+      git -C "$worktree_path" checkout HEAD~1 -- "$file" 2>/dev/null || true
       violations_found=1
     fi
   done <<< "$changed_files"
@@ -285,6 +379,8 @@ verify_scope() {
 # ---------------------------------------------------------------------------
 # get_diff_stats()
 #   Returns JSON {"additions": N, "deletions": N} from git diff.
+#   Compares HEAD against its parent (HEAD~1) to capture committed changes.
+#   Falls back to uncommitted diff if no parent exists.
 #   Usage: get_diff_stats <worktree_path>
 # ---------------------------------------------------------------------------
 get_diff_stats() {
@@ -295,7 +391,11 @@ get_diff_stats() {
 
   if [[ -d "$worktree_path" ]]; then
     local stat_line
-    stat_line="$(git -C "$worktree_path" diff --stat HEAD 2>/dev/null | tail -1 || true)"
+    # Try committed diff first (HEAD~1..HEAD), fall back to uncommitted (HEAD)
+    stat_line="$(git -C "$worktree_path" diff --stat HEAD~1 HEAD 2>/dev/null | tail -1 || true)"
+    if [[ -z "$stat_line" ]]; then
+      stat_line="$(git -C "$worktree_path" diff --stat HEAD 2>/dev/null | tail -1 || true)"
+    fi
 
     if [[ -n "$stat_line" ]]; then
       # Extract insertions and deletions from summary line like:
@@ -322,7 +422,11 @@ get_changed_files() {
   fi
 
   local files
-  files="$(git -C "$worktree_path" diff --name-only HEAD 2>/dev/null || true)"
+  # Try committed diff first (HEAD~1..HEAD), fall back to uncommitted (HEAD)
+  files="$(git -C "$worktree_path" diff --name-only HEAD~1 HEAD 2>/dev/null || true)"
+  if [[ -z "$files" ]]; then
+    files="$(git -C "$worktree_path" diff --name-only HEAD 2>/dev/null || true)"
+  fi
 
   if [[ -z "$files" ]]; then
     printf '[]'
