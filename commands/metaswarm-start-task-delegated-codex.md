@@ -112,9 +112,8 @@ Ask the user to confirm:
 
 For each work unit, prepare:
 
-- **Scope**: Which files/directories this unit touches
-- **Definition of Done**: Specific, testable criteria
-- **Context files**: List of files the implementer needs to read
+- **Scope**: Which files/directories this unit touches (Codex reads them from the worktree — do NOT paste their contents into the prompt)
+- **Definition of Done**: Specific, testable criteria (describe behavior, not implementation)
 - **Test expectations**: What tests should exist after implementation
 
 ### 3. Prompt Preparation & Codex Launch
@@ -127,48 +126,36 @@ For each work unit, spawn a sub-agent (via Task tool with `subagent_type: "gener
 
 #### 3.1 — Write the Prompt File
 
-Create a self-contained markdown prompt at `/tmp/codex-prompt-<unit-id>.md` with:
+Create a **concise** prompt at `/tmp/codex-prompt-<unit-id>.md`. Codex has full access to the worktree — it can read every file. **Do NOT paste code into the prompt.** Do NOT write the implementation for Codex. Describe the problem, point to the files, and let Codex figure it out.
+
+**Target: under 2 KB per prompt.** If your prompt exceeds 4 KB, you're being too prescriptive.
 
 ```markdown
 # Task: <work unit title>
 
-## Context
-<Issue body or task description>
-<Relevant CLAUDE.md sections - coding standards, test patterns>
+## Problem
+<What's broken or what needs to be built. 2-3 sentences max.>
 
-## Files to Modify
-<List of files with brief description of needed changes>
-
-## Current Code
-<Paste relevant code snippets from context files - Codex can't read your repo without this>
+## Scope
+<File paths to modify — just paths, no code snippets. Codex can read them.>
 
 ## Definition of Done
-<Specific criteria from work unit decomposition>
+<Testable acceptance criteria — what should pass, what behavior should change>
 
-## Testing Requirements
-- Write tests FIRST (TDD)
+## Test & Validate
 - Test command: <from project profile>
-- Coverage command: <from project profile>
 - All tests must pass before committing
+- Do NOT commit prompt files (*.codex-prompt*.md)
 
-## Coding Standards
-<From CLAUDE.md - language-specific rules, lint, format requirements>
-
-## Known Gotchas
-<Include any project-specific pitfalls discovered from prior runs. Examples:>
-- <If TypeScript + ESM: "Use .mjs-compatible syntax: no `catch (e: any)`, use `as any` for untyped imports">
-- <If sandbox restrictions: "npm registry may not be reachable. Do NOT run `npm install` or `pnpm install`. Dependencies are pre-installed.">
-- <If specific tool limitations: "tsx IPC sockets may be blocked. Use `node --import tsx/esm` instead of `npx tsx`.">
-- <If known test patterns: "Tests use vitest, not jest. Do not add jest imports.">
-
-Check `.metaswarm/known-gotchas.md` in the project root if it exists — paste its contents here.
-
-## IMPORTANT
-- Only modify files listed above. Do not touch other files.
-- Commit your changes with a descriptive message when done.
-- Run tests and fix any failures before committing.
-- Do NOT commit prompt files (*.codex-prompt*.md) — they are ephemeral.
+## Gotchas
+<Paste contents of `.metaswarm/known-gotchas.md` if it exists, otherwise omit this section>
 ```
+
+**Anti-patterns to avoid:**
+- Do NOT paste function bodies into the prompt — Codex can read the source
+- Do NOT write replacement code — describe the expected behavior instead
+- Do NOT include line numbers — they shift during edits and mislead Codex
+- Do NOT duplicate coding standards Codex can find in CLAUDE.md (it's in the worktree)
 
 #### 3.2 — Create Worktree & Launch Codex
 
