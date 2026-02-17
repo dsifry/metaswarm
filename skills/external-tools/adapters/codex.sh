@@ -296,20 +296,28 @@ cmd_implement() {
   local git_sha=""
 
   if [[ -d "$XT_WORKTREE" ]]; then
+    # Recover from stale index.lock left by sandboxed Codex.
+    # Without this, git add silently fails and all work is lost.
+    recover_git_index "$XT_WORKTREE"
+
     # Stage all changes
-    git -C "$XT_WORKTREE" add -A 2>/dev/null || true
+    if ! git -C "$XT_WORKTREE" add -A 2>/dev/null; then
+      printf '[adapter] WARNING: git add -A failed in %s\n' "$XT_WORKTREE" >&2
+    fi
 
     # Check if there are changes to commit
     if ! git -C "$XT_WORKTREE" diff --cached --quiet 2>/dev/null; then
-      git -C "$XT_WORKTREE" commit -m "feat: codex implement (attempt ${XT_ATTEMPT})" \
+      if ! git -C "$XT_WORKTREE" commit -m "feat: codex implement (attempt ${XT_ATTEMPT})" \
         --author="Codex CLI <codex@openai.com>" \
-        >/dev/null 2>&1 || true
+        >/dev/null 2>&1; then
+        printf '[adapter] WARNING: git commit failed in %s\n' "$XT_WORKTREE" >&2
+      fi
     fi
 
     # Verify scope (revert out-of-scope changes if context_dir is set)
     if [[ -n "$XT_CONTEXT_DIR" ]]; then
       if ! verify_scope "$XT_WORKTREE" "$XT_CONTEXT_DIR"; then
-        # Re-commit after reverting out-of-scope files
+        recover_git_index "$XT_WORKTREE"
         git -C "$XT_WORKTREE" add -A 2>/dev/null || true
         if ! git -C "$XT_WORKTREE" diff --cached --quiet 2>/dev/null; then
           git -C "$XT_WORKTREE" commit -m "fix: revert out-of-scope changes" \
@@ -322,13 +330,9 @@ cmd_implement() {
     # Capture branch and SHA
     branch="$(git -C "$XT_WORKTREE" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
     git_sha="$(git -C "$XT_WORKTREE" rev-parse HEAD 2>/dev/null || true)"
-
-    # Clean worktree of build artifacts so it can be removed without --force.
-    # Codex may have run install/build which creates large untracked dirs.
-    scrub_worktree "$XT_WORKTREE"
   fi
 
-  # Extract cost/stats
+  # Extract cost/stats BEFORE scrub (scrub resets working tree)
   local cost_json
   cost_json="$(extract_cost_codex "$stdout_file")"
 
@@ -337,6 +341,12 @@ cmd_implement() {
 
   local diff_stats_json
   diff_stats_json="$(get_diff_stats "$XT_WORKTREE")"
+
+  if [[ -d "$XT_WORKTREE" ]]; then
+    # Clean worktree of build artifacts so it can be removed without --force.
+    # Codex may have run install/build which creates large untracked dirs.
+    scrub_worktree "$XT_WORKTREE"
+  fi
 
   # Emit structured output
   local result_json

@@ -235,6 +235,43 @@ create_worktree() {
 }
 
 # ---------------------------------------------------------------------------
+# recover_git_index()
+#   Removes stale index.lock left by sandboxed tools (Codex/Gemini) that
+#   couldn't complete their git operations. Without this, the adapter's
+#   post-run `git add -A` silently fails, and all work is lost when
+#   scrub_worktree resets the working tree.
+#   Usage: recover_git_index <worktree_path>
+# ---------------------------------------------------------------------------
+recover_git_index() {
+  local wt="${1:?recover_git_index: worktree_path required}"
+  [[ -d "$wt" ]] || return 0
+
+  # Get the git dir for this worktree (follows the .git file pointer)
+  local git_dir
+  git_dir="$(git -C "$wt" rev-parse --git-dir 2>/dev/null || true)"
+  [[ -z "$git_dir" ]] && return 0
+
+  # Resolve relative paths
+  if [[ "$git_dir" != /* ]]; then
+    git_dir="$(cd "$wt" && cd "$git_dir" && pwd)"
+  fi
+
+  # Remove stale index.lock
+  local lockfile="${git_dir}/index.lock"
+  if [[ -f "$lockfile" ]]; then
+    printf '[adapter] Removing stale index.lock: %s\n' "$lockfile" >&2
+    rm -f "$lockfile"
+  fi
+
+  # If the index itself is missing or corrupted, rebuild it from HEAD
+  local indexfile="${git_dir}/index"
+  if [[ ! -f "$indexfile" ]] || ! git -C "$wt" status >/dev/null 2>&1; then
+    printf '[adapter] Rebuilding git index from HEAD\n' >&2
+    git -C "$wt" read-tree HEAD 2>/dev/null || true
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # scrub_worktree()
 #   Removes untracked files and resets modified files in a worktree so it can
 #   be removed with plain `git worktree remove` (no --force).

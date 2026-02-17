@@ -212,12 +212,20 @@ cmd_implement() {
 
   branch="$(git -C "$XT_WORKTREE" rev-parse --abbrev-ref HEAD 2>/dev/null || printf '')"
 
+  # Recover from stale index.lock left by sandboxed Gemini.
+  # Without this, git add silently fails and all work is lost.
+  recover_git_index "$XT_WORKTREE"
+
   # Stage all changes and commit (only if there are actual changes)
-  git -C "$XT_WORKTREE" add -A 2>/dev/null || true
+  if ! git -C "$XT_WORKTREE" add -A 2>/dev/null; then
+    printf '[adapter] WARNING: git add -A failed in %s\n' "$XT_WORKTREE" >&2
+  fi
   if ! git -C "$XT_WORKTREE" diff --cached --quiet 2>/dev/null; then
-    git -C "$XT_WORKTREE" commit -m "${TOOL_NAME}: implement (attempt ${XT_ATTEMPT})" \
+    if ! git -C "$XT_WORKTREE" commit -m "${TOOL_NAME}: implement (attempt ${XT_ATTEMPT})" \
       --author="Gemini CLI <gemini@google.com>" \
-      >/dev/null 2>&1 || true
+      >/dev/null 2>&1; then
+      printf '[adapter] WARNING: git commit failed in %s\n' "$XT_WORKTREE" >&2
+    fi
   fi
 
   git_sha="$(git -C "$XT_WORKTREE" rev-parse HEAD 2>/dev/null || printf '')"
@@ -226,6 +234,7 @@ cmd_implement() {
   if [[ -n "$XT_CONTEXT_DIR" ]]; then
     if ! verify_scope "$XT_WORKTREE" "$XT_CONTEXT_DIR"; then
       # Re-commit after reverting out-of-scope files
+      recover_git_index "$XT_WORKTREE"
       git -C "$XT_WORKTREE" add -A 2>/dev/null || true
       if ! git -C "$XT_WORKTREE" diff --cached --quiet 2>/dev/null; then
         git -C "$XT_WORKTREE" commit -m "fix: revert out-of-scope changes" \
