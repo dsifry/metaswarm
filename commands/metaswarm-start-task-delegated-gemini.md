@@ -2,7 +2,7 @@
 
 A variant of `start-task` that forces all implementation work through Google Gemini CLI via agent teams. Use this for frontend-heavy, UI/component tasks where Gemini excels.
 
-Requires Team Mode (`TeamCreate`/`SendMessage` tools). If Team tools are not available, use `/project:start-task` instead.
+**ALWAYS use Team Mode** (`TeamCreate`/`SendMessage`/`TaskCreate`). Do NOT fall back to bare `Task` tool subagents — they lack coordination, shared task lists, and message passing. If Team tools are not available in your environment, abort and tell the user to upgrade.
 
 ## Usage
 
@@ -119,7 +119,9 @@ For each work unit, prepare:
 
 ### 3. Prompt Preparation & Gemini Launch
 
-For each work unit, spawn a sub-agent (via Task tool with `subagent_type: "general-purpose"` and `model: "opus"`) that does the following.
+**You MUST use the full team workflow.** Call `TeamCreate` first, then `TaskCreate` for each work unit, then spawn teammates via `Task` tool with `team_name` set. Do NOT use bare `Task` calls without a team — this loses coordination, shared state, and message passing. Do NOT "reconsider" or "simplify" by dropping the team. The team workflow exists because bare subagents caused $50+ sessions with 8 compaction cycles and lost work.
+
+For each work unit, spawn a teammate (via Task tool with `subagent_type: "general-purpose"`, `model: "opus"`, and `team_name: "<your-team>"`) that does the following.
 
 **CRITICAL — Worktree Isolation**: The sub-agent's prompt MUST include this directive:
 
