@@ -309,6 +309,39 @@ function updateClaudeSettings(localBinDir, hookScripts) {
   }
 }
 
+function removeClaudeSessionStartHook(localBinDir, scriptName) {
+  const claudeSettingsPath = path.join(os.homedir(), '.claude', 'settings.json');
+  if (!fs.existsSync(claudeSettingsPath)) return;
+
+  let settings;
+  try {
+    settings = JSON.parse(fs.readFileSync(claudeSettingsPath, 'utf-8'));
+  } catch (err) {
+    warn(`~/.claude/settings.json contains invalid JSON: ${err.message}`);
+    warn(`Skipping removal of ${scriptName} hook — please fix settings.json manually`);
+    return;
+  }
+
+  if (!settings.hooks || !Array.isArray(settings.hooks.SessionStart)) return;
+
+  const target = path.join(localBinDir, scriptName);
+  let changed = false;
+
+  for (const entry of settings.hooks.SessionStart) {
+    if (!entry || typeof entry !== 'object' || !Array.isArray(entry.hooks)) continue;
+    const originalLength = entry.hooks.length;
+    entry.hooks = entry.hooks.filter(h =>
+      !(h && (h.command === target || (h.command && h.command.endsWith(`/${scriptName}`))))
+    );
+    if (entry.hooks.length !== originalLength) changed = true;
+  }
+
+  if (changed) {
+    fs.writeFileSync(claudeSettingsPath, JSON.stringify(settings, null, 2) + '\n');
+    info(`~/.claude/settings.json (${scriptName} hook removed)`);
+  }
+}
+
 function installCodexSkills() {
   if (!which('codex')) return;
 
@@ -580,6 +613,9 @@ async function install(args) {
     if (fs.existsSync(scriptsDir)) {
       installGlobalScripts(scriptsDir, localBinDir, selectedHookScripts);
       updateClaudeSettings(localBinDir, selectedHookScripts);
+      if (!installVersionCheck) {
+        removeClaudeSessionStartHook(localBinDir, 'metaswarm-version-check');
+      }
     }
 
     // Install global skills for Codex
