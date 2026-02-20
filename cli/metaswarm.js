@@ -3,6 +3,7 @@
 'use strict';
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { execSync } = require('child_process');
 const readline = require('readline');
@@ -387,6 +388,77 @@ async function install(args) {
 
   // chmod +x bin/*.sh
   chmodExec(path.join(CWD, 'bin'));
+
+  // --- Global bootstrap hook (Claude Code + Codex) ---
+
+  // Install bootstrap script for auto-scaffolding new projects
+  const bootstrapScriptSrc = path.join(PKG_ROOT, 'skills', 'project-bootstrap', 'scripts', 'metaswarm-bootstrap');
+  const bootstrapScriptDest = path.join(os.homedir(), '.local', 'bin', 'metaswarm-bootstrap');
+
+  if (fs.existsSync(bootstrapScriptSrc)) {
+    mkdirp(path.dirname(bootstrapScriptDest));
+    if (!fs.existsSync(bootstrapScriptDest)) {
+      fs.copyFileSync(bootstrapScriptSrc, bootstrapScriptDest);
+      fs.chmodSync(bootstrapScriptDest, 0o755);
+      info('~/.local/bin/metaswarm-bootstrap (bootstrap script installed)');
+    } else {
+      skip('~/.local/bin/metaswarm-bootstrap');
+    }
+
+    // Add SessionStart hook to Claude Code settings
+    const claudeSettingsPath = path.join(os.homedir(), '.claude', 'settings.json');
+    if (fs.existsSync(claudeSettingsPath)) {
+      try {
+        const settings = JSON.parse(fs.readFileSync(claudeSettingsPath, 'utf-8'));
+        const sessionHooks = settings.hooks?.SessionStart?.[0]?.hooks || [];
+        const alreadyInstalled = sessionHooks.some(h =>
+          h.command && h.command.includes('metaswarm-bootstrap')
+        );
+
+        if (!alreadyInstalled) {
+          if (!settings.hooks) settings.hooks = {};
+          if (!settings.hooks.SessionStart) {
+            settings.hooks.SessionStart = [{ matcher: '', hooks: [] }];
+          }
+          if (!settings.hooks.SessionStart[0].hooks) {
+            settings.hooks.SessionStart[0].hooks = [];
+          }
+          settings.hooks.SessionStart[0].hooks.push({
+            type: 'command',
+            command: bootstrapScriptDest,
+          });
+          fs.writeFileSync(claudeSettingsPath, JSON.stringify(settings, null, 2) + '\n');
+          info('~/.claude/settings.json (SessionStart hook added)');
+        } else {
+          skip('~/.claude/settings.json (bootstrap hook already present)');
+        }
+      } catch (err) {
+        warn(`Could not update ~/.claude/settings.json: ${err.message}`);
+      }
+    }
+  }
+
+  // Install global skills for Codex
+  if (which('codex')) {
+    const codexSkillsDir = path.join(os.homedir(), '.codex', 'metaswarm');
+    const agentsSymlink = path.join(os.homedir(), '.agents', 'skills', 'metaswarm');
+
+    if (!fs.existsSync(codexSkillsDir)) {
+      mkdirp(codexSkillsDir);
+      copyDir(path.join(PKG_ROOT, 'skills'), path.join(codexSkillsDir, 'skills'));
+      info('~/.codex/metaswarm/skills (global Codex skills installed)');
+    } else {
+      skip('~/.codex/metaswarm/skills');
+    }
+
+    if (!fs.existsSync(agentsSymlink)) {
+      mkdirp(path.dirname(agentsSymlink));
+      fs.symlinkSync(path.join(codexSkillsDir, 'skills'), agentsSymlink);
+      info('~/.agents/skills/metaswarm (symlinked for global discovery)');
+    } else {
+      skip('~/.agents/skills/metaswarm');
+    }
+  }
 
   // --- Flag-driven setup ---
 
