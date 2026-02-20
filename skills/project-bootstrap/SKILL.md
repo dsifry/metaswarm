@@ -169,7 +169,9 @@ Both hooks are added to `~/.claude/settings.json`:
 npx metaswarm install --install-global-hooks
 ```
 
-Or run `npx metaswarm install` and answer the global setup prompt with `y`.
+Or run `npx metaswarm install` and answer prompts:
+- Install global hooks/skills? `y` to enable SessionStart auto-bootstrap
+- Enable session-start update checks? `y` to get update notices (optional)
 
 The `metaswarm-bootstrap` script exits instantly if the project already has metaswarm. The `metaswarm-version-check` script exits instantly if it checked within 24 hours. Combined overhead for a warm session: ~2ms.
 

@@ -26,6 +26,10 @@ function skip(msg) {
   console.log(`  \u00b7  ${msg} (already exists, skipped)`);
 }
 
+function note(msg) {
+  console.log(`  \u00b7  ${msg}`);
+}
+
 function which(cmd) {
   try {
     execSync(`command -v ${cmd}`, { stdio: 'ignore' });
@@ -543,6 +547,7 @@ async function install(args) {
   ];
 
   let installGlobalHooks = installGlobalHooksFlag;
+  let installVersionCheck = installGlobalHooksFlag;
   if (installGlobalHooksFlag && noGlobalHooksFlag) {
     warn('Both --install-global-hooks and --no-global-hooks were provided; using --install-global-hooks');
   } else if (!installGlobalHooksFlag && !noGlobalHooksFlag) {
@@ -552,23 +557,35 @@ async function install(args) {
       );
       installGlobalHooks = answer === 'y' || answer === 'yes';
       if (!installGlobalHooks) {
-        skip('global hooks/skills');
+        note('global hooks/skills not installed');
       }
     } else {
-      skip('global hooks/skills (--install-global-hooks to enable)');
+      note('global hooks/skills not installed (--install-global-hooks to enable)');
     }
   }
 
   if (installGlobalHooks) {
+    let selectedHookScripts = hookScripts;
+    if (process.stdin.isTTY && process.stdout.isTTY) {
+      const updateCheckAnswer = await askUser(
+        '  Enable session-start update checks? [y/N] '
+      );
+      installVersionCheck = updateCheckAnswer === 'y' || updateCheckAnswer === 'yes';
+      if (!installVersionCheck) {
+        selectedHookScripts = hookScripts.filter(s => s.name !== 'metaswarm-version-check');
+        info('session-start update checks disabled');
+      }
+    }
+
     if (fs.existsSync(scriptsDir)) {
-      installGlobalScripts(scriptsDir, localBinDir, hookScripts);
-      updateClaudeSettings(localBinDir, hookScripts);
+      installGlobalScripts(scriptsDir, localBinDir, selectedHookScripts);
+      updateClaudeSettings(localBinDir, selectedHookScripts);
     }
 
     // Install global skills for Codex
     installCodexSkills();
   } else if (noGlobalHooksFlag) {
-    skip('global hooks/skills');
+    note('global hooks/skills not installed');
   }
 
   // --- Flag-driven setup ---
