@@ -82,20 +82,44 @@ fi
 
 # --- Compare versions ---
 msg=""
-if [ "$installed_version" != "$latest_version" ]; then
+update_available=$(node -e "
+  const i = (process.argv[1] || '').trim().replace(/^v/i, '');
+  const l = (process.argv[2] || '').trim().replace(/^v/i, '');
+  const parse = (v) => {
+    const m = v.match(/^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.-]+))?$/);
+    if (!m) return null;
+    return { major: Number(m[1]), minor: Number(m[2]), patch: Number(m[3]), pre: m[4] || '' };
+  };
+  const pv = parse(i);
+  const lv = parse(l);
+  if (!pv || !lv) process.exit(1);
+  const cmpNum = (a, b) => (a === b ? 0 : (a > b ? 1 : -1));
+  let cmp = cmpNum(lv.major, pv.major) || cmpNum(lv.minor, pv.minor) || cmpNum(lv.patch, pv.patch);
+  if (cmp === 0) {
+    // Stable release is newer than prerelease for same core version
+    if (!lv.pre && pv.pre) cmp = 1;
+    else if (lv.pre && !pv.pre) cmp = -1;
+    else cmp = cmpNum(lv.pre, pv.pre);
+  }
+  console.log(cmp > 0 ? '1' : '0');
+" "$installed_version" "$latest_version" 2>/dev/null || echo "0")
+
+if [ "$update_available" = "1" ]; then
   msg="metaswarm update available: ${installed_version} → ${latest_version}. Run: npx metaswarm@${latest_version} install"
 fi
 
 # --- Write cache atomically (temp file + rename) ---
-mkdir -p "$CACHE_DIR"
-tmp_cache=$(mktemp "${CACHE_FILE}.XXXXXX")
-{
-  date +%s
-  if [ -n "$msg" ]; then
-    echo "$msg"
-  fi
-} > "$tmp_cache"
-mv "$tmp_cache" "$CACHE_FILE"
+(
+  mkdir -p "$CACHE_DIR"
+  tmp_cache=$(mktemp "${CACHE_FILE}.XXXXXX")
+  {
+    date +%s
+    if [ -n "$msg" ]; then
+      echo "$msg"
+    fi
+  } > "$tmp_cache"
+  mv "$tmp_cache" "$CACHE_FILE"
+) || true
 
 # --- Output notice if update available ---
 if [ -n "$msg" ]; then

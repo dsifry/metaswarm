@@ -246,6 +246,8 @@ function installGlobalScripts(scriptsDir, localBinDir, hookScripts) {
       fs.copyFileSync(src, dest);
       fs.chmodSync(dest, 0o755);
       info(`~/.local/bin/${name} (${desc} installed)`);
+    } else {
+      warn(`Hook script missing, skipped: ${src}`);
     }
   }
 }
@@ -352,6 +354,11 @@ function installCodexSkills() {
 
   mkdirp(codexSkillsDir);
   if (fs.existsSync(codexGlobalSkillsDir)) {
+    const expectedMarker = path.join(codexGlobalSkillsDir, 'project-bootstrap', 'SKILL.md');
+    if (!fs.existsSync(expectedMarker)) {
+      warn('~/.codex/metaswarm/skills contains unexpected contents; skipping auto-update');
+      return;
+    }
     fs.rmSync(codexGlobalSkillsDir, { recursive: true, force: true });
   }
   copyDir(path.join(PKG_ROOT, 'skills'), codexGlobalSkillsDir);
