@@ -1,0 +1,129 @@
+#!/bin/bash
+# metaswarm-version-check — Check for newer metaswarm versions on session start.
+#
+# Runs as a Claude Code SessionStart hook. Compares the locally installed
+# version against the latest on npm. If a newer version is available,
+# prints a notice (which appears as hook output in the session context).
+#
+# Designed to be fast: skips the check if it ran within the last 24 hours
+# (cached in ~/.metaswarm/version-cache).
+#
+# Dependencies: node (required by metaswarm anyway), npm
+#
+# Exit codes:
+#   0 — Always (never blocks session start)
+
+set -euo pipefail
+
+CACHE_DIR="${HOME}/.metaswarm"
+CACHE_FILE="${CACHE_DIR}/version-cache"
+CACHE_TTL=86400  # 24 hours in seconds
+
+# --- Fast path: skip if checked recently ---
+if [ -f "$CACHE_FILE" ]; then
+  last_check=$(head -1 "$CACHE_FILE" 2>/dev/null | grep -E '^[0-9]+$' || echo "0")
+  now=$(date +%s)
+  age=$(( now - last_check ))
+  if [ "$age" -lt "$CACHE_TTL" ]; then
+    # Already checked recently — stay silent to avoid repeated session spam
+    exit 0
+  fi
+fi
+
+# --- Determine installed version ---
+# Use node (always available since metaswarm requires it) instead of python3
+installed_version=""
+if [ -f ".claude/plugins/metaswarm/.claude-plugin/plugin.json" ]; then
+  installed_version=$(node -e "
+    try {
+      const p = JSON.parse(require('fs').readFileSync('.claude/plugins/metaswarm/.claude-plugin/plugin.json', 'utf-8'));
+      if (p.version) console.log(p.version);
+    } catch {}
+  " 2>/dev/null || true)
+fi
+
+if [ -z "$installed_version" ]; then
+  # Try global plugin
+  global_json="${HOME}/.claude/plugins/installed_plugins.json"
+  if [ -f "$global_json" ]; then
+    installed_version=$(node -e "
+      try {
+        const data = JSON.parse(require('fs').readFileSync(process.argv[1], 'utf-8'));
+        const entries = (data.plugins || {})['metaswarm@metaswarm'] || [];
+        if (entries.length > 0 && entries[0].version) console.log(entries[0].version);
+      } catch {}
+    " "$global_json" 2>/dev/null || true)
+  fi
+fi
+
+if [ -z "$installed_version" ]; then
+  # No metaswarm installed anywhere — nothing to check
+  mkdir -p "$CACHE_DIR"
+  date +%s > "$CACHE_FILE"
+  exit 0
+fi
+
+# --- Check latest version on npm ---
+# Use node's child_process with a timeout (works on macOS + Linux, no coreutils needed)
+latest_version=$(node -e "
+  const { execSync } = require('child_process');
+  try {
+    const v = execSync('npm view metaswarm version', { timeout: 5000, encoding: 'utf-8' }).trim();
+    if (v) console.log(v);
+  } catch {}
+" 2>/dev/null || true)
+
+if [ -z "$latest_version" ]; then
+  # Network error or timeout — skip silently, cache the attempt
+  mkdir -p "$CACHE_DIR"
+  date +%s > "$CACHE_FILE"
+  exit 0
+fi
+
+# --- Compare versions ---
+msg=""
+update_available=$(node -e "
+  const i = (process.argv[1] || '').trim().replace(/^v/i, '');
+  const l = (process.argv[2] || '').trim().replace(/^v/i, '');
+  const parse = (v) => {
+    const m = v.match(/^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.-]+))?$/);
+    if (!m) return null;
+    return { major: Number(m[1]), minor: Number(m[2]), patch: Number(m[3]), pre: m[4] || '' };
+  };
+  const pv = parse(i);
+  const lv = parse(l);
+  if (!pv || !lv) process.exit(1);
+  const cmpNum = (a, b) => (a === b ? 0 : (a > b ? 1 : -1));
+  let cmp = cmpNum(lv.major, pv.major) || cmpNum(lv.minor, pv.minor) || cmpNum(lv.patch, pv.patch);
+  if (cmp === 0) {
+    // Stable release is newer than prerelease for same core version
+    if (!lv.pre && pv.pre) cmp = 1;
+    else if (lv.pre && !pv.pre) cmp = -1;
+    else cmp = cmpNum(lv.pre, pv.pre);
+  }
+  console.log(cmp > 0 ? '1' : '0');
+" "$installed_version" "$latest_version" 2>/dev/null || echo "0")
+
+if [ "$update_available" = "1" ]; then
+  msg="metaswarm update available: ${installed_version} → ${latest_version}. Run: npx metaswarm@${latest_version} install"
+fi
+
+# --- Write cache atomically (temp file + rename) ---
+(
+  mkdir -p "$CACHE_DIR"
+  tmp_cache=$(mktemp "${CACHE_FILE}.XXXXXX")
+  {
+    date +%s
+    if [ -n "$msg" ]; then
+      echo "$msg"
+    fi
+  } > "$tmp_cache"
+  mv "$tmp_cache" "$CACHE_FILE"
+) || true
+
+# --- Output notice if update available ---
+if [ -n "$msg" ]; then
+  echo "$msg"
+fi
+
+exit 0
