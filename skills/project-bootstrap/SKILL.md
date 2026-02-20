@@ -108,7 +108,7 @@ Compare versions
     └── Different ──► Print update notice, write cache
 ```
 
-**Cache file:** `~/.metaswarm-version-cache`
+**Cache file:** `~/.metaswarm/version-cache`
 - Line 1: Unix timestamp of last check
 - Line 2+: Cached update message (empty if up to date)
 
@@ -211,7 +211,7 @@ Any platform that supports agent skills can use this skill. The core logic is:
 | 2 | **Installing in non-git directories** — running bootstrap in `/tmp` or home directory | Scaffolds agents, rubrics, and knowledge files into directories that aren't projects | Guard with `git rev-parse --is-inside-work-tree` before installing |
 | 3 | **Interactive install in hooks** — running `npx metaswarm install` without piping `Y` | The CLAUDE.md prompt blocks the hook, hanging the session start | Always pipe `echo "Y"` to make the install non-interactive |
 | 4 | **Overwriting existing plugin.json** — deleting and recreating on every run | Loses the version that was intentionally installed; may downgrade | Only install when the marker file is completely absent |
-| 5 | **Checking npm on every session** — no caching of version lookups | Adds 2-5 seconds of latency to every session start | Cache the result for 24 hours in `~/.metaswarm-version-cache` |
+| 5 | **Checking npm on every session** — no caching of version lookups | Adds 2-5 seconds of latency to every session start | Cache the result for 24 hours in `~/.metaswarm/version-cache` |
 | 6 | **Auto-updating without user consent** — silently upgrading metaswarm | May break workflows mid-session or introduce unexpected changes | Only notify; let the user decide when to update |
 
 ---
@@ -236,7 +236,7 @@ Before considering setup complete:
 - [ ] Rubrics exist in `.claude/rubrics/`
 - [ ] CLAUDE.md contains the metaswarm section
 - [ ] Session start latency is under 100ms for already-bootstrapped projects
-- [ ] Version check cache file exists at `~/.metaswarm-version-cache` after first session
+- [ ] Version check cache file exists at `~/.metaswarm/version-cache` after first session
 - [ ] Version check correctly reports when a newer version is available
 
 ---

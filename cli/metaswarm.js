@@ -268,7 +268,13 @@ function updateClaudeSettings(localBinDir, hookScripts) {
   if (!Array.isArray(settings.hooks.SessionStart) || settings.hooks.SessionStart.length === 0) {
     settings.hooks.SessionStart = [{ matcher: '', hooks: [] }];
   }
-  const sessionStart = settings.hooks.SessionStart[0];
+  let sessionStart = settings.hooks.SessionStart.find(entry =>
+    entry && typeof entry === 'object' && entry.matcher === ''
+  );
+  if (!sessionStart) {
+    sessionStart = { matcher: '', hooks: [] };
+    settings.hooks.SessionStart.push(sessionStart);
+  }
   if (!sessionStart.hooks || !Array.isArray(sessionStart.hooks)) {
     sessionStart.hooks = [];
   }
@@ -300,33 +306,52 @@ function installCodexSkills() {
   if (!which('codex')) return;
 
   const codexSkillsDir = path.join(os.homedir(), '.codex', 'metaswarm');
+  const codexGlobalSkillsDir = path.join(codexSkillsDir, 'skills');
   const agentsSymlink = path.join(os.homedir(), '.agents', 'skills', 'metaswarm');
+  const desiredSymlinkTarget = codexGlobalSkillsDir;
 
-  if (!fs.existsSync(codexSkillsDir)) {
-    mkdirp(codexSkillsDir);
-    copyDir(path.join(PKG_ROOT, 'skills'), path.join(codexSkillsDir, 'skills'));
-    info('~/.codex/metaswarm/skills (global Codex skills installed)');
-  } else {
-    skip('~/.codex/metaswarm/skills');
+  mkdirp(codexSkillsDir);
+  if (fs.existsSync(codexGlobalSkillsDir)) {
+    fs.rmSync(codexGlobalSkillsDir, { recursive: true, force: true });
   }
+  copyDir(path.join(PKG_ROOT, 'skills'), codexGlobalSkillsDir);
+  info('~/.codex/metaswarm/skills (global Codex skills installed/updated)');
 
-  // Handle symlink — check for broken symlinks via lstat
+  let createSymlink = false;
   try {
     const stats = fs.lstatSync(agentsSymlink);
-    // Symlink or file exists
-    skip('~/.agents/skills/metaswarm');
+    if (!stats.isSymbolicLink()) {
+      warn('~/.agents/skills/metaswarm exists and is not a symlink — leaving as-is');
+      return;
+    }
+
+    const currentTarget = fs.readlinkSync(agentsSymlink);
+    const resolvedCurrent = path.resolve(path.dirname(agentsSymlink), currentTarget);
+    const resolvedDesired = path.resolve(desiredSymlinkTarget);
+
+    if (resolvedCurrent === resolvedDesired) {
+      skip('~/.agents/skills/metaswarm');
+      return;
+    }
+
+    fs.unlinkSync(agentsSymlink);
+    createSymlink = true;
   } catch (err) {
     if (err.code === 'ENOENT') {
-      // Does not exist — create it
-      mkdirp(path.dirname(agentsSymlink));
-      try {
-        fs.symlinkSync(path.join(codexSkillsDir, 'skills'), agentsSymlink);
-        info('~/.agents/skills/metaswarm (symlinked for global discovery)');
-      } catch (symlinkErr) {
-        warn(`Could not create symlink ~/.agents/skills/metaswarm: ${symlinkErr.message}`);
-      }
+      createSymlink = true;
     } else {
       warn(`Could not check ~/.agents/skills/metaswarm: ${err.message}`);
+      return;
+    }
+  }
+
+  if (createSymlink) {
+    mkdirp(path.dirname(agentsSymlink));
+    try {
+      fs.symlinkSync(desiredSymlinkTarget, agentsSymlink);
+      info('~/.agents/skills/metaswarm (symlinked for global discovery)');
+    } catch (symlinkErr) {
+      warn(`Could not create symlink ~/.agents/skills/metaswarm: ${symlinkErr.message}`);
     }
   }
 }
@@ -518,7 +543,7 @@ async function install(args) {
   }
 
   // Install global skills for Codex
-  installCodexSkills(hookScripts);
+  installCodexSkills();
 
   // --- Flag-driven setup ---
 
