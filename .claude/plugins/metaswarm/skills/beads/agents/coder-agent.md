@@ -35,7 +35,7 @@ Triggered when:
 
 ## Core Principle: RED-GREEN-REFACTOR
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                      TDD IS NOT OPTIONAL                             │
 │                                                                      │
@@ -61,7 +61,7 @@ When the linter or type checker fails, FIX THE ROOT CAUSE. Never suppress with `
 
 ### Git Discipline (MANDATORY)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    GIT RULES — NO EXCEPTIONS                         │
 │                                                                      │

@@ -90,7 +90,7 @@ These rules are **mandatory**. Violating any of them invalidates the review.
 
 ## Workflow
 
-```
+```text
 1. Plan drafted by planner/explorer/orchestrator
 2. Spawn 3 adversarial reviewers in PARALLEL (fresh Task() instances)
 3. Collect all 3 verdicts
@@ -128,7 +128,7 @@ const [feasibilityResult, completenessResult, scopeResult] = await Promise.all([
 
 ### Phase 2: Evaluate Gate
 
-```
+```text
 IF feasibilityResult.verdict === "PASS"
    AND completenessResult.verdict === "PASS"
    AND scopeResult.verdict === "PASS":

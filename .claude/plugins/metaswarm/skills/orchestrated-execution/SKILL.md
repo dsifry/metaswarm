@@ -142,7 +142,7 @@ Each work unit contains:
 
 Work units form a directed acyclic graph (DAG):
 
-```
+```text
 wu-001 (schema changes) ───┐
                             ├──→ wu-003 (API endpoints)  ───→ wu-005 (integration tests)
 wu-002 (shared utilities) ──┘                                        │
@@ -176,7 +176,7 @@ bd dep add <wu-003> <wu-002>
 
 For each work unit, execute these four phases in sequence. **Do not skip phases.** Do not combine phases. Do not proceed to the next phase until the current phase produces a clear outcome.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                    4-PHASE EXECUTION LOOP                       │
 │                                                                 │
@@ -204,7 +204,7 @@ The coding subagent executes against the work unit spec.
 
 **Subagent spawn template:**
 
-```
+```text
 You are the CODER AGENT for work unit ${wuId}.
 
 ## Spec
@@ -292,7 +292,7 @@ A **separate review subagent** checks the implementation against the spec contra
 
 **Reviewer spawn template:**
 
-```
+```text
 You are the ADVERSARIAL REVIEWER for work unit ${wuId}.
 
 ## Mode
@@ -359,7 +359,7 @@ Quality gates are BLOCKING STATE TRANSITIONS, not advisory recommendations. The 
 
 ### State Machine
 
-```
+```text
 IMPLEMENT ──→ VALIDATE ──→ REVIEW ──→ COMMIT
                  │            │
                  ↓            ↓
@@ -419,7 +419,7 @@ Track each attempt visibly: "Re-review attempt 1/3", "Re-review attempt 2/3", et
 
 When multiple work units have no dependencies on each other, execute them in parallel — but with structured convergence points.
 
-```
+```text
               ┌──── WU-001: IMPLEMENT ────┐
               │                            │
 Fan-out ──────┼──── WU-002: IMPLEMENT ────┼──── Converge for VALIDATE
@@ -560,7 +560,7 @@ STATE_EOF
 
 When the orchestrator detects it has lost context (after compaction or in a new session), it recovers by reading persisted state:
 
-```
+```text
 1. Check: Does `.beads/plans/active-plan.md` exist with `status: in-progress`?
    - YES → Context was lost mid-execution. Recover.
    - NO → No active execution. Start fresh.
@@ -583,8 +583,12 @@ When the orchestrator detects it has lost context (after compaction or in a new 
 After the PR is created (or the plan is abandoned):
 
 ```bash
-# Mark plan as completed
-sed -i '' 's/status: in-progress/status: completed/' .beads/plans/active-plan.md
+# Mark plan as completed (cross-platform sed)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  sed -i '' 's/status: in-progress/status: completed/' .beads/plans/active-plan.md
+else
+  sed -i 's/status: in-progress/status: completed/' .beads/plans/active-plan.md
+fi
 
 # Archive execution state (don't delete — useful for post-mortem)
 mv .beads/context/execution-state.md .beads/context/execution-state-<timestamp>.md
