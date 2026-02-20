@@ -1,0 +1,89 @@
+#!/bin/bash
+# metaswarm-version-check — Check for newer metaswarm versions on session start.
+#
+# Runs as a Claude Code SessionStart hook. Compares the locally installed
+# version against the latest on npm. If a newer version is available,
+# prints a notice (which appears as hook output in the session context).
+#
+# Designed to be fast: skips the check if it ran within the last 24 hours
+# (cached in ~/.metaswarm-version-cache).
+#
+# Exit codes:
+#   0 — Always (never blocks session start)
+
+set -euo pipefail
+
+CACHE_FILE="${HOME}/.metaswarm-version-cache"
+CACHE_TTL=86400  # 24 hours in seconds
+
+# --- Fast path: skip if checked recently ---
+if [ -f "$CACHE_FILE" ]; then
+  last_check=$(head -1 "$CACHE_FILE" 2>/dev/null || echo "0")
+  now=$(date +%s)
+  age=$(( now - last_check ))
+  if [ "$age" -lt "$CACHE_TTL" ]; then
+    # Already checked recently — print cached message if any
+    cached_msg=$(tail -n +2 "$CACHE_FILE" 2>/dev/null || true)
+    if [ -n "$cached_msg" ]; then
+      echo "$cached_msg"
+    fi
+    exit 0
+  fi
+fi
+
+# --- Determine installed version ---
+# Check project-local plugin.json first, then global
+installed_version=""
+if [ -f ".claude/plugins/metaswarm/.claude-plugin/plugin.json" ]; then
+  installed_version=$(python3 -c "import json; print(json.load(open('.claude/plugins/metaswarm/.claude-plugin/plugin.json')).get('version',''))" 2>/dev/null || true)
+fi
+
+if [ -z "$installed_version" ]; then
+  # Try global plugin
+  global_json="${HOME}/.claude/plugins/installed_plugins.json"
+  if [ -f "$global_json" ]; then
+    installed_version=$(python3 -c "
+import json
+data = json.load(open('$global_json'))
+entries = data.get('plugins', {}).get('metaswarm@metaswarm', [])
+if entries:
+    print(entries[0].get('version', ''))
+" 2>/dev/null || true)
+  fi
+fi
+
+if [ -z "$installed_version" ]; then
+  # No metaswarm installed anywhere — nothing to check
+  date +%s > "$CACHE_FILE"
+  exit 0
+fi
+
+# --- Check latest version on npm (with timeout) ---
+latest_version=$(timeout 5 npm view metaswarm version 2>/dev/null || true)
+
+if [ -z "$latest_version" ]; then
+  # Network error or timeout — skip silently
+  date +%s > "$CACHE_FILE"
+  exit 0
+fi
+
+# --- Compare versions ---
+msg=""
+if [ "$installed_version" != "$latest_version" ]; then
+  msg="metaswarm update available: ${installed_version} → ${latest_version}. Run: npx metaswarm@${latest_version} install"
+fi
+
+# --- Write cache ---
+{
+  date +%s
+  if [ -n "$msg" ]; then
+    echo "$msg"
+  fi
+} > "$CACHE_FILE"
+
+# --- Output notice if update available ---
+if [ -n "$msg" ]; then
+  echo "$msg"
+fi
+
+exit 0

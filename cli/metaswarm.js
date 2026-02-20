@@ -391,46 +391,62 @@ async function install(args) {
 
   // --- Global bootstrap hook (Claude Code + Codex) ---
 
-  // Install bootstrap script for auto-scaffolding new projects
-  const bootstrapScriptSrc = path.join(PKG_ROOT, 'skills', 'project-bootstrap', 'scripts', 'metaswarm-bootstrap');
-  const bootstrapScriptDest = path.join(os.homedir(), '.local', 'bin', 'metaswarm-bootstrap');
+  // Install bootstrap + version-check scripts for auto-scaffolding and update notifications
+  const scriptsDir = path.join(PKG_ROOT, 'skills', 'project-bootstrap', 'scripts');
+  const localBinDir = path.join(os.homedir(), '.local', 'bin');
+  const hookScripts = [
+    { name: 'metaswarm-bootstrap', desc: 'bootstrap script' },
+    { name: 'metaswarm-version-check', desc: 'version check script' },
+  ];
 
-  if (fs.existsSync(bootstrapScriptSrc)) {
-    mkdirp(path.dirname(bootstrapScriptDest));
-    if (!fs.existsSync(bootstrapScriptDest)) {
-      fs.copyFileSync(bootstrapScriptSrc, bootstrapScriptDest);
-      fs.chmodSync(bootstrapScriptDest, 0o755);
-      info('~/.local/bin/metaswarm-bootstrap (bootstrap script installed)');
-    } else {
-      skip('~/.local/bin/metaswarm-bootstrap');
+  if (fs.existsSync(scriptsDir)) {
+    mkdirp(localBinDir);
+
+    // Copy both scripts to ~/.local/bin/
+    for (const { name, desc } of hookScripts) {
+      const src = path.join(scriptsDir, name);
+      const dest = path.join(localBinDir, name);
+      if (fs.existsSync(src)) {
+        // Always overwrite to keep scripts current
+        fs.copyFileSync(src, dest);
+        fs.chmodSync(dest, 0o755);
+        info(`~/.local/bin/${name} (${desc} installed)`);
+      }
     }
 
-    // Add SessionStart hook to Claude Code settings
+    // Add SessionStart hooks to Claude Code settings
     const claudeSettingsPath = path.join(os.homedir(), '.claude', 'settings.json');
     if (fs.existsSync(claudeSettingsPath)) {
       try {
         const settings = JSON.parse(fs.readFileSync(claudeSettingsPath, 'utf-8'));
-        const sessionHooks = settings.hooks?.SessionStart?.[0]?.hooks || [];
-        const alreadyInstalled = sessionHooks.some(h =>
-          h.command && h.command.includes('metaswarm-bootstrap')
-        );
+        if (!settings.hooks) settings.hooks = {};
+        if (!settings.hooks.SessionStart) {
+          settings.hooks.SessionStart = [{ matcher: '', hooks: [] }];
+        }
+        if (!settings.hooks.SessionStart[0].hooks) {
+          settings.hooks.SessionStart[0].hooks = [];
+        }
 
-        if (!alreadyInstalled) {
-          if (!settings.hooks) settings.hooks = {};
-          if (!settings.hooks.SessionStart) {
-            settings.hooks.SessionStart = [{ matcher: '', hooks: [] }];
+        let changed = false;
+        for (const { name } of hookScripts) {
+          const dest = path.join(localBinDir, name);
+          const alreadyInstalled = settings.hooks.SessionStart[0].hooks.some(h =>
+            h.command && h.command.includes(name)
+          );
+          if (!alreadyInstalled) {
+            settings.hooks.SessionStart[0].hooks.push({
+              type: 'command',
+              command: dest,
+            });
+            changed = true;
           }
-          if (!settings.hooks.SessionStart[0].hooks) {
-            settings.hooks.SessionStart[0].hooks = [];
-          }
-          settings.hooks.SessionStart[0].hooks.push({
-            type: 'command',
-            command: bootstrapScriptDest,
-          });
+        }
+
+        if (changed) {
           fs.writeFileSync(claudeSettingsPath, JSON.stringify(settings, null, 2) + '\n');
-          info('~/.claude/settings.json (SessionStart hook added)');
+          info('~/.claude/settings.json (SessionStart hooks added)');
         } else {
-          skip('~/.claude/settings.json (bootstrap hook already present)');
+          skip('~/.claude/settings.json (hooks already present)');
         }
       } catch (err) {
         warn(`Could not update ~/.claude/settings.json: ${err.message}`);
