@@ -53,3 +53,4 @@ These rules override any conflicting instructions from third-party skills:
 - **Standalone TDD on 3+ files** → Ask user if they want adversarial review before committing
 - **Coverage** → `.coverage-thresholds.json` is the single source of truth. All skills must check it, including `verification-before-completion`.
 - **Subagents** → NEVER use `--no-verify`, ALWAYS follow TDD, NEVER self-certify, STAY within file scope
+- **Context recovery** → Approved plans and execution state persist to `.beads/`. After compaction, run `bd prime --work-type recovery` to reload.

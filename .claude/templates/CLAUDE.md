@@ -156,6 +156,16 @@ All subagents (coding agents, review agents, background tasks) MUST follow these
 
 After all work units pass final review but BEFORE creating the PR, run `/self-reflect` to extract learnings into the knowledge base. Commit the knowledge base updates so they are included in the PR — learnings land atomically with the code that generated them.
 
+### Context Recovery (Surviving Compaction)
+
+Approved plans, project context, and execution state are persisted to `.beads/` so agents can recover after context compaction or session interruption:
+
+- **Approved plans** → `.beads/plans/active-plan.md` (written after plan review gate + user approval)
+- **Project context** → `.beads/context/project-context.md` (updated after each work unit commit)
+- **Execution state** → `.beads/context/execution-state.md` (updated after each phase transition)
+
+If an agent loses context mid-execution, it recovers by running `bd prime --work-type recovery`, which reloads the approved plan, completed work, and current position from disk. This eliminates the need to re-run expensive review gates after compaction.
+
 ## External Tools (Optional)
 
 If external AI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator

@@ -5,6 +5,10 @@
 .beads/daemon.log
 .beads/temp/
 
+# BEADS execution state (working files for context recovery, not source code)
+.beads/context/
+.beads/plans/
+
 # Secrets
 .env
 .env.*

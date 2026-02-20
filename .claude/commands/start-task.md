@@ -14,6 +14,13 @@ Determine task complexity and use appropriate workflow for efficient development
 
 Before starting any new task:
 
+**Context Recovery Check**:
+
+- [ ] Check if `.beads/plans/active-plan.md` exists with `status: in-progress`
+- [ ] If YES: An interrupted execution exists. Ask user: "There's an active plan from a previous session. Resume it or start fresh?"
+  - Resume → run `bd prime --work-type recovery` and pick up where execution stopped
+  - Start fresh → mark the old plan as `status: abandoned` and proceed normally
+
 **Knowledge Priming (CRITICAL)**:
 
 - [ ] Run BEADS prime: `bd prime --keywords "<task-keywords>" --work-type planning`

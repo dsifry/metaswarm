@@ -477,6 +477,121 @@ See SERVICE-INVENTORY.md
 - After each Phase 1 (IMPLEMENT), update patterns if new ones emerge
 - Pass this document to every coder subagent alongside the work unit spec
 
+### Persisting to Disk (MANDATORY)
+
+The Project Context Document MUST be written to `.beads/context/project-context.md` and kept in sync with the in-memory version. This ensures the context survives context compaction and session boundaries.
+
+```bash
+# Create directory if needed
+mkdir -p .beads/context
+
+# Write/update after each Phase 4 (COMMIT) and at orchestration start
+# The file should always reflect the current state of execution
+```
+
+**When to write:**
+- At orchestration start (initial creation)
+- After each Phase 4 (COMMIT) — add the completed work unit
+- After each Phase 1 (IMPLEMENT) — update patterns if new ones emerge
+- At human checkpoints — snapshot current state
+
+**The file is NOT committed to git** during execution — it's a working document. It gets cleaned up after the PR is created (or left for the next session if interrupted).
+
+---
+
+## 6.5. Plan Persistence (Context Recovery)
+
+Approved plans and execution state are persisted to `.beads/` so agents can recover after context compaction or session interruption.
+
+### What Gets Persisted
+
+| File | Contents | Written When |
+|------|----------|-------------|
+| `.beads/plans/active-plan.md` | The adversarially-reviewed, user-approved implementation plan | After plan review gate PASS + user approval |
+| `.beads/context/project-context.md` | Project Context Document (tooling, completed WUs, patterns) | After each Phase 4 COMMIT |
+| `.beads/context/execution-state.md` | Current work unit, phase, retry count | After each phase transition |
+
+### Writing the Approved Plan
+
+After the Plan Review Gate approves a plan AND the user approves it, persist immediately:
+
+```bash
+mkdir -p .beads/plans
+
+# Write the approved plan with metadata header
+cat > .beads/plans/active-plan.md << 'PLAN_EOF'
+# Active Plan
+<!-- approved: <timestamp> -->
+<!-- gate-iterations: <N> -->
+<!-- user-approved: true -->
+<!-- status: in-progress -->
+
+<full plan text including work unit decomposition, DoD items, file scopes, dependencies>
+PLAN_EOF
+```
+
+### Writing Execution State
+
+After each phase transition, update the execution state:
+
+```bash
+cat > .beads/context/execution-state.md << 'STATE_EOF'
+# Execution State
+<!-- updated: <timestamp> -->
+
+## Current Position
+- Active work unit: <wu-id>
+- Current phase: <IMPLEMENT|VALIDATE|REVIEW|COMMIT>
+- Retry count: <0-3>
+
+## Work Unit Status
+| WU | Status | Phase | Retries |
+|----|--------|-------|---------|
+| WU-001 | COMPLETE | COMMITTED | 0 |
+| WU-002 | IN-PROGRESS | VALIDATE | 1 |
+| WU-003 | PENDING | — | 0 |
+
+## Blocked / Escalated
+<any blocked or escalated work units with context>
+STATE_EOF
+```
+
+### Context Recovery Protocol
+
+When the orchestrator detects it has lost context (after compaction or in a new session), it recovers by reading persisted state:
+
+```
+1. Check: Does `.beads/plans/active-plan.md` exist with `status: in-progress`?
+   - YES → Context was lost mid-execution. Recover.
+   - NO → No active execution. Start fresh.
+
+2. Recovery steps:
+   a. Read `.beads/plans/active-plan.md` — reload the approved plan
+   b. Read `.beads/context/project-context.md` — reload completed work and patterns
+   c. Read `.beads/context/execution-state.md` — find where execution stopped
+   d. Run `bd prime --work-type recovery` — reload relevant knowledge base facts
+   e. Resume from the current work unit and phase
+
+3. Announce recovery to user:
+   "Recovered execution context from BEADS. Resuming from WU-<id>, Phase <phase>."
+```
+
+**When to trigger recovery:** The orchestrator should check for `.beads/plans/active-plan.md` at the start of any orchestrated execution. If the file exists with `status: in-progress` and the orchestrator has no plan in its current context, it's a recovery scenario.
+
+### Cleanup
+
+After the PR is created (or the plan is abandoned):
+
+```bash
+# Mark plan as completed
+sed -i '' 's/status: in-progress/status: completed/' .beads/plans/active-plan.md
+
+# Archive execution state (don't delete — useful for post-mortem)
+mv .beads/context/execution-state.md .beads/context/execution-state-<timestamp>.md
+
+# Project context can be kept for reference
+```
+
 ---
 
 ## 7. Human Checkpoints (Proactive)
