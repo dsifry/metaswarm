@@ -219,6 +219,119 @@ async function init(args) {
 }
 
 // =========================================================================
+// Global hook helpers
+// =========================================================================
+
+function installGlobalScripts(scriptsDir, localBinDir, hookScripts) {
+  mkdirp(localBinDir);
+
+  // Warn if ~/.local/bin is not in PATH
+  const pathDirs = (process.env.PATH || '').split(path.delimiter);
+  if (!pathDirs.some(d => d === localBinDir || d === path.join(os.homedir(), '.local', 'bin'))) {
+    warn('~/.local/bin is not in your PATH — hooks will use absolute paths');
+  }
+
+  for (const { name, desc } of hookScripts) {
+    const src = path.join(scriptsDir, name);
+    const dest = path.join(localBinDir, name);
+    if (fs.existsSync(src)) {
+      // Always overwrite to keep scripts current
+      fs.copyFileSync(src, dest);
+      fs.chmodSync(dest, 0o755);
+      info(`~/.local/bin/${name} (${desc} installed)`);
+    }
+  }
+}
+
+function updateClaudeSettings(localBinDir, hookScripts) {
+  const claudeSettingsPath = path.join(os.homedir(), '.claude', 'settings.json');
+
+  // Create ~/.claude/ and settings.json if they don't exist
+  if (!fs.existsSync(path.dirname(claudeSettingsPath))) {
+    mkdirp(path.dirname(claudeSettingsPath));
+  }
+  if (!fs.existsSync(claudeSettingsPath)) {
+    fs.writeFileSync(claudeSettingsPath, JSON.stringify({ hooks: {} }, null, 2) + '\n');
+    info('~/.claude/settings.json (created)');
+  }
+
+  let settings;
+  try {
+    settings = JSON.parse(fs.readFileSync(claudeSettingsPath, 'utf-8'));
+  } catch (err) {
+    warn(`~/.claude/settings.json contains invalid JSON: ${err.message}`);
+    warn('Skipping hook installation — please fix settings.json manually');
+    return;
+  }
+
+  if (!settings.hooks) settings.hooks = {};
+  if (!Array.isArray(settings.hooks.SessionStart) || settings.hooks.SessionStart.length === 0) {
+    settings.hooks.SessionStart = [{ matcher: '', hooks: [] }];
+  }
+  const sessionStart = settings.hooks.SessionStart[0];
+  if (!sessionStart.hooks || !Array.isArray(sessionStart.hooks)) {
+    sessionStart.hooks = [];
+  }
+
+  let changed = false;
+  for (const { name } of hookScripts) {
+    const dest = path.join(localBinDir, name);
+    const alreadyInstalled = sessionStart.hooks.some(h =>
+      h.command === dest || (h.command && h.command.endsWith(`/${name}`))
+    );
+    if (!alreadyInstalled) {
+      sessionStart.hooks.push({
+        type: 'command',
+        command: dest,
+      });
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    fs.writeFileSync(claudeSettingsPath, JSON.stringify(settings, null, 2) + '\n');
+    info('~/.claude/settings.json (SessionStart hooks added)');
+  } else {
+    skip('~/.claude/settings.json (hooks already present)');
+  }
+}
+
+function installCodexSkills() {
+  if (!which('codex')) return;
+
+  const codexSkillsDir = path.join(os.homedir(), '.codex', 'metaswarm');
+  const agentsSymlink = path.join(os.homedir(), '.agents', 'skills', 'metaswarm');
+
+  if (!fs.existsSync(codexSkillsDir)) {
+    mkdirp(codexSkillsDir);
+    copyDir(path.join(PKG_ROOT, 'skills'), path.join(codexSkillsDir, 'skills'));
+    info('~/.codex/metaswarm/skills (global Codex skills installed)');
+  } else {
+    skip('~/.codex/metaswarm/skills');
+  }
+
+  // Handle symlink — check for broken symlinks via lstat
+  try {
+    const stats = fs.lstatSync(agentsSymlink);
+    // Symlink or file exists
+    skip('~/.agents/skills/metaswarm');
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      // Does not exist — create it
+      mkdirp(path.dirname(agentsSymlink));
+      try {
+        fs.symlinkSync(path.join(codexSkillsDir, 'skills'), agentsSymlink);
+        info('~/.agents/skills/metaswarm (symlinked for global discovery)');
+      } catch (symlinkErr) {
+        warn(`Could not create symlink ~/.agents/skills/metaswarm: ${symlinkErr.message}`);
+      }
+    } else {
+      warn(`Could not check ~/.agents/skills/metaswarm: ${err.message}`);
+    }
+  }
+}
+
+// =========================================================================
 // install — Copy all metaswarm components to the project
 // =========================================================================
 async function install(args) {
@@ -400,81 +513,12 @@ async function install(args) {
   ];
 
   if (fs.existsSync(scriptsDir)) {
-    mkdirp(localBinDir);
-
-    // Copy both scripts to ~/.local/bin/
-    for (const { name, desc } of hookScripts) {
-      const src = path.join(scriptsDir, name);
-      const dest = path.join(localBinDir, name);
-      if (fs.existsSync(src)) {
-        // Always overwrite to keep scripts current
-        fs.copyFileSync(src, dest);
-        fs.chmodSync(dest, 0o755);
-        info(`~/.local/bin/${name} (${desc} installed)`);
-      }
-    }
-
-    // Add SessionStart hooks to Claude Code settings
-    const claudeSettingsPath = path.join(os.homedir(), '.claude', 'settings.json');
-    if (fs.existsSync(claudeSettingsPath)) {
-      try {
-        const settings = JSON.parse(fs.readFileSync(claudeSettingsPath, 'utf-8'));
-        if (!settings.hooks) settings.hooks = {};
-        if (!settings.hooks.SessionStart) {
-          settings.hooks.SessionStart = [{ matcher: '', hooks: [] }];
-        }
-        if (!settings.hooks.SessionStart[0].hooks) {
-          settings.hooks.SessionStart[0].hooks = [];
-        }
-
-        let changed = false;
-        for (const { name } of hookScripts) {
-          const dest = path.join(localBinDir, name);
-          const alreadyInstalled = settings.hooks.SessionStart[0].hooks.some(h =>
-            h.command && h.command.includes(name)
-          );
-          if (!alreadyInstalled) {
-            settings.hooks.SessionStart[0].hooks.push({
-              type: 'command',
-              command: dest,
-            });
-            changed = true;
-          }
-        }
-
-        if (changed) {
-          fs.writeFileSync(claudeSettingsPath, JSON.stringify(settings, null, 2) + '\n');
-          info('~/.claude/settings.json (SessionStart hooks added)');
-        } else {
-          skip('~/.claude/settings.json (hooks already present)');
-        }
-      } catch (err) {
-        warn(`Could not update ~/.claude/settings.json: ${err.message}`);
-      }
-    }
+    installGlobalScripts(scriptsDir, localBinDir, hookScripts);
+    updateClaudeSettings(localBinDir, hookScripts);
   }
 
   // Install global skills for Codex
-  if (which('codex')) {
-    const codexSkillsDir = path.join(os.homedir(), '.codex', 'metaswarm');
-    const agentsSymlink = path.join(os.homedir(), '.agents', 'skills', 'metaswarm');
-
-    if (!fs.existsSync(codexSkillsDir)) {
-      mkdirp(codexSkillsDir);
-      copyDir(path.join(PKG_ROOT, 'skills'), path.join(codexSkillsDir, 'skills'));
-      info('~/.codex/metaswarm/skills (global Codex skills installed)');
-    } else {
-      skip('~/.codex/metaswarm/skills');
-    }
-
-    if (!fs.existsSync(agentsSymlink)) {
-      mkdirp(path.dirname(agentsSymlink));
-      fs.symlinkSync(path.join(codexSkillsDir, 'skills'), agentsSymlink);
-      info('~/.agents/skills/metaswarm (symlinked for global discovery)');
-    } else {
-      skip('~/.agents/skills/metaswarm');
-    }
-  }
+  installCodexSkills(hookScripts);
 
   // --- Flag-driven setup ---
 

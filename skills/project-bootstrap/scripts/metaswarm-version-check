@@ -6,19 +6,22 @@
 # prints a notice (which appears as hook output in the session context).
 #
 # Designed to be fast: skips the check if it ran within the last 24 hours
-# (cached in ~/.metaswarm-version-cache).
+# (cached in ~/.metaswarm/version-cache).
+#
+# Dependencies: node (required by metaswarm anyway), npm
 #
 # Exit codes:
 #   0 — Always (never blocks session start)
 
 set -euo pipefail
 
-CACHE_FILE="${HOME}/.metaswarm-version-cache"
+CACHE_DIR="${HOME}/.metaswarm"
+CACHE_FILE="${CACHE_DIR}/version-cache"
 CACHE_TTL=86400  # 24 hours in seconds
 
 # --- Fast path: skip if checked recently ---
 if [ -f "$CACHE_FILE" ]; then
-  last_check=$(head -1 "$CACHE_FILE" 2>/dev/null || echo "0")
+  last_check=$(head -1 "$CACHE_FILE" 2>/dev/null | grep -E '^[0-9]+$' || echo "0")
   now=$(date +%s)
   age=$(( now - last_check ))
   if [ "$age" -lt "$CACHE_TTL" ]; then
@@ -32,37 +35,51 @@ if [ -f "$CACHE_FILE" ]; then
 fi
 
 # --- Determine installed version ---
-# Check project-local plugin.json first, then global
+# Use node (always available since metaswarm requires it) instead of python3
 installed_version=""
 if [ -f ".claude/plugins/metaswarm/.claude-plugin/plugin.json" ]; then
-  installed_version=$(python3 -c "import json; print(json.load(open('.claude/plugins/metaswarm/.claude-plugin/plugin.json')).get('version',''))" 2>/dev/null || true)
+  installed_version=$(node -e "
+    try {
+      const p = JSON.parse(require('fs').readFileSync('.claude/plugins/metaswarm/.claude-plugin/plugin.json', 'utf-8'));
+      if (p.version) console.log(p.version);
+    } catch {}
+  " 2>/dev/null || true)
 fi
 
 if [ -z "$installed_version" ]; then
   # Try global plugin
   global_json="${HOME}/.claude/plugins/installed_plugins.json"
   if [ -f "$global_json" ]; then
-    installed_version=$(python3 -c "
-import json
-data = json.load(open('$global_json'))
-entries = data.get('plugins', {}).get('metaswarm@metaswarm', [])
-if entries:
-    print(entries[0].get('version', ''))
-" 2>/dev/null || true)
+    installed_version=$(node -e "
+      try {
+        const data = JSON.parse(require('fs').readFileSync(process.argv[1], 'utf-8'));
+        const entries = (data.plugins || {})['metaswarm@metaswarm'] || [];
+        if (entries.length > 0 && entries[0].version) console.log(entries[0].version);
+      } catch {}
+    " "$global_json" 2>/dev/null || true)
   fi
 fi
 
 if [ -z "$installed_version" ]; then
   # No metaswarm installed anywhere — nothing to check
+  mkdir -p "$CACHE_DIR"
   date +%s > "$CACHE_FILE"
   exit 0
 fi
 
-# --- Check latest version on npm (with timeout) ---
-latest_version=$(timeout 5 npm view metaswarm version 2>/dev/null || true)
+# --- Check latest version on npm ---
+# Use node's child_process with a timeout (works on macOS + Linux, no coreutils needed)
+latest_version=$(node -e "
+  const { execSync } = require('child_process');
+  try {
+    const v = execSync('npm view metaswarm version', { timeout: 5000, encoding: 'utf-8' }).trim();
+    if (v) console.log(v);
+  } catch {}
+" 2>/dev/null || true)
 
 if [ -z "$latest_version" ]; then
-  # Network error or timeout — skip silently
+  # Network error or timeout — skip silently, cache the attempt
+  mkdir -p "$CACHE_DIR"
   date +%s > "$CACHE_FILE"
   exit 0
 fi
@@ -73,13 +90,16 @@ if [ "$installed_version" != "$latest_version" ]; then
   msg="metaswarm update available: ${installed_version} → ${latest_version}. Run: npx metaswarm@${latest_version} install"
 fi
 
-# --- Write cache ---
+# --- Write cache atomically (temp file + rename) ---
+mkdir -p "$CACHE_DIR"
+tmp_cache=$(mktemp "${CACHE_FILE}.XXXXXX")
 {
   date +%s
   if [ -n "$msg" ]; then
     echo "$msg"
   fi
-} > "$CACHE_FILE"
+} > "$tmp_cache"
+mv "$tmp_cache" "$CACHE_FILE"
 
 # --- Output notice if update available ---
 if [ -n "$msg" ]; then

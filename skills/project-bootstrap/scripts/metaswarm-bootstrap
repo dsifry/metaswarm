@@ -12,10 +12,13 @@
 # Exit codes:
 #   0 — Success (already installed or freshly bootstrapped)
 #   0 — Not a git repo (silently skipped)
+#   0 — Install failed (logged to ~/.metaswarm/bootstrap.log)
 
 set -euo pipefail
 
 MARKER=".claude/plugins/metaswarm/.claude-plugin/plugin.json"
+LOG_DIR="${HOME}/.metaswarm"
+LOG_FILE="${LOG_DIR}/bootstrap.log"
 
 # Fast path: already installed
 if [ -f "$MARKER" ]; then
@@ -33,4 +36,8 @@ if [ "$(pwd)" = "$HOME" ]; then
 fi
 
 # Run non-interactive install (pipe Y to accept CLAUDE.md prompt)
-echo "Y" | npx metaswarm install 2>/dev/null || true
+# Log errors for debugging instead of swallowing them
+mkdir -p "$LOG_DIR"
+if ! echo "Y" | npx metaswarm install 2>&1 | tee -a "$LOG_FILE"; then
+  echo "[$(date -Iseconds)] bootstrap failed in $(pwd)" >> "$LOG_FILE"
+fi
