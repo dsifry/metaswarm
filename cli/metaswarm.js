@@ -684,9 +684,15 @@ const args = process.argv.slice(2);
 const cmd = args[0];
 
 if (cmd === 'init') {
-  init(args.slice(1));
+  init(args.slice(1)).catch(err => {
+    console.error(err && err.stack ? err.stack : String(err));
+    process.exit(1);
+  });
 } else if (cmd === 'install') {
-  install(args.slice(1));
+  install(args.slice(1)).catch(err => {
+    console.error(err && err.stack ? err.stack : String(err));
+    process.exit(1);
+  });
 } else if (cmd === '--version' || cmd === '-v') {
   console.log(VERSION);
 } else {

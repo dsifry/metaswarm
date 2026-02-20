@@ -130,7 +130,7 @@ When the version check reports an update, the agent should:
    ```bash
    echo "Y" | npx metaswarm@<latest> install
    ```
-3. Force-update changed files (the installer skips existing files, so for updates you need to remove the old versions first or use `npx metaswarm@<latest> install --force` if available)
+3. Force-update changed files (the installer skips existing files, so for updates remove old versions first, then run `npx metaswarm@<latest> install`)
 4. Update `plugin.json` version to match
 
 ---
