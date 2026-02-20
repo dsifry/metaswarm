@@ -334,7 +334,7 @@ async function main() {
     console.log(`  ${type}: ${count}`);
   }
   console.log(`\nOutput written to: ${OUTPUT_PATH}`);
-  console.log("\nNext: Run '/project:self-reflect' to analyze with Claude Code");
+  console.log("\nNext: Run '/self-reflect' to analyze with Claude Code");
 }
 
 main().catch(error => {

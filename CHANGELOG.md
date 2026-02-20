@@ -8,13 +8,13 @@
 ## 0.7.0
 
 ### Added
-- **Claude-guided installation** (`/project:metaswarm-setup`): Interactive setup that detects your project's language, framework, test runner, linter, formatter, package manager, CI system, and git hooks — then customizes everything automatically. Supports 7 languages (TypeScript, Python, Go, Rust, Java, Ruby, JavaScript), 15+ frameworks, and all major toolchains
-- **Self-update command** (`/project:metaswarm-update-version`): Check for new metaswarm versions, show changelog, update files, re-detect project context, and refresh the project profile
+- **Claude-guided installation** (`/metaswarm-setup`): Interactive setup that detects your project's language, framework, test runner, linter, formatter, package manager, CI system, and git hooks — then customizes everything automatically. Supports 7 languages (TypeScript, Python, Go, Rust, Java, Ruby, JavaScript), 15+ frameworks, and all major toolchains
+- **Self-update command** (`/metaswarm-update-version`): Check for new metaswarm versions, show changelog, update files, re-detect project context, and refresh the project profile
 - **Project profile** (`.metaswarm/project-profile.json`): Stores detection results, user choices, and derived commands for future reference and updates
 - **`npx metaswarm install`** CLI command: Separate heavy file-copy operation that can be invoked by the setup skill or run directly
 
 ### Changed
-- **`npx metaswarm init` is now a thin bootstrap**: Copies only 3 files (metaswarm-setup command, metaswarm-update-version command, minimal CLAUDE.md reference) instead of 60+ files. Points user to `/project:metaswarm-setup` for interactive guided setup
+- **`npx metaswarm init` is now a thin bootstrap**: Copies only 3 files (metaswarm-setup command, metaswarm-update-version command, minimal CLAUDE.md reference) instead of 60+ files. Points user to `/metaswarm-setup` for interactive guided setup
 - **`npx metaswarm init --full`** preserves the legacy behavior (init + install in one step) for CI/scripting environments
 - README.md install section rewritten around two-step guided flow
 - INSTALL.md restructured: "Recommended: Claude-Guided Setup" as primary, "Manual / CI Installation" as fallback
@@ -31,9 +31,9 @@
 - **Cross-model review rubric** (`rubrics/external-tool-review-rubric.md`): Binary PASS/FAIL rubric for cross-model adversarial review with file:line evidence requirements
 - **External tools config template** (`templates/external-tools.yaml`): Per-project configuration for adapter settings, routing strategy, and budget limits
 - **External tools setup guide** (`templates/external-tools-setup.md`): User-facing installation and authentication guide for Codex and Gemini CLI
-- **`/project:external-tools-health` command** (`commands/external-tools-health.md`): Slash command to check external tool availability and authentication status
+- **`/external-tools-health` command** (`commands/external-tools-health.md`): Slash command to check external tool availability and authentication status
 - **External tools verification script** (`bin/external-tools-verify.sh`): End-to-end verification with 15 checks covering shared helpers, both adapters, and file existence
-- **External tools detection in start-task**: `/project:start-task` now auto-detects installed external tools and suggests enabling them
+- **External tools detection in start-task**: `/start-task` now auto-detects installed external tools and suggests enabling them
 - **External tools onboarding**: Added external tools sections to INSTALL.md, GETTING_STARTED.md, and CLAUDE.md template
 - **`metaswarm init` copies external-tools.yaml**: Copies config template to `.metaswarm/` during project initialization (disabled by default)
 

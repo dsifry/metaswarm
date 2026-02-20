@@ -71,7 +71,7 @@ bd update <task-id> --status in_progress
 The core monitoring logic is handled by the existing skill:
 
 ```
-/project:pr-shepherd $PR_NUMBER
+/pr-shepherd $PR_NUMBER
 ```
 
 Or programmatically:

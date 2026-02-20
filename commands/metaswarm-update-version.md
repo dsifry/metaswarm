@@ -5,7 +5,7 @@ Update metaswarm to the latest version, refresh component files, and re-detect p
 ## Usage
 
 ```text
-/project:metaswarm-update-version
+/metaswarm-update-version
 ```
 
 ## Steps
@@ -14,7 +14,7 @@ Update metaswarm to the latest version, refresh component files, and re-detect p
 
 - Read `.metaswarm/project-profile.json` and extract `metaswarm_version`
 - If the file doesn't exist, stop and tell the user:
-  > No project profile found. Run `/project:metaswarm-setup` first to initialize metaswarm.
+  > No project profile found. Run `/metaswarm-setup` first to initialize metaswarm.
 - Display the current version to the user
 
 ### 2. Fetch Latest Version
@@ -46,7 +46,7 @@ Update metaswarm to the latest version, refresh component files, and re-detect p
 - If changes are detected (e.g., project switched from Jest to Vitest):
   - Show what changed
   - Ask user if they want to re-customize affected files (e.g., update coverage commands in CLAUDE.md)
-  - If yes, apply the same customization logic from `/project:metaswarm-setup`
+  - If yes, apply the same customization logic from `/metaswarm-setup`
 
 ### 6. Update Project Profile
 

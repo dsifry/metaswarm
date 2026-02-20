@@ -11,7 +11,7 @@ The fastest way to set up metaswarm:
 
 2. Open Claude Code in your project and run:
    ```text
-   /project:metaswarm-setup
+   /metaswarm-setup
    ```
 
 3. Claude will:
@@ -24,7 +24,7 @@ The fastest way to set up metaswarm:
 
 4. To update metaswarm later:
    ```text
-   /project:metaswarm-update-version
+   /metaswarm-update-version
    ```
 
 ### Manual / CI Installation
@@ -122,7 +122,7 @@ After installing, see [`templates/external-tools-setup.md`](templates/external-t
 To verify your setup, run the health check command in Claude Code:
 
 ```text
-/project:external-tools-health
+/external-tools-health
 ```
 
 This checks that each tool is installed, authenticated, and responsive.
@@ -300,7 +300,7 @@ bd status
 bd prime
 
 # In Claude Code, verify commands are available
-# Type /project: and you should see prime, start-task, review-design, etc.
+# Type / and you should see prime, start-task, review-design, etc.
 ```
 
 ## Next Steps

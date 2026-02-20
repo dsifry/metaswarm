@@ -15,7 +15,7 @@ This skill generates GitHub issues that are self-contained work packets. Each is
 ## Usage
 
 ```
-/project:create-issue
+/create-issue
 ```
 
 ## Interactive Flow
@@ -228,7 +228,7 @@ it("should handle [error case]", async () => {
 3. **Add JSDoc documentation** to all new/modified services
 4. Run local validation: `pnpm lint && pnpm typecheck && pnpm test --run`
 5. **Update service inventory** (if new service)
-6. Create PR with comprehensive description using `/project:create-pr`
+6. Create PR with comprehensive description using `/create-pr`
 
 ### Phase B: Code Review Iteration
 

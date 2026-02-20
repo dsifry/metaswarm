@@ -26,7 +26,7 @@ This skill auto-activates when:
 1. An implementation plan is drafted (by planner, explorer, or orchestrator)
 2. The `writing-plans` skill completes a plan
 3. The orchestrator's plan validation phase produces a plan for review
-4. User explicitly requests: `/project:plan-review <path-to-plan>`
+4. User explicitly requests: `/plan-review <path-to-plan>`
 
 **Do NOT use for**: Trivial changes (single-file bug fixes, copy edits, config tweaks). The plan must have at least 2 work units or touch 3+ files to warrant gate review.
 
@@ -90,7 +90,7 @@ These rules are **mandatory**. Violating any of them invalidates the review.
 
 ## Workflow
 
-```
+```text
 1. Plan drafted by planner/explorer/orchestrator
 2. Spawn 3 adversarial reviewers in PARALLEL (fresh Task() instances)
 3. Collect all 3 verdicts
@@ -128,7 +128,7 @@ const [feasibilityResult, completenessResult, scopeResult] = await Promise.all([
 
 ### Phase 2: Evaluate Gate
 
-```
+```text
 IF feasibilityResult.verdict === "PASS"
    AND completenessResult.verdict === "PASS"
    AND scopeResult.verdict === "PASS":
@@ -389,8 +389,30 @@ Plan is ready for user review.
 ### Downstream (after gate approval)
 
 - Plan presented to user for final approval
+- **After user approval**: Persist the approved plan to `.beads/plans/active-plan.md` (see Section: Plan Persistence below)
 - User-approved plan flows to `orchestrated-execution` for the 4-phase execution loop
 - Work unit decomposition and implementation begin
+
+### Plan Persistence
+
+After the gate approves AND the user approves the plan, persist it to BEADS so it survives context compaction:
+
+```bash
+mkdir -p .beads/plans
+
+# Write with metadata header
+cat > .beads/plans/active-plan.md << 'PLAN_EOF'
+# Active Plan
+<!-- approved: <timestamp> -->
+<!-- gate-iterations: <N> -->
+<!-- user-approved: true -->
+<!-- status: in-progress -->
+
+<full approved plan text>
+PLAN_EOF
+```
+
+This enables context recovery — if the agent loses context mid-execution, it can re-read the approved plan from disk instead of re-running the entire gate. See `orchestrated-execution` Section 6.5 for the full recovery protocol.
 
 ### Relationship to Design Review Gate
 

@@ -23,7 +23,7 @@ This skill coordinates a swarm of specialized AI agents to autonomously handle G
 # User triggers via any of:
 @beads start #123
 bd start 123
-/project:beads-start 123
+/beads-start 123
 ```
 
 ### Check BEADS Status
@@ -90,7 +90,7 @@ Design Document Created
 The gate is automatically triggered when:
 
 - `superpowers:brainstorming` completes and commits a design doc
-- User runs `/project:review-design <path-to-design.md>`
+- User runs `/review-design <path-to-design.md>`
 
 ### Review Criteria by Agent
 
@@ -225,7 +225,7 @@ Each escalated model receives the previous model's branch as a reference. See `s
 ### Health Check
 
 ```bash
-/project:external-tools-health
+/external-tools-health
 ```
 
 Checks installation, authentication, and reachability of all configured adapters.
@@ -387,12 +387,12 @@ If the CI check is stale: `gh workflow run gtg.yml -f pr_number=<PR_NUMBER>`
 When a PR is created via `bin/create-pr-with-shepherd.sh`, the script outputs instructions to start monitoring:
 
 1. **Creates the PR** with proper title/body
-2. **Start pr-shepherd** using `/project:pr-shepherd <pr-number>`
+2. **Start pr-shepherd** using `/pr-shepherd <pr-number>`
 3. **PR Shepherd monitors**: CI status, review comments, thread resolution
 4. **Auto-fixes**: Lint, type errors, test failures in your code
 5. **Reports when ready**: All CI green, all threads resolved
 
-For manually-created PRs, invoke `/project:pr-shepherd <pr-number>` to start the monitoring cycle.
+For manually-created PRs, invoke `/pr-shepherd <pr-number>` to start the monitoring cycle.
 
 ---
 
@@ -650,7 +650,7 @@ Run self-reflection to extract learnings:
 GITHUB_TOKEN=$(gh auth token) npx tsx scripts/beads-fetch-pr-comments.ts --days 7
 
 # Use self-reflect skill to evaluate and add learnings
-/project:self-reflect
+/self-reflect
 ```
 
 Or spawn Knowledge Curator agent:
@@ -819,7 +819,7 @@ guides/
 └── build-validation.md         # Pre-push checks, CI pipeline
 
 .claude/commands/
-└── review-design.md            # /project:review-design command
+└── review-design.md            # /review-design command
 
 .claude/rubrics/
 ├── plan-review-rubric.md       # Used by CTO Agent

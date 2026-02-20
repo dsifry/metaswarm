@@ -113,7 +113,7 @@ Install flags:
 
 Recommended workflow:
   1. npx metaswarm init
-  2. Open Claude Code and run: /project:metaswarm-setup
+  2. Open Claude Code and run: /metaswarm-setup
 
   Claude will detect your project, install components, and customize everything interactively.
 `);
@@ -148,7 +148,7 @@ async function init(args) {
 
   // --- CLAUDE.md handling ---
   // Three-way:
-  //   1. No CLAUDE.md → create minimal one pointing to /project:metaswarm-setup
+  //   1. No CLAUDE.md → create minimal one pointing to /metaswarm-setup
   //   2. CLAUDE.md exists with metaswarm marker → skip
   //   3. CLAUDE.md exists without marker → ask to append reference
   const claudeMdPath = path.join(CWD, 'CLAUDE.md');
@@ -158,9 +158,9 @@ async function init(args) {
       '',
       'This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-agent orchestration.',
       '',
-      '**First-time setup:** Run `/project:metaswarm-setup` in Claude Code to detect your project and configure everything.',
+      '**First-time setup:** Run `/metaswarm-setup` in Claude Code to detect your project and configure everything.',
       '',
-      '**Update metaswarm:** Run `/project:metaswarm-update-version` to check for and apply updates.',
+      '**Update metaswarm:** Run `/metaswarm-update-version` to check for and apply updates.',
       '',
     ].join('\n');
     fs.writeFileSync(claudeMdPath, minimalClaude);
@@ -182,9 +182,9 @@ async function init(args) {
           '',
           'This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-agent orchestration.',
           '',
-          '**Setup:** Run `/project:metaswarm-setup` to detect your project and configure metaswarm.',
+          '**Setup:** Run `/metaswarm-setup` to detect your project and configure metaswarm.',
           '',
-          '**Update:** Run `/project:metaswarm-update-version` to update metaswarm.',
+          '**Update:** Run `/metaswarm-update-version` to update metaswarm.',
           '',
         ].join('\n');
         fs.appendFileSync(claudeMdPath, appendContent);
@@ -208,7 +208,7 @@ async function init(args) {
   console.log('Done! Next step:\n');
   console.log('  Open Claude Code and run:');
   console.log('');
-  console.log('    /project:metaswarm-setup');
+  console.log('    /metaswarm-setup');
   console.log('');
   console.log('  Claude will detect your project, install components,');
   console.log('  and customize everything interactively.');
@@ -438,7 +438,7 @@ async function install(args) {
 
   // Summary
   console.log('\nInstall complete!\n');
-  console.log('  Run /project:metaswarm-setup in Claude Code to customize for your project.');
+  console.log('  Run /metaswarm-setup in Claude Code to customize for your project.');
   console.log('');
 }
 

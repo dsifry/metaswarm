@@ -51,7 +51,7 @@ When external AI tools are configured (`.metaswarm/external-tools.yaml`), the Is
 
 ### Availability Detection
 
-External tools are detected automatically by `/project:start-task`. If tools are installed but not configured, the orchestrator suggests enabling them. Run `/project:external-tools-health` to check status at any time.
+External tools are detected automatically by `/start-task`. If tools are installed but not configured, the orchestrator suggests enabling them. Run `/external-tools-health` to check status at any time.
 
 ### Visual Review
 

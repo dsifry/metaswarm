@@ -5,7 +5,7 @@ Determine task complexity and use appropriate workflow for efficient development
 ## Usage
 
 ```text
-/project:start-task <task-description>
+/start-task <task-description>
 ```
 
 ## Steps
@@ -13,6 +13,13 @@ Determine task complexity and use appropriate workflow for efficient development
 ### 0. Pre-Task Checklist
 
 Before starting any new task:
+
+**Context Recovery Check**:
+
+- [ ] Check if `.beads/plans/active-plan.md` exists with `status: in-progress`
+- [ ] If YES: An interrupted execution exists. Ask user: "There's an active plan from a previous session. Resume it or start fresh?"
+  - Resume → run `bd prime --work-type recovery` and pick up where execution stopped
+  - Start fresh → mark the old plan as `status: abandoned` and proceed normally
 
 **Knowledge Priming (CRITICAL)**:
 
@@ -26,6 +33,23 @@ Before starting any new task:
 - [ ] Ask: "Before we start the new task, should we check if there are any PR comments to address?"
 - [ ] If yes, run: `gh pr list --author @me --state open`
 - [ ] Check each PR for new CodeRabbit comments
+
+### 0.5. External Tools Check (informational only — never blocks the task)
+
+Check if external AI tools (Codex, Gemini) are available for cost savings and cross-model review:
+
+- Run the health check scripts to detect installed tools:
+  ```bash
+  command -v codex >/dev/null 2>&1 && echo "codex: available" || echo "codex: not found"
+  command -v gemini >/dev/null 2>&1 && echo "gemini: available" || echo "gemini: not found"
+  ```
+- **If tools are detected but `.metaswarm/external-tools.yaml` does not exist**: Suggest the user enable them:
+  > "External tools (Codex/Gemini) are installed but not configured. Run `mkdir -p .metaswarm && cp templates/external-tools.yaml .metaswarm/` to enable cost-saving delegation."
+- **If no tools are detected**: Briefly mention they can be installed:
+  > "Optional: Install Codex and Gemini CLIs for cost savings and cross-model review — see `templates/external-tools-setup.md`."
+- **If tools are configured and working**: No message needed — proceed silently.
+
+This check is informational only. Always proceed to the task regardless of the result.
 
 ### 1. Task Assessment
 
@@ -62,6 +86,50 @@ Then ask the user to confirm your assessment:
 - Multi-file refactoring
 - Performance optimizations
 
+### 1.5. Problem Definition Phase
+
+Before implementation, ensure the problem is well-defined:
+
+**If a GitHub Issue exists:**
+
+```bash
+# Read the issue
+gh issue view <number> --json title,body,labels,comments
+
+# Extract and verify:
+# - Clear scope (what's in, what's out)
+# - Definition of Done items (verifiable acceptance criteria)
+# - File scope (which files will be affected)
+# - Human checkpoints (where should we pause for review?)
+```
+
+If the issue lacks DoD items or clear scope, ask the user to clarify before proceeding.
+
+**If no GitHub Issue exists:**
+
+- For **simple tasks**: No issue needed. Proceed directly.
+- For **complex tasks**: An issue is ALWAYS needed. Ask the user:
+  > "This is a complex task. Should I create a GitHub Issue to track it?"
+
+**If the problem is unclear:**
+
+- Route to `superpowers:brainstorming` first to refine the idea into a design
+- **MANDATORY HANDOFF**: After brainstorming commits a design document, you MUST:
+  1. STOP — do NOT proceed directly to `writing-plans` or implementation
+  2. Run the Design Review Gate (`/review-design` or invoke the `design-review-gate` skill)
+  3. Wait for all 5 review agents (PM, Architect, Designer, Security, CTO) to APPROVE
+  4. Only after ALL APPROVED, proceed to planning
+- This handoff is required even if the brainstorming skill instructs you to invoke `writing-plans` next. The design review gate catches issues before expensive implementation begins.
+- After design review approval, create a GitHub Issue from the refined design
+- The issue should contain: scope, DoD items, file scope, human checkpoints
+
+**Problem Definition outputs:**
+
+- [ ] Clear scope (what's in, what's out)
+- [ ] DoD items (enumerated, independently verifiable)
+- [ ] File scope (which files will be affected)
+- [ ] Human checkpoints (where to pause for review)
+
 ### 2. Simple Task Flow
 
 If user confirms it's a simple task:
@@ -84,6 +152,24 @@ If it's a complex task:
 - Consider breaking into smaller tasks as BEADS sub-issues
 - Use extended thinking for planning
 - Create detailed implementation plan
+
+#### Orchestrated Execution (for tasks with DoD items)
+
+When the task has a spec with Definition of Done items, use the orchestrated execution pattern:
+
+1. **Create implementation plan** — decompose into work units with DoD items, file scopes, dependencies
+2. **Plan Review Gate (BLOCKING)** — submit plan to adversarial review (3 reviewers: Feasibility, Completeness, Scope & Alignment must all PASS). This gate is MANDATORY — do NOT present the plan to the user or begin implementation until all 3 reviewers PASS. See `skills/plan-review-gate/SKILL.md`
+3. **Execute** the 4-phase loop per work unit: IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT
+4. **Final review** after all work units: cross-unit integration check
+5. **Self-reflect**: Run `/self-reflect` to extract learnings, then commit knowledge base updates
+6. **Create PR** — knowledge base changes are included in the PR
+
+See the `orchestrated-execution` skill for the full pattern. Key principles:
+- **Trust nothing, verify everything**: Run quality gates independently, never trust subagent self-reports
+- **Adversarial review**: Fresh reviewer checks each DoD item with file:line evidence
+- **Human checkpoints**: Pause at planned review points before continuing
+- **Recovery**: Max 3 retries per work unit, then escalate with failure history
+- **No shortcuts**: NEVER use `--no-verify` on commits, NEVER skip coverage gates, NEVER self-certify
 
 #### Multi-Agent Orchestration (for large features)
 

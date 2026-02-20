@@ -60,6 +60,16 @@ bd prime --work-type review
 bd prime --work-type debugging
 ```
 
+### Prime for Context Recovery
+
+When resuming after context compaction or in a new session:
+
+```bash
+bd prime --work-type recovery
+```
+
+This loads active plan, project context, execution state, and relevant knowledge base facts. See "Context Recovery" section below.
+
 ### Combined
 
 ```bash
@@ -182,6 +192,62 @@ Avoid these known issues:
 - **[pattern]** Use mock factories from test utilities...
 ```
 
+## Context Recovery
+
+When `--work-type recovery` is used (or when an orchestrator detects it lost context), the prime command loads additional context beyond the standard knowledge base:
+
+### What Gets Loaded
+
+1. **Active Plan** — reads `.beads/plans/active-plan.md` if it exists with `status: in-progress`
+2. **Project Context** — reads `.beads/context/project-context.md` (completed work units, established patterns, tooling)
+3. **Execution State** — reads `.beads/context/execution-state.md` (current work unit, phase, retry count)
+4. **Standard Knowledge** — all the usual MUST FOLLOW, GOTCHAS, PATTERNS, DECISIONS facts
+
+### Recovery Flow
+
+```bash
+# 1. Check for active execution
+if [ -f .beads/plans/active-plan.md ]; then
+  grep -q 'status: in-progress' .beads/plans/active-plan.md && echo "ACTIVE PLAN FOUND"
+fi
+
+# 2. Load all context files
+cat .beads/plans/active-plan.md           # The approved plan
+cat .beads/context/project-context.md     # Completed work, patterns
+cat .beads/context/execution-state.md     # Where we left off
+
+# 3. Load relevant knowledge base facts
+cat .beads/knowledge/*.jsonl | jq -r '.fact'
+```
+
+### When Recovery Triggers Automatically
+
+- Orchestrated execution starts and finds `.beads/plans/active-plan.md` with `status: in-progress` but has no plan in its current context
+- A new session begins with `bd prime` and active execution state is detected
+- After context compaction, when the agent recognizes it has lost plan/execution context
+
+### Output Format (Recovery Mode)
+
+```markdown
+# Context Recovery
+
+_Recovered from BEADS persisted state_
+
+## Active Plan
+<plan summary — title, work unit count, current position>
+
+## Execution State
+- Current work unit: WU-<id> (<title>)
+- Phase: <IMPLEMENT|VALIDATE|REVIEW|COMMIT>
+- Completed: <N> of <total> work units
+
+## Project Context
+<tooling, completed work units, established patterns>
+
+## Relevant Knowledge
+<standard priming output: MUST FOLLOW, GOTCHAS, PATTERNS, DECISIONS>
+```
+
 ## Verification
 
 After priming, you should be able to answer:
@@ -190,3 +256,4 @@ After priming, you should be able to answer:
 2. What gotchas should I watch out for?
 3. What patterns should I apply?
 4. What architectural decisions constrain my options?
+5. (If recovery mode) Where did execution stop and what comes next?

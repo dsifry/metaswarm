@@ -3,7 +3,7 @@
  * BEADS Self-Reflect Script
  *
  * Generates knowledge base statistics and weekly reports.
- * For AI-powered PR analysis, use the Claude Code skill: /project:self-reflect
+ * For AI-powered PR analysis, use the Claude Code skill: /self-reflect
  *
  * Usage:
  *   npx tsx scripts/beads-self-reflect.ts
@@ -47,7 +47,7 @@ Options:
 
 For AI-powered PR analysis:
   1. Run: npx tsx scripts/beads-fetch-pr-comments.ts
-  2. Then use Claude Code: /project:self-reflect
+  2. Then use Claude Code: /self-reflect
 
 Environment Variables:
   SLACK_BOT_TOKEN           Slack bot token for posting
@@ -141,7 +141,7 @@ function formatSlackBlocks(knowledgeStats: {
       elements: [
         {
           type: "mrkdwn",
-          text: "_For AI analysis of PR comments, use `/project:self-reflect` in Claude Code_",
+          text: "_For AI analysis of PR comments, use `/self-reflect` in Claude Code_",
         },
       ],
     },
@@ -221,7 +221,7 @@ async function main() {
   console.log("=== Report Complete ===\n");
   console.log("To extract learnings from PR comments:");
   console.log("  1. Run: npx tsx scripts/beads-fetch-pr-comments.ts");
-  console.log("  2. Use Claude Code: /project:self-reflect");
+  console.log("  2. Use Claude Code: /self-reflect");
 }
 
 main().catch(error => {

@@ -41,7 +41,7 @@ This skill auto-activates when:
 
 1. A design document is committed to `docs/plans/*-design.md`
 2. The `superpowers:brainstorming` skill completes
-3. User explicitly requests: `/project:review-design <path-to-design.md>`
+3. User explicitly requests: `/review-design <path-to-design.md>`
 
 ---
 

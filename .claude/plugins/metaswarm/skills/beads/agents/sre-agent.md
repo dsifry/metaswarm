@@ -19,7 +19,7 @@ The SRE Agent investigates production issues, analyzes system health, and provid
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    ⚠️  PRODUCTION MODE REQUIRED  ⚠️                  │
 │                                                                      │
-│   This agent MUST use /project:production-mode before ANY           │
+│   This agent MUST use /production-mode before ANY           │
 │   production system access.                                          │
 │                                                                      │
 │   ✅ READ-ONLY operations ONLY                                       │
@@ -70,7 +70,7 @@ Review the output for production investigation patterns and known system behavio
 
 ```bash
 # MANDATORY first step
-/project:production-mode on
+/production-mode on
 ```
 
 This activates safety guardrails that:

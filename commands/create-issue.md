@@ -5,7 +5,7 @@ Create a comprehensive, well-structured GitHub issue with embedded agent instruc
 ## Usage
 
 ```text
-/project:create-issue [type] [description]
+/create-issue [type] [description]
 ```
 
 **Arguments** (optional - will prompt if not provided):
@@ -17,13 +17,13 @@ Create a comprehensive, well-structured GitHub issue with embedded agent instruc
 
 ```bash
 # Interactive mode (prompts for all details)
-/project:create-issue
+/create-issue
 
 # With type specified
-/project:create-issue feature
+/create-issue feature
 
 # With type and description
-/project:create-issue bug "Login fails when email contains plus sign"
+/create-issue bug "Login fails when email contains plus sign"
 ```
 
 ## What This Does
@@ -98,7 +98,7 @@ Issues are automatically labeled based on type and complexity:
 
 ## Related Commands
 
-- `/project:handle-pr-comments` - Handle PR review feedback
-- `/project:pr-shepherd` - Monitor PR through to merge
-- `/project:create-pr` - Create comprehensive PR
-- `/project:start-task` - Start working on an existing issue
+- `/handle-pr-comments` - Handle PR review feedback
+- `/pr-shepherd` - Monitor PR through to merge
+- `/create-pr` - Create comprehensive PR
+- `/start-task` - Start working on an existing issue

@@ -72,9 +72,9 @@ Not every task needs the full orchestration machinery. Use the right level of pr
 | Task Type | Examples | Workflow | Key Skill |
 |---|---|---|---|
 | **Quick fix** | Typo, config change, copy update | Edit → test → commit | None needed |
-| **Simple task** | Bug fix, small feature, validation | `/project:start-task` → simple flow | TDD only |
-| **Complex task** (no spec) | New feature, refactor, optimization | `/project:start-task` → BEADS epic → linear implementation | Design Review Gate |
-| **Complex task** (with spec & DoD) | Multi-unit feature, risky change, multi-agent work | `/project:start-task` → BEADS epic → orchestrated execution | **Orchestrated Execution** |
+| **Simple task** | Bug fix, small feature, validation | `/start-task` → simple flow | TDD only |
+| **Complex task** (no spec) | New feature, refactor, optimization | `/start-task` → BEADS epic → linear implementation | Design Review Gate |
+| **Complex task** (with spec & DoD) | Multi-unit feature, risky change, multi-agent work | `/start-task` → BEADS epic → orchestrated execution | **Orchestrated Execution** |
 
 ### Team Mode
 
@@ -126,7 +126,7 @@ Uses the `adversarial-review-rubric.md` for reviews (distinct from the collabora
 Spawns 6 agents in parallel to review a design document:
 
 ```text
-/project:review-design <path-to-spec>
+/review-design <path-to-spec>
 ```
 
 - PM, Architect, Designer, Security, UX Reviewer, CTO review simultaneously
@@ -141,7 +141,7 @@ Spawns 6 agents in parallel to review a design document:
 Autonomously monitors a PR through to merge:
 
 ```text
-/project:pr-shepherd <pr-number>
+/pr-shepherd <pr-number>
 ```
 
 - Polls CI status
@@ -157,7 +157,7 @@ Autonomously monitors a PR through to merge:
 Systematic workflow for addressing review feedback:
 
 ```text
-/project:handle-pr-comments <pr-number>
+/handle-pr-comments <pr-number>
 ```
 
 - Categorizes comments by priority
@@ -188,7 +188,7 @@ Delegates implementation and review tasks to external AI CLI tools (OpenAI Codex
 - **Availability-aware escalation**: Model A (2 tries) → Model B (2 tries) → Claude (1 try) → user alert. Degrades gracefully with 0, 1, or 2 tools
 - **Sandboxed execution**: Isolated git worktrees, minimal environment (`env -i`), timeout protection
 - **Budget enforcement**: Per-task and per-session USD circuit breakers
-- **Health checks**: `/project:external-tools-health` verifies installation, authentication, and reachability
+- **Health checks**: `/external-tools-health` verifies installation, authentication, and reachability
 
 Configuration: `.metaswarm/external-tools.yaml`. See `templates/external-tools-setup.md` for setup.
 
@@ -210,14 +210,14 @@ Prerequisites: `npx playwright install chromium`
 
 | Command | Description |
 |---|---|
-| `/project:prime` | Load relevant knowledge before starting work |
-| `/project:start-task <id>` | Begin a BEADS-tracked task with full workflow |
-| `/project:review-design <path>` | Run the 5-agent Design Review Gate |
-| `/project:self-reflect` | Extract learnings from recent PR reviews |
-| `/project:pr-shepherd <pr>` | Monitor PR through to merge |
-| `/project:handle-pr-comments <pr>` | Address PR review feedback |
-| `/project:create-issue` | Create a GitHub issue with agent instructions |
-| `/project:external-tools-health` | Check status of external AI tools (Codex, Gemini) |
+| `/prime` | Load relevant knowledge before starting work |
+| `/start-task <id>` | Begin a BEADS-tracked task with full workflow |
+| `/review-design <path>` | Run the 5-agent Design Review Gate |
+| `/self-reflect` | Extract learnings from recent PR reviews |
+| `/pr-shepherd <pr>` | Monitor PR through to merge |
+| `/handle-pr-comments <pr>` | Address PR review feedback |
+| `/create-issue` | Create a GitHub issue with agent instructions |
+| `/external-tools-health` | Check status of external AI tools (Codex, Gemini) |
 
 ## BEADS CLI Reference
 
