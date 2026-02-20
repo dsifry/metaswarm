@@ -694,6 +694,14 @@ When all work units pass, create a PR.</code></pre>
         <h4>6 Development Guides</h4>
         <p>Comprehensive reference guides for coding standards, testing patterns, git workflow, worktree development, build validation, and agent coordination. Agents load them automatically when relevant.</p>
       </div>
+      <div class="feature">
+        <h4>Workflow Enforcement</h4>
+        <p>Mandatory intercepts at every handoff point ensure quality gates are never bypassed. After brainstorming &rarr; design review gate. After planning &rarr; plan review gate. Before PR &rarr; self-reflect + knowledge capture. Users choose execution method (orchestrated vs lightweight).</p>
+      </div>
+      <div class="feature">
+        <h4>Context Recovery</h4>
+        <p>Approved plans and execution state persist to <code>.beads/</code> on disk. After context compaction or session interruption, <code>bd prime --work-type recovery</code> reloads everything: the plan, completed work, current position. No re-running expensive review gates.</p>
+      </div>
     </div>
   </section>
 

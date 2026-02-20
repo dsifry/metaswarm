@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.8.0
+
+### Added
+- **Workflow enforcement rules** in CLAUDE.md templates: mandatory intercepts at every superpowers handoff point (brainstorming → writing-plans → executing-plans → finishing-a-branch) to ensure quality gates are never bypassed
+- **Execution method choice**: agents now always ask the user whether to use metaswarm orchestrated execution (more thorough, more tokens) or superpowers execution skills (faster, lighter-weight) — no default, user decides
+- **BEADS context persistence**: approved plans, project context, and execution state are written to `.beads/plans/` and `.beads/context/` so agents can recover after context compaction or session interruption
+- **Context recovery protocol** (`bd prime --work-type recovery`): reloads approved plan, completed work, and current execution position from disk after context loss
+- **Start-task recovery check**: detects interrupted executions at startup, asks user to resume or start fresh
+- **Pre-PR self-reflect**: knowledge capture moved from post-merge to before PR creation; KB updates are committed as part of the PR so learnings land atomically with the code
+- **Subagent discipline rules**: `--no-verify` prohibition, TDD enforcement, file scope rules, and no-self-certify rules added to coder-agent and orchestrated-execution spawn templates
+- **EnterPlanMode intercept**: CLAUDE.md instructs agents to use `/start-task` instead of `EnterPlanMode` for tasks touching 3+ files (EnterPlanMode bypasses all quality gates)
+- **Standalone TDD review**: after TDD sessions modifying 3+ files, agent asks user if they want adversarial review before committing
+- **Coverage source of truth unification**: `.coverage-thresholds.json` is now explicitly the single source of truth across all skills including `verification-before-completion`
+- **Plan persistence in plan-review-gate**: approved plans are written to `.beads/plans/active-plan.md` after gate approval + user approval
+- **Execution state tracking**: `.beads/context/execution-state.md` tracks current work unit, phase, and retry count across phase transitions
+
+### Changed
+- **Command namespace simplified**: removed `/project:` prefix from 259 references across 52 files — commands now use `/start-task`, `/review-design`, `/self-reflect`, etc.
+- **Brainstorming-extension rewritten**: replaced aspirational YAML triggers with documentation of the actual 3-layer enforcement mechanism (CLAUDE.md instructions, start-task command, skill documents)
+- **Project Context Document now persisted to disk**: written to `.beads/context/project-context.md` and updated after each work unit commit
+- **PR shepherd self-reflect timing**: post-merge knowledge capture is now a fallback only (primary capture happens pre-PR)
+- **Cross-platform sed syntax**: cleanup commands use `OSTYPE` detection for macOS vs GNU/Linux compatibility
+- **Gitignore template**: added `!.env.example` negation, BEADS runtime exclusions, and execution state exclusions
+- **Code fence language specifiers**: added `text` language to all bare fenced code blocks for markdown lint compliance
+- Updated counts: 9 skills (was 8), 9 commands, 8 rubrics
+
 ## 0.7.1
 
 ### Fixed

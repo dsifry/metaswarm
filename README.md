@@ -1,6 +1,6 @@
 # metaswarm
 
-A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Coordinate 18 specialized AI agents and 8 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
+A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Coordinate 18 specialized AI agents and 9 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
 
 ## What Is This?
 
@@ -17,6 +17,8 @@ metaswarm is an extraction of a production-tested agentic orchestration system. 
 - **External AI tool delegation**: Optionally delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI for cost savings and cross-model adversarial review
 - **Visual review**: Playwright-based screenshot capture for reviewing web UIs, presentations, and rendered pages
 - **PR lifecycle automation**: Autonomous CI monitoring, review comment handling, and thread resolution
+- **Workflow enforcement**: Mandatory quality gate intercepts at every handoff point — agents cannot skip design review, plan review, or knowledge capture
+- **Context recovery**: Approved plans and execution state persist to disk via BEADS, surviving context compaction and session interruption
 
 ## Architecture
 
