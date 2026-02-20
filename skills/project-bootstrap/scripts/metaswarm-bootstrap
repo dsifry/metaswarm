@@ -39,5 +39,5 @@ fi
 # Log errors for debugging instead of swallowing them
 mkdir -p "$LOG_DIR"
 if ! echo "Y" | npx metaswarm install 2>&1 | tee -a "$LOG_FILE"; then
-  echo "[$(date -Iseconds)] bootstrap failed in $(pwd)" >> "$LOG_FILE"
+  echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] bootstrap failed in $(pwd)" >> "$LOG_FILE"
 fi
