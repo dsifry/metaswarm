@@ -25,11 +25,7 @@ if [ -f "$CACHE_FILE" ]; then
   now=$(date +%s)
   age=$(( now - last_check ))
   if [ "$age" -lt "$CACHE_TTL" ]; then
-    # Already checked recently — print cached message if any
-    cached_msg=$(tail -n +2 "$CACHE_FILE" 2>/dev/null || true)
-    if [ -n "$cached_msg" ]; then
-      echo "$cached_msg"
-    fi
+    # Already checked recently — stay silent to avoid repeated session spam
     exit 0
   fi
 fi

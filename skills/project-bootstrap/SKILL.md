@@ -1,6 +1,6 @@
 ---
 name: project-bootstrap
-description: Auto-scaffold metaswarm into any project on first session and check for version updates — fully automatic on Claude Code (SessionStart hooks), skill-invoked on Codex
+description: Auto-scaffold metaswarm into any project on first session and check for version updates — opt-in SessionStart hooks on Claude Code, skill-invoked on Codex
 auto_activate: true
 triggers:
   - "bootstrap project"
@@ -20,7 +20,7 @@ This skill provides two SessionStart hooks:
 1. **Auto-scaffold** — Installs metaswarm into any new project on first session
 2. **Version check** — Compares installed version against npm and notifies if an update is available (cached for 24 hours to avoid repeated network calls)
 
-On Claude Code both run automatically via `SessionStart` hooks. On Codex and other platforms, the agent invokes this skill at session start.
+On Claude Code both run automatically via `SessionStart` hooks after the user opts in during `metaswarm install` (or with `--install-global-hooks`). On Codex and other platforms, the agent invokes this skill at session start.
 
 ---
 
@@ -91,7 +91,7 @@ Runs on every session start with a 24-hour cache to avoid redundant npm queries.
 Session Start
     │
     ▼
-Cache fresh? ──yes──► Print cached message (if any) ──► Exit
+Cache fresh? ──yes──► Exit silently
     │
     no
     ▼
@@ -110,7 +110,7 @@ Compare versions
 
 **Cache file:** `~/.metaswarm/version-cache`
 - Line 1: Unix timestamp of last check
-- Line 2+: Cached update message (empty if up to date)
+- Line 2+: Cached update message from last network check (for diagnostics)
 
 **Update notice format:**
 ```
@@ -137,7 +137,7 @@ When the version check reports an update, the agent should:
 
 ## Platform Setup
 
-### Claude Code — Fully Automatic (SessionStart Hooks)
+### Claude Code — Opt-In SessionStart Hooks
 
 Both hooks are added to `~/.claude/settings.json`:
 
@@ -163,14 +163,13 @@ Both hooks are added to `~/.claude/settings.json`:
 }
 ```
 
-**Installation:**
+**Installation (recommended):**
 
 ```bash
-# Copy both scripts
-cp skills/project-bootstrap/scripts/metaswarm-bootstrap ~/.local/bin/
-cp skills/project-bootstrap/scripts/metaswarm-version-check ~/.local/bin/
-chmod +x ~/.local/bin/metaswarm-bootstrap ~/.local/bin/metaswarm-version-check
+npx metaswarm install --install-global-hooks
 ```
+
+Or run `npx metaswarm install` and answer the global setup prompt with `y`.
 
 The `metaswarm-bootstrap` script exits instantly if the project already has metaswarm. The `metaswarm-version-check` script exits instantly if it checked within 24 hours. Combined overhead for a warm session: ~2ms.
 

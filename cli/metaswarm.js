@@ -111,6 +111,9 @@ Init flags:
 
 Install flags:
   --with-husky        Initialize Husky + install pre-push hook
+  --install-global-hooks
+                      Install global hooks/skills (~/.claude, ~/.local/bin, ~/.codex, ~/.agents)
+  --no-global-hooks   Skip global hooks/skills and suppress prompt
 
 Recommended workflow:
   1. npx metaswarm init
@@ -362,6 +365,8 @@ function installCodexSkills() {
 async function install(args) {
   const flags = new Set(args);
   const withHusky = flags.has('--with-husky');
+  const installGlobalHooksFlag = flags.has('--install-global-hooks');
+  const noGlobalHooksFlag = flags.has('--no-global-hooks');
 
   console.log(`\nmetaswarm v${VERSION} \u2014 install\n`);
 
@@ -537,13 +542,34 @@ async function install(args) {
     { name: 'metaswarm-version-check', desc: 'version check script' },
   ];
 
-  if (fs.existsSync(scriptsDir)) {
-    installGlobalScripts(scriptsDir, localBinDir, hookScripts);
-    updateClaudeSettings(localBinDir, hookScripts);
+  let installGlobalHooks = installGlobalHooksFlag;
+  if (installGlobalHooksFlag && noGlobalHooksFlag) {
+    warn('Both --install-global-hooks and --no-global-hooks were provided; using --install-global-hooks');
+  } else if (!installGlobalHooksFlag && !noGlobalHooksFlag) {
+    if (process.stdin.isTTY && process.stdout.isTTY) {
+      const answer = await askUser(
+        '  Install global hooks/skills (~/.claude/settings.json, ~/.local/bin, ~/.codex, ~/.agents)? [y/N] '
+      );
+      installGlobalHooks = answer === 'y' || answer === 'yes';
+      if (!installGlobalHooks) {
+        skip('global hooks/skills');
+      }
+    } else {
+      skip('global hooks/skills (--install-global-hooks to enable)');
+    }
   }
 
-  // Install global skills for Codex
-  installCodexSkills();
+  if (installGlobalHooks) {
+    if (fs.existsSync(scriptsDir)) {
+      installGlobalScripts(scriptsDir, localBinDir, hookScripts);
+      updateClaudeSettings(localBinDir, hookScripts);
+    }
+
+    // Install global skills for Codex
+    installCodexSkills();
+  } else if (noGlobalHooksFlag) {
+    skip('global hooks/skills');
+  }
 
   // --- Flag-driven setup ---
 
