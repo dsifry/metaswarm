@@ -224,6 +224,10 @@ ${projectContext}
 - Do NOT modify files outside your file scope
 - Do NOT self-certify — the orchestrator will validate independently
 - When complete, report what you changed and what tests you added
+- NEVER use --no-verify on git commits — pre-commit hooks are mandatory
+- NEVER use git push --force
+- NEVER suppress linter/type errors with eslint-disable, @ts-ignore, or as any
+- NEVER skip tests or claim "tests pass" without actually running them
 ```
 
 **Phase 1 output:** List of changed files and new tests.
@@ -589,6 +593,28 @@ git log main..HEAD --oneline
 
 ---
 
+## 8.5. Pre-PR Knowledge Capture (MANDATORY)
+
+After the final comprehensive review passes but BEFORE creating the PR, run `/self-reflect` to extract learnings into the knowledge base. This captures implementation insights, debugging discoveries, and architectural decisions while context is freshest — not deferred to post-merge when details have faded.
+
+```text
+## Pre-PR Knowledge Capture
+
+Final review PASSED. Before creating the PR, extracting learnings...
+
+/self-reflect
+
+Learnings captured: [N] items added to knowledge base.
+Committing knowledge base updates...
+Proceeding to PR creation.
+```
+
+**Why before PR, not after merge?** By the time a PR is merged, the implementing agent's context may be gone (session ended, context compacted). The richest insights — why a certain approach was chosen, what debugging dead-ends were hit, which patterns emerged — exist NOW, immediately after implementation. Capture them now.
+
+**Knowledge base changes are part of the PR.** After self-reflect updates the knowledge base files, commit them alongside the implementation. This ensures learnings are reviewed as part of the PR and land atomically with the code that generated them. Do NOT defer knowledge base commits to a separate PR or post-merge step.
+
+---
+
 ## 9. Recovery Protocol
 
 When things go wrong during the 4-phase loop, follow this structured recovery.
@@ -674,6 +700,9 @@ These are explicit DON'Ts. Violating any of these undermines the entire orchestr
 | 10 | **Building UI components in isolation** — all components tested but never wired into the app | Users can't interact with components that aren't rendered | Plan must include integration WUs that wire components into the app shell |
 | 11 | **Proceeding without external credentials** — building features that require API keys without verifying the user has them | Features will fail at runtime; user discovers this after 10+ commits | Checkpoint before external-service WUs to verify credentials are configured |
 | 12 | **Advisory quality gates** — treating FAIL as a suggestion rather than a blocking transition | Undermines the entire trust model; equivalent to skipping the gate | Quality gates are state transitions. FAIL means retry or escalate, never skip. |
+| 13 | **Using `--no-verify`** — bypassing pre-commit hooks on git commits | Pre-commit hooks catch lint errors, type errors, and formatting issues before they enter history | Never use `--no-verify`. Fix the underlying issue instead. |
+| 14 | **Skipping design review gate after brainstorming** — going directly from brainstorming to writing-plans | Expensive implementation work begins on unreviewed designs | Always run the 5-agent design review gate between brainstorming and planning |
+| 15 | **Skipping plan review gate** — presenting a plan to the user without adversarial review | Plans with feasibility gaps, missing requirements, or scope creep reach implementation | Always run the 3-reviewer plan review gate before presenting any plan |
 
 ---
 
@@ -711,4 +740,6 @@ After all work units:
 - [ ] Run final comprehensive review (with coverage enforcement)
 - [ ] Verify SERVICE-INVENTORY.md is complete
 - [ ] Present final report
+- [ ] Run `/self-reflect` to capture learnings (BEFORE PR creation)
+- [ ] Commit knowledge base updates (included in the PR)
 - [ ] Proceed to PR creation

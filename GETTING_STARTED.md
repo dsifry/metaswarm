@@ -11,13 +11,13 @@ npx metaswarm init
 Then open Claude Code in your project and run:
 
 ```text
-/project:metaswarm-setup
+/metaswarm-setup
 ```
 
 Claude detects your project's language, framework, test runner, and tools, then configures everything interactively. When setup completes, you're ready to start your first task:
 
 ```text
-/project:start-task
+/start-task
 ```
 
 For non-interactive or CI environments, use the legacy one-command install:
@@ -50,7 +50,7 @@ mkdir my-new-app && cd my-new-app
 git init
 npm init -y        # or whatever your stack needs
 npx metaswarm init
-# In Claude Code: /project:metaswarm-setup
+# In Claude Code: /metaswarm-setup
 ```
 
 ### 2. Tell Claude what to build
@@ -151,7 +151,7 @@ You described what you wanted. The system figured out how to build it.
 - **Include user flows.** Describe what the user sees and does, not just what the code does. Include text wireframes if the app has a UI. This prevents building components that are never wired into the app.
 - **List external dependencies.** If your app needs API keys (e.g., Anthropic, Stripe), say so in the spec. The orchestrator will prompt you to configure them before building features that depend on them.
 - **Use human checkpoints.** Put them after risky or foundational work (database schema, auth, AI integration). You can always continue quickly, but you can't easily undo.
-- **Start with a working spec, not a vague idea.** If you're not sure what you want yet, use `/project:brainstorm` first to refine the idea, then use the brainstorming output as your spec.
+- **Start with a working spec, not a vague idea.** If you're not sure what you want yet, use `/brainstorm` first to refine the idea, then use the brainstorming output as your spec.
 
 ---
 
@@ -185,7 +185,7 @@ bd ready
 In Claude Code, start the workflow:
 
 ```text
-> /project:start-task <task-id>
+> /start-task <task-id>
 ```
 
 This triggers the full pipeline:
@@ -207,7 +207,7 @@ This triggers the full pipeline:
 For a more complex feature, trigger the parallel review manually:
 
 ```text
-> /project:review-design docs/specs/my-feature.md
+> /review-design docs/specs/my-feature.md
 ```
 
 Six agents review in parallel:
@@ -248,7 +248,7 @@ See `skills/orchestrated-execution/SKILL.md` for the full pattern, and `rubrics/
 Before any task, prime your agent with relevant context:
 
 ```text
-> /project:prime
+> /prime
 ```
 
 Or with specific filters:
@@ -288,7 +288,7 @@ For details on the three enforcement gates, see [docs/coverage-enforcement.md](d
 After creating a PR, let the PR Shepherd monitor it:
 
 ```text
-> /project:pr-shepherd 42
+> /pr-shepherd 42
 ```
 
 The shepherd:
@@ -302,7 +302,7 @@ The shepherd:
 After a PR is merged, extract learnings for the knowledge base:
 
 ```text
-> /project:self-reflect
+> /self-reflect
 ```
 
 This analyzes recent PR review comments and suggests new knowledge entries for patterns, gotchas, and decisions.
@@ -365,7 +365,7 @@ metaswarm can delegate work to Codex (OpenAI) and Gemini (Google) for cost savin
 
 4. **Verify** everything works:
    ```text
-   /project:external-tools-health
+   /external-tools-health
    ```
 
 ## What's Next

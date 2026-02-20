@@ -5,20 +5,20 @@ Run the design review gate on a design document to get feedback from Product Man
 ## Usage
 
 ```bash
-/project:review-design <path-to-design-doc>
+/review-design <path-to-design-doc>
 ```
 
 ## Examples
 
 ```bash
 # Review a specific design document
-/project:review-design docs/plans/2026-01-11-contact-assistant-design.md
+/review-design docs/plans/2026-01-11-contact-assistant-design.md
 
 # Review the most recent design document
-/project:review-design --latest
+/review-design --latest
 
 # Re-run review after revisions
-/project:review-design docs/plans/2026-01-11-contact-assistant-design.md --iteration 2
+/review-design docs/plans/2026-01-11-contact-assistant-design.md --iteration 2
 ```
 
 ## What This Does
@@ -169,9 +169,9 @@ After 3 iterations, use `--force-override` to proceed anyway (documents technica
 
 ## Related Commands
 
-- `/project:review-this` - General CTO review (more detailed, single reviewer)
-- `/project:create-issue` - Create GitHub issue from approved design
-- `/project:start-task` - Begin implementation of approved design
+- `/review-this` - General CTO review (more detailed, single reviewer)
+- `/create-issue` - Create GitHub issue from approved design
+- `/start-task` - Begin implementation of approved design
 
 ## Related Skills
 

@@ -360,7 +360,7 @@ bin/create-pr-with-shepherd.sh --title "<title>" --body "<body>" --base main
 
 # Option B: Create PR manually and invoke pr-shepherd skill
 gh pr create --title "<title>" --body "<body>" --base main
-# Then invoke: /project:pr-shepherd <pr-number>
+# Then invoke: /pr-shepherd <pr-number>
 
 # PR Shepherd Agent automatically starts (via Option A or skill invocation)
 # The pr-shepherd monitors CI, responds to comments, resolves threads

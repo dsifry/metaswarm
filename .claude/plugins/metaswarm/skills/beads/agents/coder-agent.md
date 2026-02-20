@@ -59,6 +59,22 @@ Agents working without full context WILL make mistakes. Type breakage reveals th
 
 When the linter or type checker fails, FIX THE ROOT CAUSE. Never suppress with `as any`, `@ts-ignore`, or `eslint-disable`.
 
+### Git Discipline (MANDATORY)
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    GIT RULES — NO EXCEPTIONS                         │
+│                                                                      │
+│   1. NEVER use --no-verify on git commits                           │
+│   2. NEVER use git push --force without explicit user approval      │
+│   3. NEVER self-certify — the orchestrator validates independently  │
+│   4. STAY within your declared file scope                           │
+│   5. If pre-commit hooks fail, FIX THE ISSUE, don't bypass hooks   │
+│                                                                      │
+│   Violating these rules undermines the entire trust model.          │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## Workflow

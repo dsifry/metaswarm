@@ -120,7 +120,7 @@ npx metaswarm init
 Then open Claude Code and run:
 
 ```text
-/project:metaswarm-setup
+/metaswarm-setup
 ```
 
 That's it. Claude detects your project's language, framework, test runner, and tools, then configures everything interactively — 18 agent personas, 8 orchestration skills, 8 slash commands, 7 quality rubrics, knowledge base templates, and automation scripts. All customized for your stack.
@@ -139,7 +139,7 @@ metaswarm doesn't just execute — it learns from every session and gets smarter
 
 ### Automatic Reflection
 
-After every PR merge, the self-reflect workflow (`/project:self-reflect`) analyzes what happened:
+After every PR merge, the self-reflect workflow (`/self-reflect`) analyzes what happened:
 
 - **Code review feedback** — Extracts patterns, gotchas, and anti-patterns from reviewer comments (both human and automated) and writes them back to the knowledge base as structured JSONL entries
 - **Build and test failures** — Captures what broke and why, so agents avoid the same mistakes in future tasks

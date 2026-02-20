@@ -1,11 +1,11 @@
-# /project:handle-pr-comments
+# /handle-pr-comments
 
 Handle review comments on pull requests with appropriate responses and resolutions.
 
 ## Usage
 
 ```text
-/project:handle-pr-comments <pr-number>
+/handle-pr-comments <pr-number>
 ```
 
 ## Overview

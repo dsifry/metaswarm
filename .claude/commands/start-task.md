@@ -5,7 +5,7 @@ Determine task complexity and use appropriate workflow for efficient development
 ## Usage
 
 ```text
-/project:start-task <task-description>
+/start-task <task-description>
 ```
 
 ## Steps
@@ -107,7 +107,12 @@ If the issue lacks DoD items or clear scope, ask the user to clarify before proc
 **If the problem is unclear:**
 
 - Route to `superpowers:brainstorming` first to refine the idea into a design
-- The brainstorming output triggers the design review gate automatically (see `design-review-gate` skill)
+- **MANDATORY HANDOFF**: After brainstorming commits a design document, you MUST:
+  1. STOP — do NOT proceed directly to `writing-plans` or implementation
+  2. Run the Design Review Gate (`/review-design` or invoke the `design-review-gate` skill)
+  3. Wait for all 5 review agents (PM, Architect, Designer, Security, CTO) to APPROVE
+  4. Only after ALL APPROVED, proceed to planning
+- This handoff is required even if the brainstorming skill instructs you to invoke `writing-plans` next. The design review gate catches issues before expensive implementation begins.
 - After design review approval, create a GitHub Issue from the refined design
 - The issue should contain: scope, DoD items, file scope, human checkpoints
 
@@ -146,16 +151,18 @@ If it's a complex task:
 When the task has a spec with Definition of Done items, use the orchestrated execution pattern:
 
 1. **Create implementation plan** — decompose into work units with DoD items, file scopes, dependencies
-2. **Plan Review Gate** — submit plan to adversarial review (3 reviewers: Feasibility, Completeness, Scope & Alignment must all PASS). See `skills/plan-review-gate/SKILL.md`
+2. **Plan Review Gate (BLOCKING)** — submit plan to adversarial review (3 reviewers: Feasibility, Completeness, Scope & Alignment must all PASS). This gate is MANDATORY — do NOT present the plan to the user or begin implementation until all 3 reviewers PASS. See `skills/plan-review-gate/SKILL.md`
 3. **Execute** the 4-phase loop per work unit: IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT
 4. **Final review** after all work units: cross-unit integration check
-5. **Create PR** after final review passes
+5. **Self-reflect**: Run `/self-reflect` to extract learnings, then commit knowledge base updates
+6. **Create PR** — knowledge base changes are included in the PR
 
 See the `orchestrated-execution` skill for the full pattern. Key principles:
 - **Trust nothing, verify everything**: Run quality gates independently, never trust subagent self-reports
 - **Adversarial review**: Fresh reviewer checks each DoD item with file:line evidence
 - **Human checkpoints**: Pause at planned review points before continuing
 - **Recovery**: Max 3 retries per work unit, then escalate with failure history
+- **No shortcuts**: NEVER use `--no-verify` on commits, NEVER skip coverage gates, NEVER self-certify
 
 #### Multi-Agent Orchestration (for large features)
 

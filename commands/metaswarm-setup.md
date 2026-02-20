@@ -5,7 +5,7 @@ Interactive, Claude-guided setup for metaswarm in your project. Detects your sta
 ## Usage
 
 ```text
-/project:metaswarm-setup
+/metaswarm-setup
 ```
 
 ---
@@ -462,7 +462,7 @@ If the user chose YES for BEADS and `bd` is available:
 
 1. Run `bd init` via Bash
 2. Confirm success
-3. Tell the user: "BEADS initialized. Use `/project:prime` to load knowledge before starting tasks."
+3. Tell the user: "BEADS initialized. Use `/prime` to load knowledge before starting tasks."
 
 ---
 
@@ -576,15 +576,15 @@ Files modified:
   - .metaswarm/project-profile.json (created)
   {list any other files modified}
 
-You're all set! Try `/project:start-task` on a small task to see metaswarm in action.
+You're all set! Try `/start-task` on a small task to see metaswarm in action.
 ```
 
 ### 6.3 — Post-Setup Tips
 
 Based on what was configured, offer 1-2 relevant tips:
 
-- If external tools enabled: "Use `/project:external-tools-health` to check tool status anytime."
-- If BEADS enabled: "Use `/project:prime` before starting work to load relevant knowledge."
+- If external tools enabled: "Use `/external-tools-health` to check tool status anytime."
+- If BEADS enabled: "Use `/prime` before starting work to load relevant knowledge."
 - If no CI was set up: "Consider adding CI later — metaswarm includes a GitHub Actions template in `templates/ci.yml`."
 - If visual review enabled: "The visual review skill can screenshot your app during development. Agents will use it automatically."
 
@@ -597,4 +597,4 @@ Throughout the setup process:
 - If any Bash command fails, report the error clearly and offer to skip that step or retry
 - If a file can't be read (permissions, missing), note it and continue with other detection
 - If AskUserQuestion times out or is dismissed, use sensible defaults (100% coverage, no external tools, no visual review)
-- Never leave the project in a half-configured state — if setup is interrupted, the user should be able to re-run `/project:metaswarm-setup` to pick up where they left off (the Phase 1 re-setup check handles this)
+- Never leave the project in a half-configured state — if setup is interrupted, the user should be able to re-run `/metaswarm-setup` to pick up where they left off (the Phase 1 re-setup check handles this)

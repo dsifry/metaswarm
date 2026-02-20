@@ -4,7 +4,7 @@
 
 **Goal:** Replace the monolithic `npx metaswarm init` with a thin bootstrap + Claude-guided interactive setup.
 
-**Architecture:** Thin CLI bootstrap (3 files) → `/project:metaswarm-setup` skill (detects, installs, customizes) + `/project:metaswarm-update-version` for updates.
+**Architecture:** Thin CLI bootstrap (3 files) → `/metaswarm-setup` skill (detects, installs, customizes) + `/metaswarm-update-version` for updates.
 
 **Tech Stack:** Node.js CLI, Claude Code skills (markdown), shell commands
 
@@ -16,7 +16,7 @@
 - Create: `commands/metaswarm-setup.md`
 
 **Description:**
-The slash command that users invoke via `/project:metaswarm-setup`. This is a command file that triggers the guided-setup skill. It should:
+The slash command that users invoke via `/metaswarm-setup`. This is a command file that triggers the guided-setup skill. It should:
 - Check if metaswarm components are installed (`.claude/plugins/metaswarm/` exists)
 - If not, run `npx metaswarm install` to copy all components
 - Run project detection (scan for language/framework/test/lint/CI marker files)
@@ -121,8 +121,8 @@ Refactor the CLI to have two subcommands:
 **`metaswarm init`** (thin bootstrap):
 - Copy `commands/metaswarm-setup.md` → `.claude/commands/metaswarm-setup.md`
 - Copy `commands/metaswarm-update-version.md` → `.claude/commands/metaswarm-update-version.md`
-- Handle CLAUDE.md: if none exists, create minimal one that mentions metaswarm-setup; if exists without marker, ask to append a reference to `/project:metaswarm-setup`
-- Print: "metaswarm bootstrapped. Open Claude Code and run: /project:metaswarm-setup"
+- Handle CLAUDE.md: if none exists, create minimal one that mentions metaswarm-setup; if exists without marker, ask to append a reference to `/metaswarm-setup`
+- Print: "metaswarm bootstrapped. Open Claude Code and run: /metaswarm-setup"
 - Support `--full` flag that runs init + install (legacy behavior for CI/scripting)
 
 **`metaswarm install`** (the file copier):
@@ -148,8 +148,8 @@ The `install` command should be idempotent (skip existing files, same as current
 - Modify: `templates/CLAUDE-append.md` (if it exists)
 
 **Description:**
-- Add `/project:metaswarm-setup` and `/project:metaswarm-update-version` to the commands table
-- Add a note at the top: "This project uses metaswarm. Run /project:metaswarm-setup to configure for your project."
+- Add `/metaswarm-setup` and `/metaswarm-update-version` to the commands table
+- Add a note at the top: "This project uses metaswarm. Run /metaswarm-setup to configure for your project."
 - The TODO sections should remain (the setup skill fills them in)
 
 ---
@@ -164,21 +164,21 @@ The `install` command should be idempotent (skip existing files, same as current
 **Description:**
 
 **README.md** — Update the Install section:
-- Primary path: "Open Claude Code in your project and run `/project:metaswarm-setup`" (if already bootstrapped) or "Run `npx metaswarm init` then `/project:metaswarm-setup`"
+- Primary path: "Open Claude Code in your project and run `/metaswarm-setup`" (if already bootstrapped) or "Run `npx metaswarm init` then `/metaswarm-setup`"
 - The "That's it" paragraph should emphasize Claude walks you through everything
 - Keep `npx metaswarm init --full` as alternative for CI/scripting
 
 **INSTALL.md** — Restructure:
 - "Recommended: Claude-Guided Setup" as primary section
 - "Manual Installation" (npx metaswarm init --full) as secondary
-- "Updating" section referencing /project:metaswarm-update-version
+- "Updating" section referencing /metaswarm-update-version
 - Remove or simplify the long manual customization matrix (the skill handles this now)
 
 **GETTING_STARTED.md** — Rewrite quickstart:
 - Step 1: `npx metaswarm init`
-- Step 2: Open Claude Code, run `/project:metaswarm-setup`
+- Step 2: Open Claude Code, run `/metaswarm-setup`
 - Step 3: Claude detects your project and configures everything
-- Step 4: Run `/project:start-task` on your first task
+- Step 4: Run `/start-task` on your first task
 
 ---
 
@@ -189,8 +189,8 @@ The `install` command should be idempotent (skip existing files, same as current
 
 **Description:**
 Add v0.7.0 entry:
-- Claude-guided installation (`/project:metaswarm-setup`)
-- Self-update command (`/project:metaswarm-update-version`)
+- Claude-guided installation (`/metaswarm-setup`)
+- Self-update command (`/metaswarm-update-version`)
 - Thin bootstrap (npx metaswarm init copies 3 files, not 60+)
 - Project detection (language, framework, test runner, linter, CI, package manager)
 - Auto-customization of CLAUDE.md, coverage thresholds, .gitignore

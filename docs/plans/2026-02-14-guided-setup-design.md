@@ -16,11 +16,11 @@ Split installation into a **thin CLI bootstrap** and a **Claude-driven interacti
 ```
 Path A (CLI-first):                    Path B (Claude-first):
 npx metaswarm init                     User tells Claude: "Set up metaswarm"
-  └── copies 3 files                     └── Claude invokes /project:metaswarm-setup
-  └── prints: "Run /project:metaswarm-setup"   └── checks if init was run
+  └── copies 3 files                     └── Claude invokes /metaswarm-setup
+  └── prints: "Run /metaswarm-setup"   └── checks if init was run
                                                 └── runs npx metaswarm install if needed
 Both paths converge:
-/project:metaswarm-setup
+/metaswarm-setup
   └── detects project context (language, framework, test runner, etc.)
   └── presents findings to user
   └── asks 3-5 targeted questions
@@ -37,12 +37,12 @@ Both paths converge:
 Copies ONLY:
 - `.claude/commands/metaswarm-setup.md`
 - `.claude/commands/metaswarm-update-version.md`
-- Minimal CLAUDE.md entry (create or append) pointing to `/project:metaswarm-setup`
+- Minimal CLAUDE.md entry (create or append) pointing to `/metaswarm-setup`
 
 Prints:
 ```
 metaswarm bootstrapped.
-Open Claude Code and run: /project:metaswarm-setup
+Open Claude Code and run: /metaswarm-setup
 ```
 
 #### `npx metaswarm install` (the file copier)
@@ -57,7 +57,7 @@ This is essentially the current `init` logic, minus the bootstrapper and CLAUDE.
 
 Supports `--full` flag for legacy behavior (init + install in one step).
 
-### Skill: `/project:metaswarm-setup`
+### Skill: `/metaswarm-setup`
 
 **Phase 1: Bootstrap Check**
 - Check for `.claude/plugins/metaswarm/` — if missing, run `npx metaswarm install`
@@ -94,9 +94,9 @@ Supports `--full` flag for legacy behavior (init + install in one step).
 **Phase 5: Verify & First Task**
 - Run health checks (external tools if enabled)
 - Show summary of what was installed and customized
-- Suggest: "Try /project:start-task on a small bug or feature"
+- Suggest: "Try /start-task on a small bug or feature"
 
-### Command: `/project:metaswarm-update-version`
+### Command: `/metaswarm-update-version`
 
 1. Read `.metaswarm/project-profile.json` for current version
 2. Run `npx metaswarm@latest install` to refresh all files
@@ -143,8 +143,8 @@ Supports `--full` flag for legacy behavior (init + install in one step).
 
 - **README.md**: Change install section to recommend "tell Claude: set up metaswarm"
 - **INSTALL.md**: Restructure around guided flow, keep npx as "Manual/CI Installation"
-- **GETTING_STARTED.md**: Rewrite quickstart around `/project:metaswarm-setup`
-- **templates/CLAUDE.md**: Add `/project:metaswarm-setup` and `/project:metaswarm-update-version`
+- **GETTING_STARTED.md**: Rewrite quickstart around `/metaswarm-setup`
+- **templates/CLAUDE.md**: Add `/metaswarm-setup` and `/metaswarm-update-version`
 
 ### What Does NOT Change
 
@@ -158,5 +158,5 @@ Supports `--full` flag for legacy behavior (init + install in one step).
 2. **Thin bootstrap** — Init copies only what's needed to invoke Claude. Everything else is pulled by the skill.
 3. **Separate install command** — The heavy file-copying is a distinct CLI command the skill invokes programmatically.
 4. **Project profile** — Single source of truth for detection results, user choices, and version tracking.
-5. **Namespaced commands** — `/project:metaswarm-setup` and `/project:metaswarm-update-version` avoid collision with other projects' commands.
+5. **Namespaced commands** — `/metaswarm-setup` and `/metaswarm-update-version` avoid collision with other projects' commands.
 6. **No language-conditional templates** — We keep one set of templates and customize post-copy. Simpler than maintaining N template variants.

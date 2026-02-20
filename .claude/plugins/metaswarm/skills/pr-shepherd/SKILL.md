@@ -21,7 +21,7 @@ Activate this skill when ANY of these conditions are true:
 
 - Agent just created a PR with `gh pr create`
 - User asks to "shepherd", "monitor", or "see through" a PR
-- User invokes `/project:pr-shepherd <pr-number>`
+- User invokes `/pr-shepherd <pr-number>`
 - User asks to "watch this PR" or "handle this PR until it's merged"
 - Orchestrator spawned you with instructions to shepherd a PR
 - **Automatic**: `bin/create-pr-with-shepherd.sh` was used (outputs shepherd instructions)
@@ -43,7 +43,7 @@ The pr-shepherd skill will:
   - Report when PR is ready to merge
 
 To manually invoke shepherd later:
-  /project:pr-shepherd 123
+  /pr-shepherd 123
 ```
 
 When you see this output, **immediately invoke the pr-shepherd skill** with the PR number shown.
@@ -364,7 +364,7 @@ The PR is ready for final approval and merge.
 After the PR is merged and knowledge extraction tasks are created, invoke automatic RAM cleanup to free resources:
 
 ```text
-/project:auto-ram-cleanup
+/auto-ram-cleanup
 ```
 
 **Why**: Development processes (test runners, build watchers, language servers) accumulate during PR work. Cleaning up after merge frees memory for the next task.
@@ -381,9 +381,11 @@ After the PR is merged and knowledge extraction tasks are created, invoke automa
 - Duplicate language server instances
 - Other development tool cruft
 
-## Phase 7: Post-Merge Knowledge Extraction
+## Phase 7: Post-Merge Verification & Fallback Knowledge Extraction
 
-**IMPORTANT**: After a PR is merged into main, create a blocking task for knowledge extraction. This ensures learnings are captured before the epic can be closed.
+**Primary path**: Self-reflect should have already run pre-PR (see orchestrated-execution section 8.5), with knowledge base changes committed as part of the PR. This phase verifies that happened and handles the fallback case.
+
+**Fallback**: If self-reflect was NOT run pre-PR (e.g., PR was created outside the orchestrated workflow), create a blocking task for knowledge extraction after merge.
 
 ### When PR is Merged
 
@@ -403,6 +405,8 @@ if [ "$MERGED" = "true" ]; then
 fi
 ```
 
+**Note**: Self-reflect (`/self-reflect`) should have already run BEFORE the PR was created (see orchestrated-execution skill, section 8.5). If it was skipped, run it now as a fallback — but the preferred time is pre-PR while implementation context is freshest.
+
 ### Report to User
 
 When creating the curation task:
@@ -417,7 +421,7 @@ Created blocking task: [CURATION_TASK_ID]
 
 To extract learnings, invoke:
 ```
-/project:curate-pr-learnings [number]
+/curate-pr-learnings [number]
 ```
 
 The command will:
@@ -484,7 +488,7 @@ Status at exit:
 - Threads: [X] resolved, [Y] unresolved
 - Last activity: [timestamp]
 
-To resume: `/project:pr-shepherd [number]`
+To resume: `/pr-shepherd [number]`
 ```
 
 ## Skills Invoked
@@ -534,10 +538,11 @@ After PR is merged (Phase 7):
 - [ ] Created task for knowledge curation
 - [ ] Added task as blocker to epic (if applicable)
 - [ ] Reported curation task ID to user
+- [ ] Verified `/self-reflect` ran pre-PR (if not, run it now as fallback)
 
 After all post-merge tasks complete:
 
-- [ ] Ran `/project:auto-ram-cleanup` to free development resources
+- [ ] Ran `/auto-ram-cleanup` to free development resources
 - [ ] Confirmed Docker containers still running (if needed)
 
 ## Common Mistakes

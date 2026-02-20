@@ -1607,7 +1607,7 @@ Run health checks on all configured external AI tools and report their status.
 
 ```bash
 git add .claude/commands/external-tools-health.md
-git commit -m "feat(external-tools): add /project:external-tools-health slash command"
+git commit -m "feat(external-tools): add /external-tools-health slash command"
 ```
 
 ---
@@ -1625,7 +1625,7 @@ Run: Read `templates/CLAUDE.md` to find where to add the external tools referenc
 
 Add to the "Available Commands" section:
 ```markdown
-- `/project:external-tools-health` — Check status of external AI tools (Codex, Gemini)
+- `/external-tools-health` — Check status of external AI tools (Codex, Gemini)
 ```
 
 Add a new section after "Quality Gates":

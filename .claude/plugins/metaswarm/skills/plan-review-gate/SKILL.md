@@ -26,7 +26,7 @@ This skill auto-activates when:
 1. An implementation plan is drafted (by planner, explorer, or orchestrator)
 2. The `writing-plans` skill completes a plan
 3. The orchestrator's plan validation phase produces a plan for review
-4. User explicitly requests: `/project:plan-review <path-to-plan>`
+4. User explicitly requests: `/plan-review <path-to-plan>`
 
 **Do NOT use for**: Trivial changes (single-file bug fixes, copy edits, config tweaks). The plan must have at least 2 work units or touch 3+ files to warrant gate review.
 

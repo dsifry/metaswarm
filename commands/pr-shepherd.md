@@ -9,7 +9,7 @@ Monitor a PR from creation through merge, handling CI failures, review comments,
 ## Usage
 
 ```text
-/project:pr-shepherd [pr-number]
+/pr-shepherd [pr-number]
 ```
 
 If no PR number is provided, uses the PR associated with the current branch.
@@ -30,7 +30,7 @@ If no PR number is provided, uses the PR associated with the current branch.
    ```bash
    PR_NUMBER=${1:-$(gh pr view --json number -q .number 2>/dev/null)}
    if [ -z "$PR_NUMBER" ]; then
-     echo "No PR found. Provide PR number: /project:pr-shepherd 123"
+     echo "No PR found. Provide PR number: /pr-shepherd 123"
      exit 1
    fi
    ```
@@ -56,7 +56,7 @@ If no PR number is provided, uses the PR associated with the current branch.
 ## Example
 
 ```text
-/project:pr-shepherd 695
+/pr-shepherd 695
 
 > I'm using the pr-shepherd skill to monitor PR #695 through to merge.
 > I'll watch CI/CD, handle review comments, and fix issues as they arise.

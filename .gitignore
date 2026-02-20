@@ -5,6 +5,11 @@
 .beads/daemon.log
 .beads/temp/
 
+# Secrets
+.env
+.env.*
+!.env.example
+
 # Node
 node_modules/
 
