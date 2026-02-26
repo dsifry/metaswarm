@@ -1,0 +1,4 @@
+# Schema: facts.jsonl - General facts that don't fit other categories
+# Each line is a JSON object with: id, type, fact, recommendation, confidence, provenance[], tags[], affectedFiles[], affectedServices[], createdAt, updatedAt, usageCount, helpfulCount, outdatedReports
+# Example entry:
+{"id":"fact-general-001","type":"code_quirk","fact":"Example: The project uses port 3100 for the API server and port 4000 for the Vite dev server.","recommendation":"Check .env or config files for port assignments before hardcoding values.","confidence":"high","provenance":[{"source":"documentation","reference":"README","date":"2026-01-09"}],"tags":["configuration","ports"],"affectedFiles":["vite.config.ts","src/api/server.ts"],"affectedServices":[],"createdAt":"2026-01-09T00:00:00Z","updatedAt":"2026-01-09T00:00:00Z","usageCount":0,"helpfulCount":0,"outdatedReports":0}

@@ -1,0 +1,4 @@
+# Schema: anti-patterns.jsonl - Things to avoid
+# Each line is a JSON object with: id, type, fact, recommendation, confidence, provenance[], tags[], affectedFiles[], affectedServices[], createdAt, updatedAt, usageCount, helpfulCount, outdatedReports
+# Example entry:
+{"id":"anti-example-001","type":"pattern","fact":"Example: NEVER use 'as any' type casting - it hides bugs and defeats TypeScript's type system.","recommendation":"Use proper type narrowing, generics, or 'as unknown as Type' for test mocks.","confidence":"high","provenance":[{"source":"documentation","reference":"TypeScript patterns guide","date":"2026-01-09"}],"tags":["typescript","type-safety"],"affectedFiles":["**/*.ts"],"affectedServices":[],"createdAt":"2026-01-09T00:00:00Z","updatedAt":"2026-01-09T00:00:00Z","usageCount":0,"helpfulCount":0,"outdatedReports":0}

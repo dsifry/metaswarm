@@ -1,0 +1,4 @@
+# Schema: decisions.jsonl - Architectural decisions with context
+# Each line is a JSON object with: id, type, fact, recommendation, confidence, provenance[], tags[], affectedFiles[], affectedServices[], createdAt, updatedAt, usageCount, helpfulCount, outdatedReports
+# Example entry:
+{"id":"decision-example-001","type":"decision","fact":"Example: Chose Zustand over Redux for client state management because of simpler API and smaller bundle size.","recommendation":"Use Zustand stores for client state. Use TanStack Query for server state. Do not mix the two patterns.","confidence":"high","provenance":[{"source":"human","reference":"Architecture decision","date":"2026-01-09"}],"tags":["architecture","state-management","zustand"],"affectedFiles":["src/stores/**/*.ts"],"affectedServices":[],"createdAt":"2026-01-09T00:00:00Z","updatedAt":"2026-01-09T00:00:00Z","usageCount":0,"helpfulCount":0,"outdatedReports":0}
