@@ -32,9 +32,23 @@ jobs:
       - name: Test with coverage
         run: |
           if [ -f .coverage-thresholds.json ]; then
+            # Read command from coverage config
             CMD=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.coverage-thresholds.json','utf-8')).enforcement.command)")
             echo "Running coverage command: $CMD"
-            eval "$CMD"
+            # Split into array for safe execution
+            read -ra CMD_ARRAY <<< "$CMD"
+            # Validate first word is a known package manager/runner
+            case "${CMD_ARRAY[0]}" in
+              npm|pnpm|yarn|npx|bun|cargo|pytest|go|make) ;;
+              *) echo "Error: enforcement command must start with a known package manager/runner"; exit 1 ;;
+            esac
+            # Reject shell metacharacters in the full command string
+            if echo "$CMD" | grep -qE '[;|&`$(){}<>\\]'; then
+              echo "Error: enforcement command contains disallowed shell metacharacters"
+              exit 1
+            fi
+            # Execute as array — prevents all shell metacharacter interpretation
+            "${CMD_ARRAY[@]}"
           else
             npm test
           fi
