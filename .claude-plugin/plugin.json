@@ -1,0 +1,13 @@
+{
+  "name": "metaswarm",
+  "version": "1.0.0",
+  "description": "Multi-agent orchestration framework for Claude Code — 18 agents, 9-phase workflow, quality gates, TDD enforcement",
+  "author": {
+    "name": "David Sifry",
+    "email": "david@sifry.com"
+  },
+  "homepage": "https://github.com/dsifry/metaswarm",
+  "repository": "https://github.com/dsifry/metaswarm",
+  "license": "MIT",
+  "keywords": ["orchestration", "agents", "tdd", "quality-gates", "beads"]
+}
