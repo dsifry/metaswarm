@@ -11,6 +11,18 @@ const PKG_ROOT = path.resolve(__dirname, '..');
 const CWD = process.cwd();
 const VERSION = require(path.join(PKG_ROOT, 'package.json')).version;
 
+// Deprecation notice
+console.log('\n  ========================================');
+console.log('  DEPRECATION NOTICE');
+console.log('  ========================================');
+console.log('  npx metaswarm init is deprecated.');
+console.log('  Install via the Claude Code plugin marketplace instead:');
+console.log('');
+console.log('    claude plugin add dsifry/metaswarm');
+console.log('');
+console.log('  Then in Claude Code, run: /setup');
+console.log('  ========================================\n');
+
 // --- Helpers ---
 
 function warn(msg) {
