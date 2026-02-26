@@ -204,7 +204,7 @@ if (url.includes("localhost") || url.includes("127.0.0.1")) {
 | Document                                | Purpose                                 |
 | --------------------------------------- | --------------------------------------- |
 | `CLAUDE.md`                             | Architecture, auth patterns, guidelines |
-| `.claude/guides/testing-patterns.md`    | Testing philosophy, mock factories      |
+| `./guides/testing-patterns.md`    | Testing philosophy, mock factories      |
 | TypeScript strict mode                  | Follow conventions from tsconfig.json and ESLint configuration |
 | `docs/SERVICE_INVENTORY.md`             | Service catalog                         |
 

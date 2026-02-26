@@ -5,25 +5,19 @@ This guide walks you through your first metaswarm-orchestrated workflow.
 ## Step 1: Install metaswarm
 
 ```bash
-npx metaswarm init
+claude plugin add dsifry/metaswarm
 ```
 
 Then open Claude Code in your project and run:
 
 ```text
-/metaswarm-setup
+/setup
 ```
 
 Claude detects your project's language, framework, test runner, and tools, then configures everything interactively. When setup completes, you're ready to start your first task:
 
 ```text
 /start-task
-```
-
-For non-interactive or CI environments, use the legacy one-command install:
-
-```bash
-npx metaswarm init --full
 ```
 
 Verify it worked:
@@ -49,8 +43,8 @@ The fastest way to see metaswarm in action is to give it a project to build from
 mkdir my-new-app && cd my-new-app
 git init
 npm init -y        # or whatever your stack needs
-npx metaswarm init
-# In Claude Code: /metaswarm-setup
+claude plugin add dsifry/metaswarm
+# In Claude Code: /setup
 ```
 
 ### 2. Tell Claude what to build
@@ -265,19 +259,7 @@ This outputs prioritized knowledge:
 
 ## Step 6: Set Up Coverage Enforcement
 
-Use the `--with-coverage` flag (or `--with-husky` / `--with-ci` which imply it):
-
-```bash
-npx metaswarm init --with-husky --with-ci
-```
-
-This copies `.coverage-thresholds.json` to your project root, sets up Husky with a pre-push hook, and creates a CI coverage workflow. Edit `.coverage-thresholds.json` to set your coverage command and thresholds.
-
-You can also set up just the thresholds file:
-
-```bash
-npx metaswarm init --with-coverage
-```
+The `/setup` command configures coverage enforcement automatically. It creates `.coverage-thresholds.json` in your project root with your coverage command and thresholds.
 
 When `.coverage-thresholds.json` exists, agents will be blocked from creating PRs or marking tasks complete until all coverage thresholds pass.
 

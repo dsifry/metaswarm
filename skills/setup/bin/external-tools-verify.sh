@@ -152,7 +152,7 @@ printf '\n=== File existence ===\n'
 
 check "templates/external-tools.yaml exists" test -f "${REPO_ROOT}/templates/external-tools.yaml"
 check "skills/external-tools/SKILL.md exists" test -f "${REPO_ROOT}/skills/external-tools/SKILL.md"
-check ".claude/rubrics/external-tool-review-rubric.md exists" test -f "${REPO_ROOT}/.claude/rubrics/external-tool-review-rubric.md"
+check "rubrics/external-tool-review-rubric.md exists" test -f "${REPO_ROOT}/rubrics/external-tool-review-rubric.md"
 
 # ---------------------------------------------------------------------------
 # Summary

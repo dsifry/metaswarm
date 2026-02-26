@@ -61,7 +61,7 @@ The validation phase of orchestrated execution reads `.coverage-thresholds.json`
 ## Quality Gates
 
 - **Design Review Gate**: Parallel 5-agent review after design is drafted (`/review-design`)
-- **Plan Review Gate**: Automatic adversarial review after any implementation plan is drafted. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before the plan is presented to the user. See `.claude/plugins/metaswarm/skills/plan-review-gate/SKILL.md`
+- **Plan Review Gate**: Automatic adversarial review after any implementation plan is drafted. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before the plan is presented to the user. See `skills/plan-review-gate/SKILL.md`
 - **Coverage Gate**: Reads `.coverage-thresholds.json` and runs the enforcement command — BLOCKING gate before PR creation
 
 ## Workflow Enforcement (MANDATORY)
@@ -174,11 +174,11 @@ and cross-model adversarial review. See `templates/external-tools-setup.md` for 
 
 ## Team Mode
 
-When `TeamCreate` and `SendMessage` tools are available, the orchestrator uses Team Mode for parallel agent dispatch. Otherwise it falls back to Task Mode (the existing workflow, unchanged). See `.claude/guides/agent-coordination.md` for details.
+When `TeamCreate` and `SendMessage` tools are available, the orchestrator uses Team Mode for parallel agent dispatch. Otherwise it falls back to Task Mode (the existing workflow, unchanged). See `guides/agent-coordination.md` for details.
 
 ## Guides
 
-Development patterns and standards are documented in `.claude/guides/`:
+Development patterns and standards are documented in `guides/`:
 - `agent-coordination.md` — Team Mode vs Task Mode, agent dispatch patterns
 - `build-validation.md` — Build and validation workflow
 - `coding-standards.md` — Code style and conventions

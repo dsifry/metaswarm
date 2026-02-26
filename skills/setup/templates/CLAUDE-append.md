@@ -24,16 +24,16 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 ### Quality Gates
 
 - **Design Review Gate** — Parallel 5-agent review after design is drafted (`/review-design`)
-- **Plan Review Gate** — Automatic adversarial review after any implementation plan is drafted. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before presenting the plan. See `.claude/plugins/metaswarm/skills/plan-review-gate/SKILL.md`
+- **Plan Review Gate** — Automatic adversarial review after any implementation plan is drafted. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before presenting the plan. See `skills/plan-review-gate/SKILL.md`
 - **Coverage Gate** — `.coverage-thresholds.json` defines thresholds. BLOCKING gate before PR creation
 
 ### Team Mode
 
-When `TeamCreate` and `SendMessage` tools are available, the orchestrator uses Team Mode for parallel agent dispatch. Otherwise it falls back to Task Mode (existing workflow, unchanged). See `.claude/guides/agent-coordination.md` for details.
+When `TeamCreate` and `SendMessage` tools are available, the orchestrator uses Team Mode for parallel agent dispatch. Otherwise it falls back to Task Mode (existing workflow, unchanged). See `guides/agent-coordination.md` for details.
 
 ### Guides
 
-Development patterns and standards are documented in `.claude/guides/` — covering agent coordination, build validation, coding standards, git workflow, testing patterns, and worktree development.
+Development patterns and standards are documented in `guides/` — covering agent coordination, build validation, coding standards, git workflow, testing patterns, and worktree development.
 
 ### Testing & Quality
 

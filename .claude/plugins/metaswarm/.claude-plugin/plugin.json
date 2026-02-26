@@ -1,8 +1,0 @@
-{
-  "name": "metaswarm",
-  "version": "0.1.0",
-  "description": "Multi-agent orchestration framework for Claude Code",
-  "skills": [
-    "skills/beads/SKILL.md"
-  ]
-}

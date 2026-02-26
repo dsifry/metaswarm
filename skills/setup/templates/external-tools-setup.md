@@ -304,6 +304,6 @@ the chain is shorter (3 attempts max).
 
 - **Design document**: `docs/plans/2026-02-14-external-tools-design.md`
 - **Orchestration skill**: `skills/external-tools/SKILL.md`
-- **Review rubric**: `.claude/rubrics/external-tool-review-rubric.md`
+- **Review rubric**: `rubrics/external-tool-review-rubric.md`
 - **Config template**: `templates/external-tools.yaml`
 - **Health check command**: `/external-tools-health`

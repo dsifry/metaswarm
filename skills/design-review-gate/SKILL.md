@@ -405,7 +405,7 @@ Review this design for TDD readiness and codebase alignment.
 BEFORE reviewing, read:
 - docs/BACKEND_SERVICE_GUIDE.md
 - docs/TESTING_GUIDE.md
-- .claude/task-completion-checklist.md
+- templates/task-completion-checklist.md
 
 ## Output Format
 

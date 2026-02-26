@@ -16,9 +16,9 @@ This rubric evaluates test quality beyond just coverage percentages. Good tests 
 
 | Document                                | Purpose                                                        |
 | --------------------------------------- | -------------------------------------------------------------- |
-| `.claude/guides/testing-patterns.md`    | Canonical test writing guide (philosophy, patterns, checklist) |
-| `.claude/test-quality-anti-patterns.md` | Cascading failures, mock factory anti-patterns                 |
-| `.claude/test-quality-anti-patterns.md` | Common testing mistakes to avoid                               |
+| `./guides/testing-patterns.md`    | Canonical test writing guide (philosophy, patterns, checklist) |
+| `test-quality-anti-patterns.md (project-specific)` | Cascading failures, mock factory anti-patterns                 |
+| `test-quality-anti-patterns.md (project-specific)` | Common testing mistakes to avoid                               |
 | `docs/SERVICE_INVENTORY.md`             | Mock factory inventory & usage rules                           |
 | `src/test-utils/factories/`             | Shared mock factories (single source of truth)                 |
 | `src/test-utils/mocks/prisma.ts`        | Prisma mock client                                             |
@@ -31,7 +31,7 @@ This rubric evaluates test quality beyond just coverage percentages. Good tests 
 | -------- | -------- |
 | All code | 100%     |
 
-This project enforces 100% statement, branch, function, and line coverage. See `.claude/guides/testing-patterns.md` for the philosophy behind this requirement.
+This project enforces 100% statement, branch, function, and line coverage. See `./guides/testing-patterns.md` for the philosophy behind this requirement.
 
 ---
 

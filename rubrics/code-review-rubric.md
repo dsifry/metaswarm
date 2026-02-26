@@ -27,13 +27,13 @@ This rubric ensures code changes meet quality standards before being submitted a
 
 | Document                                | Purpose                                  |
 | --------------------------------------- | ---------------------------------------- |
-| `.claude/guides/coding-standards.md`    | Coding standards (source of truth)       |
+| `./guides/coding-standards.md`    | Coding standards (source of truth)       |
 | `CLAUDE.md`                             | Architecture, coding standards, key locs |
-| `.claude/guides/testing-patterns.md`    | Testing philosophy, mock factories, TDD  |
-| `.claude/test-quality-anti-patterns.md` | Common testing mistakes to avoid         |
+| `./guides/testing-patterns.md`    | Testing philosophy, mock factories, TDD  |
+| `test-quality-anti-patterns.md (project-specific)` | Common testing mistakes to avoid         |
 | TypeScript strict mode                  | Follow conventions from tsconfig.json and ESLint configuration |
 | `docs/SERVICE_INVENTORY.md`             | Service catalog & factory inventory      |
-| `.claude/task-completion-checklist.md`  | Pre-completion validation steps          |
+| `templates/task-completion-checklist.md`  | Pre-completion validation steps          |
 
 ---
 
@@ -122,7 +122,7 @@ const svc = new MyService(deps as never); // Test DI wiring
 | Edge cases tested                  | HIGH     | Every branch, error handler, fallback            |
 | TDD followed                       | MEDIUM   | Tests written before implementation              |
 
-**Test Quality Checks** (see `.claude/guides/testing-patterns.md`):
+**Test Quality Checks** (see `./guides/testing-patterns.md`):
 
 - [ ] Every assertion tests a **result**, not just presence
 - [ ] Mock factories from `src/test-utils/factories/` used (never inline objects)

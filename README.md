@@ -65,48 +65,37 @@ Your prompt (spec with DoD items) or GitHub Issue
 
 ```text
 metaswarm/
-├── ORCHESTRATION.md          # Main orchestration workflow guide
-├── agents/                   # 18 agent persona definitions
-│   ├── issue-orchestrator.md
-│   ├── swarm-coordinator-agent.md
-│   ├── researcher-agent.md
-│   ├── architect-agent.md
-│   ├── coder-agent.md
-│   ├── code-review-agent.md
-│   ├── security-auditor-agent.md
-│   ├── pr-shepherd-agent.md
-│   └── ... (18 total)
-├── skills/                   # Orchestration skills
+├── .claude-plugin/
+│   └── plugin.json           # Plugin manifest (name, version, metadata)
+├── hooks/
+│   ├── hooks.json            # SessionStart + PreCompact hook definitions
+│   └── session-start.sh      # Context priming, legacy detection, BEADS dedup
+├── skills/                   # Orchestration skills (auto-discovered by Claude Code)
+│   ├── start/                # Main entry point — workflow guide + 18 agent personas
 │   ├── orchestrated-execution/ # 4-phase execution loop (IMPLEMENT→VALIDATE→REVIEW→COMMIT)
 │   ├── design-review-gate/   # Parallel 5-agent review
+│   ├── plan-review-gate/     # 3-reviewer adversarial plan review
+│   ├── setup/                # Interactive project setup (replaces npx metaswarm init)
+│   ├── migrate/              # Migration from npm to plugin installation
+│   ├── status/               # Diagnostic checks
 │   ├── pr-shepherd/          # PR lifecycle automation
 │   ├── handling-pr-comments/ # Review comment workflow
 │   ├── brainstorming-extension/
 │   ├── create-issue/
-│   ├── external-tools/      # Cross-model AI delegation (Codex, Gemini CLI)
-│   └── visual-review/       # Playwright-based screenshot review
-├── commands/                 # Claude Code slash commands
-│   ├── prime.md              # Knowledge priming
-│   ├── start-task.md         # Begin tracked work
-│   ├── review-design.md      # Trigger design review gate
-│   ├── self-reflect.md       # Extract learnings
-│   └── ...
-├── rubrics/                  # Quality review standards
-│   ├── code-review-rubric.md
-│   ├── adversarial-review-rubric.md  # Binary PASS/FAIL spec compliance
-│   ├── architecture-rubric.md
-│   ├── security-review-rubric.md
-│   ├── plan-review-rubric.md
-│   └── test-coverage-rubric.md
-├── knowledge/                # Knowledge base schema + templates
-│   ├── README.md
-│   ├── patterns.jsonl
-│   ├── gotchas.jsonl
-│   ├── decisions.jsonl
-│   └── ...
-├── scripts/                  # Automation scripts
-├── bin/                      # Shell utilities (verify scripts, cost estimation)
-├── templates/                # Setup templates (including coverage-thresholds.json)
+│   ├── external-tools/       # Cross-model AI delegation (Codex, Gemini CLI)
+│   └── visual-review/        # Playwright-based screenshot review
+├── commands/                  # Claude Code slash commands
+│   ├── prime.md, start-task.md, review-design.md, self-reflect.md
+│   ├── brainstorm.md, setup.md, update.md, status.md
+│   └── ... (14 total)
+├── agents/                    # 18 agent persona definitions (authoritative source)
+├── rubrics/                   # Quality review standards (authoritative source)
+├── guides/                    # Development patterns (authoritative source)
+├── knowledge/                 # Knowledge base schema + templates
+├── templates/                 # Setup templates (authoritative source)
+├── scripts/                   # Automation scripts
+├── bin/                       # Shell utilities
+├── lib/                       # Build scripts (sync-resources.js)
 ├── INSTALL.md
 ├── GETTING_STARTED.md
 ├── USAGE.md
@@ -116,24 +105,18 @@ metaswarm/
 ## Install
 
 ```bash
-npx metaswarm init
+claude plugin add dsifry/metaswarm
 ```
 
-Then open Claude Code and run:
+Then open Claude Code in your project and run:
 
 ```text
-/metaswarm-setup
+/setup
 ```
 
-That's it. Claude detects your project's language, framework, test runner, and tools, then configures everything interactively — 18 agent personas, 8 orchestration skills, 8 slash commands, 7 quality rubrics, knowledge base templates, and automation scripts. All customized for your stack.
+That's it. Claude detects your project's language, framework, test runner, and tools, then configures everything interactively — 18 agent personas, 13 orchestration skills, 14 slash commands, 7 quality rubrics, knowledge base templates, and automation scripts. All customized for your stack.
 
-For non-interactive or CI environments:
-
-```bash
-npx metaswarm init --full
-```
-
-See [INSTALL.md](INSTALL.md) for prerequisites and manual setup options.
+See [INSTALL.md](INSTALL.md) for prerequisites, migration from npm, and manual setup options.
 
 ## Self-Learning System
 
@@ -183,7 +166,7 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-- Node.js 18+ (for `npx metaswarm init` and automation scripts)
+- Node.js 18+ (for automation scripts)
 - [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+ — for task tracking (recommended)
 - GitHub CLI (`gh`) — for PR automation (recommended)
 - OpenAI Codex CLI (`codex`) — for external tool delegation (optional)

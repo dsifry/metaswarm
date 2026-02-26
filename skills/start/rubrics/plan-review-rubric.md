@@ -44,7 +44,7 @@ This rubric ensures implementation plans are complete, correct, and aligned with
 
 - `CLAUDE.md` (Architecture Overview section)
 - `docs/SERVICE_INVENTORY.md`
-- `.claude/guides/testing-patterns.md`
+- `./guides/testing-patterns.md`
 
 **Questions to Ask**:
 
@@ -82,7 +82,7 @@ This rubric ensures implementation plans are complete, correct, and aligned with
 
 **Reference Docs**:
 
-- `.claude/guides/testing-patterns.md`
+- `./guides/testing-patterns.md`
 - `src/test-utils/factories/`
 
 **Questions to Ask**:
