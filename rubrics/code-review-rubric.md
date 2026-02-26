@@ -31,7 +31,7 @@ This rubric ensures code changes meet quality standards before being submitted a
 | `CLAUDE.md`                             | Architecture, coding standards, key locs |
 | `.claude/guides/testing-patterns.md`    | Testing philosophy, mock factories, TDD  |
 | `.claude/test-quality-anti-patterns.md` | Common testing mistakes to avoid         |
-| `.claude/guides/typescript-patterns.md` | Type safety, no `any`, null handling     |
+| TypeScript strict mode                  | Follow conventions from tsconfig.json and ESLint configuration |
 | `docs/SERVICE_INVENTORY.md`             | Service catalog & factory inventory      |
 | `.claude/task-completion-checklist.md`  | Pre-completion validation steps          |
 

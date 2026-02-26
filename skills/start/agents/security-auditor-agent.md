@@ -75,7 +75,7 @@ Categorize changed files by risk:
 
 ```bash
 # Reference the security-review-rubric
-# .claude/rubrics/security-review-rubric.md
+# ./rubrics/security-review-rubric.md
 
 # Check for known security issues
 grep -r "security" .beads/knowledge/*.jsonl

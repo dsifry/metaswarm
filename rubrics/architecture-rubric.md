@@ -20,7 +20,7 @@ This rubric evaluates implementation plans for architectural fit. It ensures new
 | `.claude/guides/testing-patterns.md`    | Testing philosophy, mock factories, TDD |
 | `.claude/test-quality-anti-patterns.md` | Common testing mistakes to avoid        |
 | `docs/SERVICE_INVENTORY.md`             | Existing services & factory catalog     |
-| `.claude/guides/typescript-patterns.md` | Type safety patterns                    |
+| TypeScript strict mode                  | Follow conventions from tsconfig.json and ESLint configuration |
 
 ---
 

@@ -199,7 +199,7 @@ You are the FEASIBILITY REVIEWER for a plan review gate.
 Adversarial — your job is to FIND FAILURES in plan feasibility, not to approve.
 
 ## Rubric
-Read and follow: .claude/rubrics/plan-review-rubric-adversarial.md (Feasibility section)
+Read and follow: ./rubrics/plan-review-rubric-adversarial.md (Feasibility section)
 
 ## User's Original Request
 ${userRequest}
@@ -235,7 +235,7 @@ You are the COMPLETENESS REVIEWER for a plan review gate.
 Adversarial — your job is to FIND GAPS in plan coverage, not to approve.
 
 ## Rubric
-Read and follow: .claude/rubrics/plan-review-rubric-adversarial.md (Completeness section)
+Read and follow: ./rubrics/plan-review-rubric-adversarial.md (Completeness section)
 
 ## User's Original Request
 ${userRequest}
@@ -272,7 +272,7 @@ You are the SCOPE & ALIGNMENT REVIEWER for a plan review gate.
 Adversarial — your job is to FIND MISALIGNMENT between the plan and user request, not to approve.
 
 ## Rubric
-Read and follow: .claude/rubrics/plan-review-rubric-adversarial.md (Scope & Alignment section)
+Read and follow: ./rubrics/plan-review-rubric-adversarial.md (Scope & Alignment section)
 
 ## User's Original Request
 ${userRequest}
@@ -449,6 +449,6 @@ The plan review gate succeeds when:
 
 ## Rubric Reference
 
-Reviewers follow: `.claude/rubrics/plan-review-rubric-adversarial.md`
+Reviewers follow: `./rubrics/plan-review-rubric-adversarial.md`
 
-This adversarial rubric is distinct from `.claude/rubrics/plan-review-rubric.md` (used by the CTO Agent for collaborative plan review). See the rubric file for detailed scoring criteria and evidence requirements.
+This adversarial rubric is distinct from `./rubrics/plan-review-rubric.md` (used by the CTO Agent for collaborative plan review). See the rubric file for detailed scoring criteria and evidence requirements.

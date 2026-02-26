@@ -75,7 +75,7 @@ The plan should be provided by the Architect Agent. Locate it via:
 
 ```bash
 # Reference the plan-review-rubric
-# .claude/rubrics/plan-review-rubric.md
+# ./rubrics/plan-review-rubric.md
 
 # Check for relevant knowledge facts
 # .beads/knowledge/codebase-facts.jsonl

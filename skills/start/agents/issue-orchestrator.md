@@ -68,7 +68,7 @@ When Team tools are available:
 3. **Direct handoffs**: Researcher sends findings directly to architect via `SendMessage` (no orchestrator bottleneck)
 4. **Async updates**: Teammates report progress via `SendMessage`; orchestrator receives and coordinates
 
-**MANDATORY**: Adversarial reviewers are ALWAYS fresh `Task()` instances — never teammates, never resumed, never given prior context. This applies in BOTH modes without exception. See `guides/agent-coordination.md` for details.
+**MANDATORY**: Adversarial reviewers are ALWAYS fresh `Task()` instances — never teammates, never resumed, never given prior context. This applies in BOTH modes without exception. See `./guides/agent-coordination.md` for details.
 
 ### BEADS + Team TaskList Bridging (Team Mode Only)
 
@@ -261,7 +261,7 @@ You are the ADVERSARIAL REVIEWER for work unit ${wuId}.
 Adversarial — your job is to FIND FAILURES, not to approve.
 
 ## Rubric
-Read and follow: .claude/rubrics/adversarial-review-rubric.md
+Read and follow: ./rubrics/adversarial-review-rubric.md
 
 ## Spec
 ${spec}

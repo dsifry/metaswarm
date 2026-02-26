@@ -91,7 +91,7 @@ adapters/codex.sh implement \
 ```bash
 adapters/gemini.sh review \
   --worktree "/tmp/ext-codex-task-42" \
-  --rubric-file ".claude/rubrics/external-tool-review-rubric.md" \
+  --rubric-file "./rubrics/external-tool-review-rubric.md" \
   --spec-file "/private/tmp/xt-abc123/spec.md" \
   --timeout 300
 ```

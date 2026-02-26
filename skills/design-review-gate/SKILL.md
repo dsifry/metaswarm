@@ -31,7 +31,7 @@ This skill supports both coordination modes:
 - **Task Mode** (default): Spawn 5 parallel `Task()` subagents for each review round. Fresh instances per round.
 - **Team Mode**: `TeamCreate("review-{design-doc-name}")`, spawn 5 reviewers as named teammates (`pm`, `architect`, `designer`, `security`, `cto`). Reviewers retain context through revision cycles — saves 5 cold starts per re-review round. After approval, send `shutdown_request` to all, then `TeamDelete`.
 
-In either mode, the review criteria, iteration protocol, and escalation rules are identical. See `guides/agent-coordination.md` for mode detection.
+In either mode, the review criteria, iteration protocol, and escalation rules are identical. See `./guides/agent-coordination.md` for mode detection.
 
 ---
 

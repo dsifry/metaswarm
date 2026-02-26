@@ -55,7 +55,7 @@ bd doctor         # Check system health
 | **Security Auditor**      | Security review (code)         | Implementation complete            |
 | **PR Shepherd**           | PR lifecycle management        | PR created                         |
 
-See `agents/` directory for detailed agent definitions.
+See `./agents/` directory for detailed agent definitions.
 
 ---
 
@@ -111,7 +111,7 @@ The gate is automatically triggered when:
 - Each iteration: revise design → re-run all reviewers
 - Escalation options: Override / Defer / Cancel
 
-See `your-project:design-review-gate` skill for full details.
+See the `design-review-gate` skill for full details.
 
 ---
 
@@ -119,7 +119,7 @@ See `your-project:design-review-gate` skill for full details.
 
 When multiple Claude Code sessions are active on the same repository (e.g., parallel worktrees), metaswarm automatically enters **Team Mode**. In Team Mode, agents behave as persistent teammates with context retention across sessions and direct inter-agent messaging for coordination. Mode detection is automatic based on the presence of concurrent sessions.
 
-For the full Team Mode protocol — including message routing, context sharing, and conflict resolution — see `guides/agent-coordination.md`.
+For the full Team Mode protocol — including message routing, context sharing, and conflict resolution — see `./guides/agent-coordination.md`.
 
 ---
 
@@ -133,7 +133,7 @@ After the Architect creates an implementation plan and before it reaches the Des
 | **Completeness** | Missing work units, untested edge cases, gaps in Definition of Done |
 | **Scope & Alignment** | Plan stays within issue scope, aligns with codebase conventions |
 
-All 3 must APPROVE before the plan proceeds. See `skills/plan-review-gate/SKILL.md` for the full skill definition.
+All 3 must APPROVE before the plan proceeds. See the `plan-review-gate` skill for the full skill definition.
 
 ---
 
@@ -222,7 +222,7 @@ The orchestrator adapts based on tool availability:
 | One tool only | Tool(2) → Claude(1) → user | 3 |
 | No tools | Claude → user (existing behavior) | unchanged |
 
-Each escalated model receives the previous model's branch as a reference. See `skills/external-tools/SKILL.md` for the full skill definition.
+Each escalated model receives the previous model's branch as a reference. See the `external-tools` skill for the full skill definition.
 
 ### Health Check
 
@@ -250,7 +250,7 @@ npx playwright install chromium
 
 For remote/headless environments, the skill serves screenshots via HTTP file server so users can view them in their local browser.
 
-See `skills/visual-review/SKILL.md` for the complete workflow.
+See the `visual-review` skill for the complete workflow.
 
 ---
 
@@ -502,7 +502,7 @@ Task({
   prompt: `You are the ISSUE ORCHESTRATOR agent.
 
 Read the agent definition at:
-.claude/plugins/your-project/skills/beads/agents/issue-orchestrator.md
+./agents/issue-orchestrator.md
 
 Your task:
 - Epic ID: <epic-id>
@@ -775,70 +775,80 @@ bd sync --from-main
 ## Directory Structure
 
 ```
-.claude/plugins/your-project/skills/beads/
+skills/start/                   # This skill (main orchestration)
 ├── SKILL.md                    # This file
-└── agents/
-    ├── issue-orchestrator.md   # Main coordinator (runs 4-phase loop)
-    ├── researcher-agent.md     # Codebase exploration
-    ├── architect-agent.md      # Implementation planning
-    ├── product-manager-agent.md # Use case & user benefit review
-    ├── designer-agent.md       # UX/API design review
-    ├── security-design-agent.md # Security threat modeling
-    ├── cto-agent.md            # TDD readiness review
-    ├── coder-agent.md          # TDD implementation
-    ├── code-review-agent.md    # Internal code review (collaborative + adversarial modes)
-    ├── security-auditor-agent.md # Security review (implementation)
-    └── pr-shepherd-agent.md    # PR lifecycle management
+├── agents/                     # Agent definitions
+│   ├── issue-orchestrator.md   # Main coordinator (runs 4-phase loop)
+│   ├── researcher-agent.md     # Codebase exploration
+│   ├── architect-agent.md      # Implementation planning
+│   ├── product-manager-agent.md # Use case & user benefit review
+│   ├── designer-agent.md       # UX/API design review
+│   ├── security-design-agent.md # Security threat modeling
+│   ├── cto-agent.md            # TDD readiness review
+│   ├── coder-agent.md          # TDD implementation
+│   ├── code-review-agent.md    # Internal code review (collaborative + adversarial modes)
+│   ├── security-auditor-agent.md # Security review (implementation)
+│   └── pr-shepherd-agent.md    # PR lifecycle management
+├── guides/                     # Development guides
+│   ├── agent-coordination.md   # Team Mode, inter-agent messaging
+│   ├── git-workflow.md         # Branch naming, commit conventions
+│   ├── testing-patterns.md     # TDD workflow, mock strategies
+│   ├── coding-standards.md     # Language idioms, naming conventions
+│   ├── worktree-development.md # Parallel development with worktrees
+│   └── build-validation.md     # Pre-push checks, CI pipeline
+├── rubrics/                    # Review rubrics
+│   ├── plan-review-rubric.md   # Used by CTO Agent
+│   ├── code-review-rubric.md   # Used by Code Review Agent (collaborative mode)
+│   ├── adversarial-review-rubric.md # Used by Code Review Agent (adversarial mode)
+│   └── security-review-rubric.md # Used by Security Auditor Agent
+└── references/                 # Reference docs for other tools
+    ├── codex-tools.md          # OpenAI Codex CLI reference
+    ├── cursor-tools.md         # Cursor tools reference
+    └── opencode-tools.md       # OpenCode tools reference
 
-.claude/plugins/your-project/skills/orchestrated-execution/
-└── SKILL.md                    # 4-phase execution loop pattern
+skills/orchestrated-execution/  # 4-phase execution loop pattern
+└── SKILL.md
 
-.claude/plugins/your-project/skills/design-review-gate/
-└── SKILL.md                    # Design review gate orchestrator
+skills/design-review-gate/      # Design review gate orchestrator
+└── SKILL.md
 
-.claude/plugins/your-project/skills/brainstorming-extension/
-└── SKILL.md                    # Hooks brainstorming to review gate
+skills/brainstorming-extension/  # Hooks brainstorming to review gate
+└── SKILL.md
 
-.claude/plugins/your-project/skills/plan-review-gate/
-└── SKILL.md                    # 3 adversarial reviewers validate plans
+skills/plan-review-gate/        # 3 adversarial reviewers validate plans
+└── SKILL.md
 
-.claude/plugins/your-project/skills/external-tools/
-├── SKILL.md                    # External AI tool delegation
-└── adapters/
-    ├── _common.sh              # Shared adapter helpers (14 functions)
-    ├── codex.sh                # OpenAI Codex CLI adapter
-    └── gemini.sh               # Google Gemini CLI adapter
+skills/external-tools/          # External AI tool delegation
+├── SKILL.md
+├── adapters/
+│   ├── _common.sh              # Shared adapter helpers (14 functions)
+│   ├── codex.sh                # OpenAI Codex CLI adapter
+│   └── gemini.sh               # Google Gemini CLI adapter
+└── rubrics/
+    └── external-tool-review-rubric.md  # Used by cross-model adversarial review
 
-.claude/plugins/your-project/skills/visual-review/
-└── SKILL.md                    # Playwright-based visual review
+skills/visual-review/           # Playwright-based visual review
+└── SKILL.md
 
-guides/
-├── agent-coordination.md       # Team Mode, inter-agent messaging
-├── git-workflow.md             # Branch naming, commit conventions
-├── testing-patterns.md         # TDD workflow, mock strategies
-├── coding-standards.md         # Language idioms, naming conventions
-├── worktree-development.md     # Parallel development with worktrees
-└── build-validation.md         # Pre-push checks, CI pipeline
+commands/                       # Slash commands (invoked as /metaswarm:command-name)
+├── start-task.md               # /metaswarm:start-task
+├── prime.md                    # /metaswarm:prime
+├── review-design.md            # /metaswarm:review-design
+├── self-reflect.md             # /metaswarm:self-reflect
+├── pr-shepherd.md              # /metaswarm:pr-shepherd
+├── handle-pr-comments.md       # /metaswarm:handle-pr-comments
+├── create-issue.md             # /metaswarm:create-issue
+└── metaswarm-setup.md          # /metaswarm:metaswarm-setup
 
-.claude/commands/
-└── review-design.md            # /review-design command
-
-.claude/rubrics/
-├── plan-review-rubric.md       # Used by CTO Agent
-├── code-review-rubric.md       # Used by Code Review Agent (collaborative mode)
-├── adversarial-review-rubric.md # Used by Code Review Agent (adversarial mode)
-└── external-tool-review-rubric.md  # Used by cross-model adversarial review
-
-.claude/templates/
+templates/                      # Project scaffolding templates
 ├── CLAUDE.md                   # Full CLAUDE.md template for new projects
 ├── CLAUDE-append.md            # Metaswarm section to append to existing CLAUDE.md
 ├── UI-FLOWS.md                 # User flow and wireframe documentation template
-├── .gitignore                  # Standard Node.js/TypeScript ignores
-├── .env.example                # Environment variable documentation template
+├── gitignore                   # Standard Node.js/TypeScript ignores
 ├── SERVICE-INVENTORY.md        # Service/factory/module tracking template
 └── ci.yml                      # CI pipeline template
 
-.beads/
+.beads/                         # Runtime state (in user's project)
 ├── beads.db                    # SQLite database
 ├── issues.jsonl                # Issue/task data
 └── knowledge/                  # Curated learnings

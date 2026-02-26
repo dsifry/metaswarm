@@ -73,7 +73,7 @@ When Team tools are available:
 5. **Enforce phase gates**: Via messaging (next phase starts only after all previous layer PRs merged)
 6. **Graceful shutdown**: Send `shutdown_request` to each teammate, then `TeamDelete`
 
-**MANDATORY**: Adversarial reviewers are ALWAYS fresh `Task()` instances — never teammates, never resumed. See `guides/agent-coordination.md`.
+**MANDATORY**: Adversarial reviewers are ALWAYS fresh `Task()` instances — never teammates, never resumed. See `./guides/agent-coordination.md`.
 
 ---
 

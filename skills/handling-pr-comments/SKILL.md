@@ -319,4 +319,4 @@ Before declaring PR comments handled:
 ## Reference
 
 For the complete detailed workflow with all edge cases and troubleshooting, see:
-`.claude/commands/handle-pr-comments.md`
+the `/metaswarm:handle-pr-comments` command

@@ -24,7 +24,7 @@ This skill is mode-agnostic — the 4-phase execution loop works identically in 
 - **Phase 3 (ADVERSARIAL REVIEW)**: ALWAYS a fresh `Task()` instance in BOTH modes. Never a teammate, never resumed.
 - **All quality gates**: Unchanged regardless of mode.
 
-See `guides/agent-coordination.md` for full mode detection and coordination details.
+See `./guides/agent-coordination.md` for full mode detection and coordination details.
 
 ---
 
@@ -299,7 +299,7 @@ You are the ADVERSARIAL REVIEWER for work unit ${wuId}.
 Adversarial — your job is to FIND FAILURES, not to approve.
 
 ## Rubric
-Read and follow: .claude/rubrics/adversarial-review-rubric.md
+Read and follow: ./rubrics/adversarial-review-rubric.md
 
 ## Spec
 ${spec}

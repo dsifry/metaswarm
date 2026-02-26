@@ -19,7 +19,7 @@ The Code Review Agent operates in one of two modes, determined by the orchestrat
 
 ### Collaborative Mode (Default)
 
-- **Rubric**: `.claude/rubrics/code-review-rubric.md`
+- **Rubric**: `./rubrics/code-review-rubric.md`
 - **Verdict**: APPROVED / CHANGES REQUIRED
 - **Purpose**: Improve code quality through suggestions and feedback
 - **Severity levels**: CRITICAL / HIGH / MEDIUM / LOW
@@ -28,7 +28,7 @@ The Code Review Agent operates in one of two modes, determined by the orchestrat
 
 ### Adversarial Mode
 
-- **Rubric**: `.claude/rubrics/adversarial-review-rubric.md`
+- **Rubric**: `./rubrics/adversarial-review-rubric.md`
 - **Verdict**: PASS / FAIL (binary)
 - **Purpose**: Verify implementation meets its spec contract (DoD items)
 - **Issue classification**: BLOCKING / WARNING
@@ -135,7 +135,7 @@ git diff main..HEAD --name-only
 
 ```bash
 # Load the code-review-rubric
-# .claude/rubrics/code-review-rubric.md
+# ./rubrics/code-review-rubric.md
 
 # Check BEADS knowledge for relevant facts
 # Look for known issues with changed files
@@ -307,7 +307,7 @@ When spawned with `mode: adversarial`, follow this workflow INSTEAD of the colla
 
 ```bash
 # Load the adversarial-review-rubric (NOT the collaborative one)
-# .claude/rubrics/adversarial-review-rubric.md
+# ./rubrics/adversarial-review-rubric.md
 ```
 
 ### Step A2: Read Spec and DoD Items

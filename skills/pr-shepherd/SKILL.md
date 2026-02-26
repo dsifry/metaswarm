@@ -11,7 +11,7 @@ This skill supports both coordination modes:
 - **Task Mode** (default): Runs as a single long-running `Task()` with `run_in_background: true`. Orchestrator checks via `TaskOutput(block: false)`.
 - **Team Mode**: Runs as a persistent `shepherd` teammate in the `issue-{number}` team. Sends async status updates via `SendMessage` (CI failure, review comments, all-green, PR merged). Orchestrator can respond with instructions (e.g., "defer that comment, create an issue instead"). Responds to `shutdown_request` for graceful exit.
 
-All monitoring, fixing, and review handling logic is identical in both modes. See `guides/agent-coordination.md` for mode detection.
+All monitoring, fixing, and review handling logic is identical in both modes. See `./guides/agent-coordination.md` for mode detection.
 
 ---
 

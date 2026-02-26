@@ -314,7 +314,7 @@ Type cast hierarchy (in order of preference):
 3. **`as unknown as Type`** only at external boundaries with a `// SAFETY:` comment (rare)
 4. **`as any`** — NEVER allowed
 
-See `.claude/guides/typescript-patterns.md` for full guidance.
+Follow TypeScript strict mode conventions as defined in the project's tsconfig.json and ESLint configuration.
 
 ```typescript
 // CORRECT: Direct typing (ideal)
