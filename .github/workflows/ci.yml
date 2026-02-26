@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Tests & Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate plugin.json
+        run: node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/plugin.json','utf-8'))"
+
+      - name: Validate hooks.json
+        run: node -e "JSON.parse(require('fs').readFileSync('hooks/hooks.json','utf-8'))"
+
+      - name: Check session-start.sh is executable
+        run: test -x hooks/session-start.sh
+
+      - name: Run session-start.sh tests
+        run: bash tests/hooks/test-session-start.sh
+
+      - name: Run CI template security tests
+        run: bash tests/templates/test-ci-template.sh
+
+      - name: Run sync-resources tests
+        run: bash tests/lib/test-sync-resources.sh
+
+      - name: Verify co-located resources are in sync
+        run: node lib/sync-resources.js --check
