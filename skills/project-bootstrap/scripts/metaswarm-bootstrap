@@ -1,0 +1,43 @@
+#!/bin/bash
+# metaswarm-bootstrap — Auto-scaffold metaswarm into a project on first session.
+#
+# Designed to run as a Claude Code SessionStart hook. Exits immediately (0)
+# if metaswarm is already present, so there is no latency cost for
+# already-bootstrapped projects.
+#
+# Usage:
+#   As a hook:  Add to ~/.claude/settings.json SessionStart hooks
+#   Manually:   Run from any git project root
+#
+# Exit codes:
+#   0 — Success (already installed or freshly bootstrapped)
+#   0 — Not a git repo (silently skipped)
+#   0 — Install failed (logged to ~/.metaswarm/bootstrap.log)
+
+set -euo pipefail
+
+MARKER=".claude/plugins/metaswarm/.claude-plugin/plugin.json"
+LOG_DIR="${HOME}/.metaswarm"
+LOG_FILE="${LOG_DIR}/bootstrap.log"
+
+# Fast path: already installed
+if [ -f "$MARKER" ]; then
+  exit 0
+fi
+
+# Guard: must be inside a git repository
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  exit 0
+fi
+
+# Guard: don't bootstrap in $HOME itself
+if [ "$(pwd)" = "$HOME" ]; then
+  exit 0
+fi
+
+# Run non-interactive install (pipe Y to accept CLAUDE.md prompt)
+# Log errors for debugging instead of swallowing them
+mkdir -p "$LOG_DIR"
+if ! echo "Y" | npx metaswarm install 2>&1 | tee -a "$LOG_FILE"; then
+  echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] bootstrap failed in $(pwd)" >> "$LOG_FILE"
+fi
