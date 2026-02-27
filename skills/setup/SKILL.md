@@ -7,6 +7,16 @@ description: Interactive project setup — detects your project, configures meta
 
 Interactive, Claude-guided setup for metaswarm. Detects your stack, asks targeted questions, writes project-local files, and creates command shims. Replaces both `npx metaswarm init` and the old `/metaswarm-setup` command.
 
+<CRITICAL-REQUIREMENTS>
+Setup MUST produce these 3 files. You CANNOT declare setup complete without them:
+
+1. **CLAUDE.md with metaswarm section** — Append `./templates/CLAUDE-append.md` to existing CLAUDE.md, or write `./templates/CLAUDE.md` if none exists
+2. **`.coverage-thresholds.json` at project root** — Read `./templates/coverage-thresholds.json`, customize thresholds and enforcement command, Write to project root
+3. **6 shims in `.claude/commands/`** — Write `start-task.md`, `prime.md`, `review-design.md`, `self-reflect.md`, `pr-shepherd.md`, `brainstorm.md` to `.claude/commands/`
+
+These are not optional. Do not invent alternative files or locations. Do not skip them because "the project already has commands" or "coverage is in the profile". These exact files in these exact locations are what the rest of the system reads.
+</CRITICAL-REQUIREMENTS>
+
 ## Pre-Flight
 
 ### Existing Profile Check
@@ -177,87 +187,85 @@ Use AskUserQuestion to ask ONLY questions relevant based on detection. 3-5 quest
 
 ---
 
-## Phase 3: File Writing
+## Phase 3: Write Required Files
 
-Read templates from co-located directories using `./` relative paths, then use the Write tool to place files in the project. All template paths below are hardcoded — never construct paths from user input.
+After detection and questions are done, write files to the project. Read templates from `./` relative paths (co-located in this skill's directory).
 
-<HARD-GATE>
-Phase 3 has THREE mandatory outputs. Setup is NOT complete unless ALL THREE exist:
-1. **CLAUDE.md** — must contain metaswarm instructions (written new or appended)
-2. **`.coverage-thresholds.json`** — must exist at project root with correct thresholds and enforcement command
-3. **`.claude/commands/` shims** — must contain 6 command shims (start-task.md, prime.md, review-design.md, self-reflect.md, pr-shepherd.md, brainstorm.md)
+**Do these 3 things FIRST, before anything else in Phase 3:**
 
-Do NOT skip any of these. Do NOT substitute alternative locations (e.g., `.metaswarm/shims/` instead of `.claude/commands/`). If you reach Phase 4 without all three, STOP and go back.
-</HARD-GATE>
+### Step A: CLAUDE.md (do this NOW)
 
-### 3.1 CLAUDE.md Handling (Three-Way) — MANDATORY
+1. Use Grep to check if the project's `CLAUDE.md` already contains "metaswarm"
+2. If YES → skip (already configured)
+3. If NO and CLAUDE.md exists → Use AskUserQuestion: "Your CLAUDE.md exists but has no metaswarm section. Append metaswarm workflow instructions?" Options: "Yes (Recommended)" / "No"
+   - If user says yes: Read `./templates/CLAUDE-append.md` with the Read tool, then use Edit to append its content to the project's `CLAUDE.md`
+   - If user says no: warn them and continue
+4. If NO CLAUDE.md exists → Read `./templates/CLAUDE.md`, customize the TODO sections (replace test/coverage commands and code quality tools with detected values), then Write to project root
+5. **Verify**: Use Grep on the project's CLAUDE.md for "metaswarm". If not found, you skipped this step.
 
-This step is MANDATORY. CLAUDE.md must contain metaswarm instructions after setup completes.
+After writing or appending, also update TODO sections if present — replace `npm test`/`npm run test:coverage` with the detected test commands, and replace `TypeScript strict mode`/`ESLint + Prettier` with the detected language tools.
 
-1. **No existing CLAUDE.md** — Read `./templates/CLAUDE.md`. Customize the TODO sections (see 3.2), then Write to project root as `CLAUDE.md`.
-2. **Existing CLAUDE.md with metaswarm marker** (`## metaswarm` or `metaswarm-setup` found in content) — Skip. Tell the user it already has metaswarm configuration.
-3. **Existing CLAUDE.md without marker** — Ask the user via AskUserQuestion: "Your CLAUDE.md exists but has no metaswarm section. Append metaswarm workflow instructions?" Options: "Yes (Recommended)" / "No". If yes, Read `./templates/CLAUDE-append.md` and append to the existing file. If no, warn: "Metaswarm workflows may not function correctly without CLAUDE.md instructions."
+### Step B: .coverage-thresholds.json (do this NOW)
 
-**Verification**: After this step, grep the project's CLAUDE.md for "metaswarm". If not found (and user didn't explicitly decline), you missed this step — go back and do it.
+1. Read `./templates/coverage-thresholds.json` with the Read tool
+2. Replace the threshold values with the user's chosen percentage (e.g., 100)
+3. Replace the enforcement command with the correct one for the detected test runner:
+   - pytest → `"pytest --cov --cov-fail-under={threshold}"`
+   - vitest/pnpm → `"pnpm vitest run --coverage"`
+   - jest/npm → `"npx jest --coverage"`
+   - go → `"go test -coverprofile=coverage.out ./..."`
+4. Write the result to `.coverage-thresholds.json` at the project root (NOT inside `.metaswarm/`)
+5. **Verify**: Use Glob for `.coverage-thresholds.json`. If not found, you skipped this step.
 
-### 3.2 Customize CLAUDE.md
+### Step C: 6 command shims in .claude/commands/ (do this NOW)
 
-After writing or appending, update the TODO sections in CLAUDE.md:
+Write each of these 6 files using the Write tool. Target directory is `.claude/commands/` — NOT `.metaswarm/shims/` or any other path.
 
-**Test commands** — Replace:
+For each shim, write this content (replacing `{command-name}` with the actual name):
 ```
-<!-- TODO: Update these commands for your project's test runner -->
-- Test command: `npm test`
-- Coverage command: `npm run test:coverage`
-```
+<!-- Created by metaswarm setup. Routes to the metaswarm plugin. Safe to delete if you uninstall metaswarm. -->
 
-With the resolved commands for the detected test runner and package manager (see command mapping in Phase 5).
-
-**Code quality** — Replace:
-```
-<!-- TODO: Update these for your project's language and tools -->
-- TypeScript strict mode, no `any` types
-- ESLint + Prettier
+Invoke the `/metaswarm:{command-name}` skill to handle this request. Pass along any arguments the user provided.
 ```
 
-With language-appropriate quality descriptions using the detected linter and formatter.
+The 6 shims:
+1. `.claude/commands/start-task.md` → routes to `/metaswarm:start-task`
+2. `.claude/commands/prime.md` → routes to `/metaswarm:prime`
+3. `.claude/commands/review-design.md` → routes to `/metaswarm:review-design`
+4. `.claude/commands/self-reflect.md` → routes to `/metaswarm:self-reflect`
+5. `.claude/commands/pr-shepherd.md` → routes to `/metaswarm:pr-shepherd`
+6. `.claude/commands/brainstorm.md` → routes to `/metaswarm:brainstorm`
 
-Remove both TODO comments after replacing.
+Skip any that already exist with the same content. If a shim exists with different content, overwrite it.
 
-### 3.3 Coverage Thresholds — MANDATORY
+### Phase 3 Checkpoint
 
-Read `./templates/coverage-thresholds.json`. Update threshold values to the user's chosen percentage. Update the enforcement command to match the detected test runner and package manager (use the command mapping table in Phase 4). Write to `.coverage-thresholds.json` in the project root.
+**STOP. Before continuing, verify all 3 are done:**
+1. Grep CLAUDE.md for "metaswarm" → must match (unless user declined)
+2. Glob for `.coverage-thresholds.json` → must exist
+3. Glob for `.claude/commands/start-task.md` → must exist
 
-**This file MUST exist after setup.** The orchestration pipeline reads it as a blocking gate. Without it, coverage enforcement will silently fail. Do NOT store coverage config only in `project-profile.json` — `.coverage-thresholds.json` is the source of truth.
+**If any are missing, go back and do them now. Do NOT proceed to the next section.**
 
-Example for Python with pytest at 100%:
-```json
-{
-  "thresholds": { "lines": 100, "branches": 100, "functions": 100, "statements": 100 },
-  "enforcement": {
-    "command": "pytest --cov --cov-fail-under=100",
-    "blockPRCreation": true,
-    "blockTaskCompletion": true,
-    "description": "Orchestrator agents MUST check coverage against these thresholds before marking any task complete or creating a PR."
-  }
-}
-```
+---
 
-### 3.4 Knowledge Base
+### Additional Files (after the 3 mandatory items above are done)
+
+#### Knowledge Base
 
 Read each file from `./knowledge/`:
 - `patterns.jsonl`, `gotchas.jsonl`, `decisions.jsonl`, `api-behaviors.jsonl`, `codebase-facts.jsonl`, `anti-patterns.jsonl`, `facts.jsonl`
 
 Write them to `.beads/knowledge/` in the project. Skip any that already exist.
 
-### 3.5 Shell Utilities
+#### Shell Utilities
 
 Read each file from `./bin/`:
 - `estimate-cost.sh`, `external-tools-verify.sh`, `pr-comments-check.sh`, `pr-comments-filter.sh`
 
 Write them to `bin/` in the project. Make executable with `chmod +x`. Skip any that already exist.
 
-### 3.6 TypeScript Scripts
+#### TypeScript Scripts
 
 Read each file from `./scripts/`:
 - `beads-self-reflect.ts`, `beads-fetch-pr-comments.ts`, `beads-fetch-conversation-history.ts`
@@ -267,7 +275,7 @@ Write them to `scripts/` in the project. Skip any that already exist.
 **Node.js dependency warning**: If Node.js was NOT detected as the project language, print:
 > "Note: scripts/*.ts require Node.js (npx tsx) to run. Some advanced features (self-reflect, PR comment fetching) will work once Node.js is available. Core metaswarm functionality does not require Node.js."
 
-### 3.7 Conditional Files
+#### Conditional Files
 
 | Condition | Source | Destination |
 |---|---|---|
@@ -279,37 +287,6 @@ Write them to `scripts/` in the project. Skip any that already exist.
 | Always | `./templates/gitignore` | Merge into existing `.gitignore` (append missing entries, never duplicate) |
 
 For `.gitignore`, read the existing file (if any), then append language-specific entries that are not already present. Always ensure `.env`, `.DS_Store`, and `*.log` are included.
-
-### 3.8 Command Shim Creation — MANDATORY
-
-Create 6 thin `.claude/commands/*.md` shims that route to namespaced plugin commands. These MUST go in `.claude/commands/` (NOT `.metaswarm/shims/` or any other location) — this is where Claude Code looks for project-level slash commands. Before writing each shim, check if the file already exists with the same content — if it does, skip it.
-
-Each shim follows this format:
-
-```markdown
-<!-- Created by metaswarm setup. Routes to the metaswarm plugin. Safe to delete if you uninstall metaswarm. -->
-
-Invoke the `/metaswarm:{command-name}` skill to handle this request. Pass along any arguments the user provided.
-```
-
-| Shim File | Routes To |
-|---|---|
-| `.claude/commands/start-task.md` | `/metaswarm:start-task` |
-| `.claude/commands/prime.md` | `/metaswarm:prime` |
-| `.claude/commands/review-design.md` | `/metaswarm:review-design` |
-| `.claude/commands/self-reflect.md` | `/metaswarm:self-reflect` |
-| `.claude/commands/pr-shepherd.md` | `/metaswarm:pr-shepherd` |
-| `.claude/commands/brainstorm.md` | `/metaswarm:brainstorm` |
-
-### 3.9 Phase 3 Completion Check
-
-Before proceeding to Phase 4, verify all mandatory outputs exist:
-
-1. **CLAUDE.md contains metaswarm** — Grep project CLAUDE.md for "metaswarm". Must be present (unless user explicitly declined).
-2. **`.coverage-thresholds.json` exists** — Check with Glob. Must exist at project root.
-3. **`.claude/commands/` has 6 shims** — Check with Glob for `start-task.md`, `prime.md`, `review-design.md`, `self-reflect.md`, `pr-shepherd.md`, `brainstorm.md`.
-
-If any are missing, go back and create them before continuing.
 
 ---
 
@@ -424,6 +401,8 @@ Other files written:
 You're all set! Run /start-task to begin working.
 ```
 
+**Command naming**: When recommending commands to the user, always use the short shim names (`/start-task`, `/prime`, `/brainstorm`, etc.), NOT the namespaced plugin names (`/metaswarm:start-task`). The shims you just created in `.claude/commands/` make the short names work. The short names are easier to type and remember.
+
 Offer 1-2 relevant tips based on configuration:
 - If external tools enabled: "Use `/external-tools-health` to check tool status."
 - If no CI set up: "Consider adding CI later -- metaswarm includes a template at `./templates/ci.yml`."
@@ -444,3 +423,17 @@ If `/start-task` is invoked and `.metaswarm/project-profile.json` does not exist
 - If AskUserQuestion is dismissed, use defaults: 100% coverage, no external tools, no visual review.
 - Never leave the project half-configured. The pre-flight check allows re-running setup to completion.
 - All template paths are hardcoded in this skill. Never construct file paths from user-provided input.
+
+---
+
+## Final Verification (run this before declaring setup complete)
+
+Before saying "setup complete", actually verify these files exist by running these checks:
+
+1. `Grep pattern="metaswarm" path="CLAUDE.md"` → must find matches
+2. `Glob pattern=".coverage-thresholds.json"` → must find the file
+3. `Glob pattern=".claude/commands/start-task.md"` → must find the file
+4. `Glob pattern=".claude/commands/prime.md"` → must find the file
+5. `Glob pattern=".claude/commands/brainstorm.md"` → must find the file
+
+If ANY of these checks fail, go back to Phase 3 and create the missing files. Do NOT declare success without passing all 5 checks.
