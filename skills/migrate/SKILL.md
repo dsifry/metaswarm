@@ -11,6 +11,28 @@ Migrate a project from npm-installed metaswarm (`npx metaswarm init`) to the mar
 
 ---
 
+## IMPORTANT: Safety & Messaging Guidelines
+
+**The user MUST understand this before any file list is shown:**
+
+Before presenting any migration preview or file list, ALWAYS lead with this framing:
+
+> **What this migration does**: The marketplace plugin now provides all the skills, commands, rubrics, and guides that were previously copied into your project directory. This migration simply removes those redundant copies — the originals now live in the plugin itself.
+>
+> **Nothing is lost**: Your project-specific files (CLAUDE.md, .coverage-thresholds.json, .beads/, bin/, scripts/) are NEVER touched. Only duplicate metaswarm framework files are removed.
+>
+> **Fully reversible**: All removals are staged with `git rm` (not permanently deleted). Before you commit:
+> - Undo everything: `git restore --staged . && git checkout -- .`
+> - After committing: `git revert HEAD`
+>
+> **No commit is made automatically** — you review and commit when you're satisfied.
+
+**Tone**: Be reassuring, not alarming. Say "cleaning up XX redundant copies" not "deleting XX files". Say "these files now live in the plugin" not "these files will be removed". Frame the migration as housekeeping, not destruction.
+
+**When showing file counts**: If there are many files (e.g., 40+), explain that the large count is because the old npm installer copied the entire plugin framework into `.claude/plugins/metaswarm/` — that one directory accounts for most of the count, and it's all framework code that's now served directly by the plugin.
+
+---
+
 ## Step 1: Pre-flight Check
 
 1. Confirm this skill is running from the marketplace plugin (if this skill loaded, the plugin is active)
@@ -64,27 +86,34 @@ Computing hashes from the plugin's live files ensures the hash list stays curren
 
 ## Step 4: Dry Run Preview
 
-Display the complete migration plan before any changes:
+Display the complete migration plan before any changes. **Lead with the safety framing from the guidelines above**, then show the preview:
 
 ```
 ## Migration Preview
 
-### Files to remove (unmodified)
-- .claude/plugins/metaswarm/ (entire directory, XX files)
-- .claude/rubrics/<each matching file>
-- .claude/guides/<each matching file>
-- .claude/commands/metaswarm-setup.md
-- .claude/commands/metaswarm-update-version.md
+These are redundant copies of framework files that are now provided by the plugin.
+All removals are staged (not committed) — you can undo everything before committing.
 
-### User-modified files (require your decision)
-- .claude/rubrics/code-review-rubric.md (MODIFIED)
+### Redundant framework files to clean up (XX files)
+These are unmodified copies that the plugin now provides directly:
+- .claude/plugins/metaswarm/ (embedded plugin copy — XX files, now served by marketplace plugin)
+- .claude/rubrics/<each matching file> (now in plugin's rubrics/)
+- .claude/guides/<each matching file> (now in plugin's guides/)
+- .claude/commands/metaswarm-setup.md (replaced by plugin command)
+- .claude/commands/metaswarm-update-version.md (replaced by plugin command)
 
-### Files NOT touched
+### Files you've customized (require your decision)
+- .claude/rubrics/code-review-rubric.md (MODIFIED — your changes are preserved until you decide)
+
+### Your project files (NEVER touched)
 - CLAUDE.md, .coverage-thresholds.json, .metaswarm/, .beads/, bin/, scripts/
 
-### Additional changes
-- 6 command shims written to .claude/commands/
+### What gets added
+- 6 command shims in .claude/commands/ (thin wrappers that route to plugin commands)
 - .metaswarm/project-profile.json updated with "distribution": "plugin"
+
+### How to undo (before committing)
+git restore --staged . && git checkout -- .
 ```
 
 ---
@@ -92,7 +121,8 @@ Display the complete migration plan before any changes:
 ## Step 5: User Confirmation
 
 Use `AskUserQuestion`:
-- Present the deletion list and require explicit "yes" to proceed
+- Remind the user: "This stages the cleanup — nothing is committed yet. You can undo with `git restore --staged . && git checkout -- .`"
+- Ask: "Ready to clean up the redundant framework files?" (not "Ready to delete files?")
 - For each user-modified file, ask individually: keep, remove, or show diff
 - If the user chooses "diff", display the difference between their version and the plugin's, then re-ask
 
@@ -107,7 +137,10 @@ Before executing removals:
 
 ---
 
-## Step 7: Removal
+## Step 7: Cleanup
+
+**Announce what you're doing**: Before running any commands, say:
+> "Staging the redundant files for removal. These are all framework copies — your project files are untouched. Nothing is committed yet."
 
 **Git-tracked files** -- use `git rm` (staged, reversible via `git checkout`):
 ```bash
@@ -118,9 +151,11 @@ git rm .claude/commands/metaswarm-setup.md
 git rm .claude/commands/metaswarm-update-version.md
 ```
 
+**After running**: Reassure: "Done — XX files staged for removal. These are only staged, not committed. Run `git status` to see the staged changes, or `git restore --staged . && git checkout -- .` to undo."
+
 **Untracked files** -- use `rm -f` (unlikely but handle gracefully).
 
-**Empty directories** -- remove `.claude/rubrics/` and `.claude/guides/` if empty after deletion. Do NOT remove `.claude/commands/` (shims remain).
+**Empty directories** -- remove `.claude/rubrics/` and `.claude/guides/` if empty after cleanup. Do NOT remove `.claude/commands/` (shims remain).
 
 ---
 
@@ -165,26 +200,36 @@ Merge these fields into `.metaswarm/project-profile.json` (preserve existing fie
 Display what was done and next steps:
 ```
 ## Migration Complete
-- Removed XX legacy plugin files, XX rubrics, XX guides, 2 old commands
-- Wrote 6 command shims
+
+Cleaned up XX redundant framework files that are now provided by the marketplace plugin.
+Your project files (CLAUDE.md, .coverage-thresholds.json, .beads/, etc.) were not touched.
+
+### What changed
+- Removed XX redundant framework copies (now served by plugin)
+- Added 6 command shims to .claude/commands/
 - Updated project profile to "distribution": "plugin"
 
 ### Next steps
-1. Review staged changes: `git diff --cached`
-2. Commit: `git commit -m "chore: migrate metaswarm from npm to marketplace plugin"`
-3. Verify: try `/start-task`
+1. Review staged changes: `git diff --cached --stat`
+2. Commit when satisfied: `git commit -m "chore: migrate metaswarm from npm to marketplace plugin"`
+3. Verify everything works: try `/start-task`
+
+### If anything seems wrong
+- Undo before committing: `git restore --staged . && git checkout -- .`
+- Undo after committing: `git revert HEAD`
+- Full re-install: `npx metaswarm install` (npm package still available)
 ```
 
 ---
 
-## Rollback
+## Rollback (Nothing Is Permanent)
 
-All removals use `git rm`, so changes are staged and reversible:
+All removals use `git rm`, which only stages changes — files are NOT deleted from git history. The migration never auto-commits, so the user always has a chance to review and undo:
 
-- **Before committing**: `git restore --staged . && git checkout -- .`
-- **After committing**: `git revert HEAD`
-- **Full re-install**: `npx metaswarm install` (npm v0.9.0 remains published)
-- **Single file**: `git checkout HEAD~1 -- <path>`
+- **Before committing** (full undo): `git restore --staged . && git checkout -- .`
+- **After committing** (full undo): `git revert HEAD`
+- **Single file recovery**: `git checkout HEAD~1 -- <path>`
+- **Full re-install of old approach**: `npx metaswarm install` (npm package still published)
 
 ---
 
@@ -209,3 +254,6 @@ All removals use `git rm`, so changes are staged and reversible:
 | Using `rm -rf` on tracked files | Use `git rm` (reversible) |
 | Skipping dry run preview | Always show full preview |
 | Removing project-local files | Never touch CLAUDE.md, .beads/, bin/, scripts/ |
+| Saying "deleting XX files" or "removing XX files" | Say "cleaning up XX redundant copies" |
+| Showing file list without safety context | Always lead with the safety framing |
+| Jumping straight to `git rm` commands | Explain what you're doing and why it's safe first |
