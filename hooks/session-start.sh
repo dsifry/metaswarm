@@ -38,6 +38,48 @@ if [ -f ".claude/plugins/metaswarm/.claude-plugin/plugin.json" ]; then
   legacy_install=true
 fi
 
+# --- Phase 3.5: Self-heal mandatory files ---
+# If project profile exists but mandatory files are missing, run the setup script.
+# This catches cases where the agent skipped file creation during setup.
+if [ "$new_project" = false ] && [ "$legacy_install" = false ]; then
+  plugin_root="${CLAUDE_PLUGIN_ROOT:-}"
+  setup_script="${plugin_root}/lib/setup-mandatory-files.sh"
+  needs_heal=false
+
+  # Check the 3 mandatory files
+  if ! grep -q "metaswarm" CLAUDE.md 2>/dev/null; then
+    needs_heal=true
+  fi
+  if [ ! -f ".coverage-thresholds.json" ]; then
+    needs_heal=true
+  fi
+  if [ ! -f ".claude/commands/start-task.md" ] || ! grep -q "metaswarm" ".claude/commands/start-task.md" 2>/dev/null; then
+    needs_heal=true
+  fi
+
+  if [ "$needs_heal" = true ] && [ -f "$setup_script" ]; then
+    # Read coverage command from project profile
+    cov_cmd=""
+    cov_threshold="100"
+    if command -v node >/dev/null 2>&1 && [ -f ".metaswarm/project-profile.json" ]; then
+      cov_info=$(node -e "
+        try {
+          const p = JSON.parse(require('fs').readFileSync('.metaswarm/project-profile.json','utf-8'));
+          const t = p.choices?.coverage_threshold || p.coverage?.threshold || p.thresholds?.coverage || 100;
+          const c = p.commands?.coverage || 'pytest --cov --cov-fail-under=' + t;
+          console.log(t + '|' + c);
+        } catch { console.log('100|pytest --cov --cov-fail-under=100'); }
+      " 2>/dev/null || echo "100|pytest --cov --cov-fail-under=100")
+      cov_threshold="${cov_info%%|*}"
+      cov_cmd="${cov_info##*|}"
+    fi
+    [ -z "$cov_cmd" ] && cov_cmd="pytest --cov --cov-fail-under=${cov_threshold}"
+
+    # Run the setup script silently
+    bash "$setup_script" "$(pwd)" "$cov_threshold" "$cov_cmd" >/dev/null 2>&1 || true
+  fi
+fi
+
 # --- Phase 4: Build context message ---
 context_parts=()
 
