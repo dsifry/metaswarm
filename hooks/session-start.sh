@@ -46,7 +46,7 @@ if [ "$new_project" = true ]; then
 fi
 
 if [ "$legacy_install" = true ]; then
-  context_parts+=("This project has metaswarm installed via the old npm method. Run \`/metaswarm:migrate\` to switch to the marketplace plugin for automatic updates.")
+  context_parts+=("This project has metaswarm installed via the old npm method. The marketplace plugin is now active and provides all the same skills and commands. Run \`/metaswarm:migrate\` to clean up the redundant copies — this is a safe, reversible operation that only removes duplicate framework files (your project files are never touched).")
 fi
 
 # Knowledge priming (only if project is set up and BEADS isn't separately priming)
