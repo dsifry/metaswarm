@@ -1,6 +1,6 @@
 {
   "name": "metaswarm",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "A self-improving multi-agent orchestration framework for Claude Code — available as a Claude Code marketplace plugin",
   "deprecated": "Use 'claude plugin marketplace add dsifry/metaswarm-marketplace && claude plugin install metaswarm' instead. The npm package is deprecated in favor of the Claude Code plugin marketplace.",
   "bin": {
