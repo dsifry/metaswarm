@@ -1,6 +1,6 @@
 {
   "name": "metaswarm",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "description": "Multi-agent orchestration framework for Claude Code — 18 agents, 9-phase workflow, quality gates, TDD enforcement",
   "author": {
     "name": "David Sifry",
