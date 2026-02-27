@@ -415,7 +415,7 @@
     <p style="color: var(--text-muted); font-size: 13px; margin-top: 16px;">Or install directly:</p>
     <div style="position: relative;">
       <pre style="font-size: 14px; padding: 14px 18px; margin: 8px 0 0 0;"><code><span class="cmd">claude</span> plugin add dsifry/metaswarm
-<span class="comment"># then in Claude Code:</span> /setup</code></pre>
+<span class="comment"># then in Claude Code:</span> /metaswarm:setup</code></pre>
       <button onclick="copyDirect()" style="position: absolute; top: 8px; right: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 5px 7px; cursor: pointer; color: var(--text-muted); font-size: 14px; line-height: 1; transition: color 0.15s, border-color 0.15s;" aria-label="Copy to clipboard" title="Copy to clipboard" id="copy-btn-direct">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
       </button>
@@ -458,10 +458,10 @@
 <span class="comment"># &gt; Read through https://github.com/dsifry/metaswarm and install it for my project.</span></code></pre>
 
     <h3>Start building</h3>
-    <p>Run <code>/start-task</code> and describe what you want in plain English. Include a tech stack, Definition of Done items, and where you want human checkpoints. The more specific the spec, the better the agents perform.</p>
+    <p>Run <code>/metaswarm:start-task</code> and describe what you want in plain English. Include a tech stack, Definition of Done items, and where you want human checkpoints. The more specific the spec, the better the agents perform.</p>
     <div class="prompt-box">
       <h3>Example &mdash; adapt for your project</h3>
-      <pre><code>/start-task I want you to build a real-time todo list with AI chat.
+      <pre><code>/metaswarm:start-task I want you to build a real-time todo list with AI chat.
 
 Tech stack: Node.js + Hono, React + Vite, SQLite, SSE, Claude SDK.
 
@@ -657,7 +657,7 @@ When all work units pass, create a PR.</code></pre>
       </div>
       <div class="feature">
         <h4>15 Slash Commands</h4>
-        <p><code>/setup</code>, <code>/update</code>, <code>/status</code>, <code>/start-task</code>, <code>/start</code>, <code>/prime</code>, <code>/review-design</code>, <code>/brainstorm</code>, <code>/self-reflect</code>, <code>/pr-shepherd</code>, <code>/create-issue</code>, <code>/handle-pr-comments</code>, <code>/external-tools-health</code>, plus legacy aliases.</p>
+        <p><code>/metaswarm:setup</code>, <code>/metaswarm:update</code>, <code>/metaswarm:status</code>, <code>/metaswarm:start-task</code>, <code>/metaswarm:start</code>, <code>/metaswarm:prime</code>, <code>/metaswarm:review-design</code>, <code>/metaswarm:brainstorm</code>, <code>/metaswarm:self-reflect</code>, <code>/metaswarm:pr-shepherd</code>, <code>/metaswarm:create-issue</code>, <code>/metaswarm:handle-pr-comments</code>, <code>/metaswarm:external-tools-health</code>.</p>
       </div>
       <div class="feature">
         <h4>8 Quality Rubrics</h4>
@@ -689,7 +689,7 @@ When all work units pass, create a PR.</code></pre>
       </div>
       <div class="feature">
         <h4>Self-Update</h4>
-        <p>Run <code>/update</code> to check for new versions, view the changelog, update all component files, and re-detect your project context. User customizations are preserved.</p>
+        <p>Run <code>/metaswarm:update</code> to check for new versions, view the changelog, update all component files, and re-detect your project context. User customizations are preserved.</p>
       </div>
       <div class="feature">
         <h4>6 Development Guides</h4>
@@ -762,7 +762,7 @@ When all work units pass, create a PR.</code></pre>
       </div>
     </div>
 
-    <p>The guided setup (<code>/setup</code>) detects your test runner and configures coverage enforcement automatically. For manual setup, copy the template:</p>
+    <p>The guided setup (<code>/metaswarm:setup</code>) detects your test runner and configures coverage enforcement automatically. For manual setup, copy the template:</p>
     <pre><code><span class="cmd">cp</span> templates/coverage-thresholds.json .coverage-thresholds.json</code></pre>
     <p>The thresholds work with any test runner. The setup skill maps your detected test runner to the correct coverage command automatically &mdash; <code>pnpm test:coverage</code>, <code>pytest --cov</code>, <code>cargo tarpaulin</code>, <code>go test -cover</code>, or whatever your project uses. See <a href="https://github.com/dsifry/metaswarm/blob/main/docs/coverage-enforcement.md">coverage-enforcement.md</a> for the full setup guide.</p>
   </section>
@@ -784,25 +784,25 @@ When all work units pass, create a PR.</code></pre>
     <p>Then open Claude Code in your project and run:</p>
     <div class="prompt-box">
       <h3>In Claude Code</h3>
-      <pre><code>/setup</code></pre>
+      <pre><code>/metaswarm:setup</code></pre>
     </div>
     <p>Claude detects your project's language, framework, test runner, linter, formatter, type checker, package manager, CI system, and git hooks. It creates <code>CLAUDE.md</code>, configures coverage thresholds for your test runner, and sets up <code>.gitignore</code> for your language. You answer 3&ndash;5 targeted questions. Everything else is automatic.</p>
     <p>Works with Claude Code, Gemini CLI, and Codex CLI. Supports: TypeScript, Python, Go, Rust, Java, Ruby, JavaScript. 16 frameworks including Next.js, React, Angular, SvelteKit, Express, NestJS, FastAPI, Django, Gin, and more.</p>
 
     <h3>Updating</h3>
     <p>When a new version is available, run in Claude Code:</p>
-    <pre><code>/update</code></pre>
+    <pre><code>/metaswarm:update</code></pre>
     <p>This checks for new versions, shows what changed, updates all component files (preserving your customizations), re-detects your project context, and refreshes your project profile.</p>
 
     <h3>Upgrading from an Older Version</h3>
     <p>If you installed metaswarm via <code>npx metaswarm init</code> (v0.6&ndash;v0.8), upgrade to the plugin:</p>
     <ol>
       <li>Install the plugin: <code>claude plugin add dsifry/metaswarm</code></li>
-      <li>Open Claude Code and run <code>/migrate</code> &mdash; this removes redundant npm-installed copies (your project files are never touched)</li>
-      <li>Run <code>/status</code> to verify everything is clean</li>
+      <li>Open Claude Code and run <code>/metaswarm:migrate</code> &mdash; this removes redundant npm-installed copies (your project files are never touched)</li>
+      <li>Run <code>/metaswarm:status</code> to verify everything is clean</li>
       <li>Review and commit the cleanup</li>
     </ol>
-    <p>The old <code>/metaswarm-setup</code> and <code>/metaswarm-update-version</code> commands still work as aliases, but new projects should use <code>/setup</code> and <code>/update</code>. If you skip the manual migration, Claude will detect the legacy installation at session start and prompt you automatically.</p>
+    <p>The old <code>/metaswarm-setup</code> and <code>/metaswarm-update-version</code> commands still work as aliases, but new projects should use <code>/metaswarm:setup</code> and <code>/metaswarm:update</code>. If you skip the manual migration, Claude will detect the legacy installation at session start and prompt you automatically.</p>
 
     <p>See <a href="https://github.com/dsifry/metaswarm/blob/main/INSTALL.md#upgrading-to-v090">INSTALL.md</a> for the full upgrade guide.</p>
   </section>
