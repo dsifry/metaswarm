@@ -8,13 +8,31 @@ description: Interactive project setup — detects your project, configures meta
 Interactive, Claude-guided setup for metaswarm. Detects your stack, asks targeted questions, writes project-local files, and creates command shims. Replaces both `npx metaswarm init` and the old `/metaswarm-setup` command.
 
 <CRITICAL-REQUIREMENTS>
-Setup MUST produce these 3 files. You CANNOT declare setup complete without them:
+Setup MUST produce these 3 mandatory outputs. A shell script handles them automatically — you MUST run it.
 
-1. **CLAUDE.md with metaswarm section** — Append `./templates/CLAUDE-append.md` to existing CLAUDE.md, or write `./templates/CLAUDE.md` if none exists
-2. **`.coverage-thresholds.json` at project root** — Read `./templates/coverage-thresholds.json`, customize thresholds and enforcement command, Write to project root
-3. **6 shims in `.claude/commands/`** — Write `start-task.md`, `prime.md`, `review-design.md`, `self-reflect.md`, `pr-shepherd.md`, `brainstorm.md` to `.claude/commands/`
+After Phase 2 (user questions), determine the correct coverage command from the detection results, then run this Bash command:
 
-These are not optional. Do not invent alternative files or locations. Do not skip them because "the project already has commands" or "coverage is in the profile". These exact files in these exact locations are what the rest of the system reads.
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>"
+```
+
+Where:
+- `<threshold>` is the user's chosen percentage (e.g., `100`)
+- `<coverage-command>` is the enforcement command for their test runner:
+  - pytest → `"pytest --cov --cov-fail-under=<threshold>"`
+  - vitest/pnpm → `"pnpm vitest run --coverage"`
+  - jest/npm → `"npx jest --coverage"`
+  - go → `"go test -coverprofile=coverage.out ./..."`
+  - cargo → `"cargo tarpaulin --fail-under <threshold>"`
+
+The script handles:
+1. **CLAUDE.md** — appends metaswarm section (or writes new), skips if already present
+2. **`.coverage-thresholds.json`** — writes at project root with correct thresholds and command
+3. **6 shims in `.claude/commands/`** — writes `start-task.md`, `prime.md`, `review-design.md`, `self-reflect.md`, `pr-shepherd.md`, `brainstorm.md`
+
+The script outputs JSON with what was created/skipped/errored. Check that `"status": "ok"`.
+
+**If the script is not available or fails**, fall back to writing these files manually with the Write tool. Do NOT skip them.
 </CRITICAL-REQUIREMENTS>
 
 ## Pre-Flight
@@ -189,67 +207,35 @@ Use AskUserQuestion to ask ONLY questions relevant based on detection. 3-5 quest
 
 ## Phase 3: Write Required Files
 
-After detection and questions are done, write files to the project. Read templates from `./` relative paths (co-located in this skill's directory).
+### Step 1: Run the mandatory files script
 
-**Do these 3 things FIRST, before anything else in Phase 3:**
+This is the FIRST thing to do after Phase 2. Determine the coverage command, then run:
 
-### Step A: CLAUDE.md (do this NOW)
-
-1. Use Grep to check if the project's `CLAUDE.md` already contains "metaswarm"
-2. If YES → skip (already configured)
-3. If NO and CLAUDE.md exists → Use AskUserQuestion: "Your CLAUDE.md exists but has no metaswarm section. Append metaswarm workflow instructions?" Options: "Yes (Recommended)" / "No"
-   - If user says yes: Read `./templates/CLAUDE-append.md` with the Read tool, then use Edit to append its content to the project's `CLAUDE.md`
-   - If user says no: warn them and continue
-4. If NO CLAUDE.md exists → Read `./templates/CLAUDE.md`, customize the TODO sections (replace test/coverage commands and code quality tools with detected values), then Write to project root
-5. **Verify**: Use Grep on the project's CLAUDE.md for "metaswarm". If not found, you skipped this step.
-
-After writing or appending, also update TODO sections if present — replace `npm test`/`npm run test:coverage` with the detected test commands, and replace `TypeScript strict mode`/`ESLint + Prettier` with the detected language tools.
-
-### Step B: .coverage-thresholds.json (do this NOW)
-
-1. Read `./templates/coverage-thresholds.json` with the Read tool
-2. Replace the threshold values with the user's chosen percentage (e.g., 100)
-3. Replace the enforcement command with the correct one for the detected test runner:
-   - pytest → `"pytest --cov --cov-fail-under={threshold}"`
-   - vitest/pnpm → `"pnpm vitest run --coverage"`
-   - jest/npm → `"npx jest --coverage"`
-   - go → `"go test -coverprofile=coverage.out ./..."`
-4. Write the result to `.coverage-thresholds.json` at the project root (NOT inside `.metaswarm/`)
-5. **Verify**: Use Glob for `.coverage-thresholds.json`. If not found, you skipped this step.
-
-### Step C: 6 command shims in .claude/commands/ (do this NOW)
-
-Write each of these 6 files using the Write tool. Target directory is `.claude/commands/` — NOT `.metaswarm/shims/` or any other path.
-
-For each shim, write this content (replacing `{command-name}` with the actual name):
-```
-<!-- Created by metaswarm setup. Routes to the metaswarm plugin. Safe to delete if you uninstall metaswarm. -->
-
-Invoke the `/metaswarm:{command-name}` skill to handle this request. Pass along any arguments the user provided.
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>"
 ```
 
-The 6 shims:
-1. `.claude/commands/start-task.md` → routes to `/metaswarm:start-task`
-2. `.claude/commands/prime.md` → routes to `/metaswarm:prime`
-3. `.claude/commands/review-design.md` → routes to `/metaswarm:review-design`
-4. `.claude/commands/self-reflect.md` → routes to `/metaswarm:self-reflect`
-5. `.claude/commands/pr-shepherd.md` → routes to `/metaswarm:pr-shepherd`
-6. `.claude/commands/brainstorm.md` → routes to `/metaswarm:brainstorm`
+Example for Python with pytest at 100%:
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" 100 "pytest --cov --cov-fail-under=100"
+```
 
-Skip any that already exist with the same content. If a shim exists with different content, overwrite it.
+Check the JSON output. If `"status": "ok"`, the 3 mandatory files are done. Report to the user what was created.
 
-### Phase 3 Checkpoint
+If the script fails or is not found, write the files manually (see CRITICAL-REQUIREMENTS above for what they are).
 
-**STOP. Before continuing, verify all 3 are done:**
-1. Grep CLAUDE.md for "metaswarm" → must match (unless user declined)
-2. Glob for `.coverage-thresholds.json` → must exist
-3. Glob for `.claude/commands/start-task.md` → must exist
+### Step 2: Customize CLAUDE.md TODO sections
 
-**If any are missing, go back and do them now. Do NOT proceed to the next section.**
+If CLAUDE.md was newly written (not appended), use Edit to replace the TODO placeholders:
+- Replace `npm test` / `npm run test:coverage` with the detected test/coverage commands
+- Replace `TypeScript strict mode` / `ESLint + Prettier` with the detected language tools
+- Remove the `<!-- TODO: ... -->` comment lines
+
+If CLAUDE.md was appended to (existing file), this step is not needed.
 
 ---
 
-### Additional Files (after the 3 mandatory items above are done)
+### Step 3: Additional files
 
 #### Knowledge Base
 
@@ -428,12 +414,12 @@ If `/start-task` is invoked and `.metaswarm/project-profile.json` does not exist
 
 ## Final Verification (run this before declaring setup complete)
 
-Before saying "setup complete", actually verify these files exist by running these checks:
+Before saying "setup complete", run this Bash command to verify the 3 mandatory files:
 
-1. `Grep pattern="metaswarm" path="CLAUDE.md"` → must find matches
-2. `Glob pattern=".coverage-thresholds.json"` → must find the file
-3. `Glob pattern=".claude/commands/start-task.md"` → must find the file
-4. `Glob pattern=".claude/commands/prime.md"` → must find the file
-5. `Glob pattern=".claude/commands/brainstorm.md"` → must find the file
+```bash
+echo "CLAUDE.md:"; grep -c "metaswarm" CLAUDE.md 2>/dev/null || echo "MISSING"; echo "coverage:"; ls .coverage-thresholds.json 2>/dev/null || echo "MISSING"; echo "shims:"; ls .claude/commands/start-task.md .claude/commands/prime.md .claude/commands/brainstorm.md 2>/dev/null || echo "MISSING"
+```
 
-If ANY of these checks fail, go back to Phase 3 and create the missing files. Do NOT declare success without passing all 5 checks.
+If any output says "MISSING", go back and run the setup-mandatory-files.sh script or create the files manually. Do NOT declare success with missing files.
+
+When reporting available commands to the user, use the **short names** (`/start-task`, `/prime`, `/brainstorm`, etc.) — NOT the namespaced names (`/metaswarm:start-task`). The command shims make the short names work. Do NOT recommend commands that don't exist (e.g., `/metaswarm:start`, `/metaswarm:status`, `/metaswarm:architect-agent`).
