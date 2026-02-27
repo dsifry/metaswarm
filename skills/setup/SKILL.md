@@ -181,11 +181,24 @@ Use AskUserQuestion to ask ONLY questions relevant based on detection. 3-5 quest
 
 Read templates from co-located directories using `./` relative paths, then use the Write tool to place files in the project. All template paths below are hardcoded — never construct paths from user input.
 
-### 3.1 CLAUDE.md Handling (Three-Way)
+<HARD-GATE>
+Phase 3 has THREE mandatory outputs. Setup is NOT complete unless ALL THREE exist:
+1. **CLAUDE.md** — must contain metaswarm instructions (written new or appended)
+2. **`.coverage-thresholds.json`** — must exist at project root with correct thresholds and enforcement command
+3. **`.claude/commands/` shims** — must contain 6 command shims (start-task.md, prime.md, review-design.md, self-reflect.md, pr-shepherd.md, brainstorm.md)
+
+Do NOT skip any of these. Do NOT substitute alternative locations (e.g., `.metaswarm/shims/` instead of `.claude/commands/`). If you reach Phase 4 without all three, STOP and go back.
+</HARD-GATE>
+
+### 3.1 CLAUDE.md Handling (Three-Way) — MANDATORY
+
+This step is MANDATORY. CLAUDE.md must contain metaswarm instructions after setup completes.
 
 1. **No existing CLAUDE.md** — Read `./templates/CLAUDE.md`. Customize the TODO sections (see 3.2), then Write to project root as `CLAUDE.md`.
 2. **Existing CLAUDE.md with metaswarm marker** (`## metaswarm` or `metaswarm-setup` found in content) — Skip. Tell the user it already has metaswarm configuration.
-3. **Existing CLAUDE.md without marker** — Ask the user via AskUserQuestion: "Your CLAUDE.md exists but has no metaswarm section. Append metaswarm workflow instructions?" Options: "Yes (Recommended)" / "No". If yes, Read `./templates/CLAUDE-append.md` and append to the existing file.
+3. **Existing CLAUDE.md without marker** — Ask the user via AskUserQuestion: "Your CLAUDE.md exists but has no metaswarm section. Append metaswarm workflow instructions?" Options: "Yes (Recommended)" / "No". If yes, Read `./templates/CLAUDE-append.md` and append to the existing file. If no, warn: "Metaswarm workflows may not function correctly without CLAUDE.md instructions."
+
+**Verification**: After this step, grep the project's CLAUDE.md for "metaswarm". If not found (and user didn't explicitly decline), you missed this step — go back and do it.
 
 ### 3.2 Customize CLAUDE.md
 
@@ -211,9 +224,24 @@ With language-appropriate quality descriptions using the detected linter and for
 
 Remove both TODO comments after replacing.
 
-### 3.3 Coverage Thresholds
+### 3.3 Coverage Thresholds — MANDATORY
 
-Read `./templates/coverage-thresholds.json`. Update threshold values to the user's chosen percentage. Update the enforcement command to match the detected test runner. Write to `.coverage-thresholds.json` in the project root.
+Read `./templates/coverage-thresholds.json`. Update threshold values to the user's chosen percentage. Update the enforcement command to match the detected test runner and package manager (use the command mapping table in Phase 4). Write to `.coverage-thresholds.json` in the project root.
+
+**This file MUST exist after setup.** The orchestration pipeline reads it as a blocking gate. Without it, coverage enforcement will silently fail. Do NOT store coverage config only in `project-profile.json` — `.coverage-thresholds.json` is the source of truth.
+
+Example for Python with pytest at 100%:
+```json
+{
+  "thresholds": { "lines": 100, "branches": 100, "functions": 100, "statements": 100 },
+  "enforcement": {
+    "command": "pytest --cov --cov-fail-under=100",
+    "blockPRCreation": true,
+    "blockTaskCompletion": true,
+    "description": "Orchestrator agents MUST check coverage against these thresholds before marking any task complete or creating a PR."
+  }
+}
+```
 
 ### 3.4 Knowledge Base
 
@@ -252,9 +280,9 @@ Write them to `scripts/` in the project. Skip any that already exist.
 
 For `.gitignore`, read the existing file (if any), then append language-specific entries that are not already present. Always ensure `.env`, `.DS_Store`, and `*.log` are included.
 
-### 3.8 Command Shim Creation
+### 3.8 Command Shim Creation — MANDATORY
 
-Create 6 thin `.claude/commands/*.md` shims that route to namespaced plugin commands. Before writing each shim, check if the file already exists — if it does, skip it.
+Create 6 thin `.claude/commands/*.md` shims that route to namespaced plugin commands. These MUST go in `.claude/commands/` (NOT `.metaswarm/shims/` or any other location) — this is where Claude Code looks for project-level slash commands. Before writing each shim, check if the file already exists with the same content — if it does, skip it.
 
 Each shim follows this format:
 
@@ -272,6 +300,16 @@ Invoke the `/metaswarm:{command-name}` skill to handle this request. Pass along 
 | `.claude/commands/self-reflect.md` | `/metaswarm:self-reflect` |
 | `.claude/commands/pr-shepherd.md` | `/metaswarm:pr-shepherd` |
 | `.claude/commands/brainstorm.md` | `/metaswarm:brainstorm` |
+
+### 3.9 Phase 3 Completion Check
+
+Before proceeding to Phase 4, verify all mandatory outputs exist:
+
+1. **CLAUDE.md contains metaswarm** — Grep project CLAUDE.md for "metaswarm". Must be present (unless user explicitly declined).
+2. **`.coverage-thresholds.json` exists** — Check with Glob. Must exist at project root.
+3. **`.claude/commands/` has 6 shims** — Check with Glob for `start-task.md`, `prime.md`, `review-design.md`, `self-reflect.md`, `pr-shepherd.md`, `brainstorm.md`.
+
+If any are missing, go back and create them before continuing.
 
 ---
 
@@ -375,11 +413,13 @@ Setup complete! Here's what was configured:
   External tools:  {Enabled/Disabled}
   Visual review:   {Enabled/Disabled}
 
-Files written:
-  {list every file written or modified with its path}
+Mandatory files:
+  ✔ CLAUDE.md          — {written new / appended metaswarm section / already had it}
+  ✔ .coverage-thresholds.json — {threshold}% coverage, enforcement: `{command}`
+  ✔ .claude/commands/   — 6 shims: start-task, prime, review-design, self-reflect, pr-shepherd, brainstorm
 
-Command shims created:
-  /start-task, /prime, /review-design, /self-reflect, /pr-shepherd, /brainstorm
+Other files written:
+  {list every other file written or modified with its path}
 
 You're all set! Run /start-task to begin working.
 ```
