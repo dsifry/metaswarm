@@ -2,7 +2,7 @@
 
 ## Recommended: Plugin Marketplace
 
-The fastest way to install metaswarm. Also works with Gemini CLI and Codex CLI for project setup and migration.
+The fastest way to install metaswarm. Works with Claude Code, Gemini CLI, and Codex CLI.
 
 ```bash
 claude plugin add dsifry/metaswarm

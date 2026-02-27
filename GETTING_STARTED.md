@@ -14,7 +14,7 @@ Then open Claude Code in your project and run:
 /setup
 ```
 
-Claude detects your project's language, framework, test runner, and tools, then configures everything interactively. Also works with Gemini CLI and Codex CLI for non-Claude users. When setup completes, you're ready to start your first task:
+Claude detects your project's language, framework, test runner, and tools, then configures everything interactively. Works with Claude Code, Gemini CLI, and Codex CLI. When setup completes, you're ready to start your first task:
 
 > **Upgrading from an older version?** If you previously installed via `npx metaswarm init`, run `/migrate` instead of `/setup` to clean up the old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details.
 
