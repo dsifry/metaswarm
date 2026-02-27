@@ -93,6 +93,7 @@ mkdir -p "$commands_dir"
 
 shims=(
   "start-task:start-task"
+  "start:start-task"
   "prime:prime"
   "review-design:review-design"
   "self-reflect:self-reflect"
