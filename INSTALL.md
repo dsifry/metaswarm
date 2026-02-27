@@ -2,7 +2,7 @@
 
 ## Recommended: Plugin Marketplace
 
-The fastest way to install metaswarm:
+The fastest way to install metaswarm. Also works with Gemini CLI and Codex CLI for project setup and migration.
 
 ```bash
 claude plugin add dsifry/metaswarm
@@ -81,15 +81,57 @@ To verify your setup, run the health check command in Claude Code:
 
 This checks that each tool is installed, authenticated, and responsive.
 
-## Migrating from npm Installation
+## Upgrading to v0.9.0
 
-If you previously installed metaswarm via `npx metaswarm init`, run:
+v0.9.0 moved metaswarm from npm distribution to the Claude Code plugin marketplace. If you're on an older version, follow the instructions for your situation:
+
+### From v0.7.x or v0.8.x (npm-installed)
+
+This is the most common upgrade path. Your project has metaswarm files in `.claude/plugins/metaswarm/` that were copied there by `npx metaswarm init`.
+
+1. **Install the plugin:**
+   ```bash
+   claude plugin add dsifry/metaswarm
+   ```
+
+2. **Run the migration** in Claude Code:
+   ```text
+   /migrate
+   ```
+   This detects old `.claude/plugins/metaswarm/` files, verifies content matches the plugin versions, and removes the redundant copies. Your project-specific files (CLAUDE.md, `.coverage-thresholds.json`, `.beads/`, `bin/`, `scripts/`) are never touched. All removals are staged with `git rm` — nothing is permanently deleted until you commit.
+
+3. **Verify the migration:**
+   ```text
+   /status
+   ```
+
+4. **Review and commit** the cleanup when you're satisfied.
+
+**Command name changes:** The old `/metaswarm-setup` and `/metaswarm-update-version` commands have been renamed to `/setup` and `/update`. Legacy aliases are preserved, so old names still work, but new projects should use the short names.
+
+### From v0.6.x or earlier (npm-installed, no guided setup)
+
+These versions used `npx metaswarm init --full` without the guided setup skill. Follow the same steps as v0.7.x/v0.8.x above, then re-run `/setup` to take advantage of the interactive configuration:
 
 ```text
-/migrate
+/setup
 ```
 
-This detects old `.claude/plugins/metaswarm/` files, verifies content matches, removes stale copies, and creates project-local command shims pointing to the plugin.
+This re-detects your project and applies any configuration improvements from newer versions. It won't overwrite your existing customizations — it prompts before making changes.
+
+### Already on v0.9.0 (plugin-installed)
+
+Just update in Claude Code:
+
+```text
+/update
+```
+
+This checks for new versions, shows what changed, and updates all component files while preserving your customizations.
+
+### Automatic legacy detection
+
+If you skip the manual migration, the session-start hook will detect the old npm installation when you open Claude Code and prompt you to run `/migrate`. You can also run `/status` at any time to check for legacy files.
 
 ## Check Installation Status
 
@@ -101,13 +143,13 @@ This runs 9 diagnostic checks: plugin version, project setup, command shims, leg
 
 ## Legacy: npm Installation (Deprecated)
 
-> **Note:** The npm installation method is deprecated and will be removed in a future version. Use the plugin marketplace method above instead.
+> **Deprecated:** The npm installation method is deprecated as of v0.9.0 and will be removed in a future version. Use the plugin marketplace method above instead. The npm package now prints a deprecation warning on install.
 
 ```bash
 npx metaswarm init --full
 ```
 
-This runs the legacy installer that copies all files with default configuration. You'll need to manually customize CLAUDE.md and coverage settings for your project.
+This runs the legacy installer that copies all files with default configuration. You'll need to manually customize CLAUDE.md and coverage settings for your project. **New users should use `claude plugin add dsifry/metaswarm` instead.**
 
 ## Customizing for Your Project
 

@@ -1,6 +1,6 @@
 # metaswarm
 
-A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Coordinate 18 specialized AI agents and 9 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
+A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Also works with Gemini CLI and Codex CLI. Coordinate 18 specialized AI agents and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
 
 ## What Is This?
 
@@ -87,7 +87,7 @@ metaswarm/
 ├── commands/                  # Claude Code slash commands
 │   ├── prime.md, start-task.md, review-design.md, self-reflect.md
 │   ├── brainstorm.md, setup.md, update.md, status.md
-│   └── ... (14 total)
+│   └── ... (15 total)
 ├── agents/                    # 18 agent persona definitions (authoritative source)
 ├── rubrics/                   # Quality review standards (authoritative source)
 ├── guides/                    # Development patterns (authoritative source)
@@ -104,17 +104,32 @@ metaswarm/
 
 ## Install
 
+Open Claude Code in your project and tell it:
+
+```text
+> Read through https://github.com/dsifry/metaswarm and install it for my project.
+```
+
+Claude reads the documentation, installs the plugin, detects your project's language, framework, test runner, and tools, then configures everything interactively — 18 agent personas, 13 orchestration skills, 15 slash commands, 8 quality rubrics, knowledge base templates, and automation scripts. All customized for your stack.
+
+Or install directly:
+
 ```bash
 claude plugin add dsifry/metaswarm
 ```
 
-Then open Claude Code in your project and run:
+Then run `/setup` in Claude Code.
+
+### Start building
+
+Run `/start-task` and describe what you want in plain English. No issue required.
 
 ```text
-/setup
+/start-task Add a webhook system with retry logic, signature verification,
+and a delivery log UI.
 ```
 
-That's it. Claude detects your project's language, framework, test runner, and tools, then configures everything interactively — 18 agent personas, 13 orchestration skills, 14 slash commands, 7 quality rubrics, knowledge base templates, and automation scripts. All customized for your stack.
+**Upgrading from an older version?** See [INSTALL.md](INSTALL.md#upgrading-to-v090) for migration instructions from npm-installed versions.
 
 See [INSTALL.md](INSTALL.md) for prerequisites, migration from npm, and manual setup options.
 
@@ -169,8 +184,8 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 - Node.js 18+ (for automation scripts)
 - [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+ — for task tracking (recommended)
 - GitHub CLI (`gh`) — for PR automation (recommended)
-- OpenAI Codex CLI (`codex`) — for external tool delegation (optional)
-- Google Gemini CLI (`gemini`) — for external tool delegation (optional)
+- OpenAI Codex CLI (`codex`) — validated for project setup and external tool delegation (optional)
+- Google Gemini CLI (`gemini`) — validated for project setup and external tool delegation (optional)
 - Playwright — for visual review skill (optional, `npx playwright install chromium`)
 
 ## License

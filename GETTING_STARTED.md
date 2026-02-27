@@ -14,7 +14,9 @@ Then open Claude Code in your project and run:
 /setup
 ```
 
-Claude detects your project's language, framework, test runner, and tools, then configures everything interactively. When setup completes, you're ready to start your first task:
+Claude detects your project's language, framework, test runner, and tools, then configures everything interactively. Also works with Gemini CLI and Codex CLI for non-Claude users. When setup completes, you're ready to start your first task:
+
+> **Upgrading from an older version?** If you previously installed via `npx metaswarm init`, run `/migrate` instead of `/setup` to clean up the old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details.
 
 ```text
 /start-task
@@ -43,16 +45,22 @@ The fastest way to see metaswarm in action is to give it a project to build from
 mkdir my-new-app && cd my-new-app
 git init
 npm init -y        # or whatever your stack needs
-claude plugin add dsifry/metaswarm
-# In Claude Code: /setup
 ```
+
+Then open Claude Code and tell it to install metaswarm:
+
+```text
+> Read through https://github.com/dsifry/metaswarm and install it for my project.
+```
+
+Or install directly: `claude plugin add dsifry/metaswarm` then run `/setup`.
 
 ### 2. Tell Claude what to build
 
-Open Claude Code and give it one prompt with your spec. Include a tech stack, Definition of Done items, and where you want human checkpoints. The more specific the spec, the better the agents perform.
+Run `/start-task` with your spec. Include a tech stack, Definition of Done items, and where you want human checkpoints. The more specific the spec, the better the agents perform.
 
 ```text
-I want you to build a real-time collaborative todo list with AI chat.
+/start-task I want you to build a real-time collaborative todo list with AI chat.
 
 Tech stack: Node.js + Hono, React + Vite, SQLite via better-sqlite3,
 Server-Sent Events for real-time sync, Anthropic Claude SDK for AI chat,
@@ -153,7 +161,30 @@ You described what you wanted. The system figured out how to build it.
 
 The rest of this guide walks through metaswarm's components individually. If you just ran the one-shot build above, you've already seen all of these in action.
 
-## Step 2: Create Your First Tracked Issue
+## Step 2: Start Your First Task
+
+Just run `/start-task` and describe what you want in plain English. No issue required.
+
+```text
+/start-task Add a webhook system that lets users register callback URLs
+for events, with retry logic, signature verification, and a delivery log UI.
+```
+
+Pick something with real complexity — a new subsystem, a permissions layer, a reporting pipeline. Something that touches multiple files and needs real architecture. Then watch what happens.
+
+This triggers the full pipeline:
+1. **Prime** — Loads relevant knowledge for the task
+2. **Research** — Explores your codebase for related patterns
+3. **Plan** — Creates an implementation plan
+4. **Plan Review Gate** — 3 adversarial reviewers validate the plan (Feasibility, Completeness, Scope & Alignment)
+5. **Design Review** (if complex) — Runs the 6-agent Design Review Gate
+6. **Implement** — TDD implementation
+7. **Review** — Code review + security audit
+8. **PR** — Creates PR with auto-shepherd
+
+### Optional: BEADS Issue Tracking
+
+For larger projects, you can create BEADS issues to track work formally. This is optional — `/start-task` works fine with just a plain English description.
 
 ```bash
 # Create an epic
@@ -172,25 +203,10 @@ bd dep add <ui-task> <implement-task>
 
 # Check what's ready to work on
 bd ready
+
+# Then start a specific tracked task
+/start-task <task-id>
 ```
-
-## Step 3: Run the Orchestration Workflow
-
-In Claude Code, start the workflow:
-
-```text
-> /start-task <task-id>
-```
-
-This triggers the full pipeline:
-1. **Prime** — Loads relevant knowledge for the task
-2. **Research** — Explores your codebase for related patterns
-3. **Plan** — Creates an implementation plan
-4. **Plan Review Gate** — 3 adversarial reviewers validate the plan (Feasibility, Completeness, Scope & Alignment)
-5. **Design Review** (if complex) — Runs the 6-agent Design Review Gate
-6. **Implement** — TDD implementation
-7. **Review** — Code review + security audit
-8. **PR** — Creates PR with auto-shepherd
 
 **Team Mode**: If multiple Claude Code sessions are active on the same repository, metaswarm automatically detects this and enables Team Mode with persistent teammates and direct inter-agent messaging. No configuration needed — see `guides/agent-coordination.md` for details.
 

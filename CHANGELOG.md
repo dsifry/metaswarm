@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.9.0
+
+### Added
+- **Claude Code marketplace plugin distribution**: metaswarm is now installed via `claude plugin add dsifry/metaswarm`, replacing the npm `npx metaswarm init` method. The npm package is deprecated and prints a deprecation warning
+- **Setup skill** (`skills/setup/`): Interactive guided project setup that replaces `npx metaswarm init`. Detects language, framework, test runner, linter, and CI, then configures everything automatically
+- **Migrate skill** (`skills/migrate/`): Automated migration from npm installation to plugin. Detects old `.claude/plugins/metaswarm/` files, verifies content matches, removes stale copies, and creates project-local command shims
+- **Status skill** (`skills/status/`): 9 diagnostic checks — plugin version, project setup, command shims, legacy install detection, BEADS plugin, bd CLI, external tools, coverage thresholds, and Node.js
+- **Session-start hook** (`hooks/session-start.sh`): Context priming, legacy npm installation detection with migration prompt, BEADS dedup, and self-healing mandatory file writes
+- **`/start` alias command**: Shorthand for `/start-task`
+- **`/setup` command**: Routes to the setup skill (replaces `/metaswarm-setup`)
+- **`/update` command**: Routes to plugin update (replaces `/metaswarm-update-version`)
+- **`/status` command**: Routes to the status diagnostic skill
+- **Shell script for mandatory files**: `hooks/session-start.sh` writes CLAUDE.md and other required files if the agent skips them, ensuring projects always have the correct configuration
+- **Marketplace repository**: Created `dsifry/metaswarm-marketplace` for plugin distribution
+- **Cross-CLI validation**: Setup and migration workflows validated across Claude Code, Gemini CLI, and Codex CLI
+
+### Changed
+- **Primary installation method**: Plugin marketplace (`claude plugin add dsifry/metaswarm`) replaces npm (`npx metaswarm init`)
+- **npm package deprecated**: `package.json` includes deprecation notice pointing to plugin marketplace
+- **Command names simplified**: `/metaswarm-setup` → `/setup`, `/metaswarm-update-version` → `/update` (legacy aliases preserved)
+- Updated counts: 13 skills (was 9), 15 commands (was 9), 8 rubrics
+
+### Upgrade Instructions
+- **From v0.7.x / v0.8.x**: Run `claude plugin add dsifry/metaswarm`, then `/migrate` in Claude Code to clean up old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details
+- **From v0.6.x or earlier**: Same as above, then run `/setup` to get the interactive configuration
+- **Already on plugin**: Run `/update` in Claude Code
+
 ## 0.8.0
 
 ### Added

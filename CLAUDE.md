@@ -36,8 +36,10 @@ This triggers the full pipeline: Research → Plan → Design Review Gate → Wo
 | `/brainstorm` | Refine an idea before implementation |
 | `/create-issue` | Create a well-structured GitHub Issue |
 | `/external-tools-health` | Check status of external AI tools (Codex, Gemini) |
-| `/metaswarm-setup` | Interactive guided setup — detects project, configures metaswarm |
-| `/metaswarm-update-version` | Update metaswarm to latest version |
+| `/setup` | Interactive guided setup — detects project, configures metaswarm |
+| `/update` | Update metaswarm to latest version |
+| `/status` | Run diagnostic checks on your installation |
+| `/start` | Alias for `/start-task` |
 
 ### Visual Review
 

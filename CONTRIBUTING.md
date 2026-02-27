@@ -43,18 +43,26 @@ Rubrics in `rubrics/` define quality standards for reviews. Contributions should
 
 The `knowledge/` directory contains schema templates. Improvements to the schema, documentation, or example entries are welcome.
 
-## Testing the CLI
+## Testing the Plugin
 
-After making changes, test the CLI locally:
+After making changes, test the plugin locally:
 
 ```bash
 # Test in a fresh directory
 mkdir /tmp/test-project && cd /tmp/test-project && git init
-node /path/to/metaswarm/cli/metaswarm.js init
 
-# Or use npm link for npx-style testing
-cd /path/to/metaswarm && npm link
-cd /tmp/test-project && npx metaswarm init
+# Install your local copy as a plugin
+claude plugin add /path/to/metaswarm
+
+# In Claude Code, verify skills and commands load correctly
+# Type / and check that start-task, setup, prime, etc. appear
+# Run /status to verify all 9 diagnostic checks pass
+```
+
+If you're also contributing external tool adapters (Codex, Gemini), run the verification script:
+
+```bash
+bin/external-tools-verify.sh
 ```
 
 ## Pull Request Process
@@ -62,7 +70,7 @@ cd /tmp/test-project && npx metaswarm init
 1. Fork the repository
 2. Create a branch (`feat/`, `fix/`, `docs/`)
 3. Make your changes
-4. Test the CLI if you changed `cli/` or file mappings
+4. Test the plugin locally if you changed skills, commands, or hooks
 5. Ensure all Markdown is well-formed
 6. Submit a PR with a clear description
 

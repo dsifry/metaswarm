@@ -210,14 +210,21 @@ Prerequisites: `npx playwright install chromium`
 
 | Command | Description |
 |---|---|
-| `/prime` | Load relevant knowledge before starting work |
 | `/start-task <id>` | Begin a BEADS-tracked task with full workflow |
-| `/review-design <path>` | Run the 5-agent Design Review Gate |
+| `/start` | Alias for `/start-task` |
+| `/setup` | Interactive project setup — detects language, framework, test runner, and configures everything |
+| `/update` | Update metaswarm plugin to latest version |
+| `/status` | Run 9 diagnostic checks on your installation |
+| `/prime` | Load relevant knowledge before starting work |
+| `/review-design <path>` | Run the 6-agent Design Review Gate |
+| `/brainstorm` | Refine an idea before implementation |
 | `/self-reflect` | Extract learnings from recent PR reviews |
 | `/pr-shepherd <pr>` | Monitor PR through to merge |
 | `/handle-pr-comments <pr>` | Address PR review feedback |
 | `/create-issue` | Create a GitHub issue with agent instructions |
 | `/external-tools-health` | Check status of external AI tools (Codex, Gemini) |
+| `/metaswarm-setup` | Legacy alias for `/setup` |
+| `/metaswarm-update-version` | Legacy alias for `/update` |
 
 ## BEADS CLI Reference
 
@@ -283,7 +290,9 @@ metaswarm supports configurable test coverage thresholds that block PR creation 
 
 ### Setup
 
-Copy the template to your project root:
+The `/setup` command configures coverage enforcement automatically. It creates `.coverage-thresholds.json` in your project root with your coverage command and thresholds.
+
+For manual setup, copy the template to your project root:
 
 ```bash
 cp templates/coverage-thresholds.json .coverage-thresholds.json
@@ -355,7 +364,7 @@ This way both agents and CI enforce the same thresholds from a single file.
 Beyond agent checklists, metaswarm provides two automated enforcement mechanisms:
 
 - **CI Job**: A GitHub Actions job template (`templates/ci-coverage-job.yml`) that reads and runs `enforcement.command` from `.coverage-thresholds.json`. Add it to your workflow to block merges on coverage failures.
-- **Pre-push Hook**: A Husky-compatible hook (`templates/pre-push`) that runs lint, typecheck, format checks, and coverage enforcement before every `git push`. Installed automatically by `metaswarm init` when `.husky/` exists.
+- **Pre-push Hook**: A Husky-compatible hook (`templates/pre-push`) that runs lint, typecheck, format checks, and coverage enforcement before every `git push`. Configured automatically by `/setup` when `.husky/` exists.
 
 See [docs/coverage-enforcement.md](docs/coverage-enforcement.md) for full setup instructions.
 
