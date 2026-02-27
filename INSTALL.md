@@ -5,7 +5,8 @@
 The fastest way to install metaswarm. Works with Claude Code, Gemini CLI, and Codex CLI.
 
 ```bash
-claude plugin add dsifry/metaswarm
+claude plugin marketplace add dsifry/metaswarm-marketplace
+claude plugin install metaswarm
 ```
 
 Then open Claude Code in your project and run:
@@ -91,7 +92,8 @@ This is the most common upgrade path. Your project has metaswarm files in `.clau
 
 1. **Install the plugin:**
    ```bash
-   claude plugin add dsifry/metaswarm
+   claude plugin marketplace add dsifry/metaswarm-marketplace
+   claude plugin install metaswarm
    ```
 
 2. **Run the migration** in Claude Code:
@@ -149,7 +151,7 @@ This runs 9 diagnostic checks: plugin version, project setup, command shims, leg
 npx metaswarm init --full
 ```
 
-This runs the legacy installer that copies all files with default configuration. You'll need to manually customize CLAUDE.md and coverage settings for your project. **New users should use `claude plugin add dsifry/metaswarm` instead.**
+This runs the legacy installer that copies all files with default configuration. You'll need to manually customize CLAUDE.md and coverage settings for your project. **New users should use `claude plugin marketplace add dsifry/metaswarm-marketplace` then `claude plugin install metaswarm` instead.**
 
 ## Customizing for Your Project
 

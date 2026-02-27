@@ -18,9 +18,10 @@ console.log('  ========================================');
 console.log('  npx metaswarm init is deprecated.');
 console.log('  Install via the Claude Code plugin marketplace instead:');
 console.log('');
-console.log('    claude plugin add dsifry/metaswarm');
+console.log('    claude plugin marketplace add dsifry/metaswarm-marketplace');
+console.log('    claude plugin install metaswarm');
 console.log('');
-console.log('  Then in Claude Code, run: /setup');
+console.log('  Then in Claude Code, run: /metaswarm:setup');
 console.log('  ========================================\n');
 
 // --- Helpers ---

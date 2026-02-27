@@ -115,7 +115,8 @@ Claude reads the documentation, installs the plugin, detects your project's lang
 Or install directly:
 
 ```bash
-claude plugin add dsifry/metaswarm
+claude plugin marketplace add dsifry/metaswarm-marketplace
+claude plugin install metaswarm
 ```
 
 Then run `/setup` in Claude Code.

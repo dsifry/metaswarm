@@ -415,7 +415,8 @@
     <p style="color: var(--text-muted); font-size: 14px; margin-top: 12px;"><strong style="color: var(--text);">Have Gemini CLI or Codex CLI installed?</strong> metaswarm can delegate implementation and review tasks to them automatically &mdash; the writer is always reviewed by a different model. Setup detects them and offers to enable cross-model orchestration.</p>
     <p style="color: var(--text-muted); font-size: 13px; margin-top: 16px;">Or install directly:</p>
     <div style="position: relative;">
-      <pre style="font-size: 14px; padding: 14px 18px; margin: 8px 0 0 0;"><code><span class="cmd">claude</span> plugin add dsifry/metaswarm
+      <pre style="font-size: 14px; padding: 14px 18px; margin: 8px 0 0 0;"><code><span class="cmd">claude</span> plugin marketplace add dsifry/metaswarm-marketplace
+<span class="cmd">claude</span> plugin install metaswarm
 <span class="comment"># then in Claude Code:</span> /metaswarm:setup</code></pre>
       <button onclick="copyDirect()" style="position: absolute; top: 8px; right: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 5px 7px; cursor: pointer; color: var(--text-muted); font-size: 14px; line-height: 1; transition: color 0.15s, border-color 0.15s;" aria-label="Copy to clipboard" title="Copy to clipboard" id="copy-btn-direct">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
@@ -445,7 +446,7 @@
       tooltip.style.transform = 'translateX(-50%) translateY(4px)';
     }, 2000);
   }
-  function copyDirect() { copyText('claude plugin add dsifry/metaswarm', 'copy-btn-direct'); }
+  function copyDirect() { copyText('claude plugin marketplace add dsifry/metaswarm-marketplace && claude plugin install metaswarm', 'copy-btn-direct'); }
   </script>
 
   <!-- ONE-SHOT EXAMPLE -->
@@ -798,7 +799,7 @@ When all work units pass, create a PR.</code></pre>
     <h3>Upgrading from an Older Version</h3>
     <p>If you installed metaswarm via <code>npx metaswarm init</code> (v0.6&ndash;v0.8), upgrade to the plugin:</p>
     <ol>
-      <li>Install the plugin: <code>claude plugin add dsifry/metaswarm</code></li>
+      <li>Install the plugin: <code>claude plugin marketplace add dsifry/metaswarm-marketplace && claude plugin install metaswarm</code></li>
       <li>Open Claude Code and run <code>/metaswarm:migrate</code> &mdash; this removes redundant npm-installed copies (your project files are never touched)</li>
       <li>Run <code>/metaswarm:status</code> to verify everything is clean</li>
       <li>Review and commit the cleanup</li>

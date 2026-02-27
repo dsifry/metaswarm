@@ -3,7 +3,7 @@
 ## 0.9.0
 
 ### Added
-- **Claude Code marketplace plugin distribution**: metaswarm is now installed via `claude plugin add dsifry/metaswarm`, replacing the npm `npx metaswarm init` method. The npm package is deprecated and prints a deprecation warning
+- **Claude Code marketplace plugin distribution**: metaswarm is now installed via `claude plugin marketplace add dsifry/metaswarm-marketplace && claude plugin install metaswarm`, replacing the npm `npx metaswarm init` method. The npm package is deprecated and prints a deprecation warning
 - **Setup skill** (`skills/setup/`): Interactive guided project setup that replaces `npx metaswarm init`. Detects language, framework, test runner, linter, and CI, then configures everything automatically
 - **Migrate skill** (`skills/migrate/`): Automated migration from npm installation to plugin. Detects old `.claude/plugins/metaswarm/` files, verifies content matches, removes stale copies, and creates project-local command shims
 - **Status skill** (`skills/status/`): 9 diagnostic checks — plugin version, project setup, command shims, legacy install detection, BEADS plugin, bd CLI, external tools, coverage thresholds, and Node.js
@@ -17,13 +17,13 @@
 - **Cross-CLI validation**: Setup and migration workflows validated across Claude Code, Gemini CLI, and Codex CLI
 
 ### Changed
-- **Primary installation method**: Plugin marketplace (`claude plugin add dsifry/metaswarm`) replaces npm (`npx metaswarm init`)
+- **Primary installation method**: Plugin marketplace (`claude plugin install metaswarm`) replaces npm (`npx metaswarm init`)
 - **npm package deprecated**: `package.json` includes deprecation notice pointing to plugin marketplace
 - **Command names simplified**: `/metaswarm-setup` → `/setup`, `/metaswarm-update-version` → `/update` (legacy aliases preserved)
 - Updated counts: 13 skills (was 9), 15 commands (was 9), 8 rubrics
 
 ### Upgrade Instructions
-- **From v0.7.x / v0.8.x**: Run `claude plugin add dsifry/metaswarm`, then `/migrate` in Claude Code to clean up old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details
+- **From v0.7.x / v0.8.x**: Run `claude plugin marketplace add dsifry/metaswarm-marketplace && claude plugin install metaswarm`, then `/metaswarm:migrate` in Claude Code to clean up old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details
 - **From v0.6.x or earlier**: Same as above, then run `/setup` to get the interactive configuration
 - **Already on plugin**: Run `/update` in Claude Code
 

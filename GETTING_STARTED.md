@@ -5,7 +5,8 @@ This guide walks you through your first metaswarm-orchestrated workflow.
 ## Step 1: Install metaswarm
 
 ```bash
-claude plugin add dsifry/metaswarm
+claude plugin marketplace add dsifry/metaswarm-marketplace
+claude plugin install metaswarm
 ```
 
 Then open Claude Code in your project and run:
@@ -53,7 +54,7 @@ Then open Claude Code and tell it to install metaswarm:
 > Read through https://github.com/dsifry/metaswarm and install it for my project.
 ```
 
-Or install directly: `claude plugin add dsifry/metaswarm` then run `/setup`.
+Or install directly: `claude plugin marketplace add dsifry/metaswarm-marketplace` then `claude plugin install metaswarm`, then run `/metaswarm:setup`.
 
 ### 2. Tell Claude what to build
 
