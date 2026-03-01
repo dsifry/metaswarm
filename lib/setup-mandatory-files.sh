@@ -3,21 +3,38 @@
 # Writes the 3 mandatory setup files that the agent keeps skipping.
 # Called by the setup skill after detection and user questions.
 #
-# Usage: setup-mandatory-files.sh <project-dir> <coverage-threshold> <coverage-command>
+# Usage: setup-mandatory-files.sh <project-dir> <coverage-threshold> <coverage-command> [--platform claude|codex|gemini|all]
 #
 # Arguments:
 #   project-dir       - Project root directory
 #   coverage-threshold - Coverage percentage (e.g., 100)
 #   coverage-command   - Coverage enforcement command (e.g., "pytest --cov --cov-fail-under=100")
+#   --platform        - Target platform(s): claude (default), codex, gemini, or all
 #
 # Environment:
 #   CLAUDE_PLUGIN_ROOT - Plugin root directory (set by Claude Code)
+#   extensionPath      - Extension root directory (set by Gemini CLI)
 
 set -euo pipefail
 
-PROJECT_DIR="${1:?Usage: setup-mandatory-files.sh <project-dir> <coverage-threshold> <coverage-command>}"
+PROJECT_DIR="${1:?Usage: setup-mandatory-files.sh <project-dir> <coverage-threshold> <coverage-command> [--platform claude|codex|gemini|all]}"
 COVERAGE_THRESHOLD="${2:?Missing coverage threshold}"
 COVERAGE_COMMAND="${3:?Missing coverage command}"
+
+# Parse optional --platform flag (default: claude)
+PLATFORM="claude"
+shift 3
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --platform)
+      if [ $# -lt 2 ]; then
+        echo "Error: --platform requires a value (claude, codex, gemini, or all)" >&2
+        exit 1
+      fi
+      PLATFORM="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
 
 # Resolve plugin root
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -30,31 +47,54 @@ created=()
 skipped=()
 errors=()
 
-# --- File 1: CLAUDE.md ---
-claude_md="$PROJECT_DIR/CLAUDE.md"
-append_template="$TEMPLATE_DIR/CLAUDE-append.md"
+# Helper: write instruction file for a given platform
+# Args: $1=platform, $2=filename, $3=append_template, $4=full_template
+write_instruction_file() {
+  local fname="$2" append_tmpl="$3" full_tmpl="$4"
+  local target="$PROJECT_DIR/$fname"
 
-if [ ! -f "$append_template" ]; then
-  errors+=("CLAUDE-append.md template not found at $append_template")
-else
-  if [ -f "$claude_md" ]; then
-    if grep -q "metaswarm" "$claude_md" 2>/dev/null; then
-      skipped+=("CLAUDE.md (already has metaswarm section)")
+  if [ ! -f "$append_tmpl" ]; then
+    errors+=("${fname} append template not found at $append_tmpl")
+    return
+  fi
+
+  if [ -f "$target" ]; then
+    if grep -q "metaswarm" "$target" 2>/dev/null; then
+      skipped+=("${fname} (already has metaswarm section)")
     else
-      cat "$append_template" >> "$claude_md"
-      created+=("CLAUDE.md (appended metaswarm section)")
+      cat "$append_tmpl" >> "$target"
+      created+=("${fname} (appended metaswarm section)")
     fi
   else
-    # No CLAUDE.md — write full template
-    full_template="$TEMPLATE_DIR/CLAUDE.md"
-    if [ -f "$full_template" ]; then
-      cp "$full_template" "$claude_md"
-      created+=("CLAUDE.md (written from template)")
+    if [ -f "$full_tmpl" ]; then
+      cp "$full_tmpl" "$target"
+      created+=("${fname} (written from template)")
     else
-      errors+=("CLAUDE.md template not found at $full_template")
+      errors+=("${fname} template not found at $full_tmpl")
     fi
   fi
-fi
+}
+
+# --- File 1: Instruction file(s) based on platform ---
+case "$PLATFORM" in
+  claude)
+    write_instruction_file "claude" "CLAUDE.md" "$TEMPLATE_DIR/CLAUDE-append.md" "$TEMPLATE_DIR/CLAUDE.md"
+    ;;
+  codex)
+    write_instruction_file "codex" "AGENTS.md" "$TEMPLATE_DIR/AGENTS-append.md" "$TEMPLATE_DIR/AGENTS.md"
+    ;;
+  gemini)
+    write_instruction_file "gemini" "GEMINI.md" "$TEMPLATE_DIR/GEMINI-append.md" "$TEMPLATE_DIR/GEMINI.md"
+    ;;
+  all)
+    write_instruction_file "claude" "CLAUDE.md" "$TEMPLATE_DIR/CLAUDE-append.md" "$TEMPLATE_DIR/CLAUDE.md"
+    write_instruction_file "codex" "AGENTS.md" "$TEMPLATE_DIR/AGENTS-append.md" "$TEMPLATE_DIR/AGENTS.md"
+    write_instruction_file "gemini" "GEMINI.md" "$TEMPLATE_DIR/GEMINI-append.md" "$TEMPLATE_DIR/GEMINI.md"
+    ;;
+  *)
+    errors+=("Unknown platform: $PLATFORM (expected: claude, codex, gemini, or all)")
+    ;;
+esac
 
 # --- File 2: .coverage-thresholds.json ---
 coverage_file="$PROJECT_DIR/.coverage-thresholds.json"

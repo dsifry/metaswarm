@@ -66,16 +66,20 @@ Your prompt (spec with DoD items) or GitHub Issue
 ```text
 metaswarm/
 ├── .claude-plugin/
-│   └── plugin.json           # Plugin manifest (name, version, metadata)
+│   └── plugin.json           # Claude Code plugin manifest
+├── gemini-extension.json      # Gemini CLI extension manifest
+├── .codex/
+│   ├── install.sh            # Codex CLI install script
+│   └── README.md             # Codex CLI usage guide
 ├── hooks/
 │   ├── hooks.json            # SessionStart + PreCompact hook definitions
-│   └── session-start.sh      # Context priming, legacy detection, BEADS dedup
-├── skills/                   # Orchestration skills (auto-discovered by Claude Code)
+│   └── session-start.sh      # Context priming (platform-aware)
+├── skills/                   # Orchestration skills (Agent Skills standard — portable)
 │   ├── start/                # Main entry point — workflow guide + 18 agent personas
 │   ├── orchestrated-execution/ # 4-phase execution loop (IMPLEMENT→VALIDATE→REVIEW→COMMIT)
 │   ├── design-review-gate/   # Parallel 5-agent review
 │   ├── plan-review-gate/     # 3-reviewer adversarial plan review
-│   ├── setup/                # Interactive project setup (replaces npx metaswarm init)
+│   ├── setup/                # Interactive project setup
 │   ├── migrate/              # Migration from npm to plugin installation
 │   ├── status/               # Diagnostic checks
 │   ├── pr-shepherd/          # PR lifecycle automation
@@ -84,18 +88,19 @@ metaswarm/
 │   ├── create-issue/
 │   ├── external-tools/       # Cross-model AI delegation (Codex, Gemini CLI)
 │   └── visual-review/        # Playwright-based screenshot review
-├── commands/                  # Claude Code slash commands
-│   ├── prime.md, start-task.md, review-design.md, self-reflect.md
-│   ├── brainstorm.md, setup.md, update.md, status.md
-│   └── ... (15 total)
-├── agents/                    # 18 agent persona definitions (authoritative source)
-├── rubrics/                   # Quality review standards (authoritative source)
-├── guides/                    # Development patterns (authoritative source)
+├── commands/                  # Slash commands
+│   ├── *.md                  # Claude Code commands (15 files)
+│   └── metaswarm/*.toml      # Gemini CLI commands (12 files)
+├── agents/                    # 18 agent persona definitions
+├── rubrics/                   # Quality review standards
+├── guides/                    # Development patterns
 ├── knowledge/                 # Knowledge base schema + templates
-├── templates/                 # Setup templates (authoritative source)
-├── scripts/                   # Automation scripts
-├── bin/                       # Shell utilities
-├── lib/                       # Build scripts (sync-resources.js)
+├── templates/                 # Setup templates (CLAUDE.md, AGENTS.md, GEMINI.md + append variants)
+├── lib/                       # Platform detection, sync, setup scripts
+├── cli/                       # Cross-platform installer (npx metaswarm)
+├── CLAUDE.md                  # Claude Code project instructions
+├── AGENTS.md                  # Codex CLI project instructions
+├── GEMINI.md                  # Gemini CLI extension context
 ├── INSTALL.md
 ├── GETTING_STARTED.md
 ├── USAGE.md
@@ -104,15 +109,7 @@ metaswarm/
 
 ## Install
 
-Open Claude Code in your project and tell it:
-
-```text
-> Read through https://github.com/dsifry/metaswarm and install it for my project.
-```
-
-Claude reads the documentation, installs the plugin, detects your project's language, framework, test runner, and tools, then configures everything interactively — 18 agent personas, 13 orchestration skills, 15 slash commands, 8 quality rubrics, knowledge base templates, and automation scripts. All customized for your stack.
-
-Or install directly:
+### Claude Code (recommended)
 
 ```bash
 claude plugin marketplace add dsifry/metaswarm-marketplace
@@ -121,18 +118,40 @@ claude plugin install metaswarm
 
 Then run `/setup` in Claude Code.
 
+### Gemini CLI
+
+```bash
+gemini extensions install https://github.com/dsifry/metaswarm.git
+```
+
+Then run `/metaswarm:setup` in your project.
+
+### Codex CLI
+
+```bash
+curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
+```
+
+Then run `$setup` in your project.
+
+### Cross-platform installer
+
+Detect installed CLIs and install metaswarm for all of them:
+
+```bash
+npx metaswarm init
+```
+
 ### Start building
 
-Run `/start-task` and describe what you want in plain English. No issue required.
+Run `/start-task` (Claude/Gemini) or `$start` (Codex) and describe what you want in plain English. No issue required.
 
 ```text
 /start-task Add a webhook system with retry logic, signature verification,
 and a delivery log UI.
 ```
 
-**Upgrading from an older version?** See [INSTALL.md](INSTALL.md#upgrading-to-v090) for migration instructions from npm-installed versions.
-
-See [INSTALL.md](INSTALL.md) for prerequisites, migration from npm, and manual setup options.
+See [INSTALL.md](INSTALL.md) for prerequisites, platform-specific details, and migration from older versions.
 
 ## Self-Learning System
 
@@ -179,14 +198,20 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 8. **Git-Native Everything** — Issues, knowledge, specs all in version control
 9. **Human-in-the-Loop** — Proactive checkpoints at planned review points, plus automatic escalation after 3 failed iterations or ambiguous decisions
 
+## Supported Platforms
+
+| Platform | Install Method | Commands |
+|---|---|---|
+| [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Plugin marketplace | `/start-task`, `/setup`, etc. |
+| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Extension (`gemini extensions install`) | `/metaswarm:start-task`, etc. |
+| [Codex CLI](https://github.com/openai/codex) | Skills (`curl \| bash`) | `$start`, `$setup`, etc. |
+
 ## Requirements
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
+- One of: Claude Code, Gemini CLI, or Codex CLI
 - Node.js 18+ (for automation scripts)
 - [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+ — for task tracking (recommended)
 - GitHub CLI (`gh`) — for PR automation (recommended)
-- OpenAI Codex CLI (`codex`) — validated for project setup and external tool delegation (optional)
-- Google Gemini CLI (`gemini`) — validated for project setup and external tool delegation (optional)
 - Playwright — for visual review skill (optional, `npx playwright install chromium`)
 
 ## License

@@ -1,0 +1,7 @@
+description = "Refine an idea through collaborative brainstorming before implementation"
+prompt = """Invoke the metaswarm brainstorm skill. The user wants to brainstorm and refine an idea.
+
+Arguments provided by the user: {{args}}
+
+Run the brainstorming workflow. IMPORTANT: After the design document is committed, STOP and run the design review gate before proceeding to planning.
+"""

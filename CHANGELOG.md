@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.10.0
+
+### Added
+- **Native Gemini CLI extension**: Install with `gemini extensions install https://github.com/dsifry/metaswarm.git`. Includes extension manifest (`gemini-extension.json`), context file (`GEMINI.md`), and 12 TOML commands in `commands/metaswarm/`
+- **Native Codex CLI package**: Install with `curl -sSL .../install.sh | bash`. Clones repo and symlinks skills into `~/.agents/skills/`. Skills are invoked by their SKILL.md `name` field (e.g., `$start`, `$setup`). Includes install script (`.codex/install.sh`) and usage guide (`.codex/README.md`)
+- **YAML frontmatter added** to 3 skills that lacked it: `create-issue`, `handling-pr-comments`, `pr-shepherd`. All 13 skills now have proper frontmatter for Codex discoverability
+- **Cross-platform installer**: `npx metaswarm init` detects installed CLIs (claude, codex, gemini) and installs metaswarm for each. Supports `--claude`, `--codex`, `--gemini` flags for targeted install
+- **Platform detection module** (`lib/platform-detect.js`): Detects installed CLIs, returns config paths and install methods for each platform
+- **Platform adaptation reference** (`skills/start/references/platform-adaptation.md`): Documents tool equivalents, graceful degradation, and command syntax across all three platforms
+- **Instruction file templates**: `templates/AGENTS.md`, `templates/AGENTS-append.md`, `templates/GEMINI.md`, `templates/GEMINI-append.md` for Codex and Gemini project setup
+- **Multi-platform setup**: `lib/setup-mandatory-files.sh` now supports `--platform claude|codex|gemini|all` flag to write platform-appropriate instruction files
+- **Platform-aware session-start hook**: `hooks/session-start.sh` self-locates its plugin root using `$CLAUDE_PLUGIN_ROOT`, `$extensionPath`, or script directory fallback
+- **TOML command sync**: `lib/sync-resources.js` now generates and validates Gemini TOML commands, checks version sync across all manifests (package.json, plugin.json, gemini-extension.json)
+- **Test suites**: `tests/gemini/`, `tests/codex/`, `tests/cli/` with validation for extension structure, skill symlinks, and installer behavior
+- **`AGENTS.md` at repo root**: Codex CLI instruction file with metaswarm workflow, quality gates, and session completion rules
+- **`GEMINI.md` at repo root**: Gemini CLI extension context with commands, quality gates, and platform notes
+
+### Changed
+- **npm package un-deprecated**: `package.json` no longer has `deprecated` field. The npm package is now the cross-platform installer
+- **npm package description**: Updated to "Cross-platform installer for metaswarm"
+- **CLI rewritten** (`cli/metaswarm.js`): Now supports `init`, `setup`, `detect` commands with platform flags. Replaces old deprecation-warning-only behavior
+- **Version bumped to 0.10.0** across: `package.json`, `.claude-plugin/plugin.json`, `gemini-extension.json`
+- README.md, INSTALL.md, GETTING_STARTED.md updated with Codex and Gemini installation paths
+- `package.json` `files` array updated to include `lib/`, `.codex/`, `AGENTS.md`, `GEMINI.md`, `gemini-extension.json`
+- `package.json` `keywords` updated to include `codex-cli` and `gemini-cli`
+
+## 0.9.2
+
+### Changed
+- Updated plugin.json description with Gemini/Codex and accurate counts
+
+## 0.9.1
+
+### Fixed
+- Corrected plugin install commands throughout docs
+
 ## 0.9.0
 
 ### Added

@@ -4,24 +4,42 @@ This guide walks you through your first metaswarm-orchestrated workflow.
 
 ## Step 1: Install metaswarm
 
+Choose your platform:
+
+**Claude Code:**
 ```bash
 claude plugin marketplace add dsifry/metaswarm-marketplace
 claude plugin install metaswarm
 ```
 
-Then open Claude Code in your project and run:
-
-```text
-/setup
+**Gemini CLI:**
+```bash
+gemini extensions install https://github.com/dsifry/metaswarm.git
 ```
 
-Claude detects your project's language, framework, test runner, and tools, then configures everything interactively. Works with Claude Code, Gemini CLI, and Codex CLI. When setup completes, you're ready to start your first task:
-
-> **Upgrading from an older version?** If you previously installed via `npx metaswarm init`, run `/migrate` instead of `/setup` to clean up the old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details.
-
-```text
-/start-task
+**Codex CLI:**
+```bash
+curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
 ```
+
+**All platforms at once:**
+```bash
+npx metaswarm init
+```
+
+Then run setup in your project:
+- Claude Code: `/setup`
+- Gemini CLI: `/metaswarm:setup`
+- Codex CLI: `$setup`
+
+The setup skill detects your project's language, framework, test runner, and tools, then configures everything interactively.
+
+> **Upgrading from an older version?** If you previously installed via `npx metaswarm init` (pre-v0.10.0), run `/migrate` in Claude Code to clean up old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details.
+
+Start your first task:
+- Claude Code: `/start-task`
+- Gemini CLI: `/metaswarm:start-task`
+- Codex CLI: `$start`
 
 Verify it worked:
 
@@ -54,7 +72,7 @@ Then open Claude Code and tell it to install metaswarm:
 > Read through https://github.com/dsifry/metaswarm and install it for my project.
 ```
 
-Or install directly: `claude plugin marketplace add dsifry/metaswarm-marketplace` then `claude plugin install metaswarm`, then run `/metaswarm:setup`.
+Or install directly: `claude plugin marketplace add dsifry/metaswarm-marketplace` then `claude plugin install metaswarm`, then run `/setup`.
 
 ### 2. Tell Claude what to build
 
@@ -97,14 +115,14 @@ That's it. The orchestrator takes over:
 1. **Research** — Scans your project, notes the tech stack from your prompt
 2. **Plan** — Architect agent creates an implementation plan with work units
 3. **Plan Review Gate** — 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) validate the plan before it reaches the Design Review Gate
-3a. **Plan Validation** — Pre-flight checklist catches structural issues (missing service layer, wrong dependencies, oversized WUs) before spending agent cycles
-4. **Design Review** — 6 agents review the plan in parallel (PM, Architect, Designer, Security, UX Reviewer, CTO)
-5. **Decompose** — Breaks the plan into work units with DoD items and dependencies
-6. **External Dependency Check** — Identifies required API keys/credentials and prompts you to configure them
-7. **Execute** — For each work unit: implement with TDD, validate independently, adversarial review against DoD. Quality gates are blocking state transitions, not advisory.
-8. **Checkpoints** — Pauses after schema setup and AI integration for your review
-7. **Final Review** — Cross-unit integration check after all units pass
-8. **PR** — Creates the PR and starts shepherding
+4. **Plan Validation** — Pre-flight checklist catches structural issues (missing service layer, wrong dependencies, oversized WUs) before spending agent cycles
+5. **Design Review** — 6 agents review the plan in parallel (PM, Architect, Designer, Security, UX Reviewer, CTO)
+6. **Decompose** — Breaks the plan into work units with DoD items and dependencies
+7. **External Dependency Check** — Identifies required API keys/credentials and prompts you to configure them
+8. **Execute** — For each work unit: implement with TDD, validate independently, adversarial review against DoD. Quality gates are blocking state transitions, not advisory.
+9. **Checkpoints** — Pauses after schema setup and AI integration for your review
+10. **Final Review** — Cross-unit integration check after all units pass
+11. **PR** — Creates the PR and starts shepherding
 
 ### 4. Review at checkpoints
 

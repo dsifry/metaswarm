@@ -1,0 +1,7 @@
+description = "Update metaswarm to the latest version"
+prompt = """Invoke the metaswarm update skill. The user wants to update metaswarm.
+
+Arguments provided by the user: {{args}}
+
+Check for new versions, show changelog, and update all component files while preserving customizations.
+"""

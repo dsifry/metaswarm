@@ -1,0 +1,7 @@
+description = "Begin tracked work on a task with complexity assessment"
+prompt = """Invoke the metaswarm start-task skill. The user wants to begin tracked work.
+
+Arguments provided by the user: {{args}}
+
+Follow the start-task workflow: Pre-Task Checklist, Task Assessment, route to Simple or Complex flow.
+"""

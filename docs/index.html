@@ -781,20 +781,27 @@ When all work units pass, create a PR.</code></pre>
       <li>Node.js 18+</li>
     </ul>
 
-    <h3>Recommended: Plugin Install</h3>
-    <pre><code><span class="cmd">claude</span> plugin add dsifry/metaswarm</code></pre>
-    <p>Then open Claude Code in your project and run:</p>
-    <div class="prompt-box">
-      <h3>In Claude Code</h3>
-      <pre><code>/metaswarm:setup</code></pre>
-    </div>
-    <p>Claude detects your project's language, framework, test runner, linter, formatter, type checker, package manager, CI system, and git hooks. It creates <code>CLAUDE.md</code>, configures coverage thresholds for your test runner, and sets up <code>.gitignore</code> for your language. You answer 3&ndash;5 targeted questions. Everything else is automatic.</p>
-    <p>Works with Claude Code, Gemini CLI, and Codex CLI. Supports: TypeScript, Python, Go, Rust, Java, Ruby, JavaScript. 16 frameworks including Next.js, React, Angular, SvelteKit, Express, NestJS, FastAPI, Django, Gin, and more.</p>
+    <h3>Claude Code</h3>
+    <pre><code><span class="cmd">claude</span> plugin marketplace add dsifry/metaswarm-marketplace
+<span class="cmd">claude</span> plugin install metaswarm</code></pre>
+    <p>Then: <code>/metaswarm:setup</code></p>
+
+    <h3>Gemini CLI</h3>
+    <pre><code><span class="cmd">gemini</span> extensions install https://github.com/dsifry/metaswarm.git</code></pre>
+    <p>Then: <code>/metaswarm:setup</code></p>
+
+    <h3>Codex CLI</h3>
+    <pre><code>curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash</code></pre>
+    <p>Then: <code>$setup</code></p>
+
+    <h3>Cross-Platform (auto-detect)</h3>
+    <pre><code>npx metaswarm init</code></pre>
+    <p>Detects which CLIs you have installed and sets up metaswarm for each.</p>
+
+    <p>Setup detects your project's language, framework, test runner, linter, formatter, type checker, package manager, CI system, and git hooks. It creates the appropriate instruction file (<code>CLAUDE.md</code>, <code>GEMINI.md</code>, or <code>AGENTS.md</code>), configures coverage thresholds, and sets up <code>.gitignore</code>. Supports: TypeScript, Python, Go, Rust, Java, Ruby, JavaScript.</p>
 
     <h3>Updating</h3>
-    <p>When a new version is available, run in Claude Code:</p>
-    <pre><code>/metaswarm:update</code></pre>
-    <p>This checks for new versions, shows what changed, updates all component files (preserving your customizations), re-detects your project context, and refreshes your project profile.</p>
+    <p>Claude Code: <code>/metaswarm:update</code> &bull; Gemini CLI: <code>/metaswarm:update</code> &bull; Codex CLI: <code>cd ~/.codex/metaswarm && git pull</code></p>
 
     <h3>Upgrading from an Older Version</h3>
     <p>If you installed metaswarm via <code>npx metaswarm init</code> (v0.6&ndash;v0.8), upgrade to the plugin:</p>
@@ -804,7 +811,6 @@ When all work units pass, create a PR.</code></pre>
       <li>Run <code>/metaswarm:status</code> to verify everything is clean</li>
       <li>Review and commit the cleanup</li>
     </ol>
-    <p>The old <code>/metaswarm-setup</code> and <code>/metaswarm-update-version</code> commands still work as aliases, but new projects should use <code>/metaswarm:setup</code> and <code>/metaswarm:update</code>. If you skip the manual migration, Claude will detect the legacy installation at session start and prompt you automatically.</p>
 
     <p>See <a href="https://github.com/dsifry/metaswarm/blob/main/INSTALL.md#upgrading-to-v090">INSTALL.md</a> for the full upgrade guide.</p>
   </section>

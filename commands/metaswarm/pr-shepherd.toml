@@ -1,0 +1,7 @@
+description = "Monitor a PR through CI, review comments, and merge"
+prompt = """Invoke the metaswarm pr-shepherd skill. The user wants to shepherd a PR to merge.
+
+Arguments provided by the user: {{args}}
+
+Monitor CI status, handle review comments, resolve threads, report when ready to merge.
+"""

@@ -1,3 +1,8 @@
+---
+name: pr-shepherd
+description: Monitor a PR through to merge — handle CI failures, review comments, and thread resolution automatically until all checks pass
+---
+
 # pr-shepherd
 
 Use when a PR has been created and needs to be monitored through to merge - handles CI failures, review comments, and thread resolution automatically until all checks pass and all threads are resolved.
