@@ -1,0 +1,7 @@
+description = "Load relevant knowledge from the BEADS knowledge base before starting work"
+prompt = """Invoke the metaswarm prime skill. The user wants to prime their context with relevant knowledge.
+
+Arguments provided by the user: {{args}}
+
+Run BEADS knowledge priming with any specified filters (--files, --keywords, --work-type).
+"""

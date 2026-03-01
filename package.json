@@ -1,13 +1,13 @@
 {
   "name": "metaswarm",
-  "version": "0.9.2",
-  "description": "A self-improving multi-agent orchestration framework for Claude Code — available as a Claude Code marketplace plugin",
-  "deprecated": "Use 'claude plugin marketplace add dsifry/metaswarm-marketplace && claude plugin install metaswarm' instead. The npm package is deprecated in favor of the Claude Code plugin marketplace.",
+  "version": "0.10.0",
+  "description": "Cross-platform installer for metaswarm — multi-agent orchestration for Claude Code, Codex CLI, and Gemini CLI",
   "bin": {
     "metaswarm": "cli/metaswarm.js"
   },
   "files": [
     "cli/",
+    "lib/",
     "agents/",
     "skills/",
     "commands/",
@@ -17,10 +17,16 @@
     "bin/",
     "templates/",
     "guides/",
-    "ORCHESTRATION.md"
+    ".codex/",
+    "ORCHESTRATION.md",
+    "AGENTS.md",
+    "GEMINI.md",
+    "gemini-extension.json"
   ],
   "keywords": [
     "claude-code",
+    "codex-cli",
+    "gemini-cli",
     "agents",
     "orchestration",
     "tdd",

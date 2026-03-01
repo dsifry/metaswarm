@@ -4,24 +4,42 @@ This guide walks you through your first metaswarm-orchestrated workflow.
 
 ## Step 1: Install metaswarm
 
+Choose your platform:
+
+**Claude Code:**
 ```bash
 claude plugin marketplace add dsifry/metaswarm-marketplace
 claude plugin install metaswarm
 ```
 
-Then open Claude Code in your project and run:
-
-```text
-/setup
+**Gemini CLI:**
+```bash
+gemini extensions install https://github.com/dsifry/metaswarm.git
 ```
 
-Claude detects your project's language, framework, test runner, and tools, then configures everything interactively. Works with Claude Code, Gemini CLI, and Codex CLI. When setup completes, you're ready to start your first task:
-
-> **Upgrading from an older version?** If you previously installed via `npx metaswarm init`, run `/migrate` instead of `/setup` to clean up the old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details.
-
-```text
-/start-task
+**Codex CLI:**
+```bash
+curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
 ```
+
+**All platforms at once:**
+```bash
+npx metaswarm init
+```
+
+Then run setup in your project:
+- Claude Code: `/setup`
+- Gemini CLI: `/metaswarm:setup`
+- Codex CLI: `$setup`
+
+The setup skill detects your project's language, framework, test runner, and tools, then configures everything interactively.
+
+> **Upgrading from an older version?** If you previously installed via `npx metaswarm init` (pre-v0.10.0), run `/migrate` in Claude Code to clean up old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details.
+
+Start your first task:
+- Claude Code: `/start-task`
+- Gemini CLI: `/metaswarm:start-task`
+- Codex CLI: `$start`
 
 Verify it worked:
 
@@ -54,7 +72,7 @@ Then open Claude Code and tell it to install metaswarm:
 > Read through https://github.com/dsifry/metaswarm and install it for my project.
 ```
 
-Or install directly: `claude plugin marketplace add dsifry/metaswarm-marketplace` then `claude plugin install metaswarm`, then run `/metaswarm:setup`.
+Or install directly: `claude plugin marketplace add dsifry/metaswarm-marketplace` then `claude plugin install metaswarm`, then run `/setup`.
 
 ### 2. Tell Claude what to build
 

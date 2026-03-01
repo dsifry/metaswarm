@@ -1,46 +1,89 @@
 # Installation
 
-## Recommended: Plugin Marketplace
+metaswarm works with Claude Code, Gemini CLI, and Codex CLI. Install for one platform or all three.
 
-The fastest way to install metaswarm. Works with Claude Code, Gemini CLI, and Codex CLI.
+## Claude Code (Plugin Marketplace)
 
 ```bash
 claude plugin marketplace add dsifry/metaswarm-marketplace
 claude plugin install metaswarm
 ```
 
-Then open Claude Code in your project and run:
+Then in Claude Code:
 
 ```text
 /setup
 ```
 
-Claude will:
-- Detect your language, framework, test runner, linter, and CI system
-- Ask 3-5 targeted questions (coverage thresholds, external tools, etc.)
-- Create CLAUDE.md, coverage config, and command shims for your project
-- Set up external AI tools and visual review if requested
-- Write a project profile for future updates
+## Gemini CLI (Extension)
 
-To update metaswarm later:
+```bash
+gemini extensions install https://github.com/dsifry/metaswarm.git
+```
+
+Then in Gemini CLI:
 
 ```text
-/update
+/metaswarm:setup
 ```
+
+## Codex CLI (Skills)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
+```
+
+Then in Codex CLI:
+
+```text
+$setup
+```
+
+## Cross-Platform Installer
+
+Detect all installed CLIs and install metaswarm for each:
+
+```bash
+npx metaswarm init
+```
+
+Or target a specific platform:
+
+```bash
+npx metaswarm init --claude
+npx metaswarm init --codex
+npx metaswarm init --gemini
+```
+
+After installing, set up your project:
+
+```bash
+npx metaswarm setup
+```
+
+## Platform Comparison
+
+| Feature | Claude Code | Gemini CLI | Codex CLI |
+|---|---|---|---|
+| Install method | Plugin marketplace | `gemini extensions install` | Clone + symlink |
+| Commands | `/start-task` | `/metaswarm:start-task` | `$start` |
+| Instruction file | `CLAUDE.md` | `GEMINI.md` | `AGENTS.md` |
+| Parallel agents | Full (`Task()`) | Experimental | Sequential only |
+| Setup command | `/setup` | `/metaswarm:setup` | `$setup` |
 
 ## Prerequisites
 
-1. **Claude Code** — [Install Claude Code](https://docs.anthropic.com/en/docs/claude-code)
-2. **BEADS CLI** (`bd`) — Git-native issue tracking
+1. **One of**: Claude Code, Gemini CLI, or Codex CLI
+2. **BEADS CLI** (`bd`) — Git-native issue tracking (recommended)
    ```bash
    curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
    ```
-3. **GitHub CLI** (`gh`) — For PR automation
+3. **GitHub CLI** (`gh`) — For PR automation (recommended)
    ```bash
    brew install gh   # macOS
    gh auth login
    ```
-4. **Superpowers Plugin** (optional) — See [External Dependencies](#external-dependencies)
+4. **Superpowers Plugin** (optional, Claude Code only) — See [External Dependencies](#external-dependencies)
 
 ## External Dependencies
 
@@ -143,15 +186,15 @@ If you skip the manual migration, the session-start hook will detect the old npm
 
 This runs 9 diagnostic checks: plugin version, project setup, command shims, legacy install detection, BEADS plugin, bd CLI, external tools, coverage thresholds, and Node.js.
 
-## Legacy: npm Installation (Deprecated)
+## npm Package (Cross-Platform Installer)
 
-> **Deprecated:** The npm installation method is deprecated as of v0.9.0 and will be removed in a future version. Use the plugin marketplace method above instead. The npm package now prints a deprecation warning on install.
+The npm package (`npx metaswarm`) is now the cross-platform installer. It detects your installed CLIs and installs metaswarm for each.
 
 ```bash
-npx metaswarm init --full
+npx metaswarm init          # Auto-detect and install for all CLIs
+npx metaswarm setup         # Set up project (writes instruction files)
+npx metaswarm detect        # Show which CLIs are available
 ```
-
-This runs the legacy installer that copies all files with default configuration. You'll need to manually customize CLAUDE.md and coverage settings for your project. **New users should use `claude plugin marketplace add dsifry/metaswarm-marketplace` then `claude plugin install metaswarm` instead.**
 
 ## Customizing for Your Project
 

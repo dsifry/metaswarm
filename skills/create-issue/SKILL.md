@@ -1,3 +1,8 @@
+---
+name: create-issue
+description: Create comprehensive GitHub issues with TDD plans, acceptance criteria, and agent instructions for autonomous PR lifecycle management
+---
+
 # Create GitHub Issue Skill
 
 Create comprehensive, well-structured GitHub issues with embedded agent instructions for autonomous PR lifecycle management.

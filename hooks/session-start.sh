@@ -5,6 +5,12 @@
 
 set -euo pipefail
 
+# --- Phase 0: Self-locate plugin root ---
+# Works with Claude Code ($CLAUDE_PLUGIN_ROOT), Gemini CLI ($extensionPath),
+# or direct invocation (derive from script location)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-${extensionPath:-$(cd "$SCRIPT_DIR/.." && pwd)}}"
+
 # --- Phase 1: BEADS dedup check ---
 # If standalone BEADS plugin is installed, skip knowledge priming (let BEADS handle it)
 beads_standalone=false
@@ -42,8 +48,7 @@ fi
 # If project profile exists but mandatory files are missing, run the setup script.
 # This catches cases where the agent skipped file creation during setup.
 if [ "$new_project" = false ] && [ "$legacy_install" = false ]; then
-  plugin_root="${CLAUDE_PLUGIN_ROOT:-}"
-  setup_script="${plugin_root}/lib/setup-mandatory-files.sh"
+  setup_script="${PLUGIN_ROOT}/lib/setup-mandatory-files.sh"
   needs_heal=false
 
   # Check the 3 mandatory files
