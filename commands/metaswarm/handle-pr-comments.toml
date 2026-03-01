@@ -3,5 +3,5 @@ prompt = """Invoke the metaswarm handle-pr-comments skill. The user wants to add
 
 Arguments provided by the user: {{args}}
 
-Fetch inline comments and review bodies, handle \"outside diff range\" comments, resolve threads, iterate until all comments are addressed.
+Fetch inline comments and review bodies, handle "outside diff range" comments, resolve threads, iterate until all comments are addressed.
 """

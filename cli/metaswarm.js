@@ -124,7 +124,7 @@ function installGemini() {
 
 // --- Project-level setup ---
 
-async function setupProject(platformFlag) {
+function setupProject(platformFlag) {
   console.log(`\nmetaswarm v${VERSION} — project setup\n`);
 
   const platforms = detectPlatforms();
