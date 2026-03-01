@@ -115,14 +115,14 @@ That's it. The orchestrator takes over:
 1. **Research** — Scans your project, notes the tech stack from your prompt
 2. **Plan** — Architect agent creates an implementation plan with work units
 3. **Plan Review Gate** — 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) validate the plan before it reaches the Design Review Gate
-3a. **Plan Validation** — Pre-flight checklist catches structural issues (missing service layer, wrong dependencies, oversized WUs) before spending agent cycles
-4. **Design Review** — 6 agents review the plan in parallel (PM, Architect, Designer, Security, UX Reviewer, CTO)
-5. **Decompose** — Breaks the plan into work units with DoD items and dependencies
-6. **External Dependency Check** — Identifies required API keys/credentials and prompts you to configure them
-7. **Execute** — For each work unit: implement with TDD, validate independently, adversarial review against DoD. Quality gates are blocking state transitions, not advisory.
-8. **Checkpoints** — Pauses after schema setup and AI integration for your review
-7. **Final Review** — Cross-unit integration check after all units pass
-8. **PR** — Creates the PR and starts shepherding
+4. **Plan Validation** — Pre-flight checklist catches structural issues (missing service layer, wrong dependencies, oversized WUs) before spending agent cycles
+5. **Design Review** — 6 agents review the plan in parallel (PM, Architect, Designer, Security, UX Reviewer, CTO)
+6. **Decompose** — Breaks the plan into work units with DoD items and dependencies
+7. **External Dependency Check** — Identifies required API keys/credentials and prompts you to configure them
+8. **Execute** — For each work unit: implement with TDD, validate independently, adversarial review against DoD. Quality gates are blocking state transitions, not advisory.
+9. **Checkpoints** — Pauses after schema setup and AI integration for your review
+10. **Final Review** — Cross-unit integration check after all units pass
+11. **PR** — Creates the PR and starts shepherding
 
 ### 4. Review at checkpoints
 

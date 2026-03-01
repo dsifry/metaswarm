@@ -21,6 +21,7 @@ Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` synta
 | `$handling-pr-comments` | Handle PR review comments |
 | `$brainstorming-extension` | Refine an idea with design review gate |
 | `$create-issue` | Create a well-structured GitHub Issue |
+| `$plan-review-gate` | Adversarial plan review (3 reviewers) |
 
 ### Quality Gates
 
@@ -39,4 +40,4 @@ Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` synta
 - **After brainstorming** -> MUST run `$design-review-gate` before planning or implementation
 - **After any plan is created** -> MUST run `$plan-review-gate` before presenting to user
 - **Coverage** -> `.coverage-thresholds.json` is the single source of truth. All skills must check it.
-- **Agent discipline** -> NEVER use `--no-verify`, ALWAYS follow TDD, STAY within file scope
+- **Agent discipline** -> NEVER use `--no-verify`, NEVER `git push --force` without approval, NEVER self-certify, ALWAYS follow TDD, STAY within file scope

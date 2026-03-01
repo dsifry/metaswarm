@@ -57,9 +57,19 @@ for skill_dir in "$ROOT/skills"/*/; do
 
   if [ -f "$skill_md" ]; then
     pass "skills/$skill_name/SKILL.md exists"
-    # Check for YAML frontmatter (starts with ---)
+    # Check for complete YAML frontmatter (opening ---, closing ---, and name field)
     if head -1 "$skill_md" | grep -q '^---'; then
-      pass "skills/$skill_name/SKILL.md has YAML frontmatter"
+      # Count --- lines in the first 20 lines (need at least 2: opening + closing)
+      fence_count=$(head -20 "$skill_md" | grep -c '^---$' || true)
+      if [ "$fence_count" -ge 2 ]; then
+        if head -20 "$skill_md" | grep -q '^name:'; then
+          pass "skills/$skill_name/SKILL.md has valid YAML frontmatter with name field"
+        else
+          fail "skills/$skill_name/SKILL.md has frontmatter but missing 'name' field"
+        fi
+      else
+        fail "skills/$skill_name/SKILL.md has opening --- but missing closing ---"
+      fi
     else
       fail "skills/$skill_name/SKILL.md missing YAML frontmatter"
     fi

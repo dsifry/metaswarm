@@ -64,6 +64,8 @@ bd sync               # Sync with git
 - **TDD is mandatory** -> Write tests first, watch them fail, then implement
 - **Coverage** -> `.coverage-thresholds.json` is the single source of truth. BLOCKING gate.
 - **NEVER** use `--no-verify` on git commits
+- **NEVER** use `git push --force` without explicit user approval
+- **NEVER** self-certify -- the orchestrator validates independently
 - **ALWAYS** follow TDD, STAY within file scope
 
 ## External Tools Routing

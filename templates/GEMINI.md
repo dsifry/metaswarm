@@ -38,6 +38,7 @@ This triggers the full pipeline: Research, Plan, Design Review Gate, Work Unit D
 | `/metaswarm:external-tools-health` | Check status of external AI tools |
 | `/metaswarm:setup` | Interactive guided setup |
 | `/metaswarm:status` | Run diagnostic checks on your installation |
+| `/metaswarm:plan-review-gate` | Adversarial plan review (3 reviewers) |
 
 ## Testing
 
@@ -95,6 +96,7 @@ When a plan is produced:
 - **NEVER** use `--no-verify` on git commits
 - **NEVER** use `git push --force` without explicit user approval
 - **ALWAYS** follow TDD -- write tests first, watch them fail, then implement
+- **NEVER** self-certify -- the orchestrator validates independently
 - **STAY** within declared file scope
 
 ## External Tools (Optional)

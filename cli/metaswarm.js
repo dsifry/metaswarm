@@ -4,8 +4,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { execSync } = require('child_process');
-const readline = require('readline');
 
 const PKG_ROOT = path.resolve(__dirname, '..');
 const CWD = process.cwd();
@@ -31,27 +31,6 @@ function mkdirp(dir) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-function copyFile(src, dest) {
-  if (fs.existsSync(dest)) {
-    skip(path.relative(CWD, dest));
-    return false;
-  }
-  mkdirp(path.dirname(dest));
-  fs.copyFileSync(src, dest);
-  info(path.relative(CWD, dest));
-  return true;
-}
-
-function askUser(question) {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise(resolve => {
-    rl.question(question, answer => {
-      rl.close();
-      resolve(answer.trim().toLowerCase());
-    });
-  });
-}
-
 const METASWARM_MARKER = '## metaswarm';
 
 // --- Platform-specific install functions ---
@@ -64,7 +43,7 @@ function installClaude() {
     console.log('  Running: claude plugin install metaswarm');
     execSync('claude plugin install metaswarm', { stdio: 'inherit' });
     info('Claude Code plugin installed');
-    console.log('  Next: Open Claude Code and run /metaswarm:setup');
+    console.log('  Next: Open Claude Code and run /setup');
   } catch (e) {
     warn(`Claude Code install failed: ${e.message}`);
     console.log('  Try manually:');
@@ -75,16 +54,16 @@ function installClaude() {
 
 function installCodex() {
   console.log('\n  Installing for Codex CLI...\n');
-  const installDir = path.join(process.env.CODEX_HOME || path.join(require('os').homedir(), '.codex'), 'metaswarm');
-  const skillsDir = path.join(require('os').homedir(), '.agents', 'skills');
+  const installDir = path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'metaswarm');
+  const skillsDir = path.join(os.homedir(), '.agents', 'skills');
 
   if (fs.existsSync(installDir)) {
     console.log(`  Updating existing installation at ${installDir}...`);
     try {
       execSync('git pull --rebase origin main', { cwd: installDir, stdio: 'inherit' });
       info('Updated metaswarm');
-    } catch {
-      warn('git pull failed — remove and re-clone manually');
+    } catch (e) {
+      warn(`git pull failed: ${e.message || e}`);
       return;
     }
   } else {
@@ -117,7 +96,9 @@ function installCodex() {
           warn(`${linkPath} exists as a directory, skipping`);
           continue;
         }
-      } catch { /* doesn't exist, fine */ }
+      } catch (e) {
+        if (e.code !== 'ENOENT') warn(`Unexpected error checking ${linkPath}: ${e.message}`);
+      }
 
       fs.symlinkSync(srcDir, linkPath);
       linked++;
@@ -149,8 +130,11 @@ async function setupProject(platformFlag) {
   const platforms = detectPlatforms();
   const targetPlatforms = [];
 
-  if (platformFlag === 'all' || !platformFlag) {
-    // Auto-detect which are installed
+  if (platformFlag === 'all') {
+    // Explicit --all: target all platforms regardless of install status
+    targetPlatforms.push('claude', 'codex', 'gemini');
+  } else if (!platformFlag) {
+    // No flag: auto-detect which are installed
     for (const [key, p] of Object.entries(platforms)) {
       if (p.installed) targetPlatforms.push(key);
     }

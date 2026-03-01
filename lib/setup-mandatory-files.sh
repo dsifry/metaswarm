@@ -26,7 +26,12 @@ PLATFORM="claude"
 shift 3
 while [ $# -gt 0 ]; do
   case "$1" in
-    --platform) PLATFORM="${2:-claude}"; shift 2 ;;
+    --platform)
+      if [ $# -lt 2 ]; then
+        echo "Error: --platform requires a value (claude, codex, gemini, or all)" >&2
+        exit 1
+      fi
+      PLATFORM="$2"; shift 2 ;;
     *) shift ;;
   esac
 done
@@ -45,7 +50,7 @@ errors=()
 # Helper: write instruction file for a given platform
 # Args: $1=platform, $2=filename, $3=append_template, $4=full_template
 write_instruction_file() {
-  local plat="$1" fname="$2" append_tmpl="$3" full_tmpl="$4"
+  local fname="$2" append_tmpl="$3" full_tmpl="$4"
   local target="$PROJECT_DIR/$fname"
 
   if [ ! -f "$append_tmpl" ]; then

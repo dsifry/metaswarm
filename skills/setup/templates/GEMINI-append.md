@@ -20,6 +20,7 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 | `/metaswarm:handle-pr-comments` | Handle PR review comments |
 | `/metaswarm:brainstorm` | Refine an idea before implementation |
 | `/metaswarm:create-issue` | Create a well-structured GitHub Issue |
+| `/metaswarm:plan-review-gate` | Adversarial plan review (3 reviewers) |
 
 ### Quality Gates
 
@@ -39,4 +40,4 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 - **After any plan is created** -> MUST run Plan Review Gate before presenting to user
 - **Before finishing a branch** -> MUST run `/metaswarm:self-reflect` and commit knowledge base updates before PR creation
 - **Coverage** -> `.coverage-thresholds.json` is the single source of truth. All skills must check it.
-- **Subagents** -> NEVER use `--no-verify`, ALWAYS follow TDD, STAY within file scope
+- **Subagents** -> NEVER use `--no-verify`, NEVER `git push --force` without approval, NEVER self-certify, ALWAYS follow TDD, STAY within file scope
