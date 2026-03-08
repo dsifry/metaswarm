@@ -38,8 +38,8 @@ const TRIBUNAL_MARKER = '## tribunal';
 function installClaude() {
   console.log('\n  Installing for Claude Code...\n');
   try {
-    console.log('  Running: claude plugin marketplace add jpeggdev/tribunal-marketplace');
-    execSync('claude plugin marketplace add jpeggdev/tribunal-marketplace', { stdio: 'inherit' });
+    console.log('  Running: claude plugin marketplace add jpeggdev/tribunal');
+    execSync('claude plugin marketplace add jpeggdev/tribunal', { stdio: 'inherit' });
     console.log('  Running: claude plugin install tribunal');
     execSync('claude plugin install tribunal', { stdio: 'inherit' });
     info('Claude Code plugin installed');
@@ -47,7 +47,7 @@ function installClaude() {
   } catch (e) {
     warn(`Claude Code install failed: ${e.message}`);
     console.log('  Try manually:');
-    console.log('    claude plugin marketplace add jpeggdev/tribunal-marketplace');
+    console.log('    claude plugin marketplace add jpeggdev/tribunal');
     console.log('    claude plugin install tribunal');
   }
 }
