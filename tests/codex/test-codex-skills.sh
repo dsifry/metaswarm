@@ -42,11 +42,11 @@ else
   fail "AGENTS.md not found at repo root"
 fi
 
-# 4. AGENTS.md references metaswarm
-if grep -q "metaswarm" "$ROOT/AGENTS.md" 2>/dev/null; then
-  pass "AGENTS.md references metaswarm"
+# 4. AGENTS.md references tribunal
+if grep -q "tribunal" "$ROOT/AGENTS.md" 2>/dev/null; then
+  pass "AGENTS.md references tribunal"
 else
-  fail "AGENTS.md does not reference metaswarm"
+  fail "AGENTS.md does not reference tribunal"
 fi
 
 # 5. All skills have SKILL.md with YAML frontmatter
@@ -81,10 +81,10 @@ done
 # 6. README exists
 if [ -f "$ROOT/.codex/README.md" ]; then
   pass ".codex/README.md exists"
-  if grep -q "metaswarm" "$ROOT/.codex/README.md"; then
-    pass ".codex/README.md references metaswarm"
+  if grep -q "tribunal" "$ROOT/.codex/README.md"; then
+    pass ".codex/README.md references tribunal"
   else
-    fail ".codex/README.md does not reference metaswarm"
+    fail ".codex/README.md does not reference tribunal"
   fi
 else
   fail ".codex/README.md not found"
@@ -105,7 +105,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 for skill_dir in "$ROOT/skills"/*/; do
   [ -d "$skill_dir" ] || continue
-  skill_name="metaswarm-$(basename "$skill_dir")"
+  skill_name="tribunal-$(basename "$skill_dir")"
   ln -sf "$skill_dir" "$TMP_DIR/$skill_name"
 done
 

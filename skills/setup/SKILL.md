@@ -1,11 +1,11 @@
 ---
 name: setup
-description: Interactive project setup — detects your project, configures metaswarm, writes project-local files
+description: Interactive project setup — detects your project, configures tribunal, writes project-local files
 ---
 
 # Setup
 
-Interactive, Claude-guided setup for metaswarm. Detects your stack, asks targeted questions, writes project-local files, and creates command shims. Replaces both `npx metaswarm init` and the old `/metaswarm-setup` command.
+Interactive, Claude-guided setup for tribunal. Detects your stack, asks targeted questions, writes project-local files, and creates command shims. Replaces both `npx tribunal init` and the old `/tribunal-setup` command.
 
 <CRITICAL-REQUIREMENTS>
 Setup MUST produce these 3 mandatory outputs. A shell script handles them automatically — you MUST run it.
@@ -26,7 +26,7 @@ Where:
   - cargo → `"cargo tarpaulin --fail-under <threshold>"`
 
 The script handles:
-1. **CLAUDE.md** — appends metaswarm section (or writes new), skips if already present
+1. **CLAUDE.md** — appends tribunal section (or writes new), skips if already present
 2. **`.coverage-thresholds.json`** — writes at project root with correct thresholds and command
 3. **6 shims in `.claude/commands/`** — writes `start-task.md`, `prime.md`, `review-design.md`, `self-reflect.md`, `pr-shepherd.md`, `brainstorm.md`
 
@@ -39,9 +39,9 @@ The script outputs JSON with what was created/skipped/errored. Check that `"stat
 
 ### Existing Profile Check
 
-Use Glob to check if `.metaswarm/project-profile.json` exists.
+Use Glob to check if `.tribunal/project-profile.json` exists.
 
-- **If it exists**: Read it, present the current configuration summary, and ask the user via AskUserQuestion: "You already have a metaswarm project profile. Re-run setup (overwrites choices) or skip?" Options: "Re-run setup" / "Skip". If the user skips, stop with: "Setup skipped. Existing configuration unchanged."
+- **If it exists**: Read it, present the current configuration summary, and ask the user via AskUserQuestion: "You already have a tribunal project profile. Re-run setup (overwrites choices) or skip?" Options: "Re-run setup" / "Skip". If the user skips, stop with: "Setup skipped. Existing configuration unchanged."
 - **If it does not exist**: Continue to Project Detection.
 
 ---
@@ -259,7 +259,7 @@ Read each file from `./scripts/`:
 Write them to `scripts/` in the project. Skip any that already exist.
 
 **Node.js dependency warning**: If Node.js was NOT detected as the project language, print:
-> "Note: scripts/*.ts require Node.js (npx tsx) to run. Some advanced features (self-reflect, PR comment fetching) will work once Node.js is available. Core metaswarm functionality does not require Node.js."
+> "Note: scripts/*.ts require Node.js (npx tsx) to run. Some advanced features (self-reflect, PR comment fetching) will work once Node.js is available. Core tribunal functionality does not require Node.js."
 
 #### Conditional Files
 
@@ -267,7 +267,7 @@ Write them to `scripts/` in the project. Skip any that already exist.
 |---|---|---|
 | User chose YES for CI | `./templates/ci.yml` | `.github/workflows/ci.yml` |
 | User chose YES for git hooks AND Husky detected or Node.js project | `./templates/pre-push` | `.husky/pre-push` (chmod +x) |
-| User chose YES for external tools | `./templates/external-tools.yaml` | `.metaswarm/external-tools.yaml` |
+| User chose YES for external tools | `./templates/external-tools.yaml` | `.tribunal/external-tools.yaml` |
 | Always | `./templates/.env.example` | `.env.example` |
 | Always | `./templates/SERVICE-INVENTORY.md` | `SERVICE-INVENTORY.md` |
 | Always | `./templates/gitignore` | Merge into existing `.gitignore` (append missing entries, never duplicate) |
@@ -278,11 +278,11 @@ For `.gitignore`, read the existing file (if any), then append language-specific
 
 ## Phase 4: Profile Creation
 
-Write `.metaswarm/project-profile.json` with all detection results and user choices:
+Write `.tribunal/project-profile.json` with all detection results and user choices:
 
 ```json
 {
-  "metaswarm_version": "1.0.0",
+  "tribunal_version": "1.0.0",
   "distribution": "plugin",
   "installed_at": "{current ISO 8601 timestamp}",
   "updated_at": "{current ISO 8601 timestamp}",
@@ -342,7 +342,7 @@ Command resolution reference:
 1. Check if Codex and Gemini CLIs are installed via Bash (`command -v codex`, `command -v gemini`)
 2. For tools not installed, tell the user how to install them
 3. For installed tools, verify with `--version`
-4. Update `.metaswarm/external-tools.yaml` — set `enabled: true` for installed tools, `enabled: false` for missing ones
+4. Update `.tribunal/external-tools.yaml` — set `enabled: true` for installed tools, `enabled: false` for missing ones
 
 ### 5.2 Visual Review (if enabled)
 
@@ -377,7 +377,7 @@ Setup complete! Here's what was configured:
   Visual review:   {Enabled/Disabled}
 
 Mandatory files:
-  ✔ CLAUDE.md          — {written new / appended metaswarm section / already had it}
+  ✔ CLAUDE.md          — {written new / appended tribunal section / already had it}
   ✔ .coverage-thresholds.json — {threshold}% coverage, enforcement: `{command}`
   ✔ .claude/commands/   — 6 shims: start-task, prime, review-design, self-reflect, pr-shepherd, brainstorm
 
@@ -387,18 +387,18 @@ Other files written:
 You're all set! Run /start-task to begin working.
 ```
 
-**Command naming**: When recommending commands to the user, always use the short shim names (`/start-task`, `/prime`, `/brainstorm`, etc.), NOT the namespaced plugin names (`/metaswarm:start-task`). The shims you just created in `.claude/commands/` make the short names work. The short names are easier to type and remember.
+**Command naming**: When recommending commands to the user, always use the short shim names (`/start-task`, `/prime`, `/brainstorm`, etc.), NOT the namespaced plugin names (`/tribunal:start-task`). The shims you just created in `.claude/commands/` make the short names work. The short names are easier to type and remember.
 
 Offer 1-2 relevant tips based on configuration:
 - If external tools enabled: "Use `/external-tools-health` to check tool status."
-- If no CI set up: "Consider adding CI later -- metaswarm includes a template at `./templates/ci.yml`."
+- If no CI set up: "Consider adding CI later -- tribunal includes a template at `./templates/ci.yml`."
 - If visual review enabled: "The visual review skill will screenshot your app during development."
 
 ---
 
 ## Missing Setup Auto-Detection
 
-If `/start-task` is invoked and `.metaswarm/project-profile.json` does not exist, the start skill should auto-route here. This skill will run the full setup flow, then hand back to `/start-task` to continue with the user's original request.
+If `/start-task` is invoked and `.tribunal/project-profile.json` does not exist, the start skill should auto-route here. This skill will run the full setup flow, then hand back to `/start-task` to continue with the user's original request.
 
 ---
 
@@ -417,9 +417,9 @@ If `/start-task` is invoked and `.metaswarm/project-profile.json` does not exist
 Before saying "setup complete", run this Bash command to verify the 3 mandatory files:
 
 ```bash
-echo "CLAUDE.md:"; grep -c "metaswarm" CLAUDE.md 2>/dev/null || echo "MISSING"; echo "coverage:"; ls .coverage-thresholds.json 2>/dev/null || echo "MISSING"; echo "shims:"; ls .claude/commands/start-task.md .claude/commands/prime.md .claude/commands/brainstorm.md 2>/dev/null || echo "MISSING"
+echo "CLAUDE.md:"; grep -c "tribunal" CLAUDE.md 2>/dev/null || echo "MISSING"; echo "coverage:"; ls .coverage-thresholds.json 2>/dev/null || echo "MISSING"; echo "shims:"; ls .claude/commands/start-task.md .claude/commands/prime.md .claude/commands/brainstorm.md 2>/dev/null || echo "MISSING"
 ```
 
 If any output says "MISSING", go back and run the setup-mandatory-files.sh script or create the files manually. Do NOT declare success with missing files.
 
-When reporting available commands to the user, use the **short names** (`/start-task`, `/prime`, `/brainstorm`, etc.) — NOT the namespaced names (`/metaswarm:start-task`). The command shims make the short names work. Do NOT recommend commands that don't exist (e.g., `/metaswarm:start`, `/metaswarm:status`, `/metaswarm:architect-agent`).
+When reporting available commands to the user, use the **short names** (`/start-task`, `/prime`, `/brainstorm`, etc.) — NOT the namespaced names (`/tribunal:start-task`). The command shims make the short names work. Do NOT recommend commands that don't exist (e.g., `/tribunal:start`, `/tribunal:status`, `/tribunal:architect-agent`).

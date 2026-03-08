@@ -5,7 +5,7 @@
 
 ## Problem
 
-`npx metaswarm init` copies 60+ files, then leaves users with a 30-60 minute gap of manual customization — editing CLAUDE.md TODOs, fixing coverage commands for their language, adapting TypeScript-centric agent configs, setting up external tools, and reading 700+ lines of docs.
+`npx tribunal init` copies 60+ files, then leaves users with a 30-60 minute gap of manual customization — editing CLAUDE.md TODOs, fixing coverage commands for their language, adapting TypeScript-centric agent configs, setting up external tools, and reading 700+ lines of docs.
 
 ## Solution
 
@@ -15,37 +15,37 @@ Split installation into a **thin CLI bootstrap** and a **Claude-driven interacti
 
 ```
 Path A (CLI-first):                    Path B (Claude-first):
-npx metaswarm init                     User tells Claude: "Set up metaswarm"
-  └── copies 3 files                     └── Claude invokes /metaswarm-setup
-  └── prints: "Run /metaswarm-setup"   └── checks if init was run
-                                                └── runs npx metaswarm install if needed
+npx tribunal init                     User tells Claude: "Set up tribunal"
+  └── copies 3 files                     └── Claude invokes /tribunal-setup
+  └── prints: "Run /tribunal-setup"   └── checks if init was run
+                                                └── runs npx tribunal install if needed
 Both paths converge:
-/metaswarm-setup
+/tribunal-setup
   └── detects project context (language, framework, test runner, etc.)
   └── presents findings to user
   └── asks 3-5 targeted questions
-  └── installs components via npx metaswarm install
+  └── installs components via npx tribunal install
   └── customizes all templates for detected stack
-  └── writes .metaswarm/project-profile.json
+  └── writes .tribunal/project-profile.json
   └── runs health checks, suggests first task
 ```
 
 ### CLI Commands
 
-#### `npx metaswarm init` (the thin bootstrapper)
+#### `npx tribunal init` (the thin bootstrapper)
 
 Copies ONLY:
-- `.claude/commands/metaswarm-setup.md`
-- `.claude/commands/metaswarm-update-version.md`
-- Minimal CLAUDE.md entry (create or append) pointing to `/metaswarm-setup`
+- `.claude/commands/tribunal-setup.md`
+- `.claude/commands/tribunal-update-version.md`
+- Minimal CLAUDE.md entry (create or append) pointing to `/tribunal-setup`
 
 Prints:
 ```
-metaswarm bootstrapped.
-Open Claude Code and run: /metaswarm-setup
+tribunal bootstrapped.
+Open Claude Code and run: /tribunal-setup
 ```
 
-#### `npx metaswarm install` (the file copier)
+#### `npx tribunal install` (the file copier)
 
 Called by the setup skill (or directly by users). Copies all component groups:
 - agents, skills, rubrics, guides, commands, knowledge, scripts, bin, templates
@@ -57,11 +57,11 @@ This is essentially the current `init` logic, minus the bootstrapper and CLAUDE.
 
 Supports `--full` flag for legacy behavior (init + install in one step).
 
-### Skill: `/metaswarm-setup`
+### Skill: `/tribunal-setup`
 
 **Phase 1: Bootstrap Check**
-- Check for `.claude/plugins/metaswarm/` — if missing, run `npx metaswarm install`
-- Check for `.metaswarm/project-profile.json` — if exists, offer re-setup or skip
+- Check for `.claude/plugins/tribunal/` — if missing, run `npx tribunal install`
+- Check for `.tribunal/project-profile.json` — if exists, offer re-setup or skip
 
 **Phase 2: Project Detection** (automatic, no questions asked)
 - Language: `package.json` → Node.js, `pyproject.toml` → Python, `go.mod` → Go, `Cargo.toml` → Rust, etc.
@@ -89,27 +89,27 @@ Supports `--full` flag for legacy behavior (init + install in one step).
 - .gitignore: add language-appropriate ignores if missing entries
 - Agent configs: note detected language in project context for agents
 - External tools: run install + auth flow if requested
-- Write `.metaswarm/project-profile.json`
+- Write `.tribunal/project-profile.json`
 
 **Phase 5: Verify & First Task**
 - Run health checks (external tools if enabled)
 - Show summary of what was installed and customized
 - Suggest: "Try /start-task on a small bug or feature"
 
-### Command: `/metaswarm-update-version`
+### Command: `/tribunal-update-version`
 
-1. Read `.metaswarm/project-profile.json` for current version
-2. Run `npx metaswarm@latest install` to refresh all files
+1. Read `.tribunal/project-profile.json` for current version
+2. Run `npx tribunal@latest install` to refresh all files
 3. Show what changed (new skills, updated agents, etc.)
 4. Re-run detection if project has evolved
 5. Update project profile with new version
 6. Preserve user customizations (never overwrite CLAUDE.md customizations, etc.)
 
-### Project Profile (`.metaswarm/project-profile.json`)
+### Project Profile (`.tribunal/project-profile.json`)
 
 ```json
 {
-  "metaswarm_version": "0.7.0",
+  "tribunal_version": "0.7.0",
   "installed_at": "2026-02-14T23:45:00Z",
   "updated_at": "2026-02-14T23:45:00Z",
   "detection": {
@@ -141,15 +141,15 @@ Supports `--full` flag for legacy behavior (init + install in one step).
 
 ### Documentation Changes
 
-- **README.md**: Change install section to recommend "tell Claude: set up metaswarm"
+- **README.md**: Change install section to recommend "tell Claude: set up tribunal"
 - **INSTALL.md**: Restructure around guided flow, keep npx as "Manual/CI Installation"
-- **GETTING_STARTED.md**: Rewrite quickstart around `/metaswarm-setup`
-- **templates/CLAUDE.md**: Add `/metaswarm-setup` and `/metaswarm-update-version`
+- **GETTING_STARTED.md**: Rewrite quickstart around `/tribunal-setup`
+- **templates/CLAUDE.md**: Add `/tribunal-setup` and `/tribunal-update-version`
 
 ### What Does NOT Change
 
 - All existing skills, agents, rubrics, guides remain as-is
-- `npx metaswarm init --full` preserves current behavior for CI/scripting
+- `npx tribunal init --full` preserves current behavior for CI/scripting
 - File-level idempotency (skip if exists) preserved in install command
 
 ## Design Decisions
@@ -158,5 +158,5 @@ Supports `--full` flag for legacy behavior (init + install in one step).
 2. **Thin bootstrap** — Init copies only what's needed to invoke Claude. Everything else is pulled by the skill.
 3. **Separate install command** — The heavy file-copying is a distinct CLI command the skill invokes programmatically.
 4. **Project profile** — Single source of truth for detection results, user choices, and version tracking.
-5. **Namespaced commands** — `/metaswarm-setup` and `/metaswarm-update-version` avoid collision with other projects' commands.
+5. **Namespaced commands** — `/tribunal-setup` and `/tribunal-update-version` avoid collision with other projects' commands.
 6. **No language-conditional templates** — We keep one set of templates and customize post-copy. Simpler than maintaining N template variants.

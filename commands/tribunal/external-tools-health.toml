@@ -1,5 +1,5 @@
 description = "Check status of external AI tools (Codex CLI, Gemini CLI)"
-prompt = """Invoke the metaswarm external-tools-health skill. The user wants to check external tool availability.
+prompt = """Invoke the tribunal external-tools-health skill. The user wants to check external tool availability.
 
 Arguments provided by the user: {{args}}
 

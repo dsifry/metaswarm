@@ -1,6 +1,6 @@
 # Update
 
-Check for and apply metaswarm updates.
+Check for and apply tribunal updates.
 
 ## Usage
 
@@ -14,11 +14,11 @@ Check for and apply metaswarm updates.
 2. Check if the marketplace has a newer version available
 3. If an update is available, guide the user through applying it:
    - For marketplace installs: the plugin auto-updates via the marketplace system
-   - For npm installs: suggest migrating to the plugin (`/metaswarm:migrate`)
+   - For npm installs: suggest migrating to the plugin (`/tribunal:migrate`)
 4. After update, verify all skills load correctly
 
 ## Notes
 
 - Marketplace-installed plugins auto-update when Claude Code syncs plugins
 - This command is primarily useful for checking the current version and troubleshooting
-- Replaces the old `/metaswarm-update-version` command
+- Replaces the old `/tribunal-update-version` command

@@ -1,5 +1,5 @@
-description = "Interactive guided setup — detects project, configures metaswarm"
-prompt = """Invoke the metaswarm setup skill. The user wants to set up metaswarm for their project.
+description = "Interactive guided setup — detects project, configures tribunal"
+prompt = """Invoke the tribunal setup skill. The user wants to set up tribunal for their project.
 
 Arguments provided by the user: {{args}}
 

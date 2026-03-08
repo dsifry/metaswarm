@@ -1,6 +1,6 @@
 # Git Workflow Guide
 
-This guide covers Git best practices, branch management, commit conventions, and PR workflows for projects using the metaswarm framework. It is framework-level guidance applicable to any codebase.
+This guide covers Git best practices, branch management, commit conventions, and PR workflows for projects using the tribunal framework. It is framework-level guidance applicable to any codebase.
 
 ---
 

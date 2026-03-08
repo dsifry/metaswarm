@@ -1,6 +1,6 @@
 # Build Validation Guide
 
-This guide covers build processes, validation workflows, and systematic error resolution for projects using the metaswarm framework. It is framework-level guidance applicable to any TypeScript/JavaScript codebase.
+This guide covers build processes, validation workflows, and systematic error resolution for projects using the tribunal framework. It is framework-level guidance applicable to any TypeScript/JavaScript codebase.
 
 ---
 

@@ -3,10 +3,10 @@
 ## 0.10.0
 
 ### Added
-- **Native Gemini CLI extension**: Install with `gemini extensions install https://github.com/dsifry/metaswarm.git`. Includes extension manifest (`gemini-extension.json`), context file (`GEMINI.md`), and 12 TOML commands in `commands/metaswarm/`
+- **Native Gemini CLI extension**: Install with `gemini extensions install https://github.com/jpeggdev/tribunal.git`. Includes extension manifest (`gemini-extension.json`), context file (`GEMINI.md`), and 12 TOML commands in `commands/tribunal/`
 - **Native Codex CLI package**: Install with `curl -sSL .../install.sh | bash`. Clones repo and symlinks skills into `~/.agents/skills/`. Skills are invoked by their SKILL.md `name` field (e.g., `$start`, `$setup`). Includes install script (`.codex/install.sh`) and usage guide (`.codex/README.md`)
 - **YAML frontmatter added** to 3 skills that lacked it: `create-issue`, `handling-pr-comments`, `pr-shepherd`. All 13 skills now have proper frontmatter for Codex discoverability
-- **Cross-platform installer**: `npx metaswarm init` detects installed CLIs (claude, codex, gemini) and installs metaswarm for each. Supports `--claude`, `--codex`, `--gemini` flags for targeted install
+- **Cross-platform installer**: `npx tribunal init` detects installed CLIs (claude, codex, gemini) and installs tribunal for each. Supports `--claude`, `--codex`, `--gemini` flags for targeted install
 - **Platform detection module** (`lib/platform-detect.js`): Detects installed CLIs, returns config paths and install methods for each platform
 - **Platform adaptation reference** (`skills/start/references/platform-adaptation.md`): Documents tool equivalents, graceful degradation, and command syntax across all three platforms
 - **Instruction file templates**: `templates/AGENTS.md`, `templates/AGENTS-append.md`, `templates/GEMINI.md`, `templates/GEMINI-append.md` for Codex and Gemini project setup
@@ -14,13 +14,13 @@
 - **Platform-aware session-start hook**: `hooks/session-start.sh` self-locates its plugin root using `$CLAUDE_PLUGIN_ROOT`, `$extensionPath`, or script directory fallback
 - **TOML command sync**: `lib/sync-resources.js` now generates and validates Gemini TOML commands, checks version sync across all manifests (package.json, plugin.json, gemini-extension.json)
 - **Test suites**: `tests/gemini/`, `tests/codex/`, `tests/cli/` with validation for extension structure, skill symlinks, and installer behavior
-- **`AGENTS.md` at repo root**: Codex CLI instruction file with metaswarm workflow, quality gates, and session completion rules
+- **`AGENTS.md` at repo root**: Codex CLI instruction file with tribunal workflow, quality gates, and session completion rules
 - **`GEMINI.md` at repo root**: Gemini CLI extension context with commands, quality gates, and platform notes
 
 ### Changed
 - **npm package un-deprecated**: `package.json` no longer has `deprecated` field. The npm package is now the cross-platform installer
-- **npm package description**: Updated to "Cross-platform installer for metaswarm"
-- **CLI rewritten** (`cli/metaswarm.js`): Now supports `init`, `setup`, `detect` commands with platform flags. Replaces old deprecation-warning-only behavior
+- **npm package description**: Updated to "Cross-platform installer for tribunal"
+- **CLI rewritten** (`cli/tribunal.js`): Now supports `init`, `setup`, `detect` commands with platform flags. Replaces old deprecation-warning-only behavior
 - **Version bumped to 0.10.0** across: `package.json`, `.claude-plugin/plugin.json`, `gemini-extension.json`
 - README.md, INSTALL.md, GETTING_STARTED.md updated with Codex and Gemini installation paths
 - `package.json` `files` array updated to include `lib/`, `.codex/`, `AGENTS.md`, `GEMINI.md`, `gemini-extension.json`
@@ -39,27 +39,27 @@
 ## 0.9.0
 
 ### Added
-- **Claude Code marketplace plugin distribution**: metaswarm is now installed via `claude plugin marketplace add dsifry/metaswarm-marketplace && claude plugin install metaswarm`, replacing the npm `npx metaswarm init` method. The npm package is deprecated and prints a deprecation warning
-- **Setup skill** (`skills/setup/`): Interactive guided project setup that replaces `npx metaswarm init`. Detects language, framework, test runner, linter, and CI, then configures everything automatically
-- **Migrate skill** (`skills/migrate/`): Automated migration from npm installation to plugin. Detects old `.claude/plugins/metaswarm/` files, verifies content matches, removes stale copies, and creates project-local command shims
+- **Claude Code marketplace plugin distribution**: tribunal is now installed via `claude plugin marketplace add jpeggdev/tribunal-marketplace && claude plugin install tribunal`, replacing the npm `npx tribunal init` method. The npm package is deprecated and prints a deprecation warning
+- **Setup skill** (`skills/setup/`): Interactive guided project setup that replaces `npx tribunal init`. Detects language, framework, test runner, linter, and CI, then configures everything automatically
+- **Migrate skill** (`skills/migrate/`): Automated migration from npm installation to plugin. Detects old `.claude/plugins/tribunal/` files, verifies content matches, removes stale copies, and creates project-local command shims
 - **Status skill** (`skills/status/`): 9 diagnostic checks — plugin version, project setup, command shims, legacy install detection, BEADS plugin, bd CLI, external tools, coverage thresholds, and Node.js
 - **Session-start hook** (`hooks/session-start.sh`): Context priming, legacy npm installation detection with migration prompt, BEADS dedup, and self-healing mandatory file writes
 - **`/start` alias command**: Shorthand for `/start-task`
-- **`/setup` command**: Routes to the setup skill (replaces `/metaswarm-setup`)
-- **`/update` command**: Routes to plugin update (replaces `/metaswarm-update-version`)
+- **`/setup` command**: Routes to the setup skill (replaces `/tribunal-setup`)
+- **`/update` command**: Routes to plugin update (replaces `/tribunal-update-version`)
 - **`/status` command**: Routes to the status diagnostic skill
 - **Shell script for mandatory files**: `hooks/session-start.sh` writes CLAUDE.md and other required files if the agent skips them, ensuring projects always have the correct configuration
-- **Marketplace repository**: Created `dsifry/metaswarm-marketplace` for plugin distribution
+- **Marketplace repository**: Created `jpeggdev/tribunal-marketplace` for plugin distribution
 - **Cross-CLI validation**: Setup and migration workflows validated across Claude Code, Gemini CLI, and Codex CLI
 
 ### Changed
-- **Primary installation method**: Plugin marketplace (`claude plugin install metaswarm`) replaces npm (`npx metaswarm init`)
+- **Primary installation method**: Plugin marketplace (`claude plugin install tribunal`) replaces npm (`npx tribunal init`)
 - **npm package deprecated**: `package.json` includes deprecation notice pointing to plugin marketplace
-- **Command names simplified**: `/metaswarm-setup` → `/setup`, `/metaswarm-update-version` → `/update` (legacy aliases preserved)
+- **Command names simplified**: `/tribunal-setup` → `/setup`, `/tribunal-update-version` → `/update` (legacy aliases preserved)
 - Updated counts: 13 skills (was 9), 15 commands (was 9), 8 rubrics
 
 ### Upgrade Instructions
-- **From v0.7.x / v0.8.x**: Run `claude plugin marketplace add dsifry/metaswarm-marketplace && claude plugin install metaswarm`, then `/metaswarm:migrate` in Claude Code to clean up old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details
+- **From v0.7.x / v0.8.x**: Run `claude plugin marketplace add jpeggdev/tribunal-marketplace && claude plugin install tribunal`, then `/tribunal:migrate` in Claude Code to clean up old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details
 - **From v0.6.x or earlier**: Same as above, then run `/setup` to get the interactive configuration
 - **Already on plugin**: Run `/update` in Claude Code
 
@@ -67,7 +67,7 @@
 
 ### Added
 - **Workflow enforcement rules** in CLAUDE.md templates: mandatory intercepts at every superpowers handoff point (brainstorming → writing-plans → executing-plans → finishing-a-branch) to ensure quality gates are never bypassed
-- **Execution method choice**: agents now always ask the user whether to use metaswarm orchestrated execution (more thorough, more tokens) or superpowers execution skills (faster, lighter-weight) — no default, user decides
+- **Execution method choice**: agents now always ask the user whether to use tribunal orchestrated execution (more thorough, more tokens) or superpowers execution skills (faster, lighter-weight) — no default, user decides
 - **BEADS context persistence**: approved plans, project context, and execution state are written to `.beads/plans/` and `.beads/context/` so agents can recover after context compaction or session interruption
 - **Context recovery protocol** (`bd prime --work-type recovery`): reloads approved plan, completed work, and current execution position from disk after context loss
 - **Start-task recovery check**: detects interrupted executions at startup, asks user to resume or start fresh
@@ -92,19 +92,19 @@
 ## 0.7.1
 
 ### Fixed
-- `npx metaswarm init --full` crashed because npm strips `.gitignore` files from packages. Renamed template to `gitignore` (no dot) so it ships correctly.
+- `npx tribunal init --full` crashed because npm strips `.gitignore` files from packages. Renamed template to `gitignore` (no dot) so it ships correctly.
 
 ## 0.7.0
 
 ### Added
-- **Claude-guided installation** (`/metaswarm-setup`): Interactive setup that detects your project's language, framework, test runner, linter, formatter, package manager, CI system, and git hooks — then customizes everything automatically. Supports 7 languages (TypeScript, Python, Go, Rust, Java, Ruby, JavaScript), 15+ frameworks, and all major toolchains
-- **Self-update command** (`/metaswarm-update-version`): Check for new metaswarm versions, show changelog, update files, re-detect project context, and refresh the project profile
-- **Project profile** (`.metaswarm/project-profile.json`): Stores detection results, user choices, and derived commands for future reference and updates
-- **`npx metaswarm install`** CLI command: Separate heavy file-copy operation that can be invoked by the setup skill or run directly
+- **Claude-guided installation** (`/tribunal-setup`): Interactive setup that detects your project's language, framework, test runner, linter, formatter, package manager, CI system, and git hooks — then customizes everything automatically. Supports 7 languages (TypeScript, Python, Go, Rust, Java, Ruby, JavaScript), 15+ frameworks, and all major toolchains
+- **Self-update command** (`/tribunal-update-version`): Check for new tribunal versions, show changelog, update files, re-detect project context, and refresh the project profile
+- **Project profile** (`.tribunal/project-profile.json`): Stores detection results, user choices, and derived commands for future reference and updates
+- **`npx tribunal install`** CLI command: Separate heavy file-copy operation that can be invoked by the setup skill or run directly
 
 ### Changed
-- **`npx metaswarm init` is now a thin bootstrap**: Copies only 3 files (metaswarm-setup command, metaswarm-update-version command, minimal CLAUDE.md reference) instead of 60+ files. Points user to `/metaswarm-setup` for interactive guided setup
-- **`npx metaswarm init --full`** preserves the legacy behavior (init + install in one step) for CI/scripting environments
+- **`npx tribunal init` is now a thin bootstrap**: Copies only 3 files (tribunal-setup command, tribunal-update-version command, minimal CLAUDE.md reference) instead of 60+ files. Points user to `/tribunal-setup` for interactive guided setup
+- **`npx tribunal init --full`** preserves the legacy behavior (init + install in one step) for CI/scripting environments
 - README.md install section rewritten around two-step guided flow
 - INSTALL.md restructured: "Recommended: Claude-Guided Setup" as primary, "Manual / CI Installation" as fallback
 - GETTING_STARTED.md quickstart updated to the new flow
@@ -124,7 +124,7 @@
 - **External tools verification script** (`bin/external-tools-verify.sh`): End-to-end verification with 15 checks covering shared helpers, both adapters, and file existence
 - **External tools detection in start-task**: `/start-task` now auto-detects installed external tools and suggests enabling them
 - **External tools onboarding**: Added external tools sections to INSTALL.md, GETTING_STARTED.md, and CLAUDE.md template
-- **`metaswarm init` copies external-tools.yaml**: Copies config template to `.metaswarm/` during project initialization (disabled by default)
+- **`tribunal init` copies external-tools.yaml**: Copies config template to `.tribunal/` during project initialization (disabled by default)
 
 ### Changed
 - Updated counts: 8 skills (was 7), 8 commands (was 8), 7 rubrics (was 7)
@@ -221,15 +221,15 @@
 - `docs/coverage-enforcement.md`: documentation for the three enforcement gates
 
 ### Changed
-- `metaswarm init` without flags still works as before (no breaking changes)
-- Husky recommendation message now suggests `metaswarm init --with-husky`
+- `tribunal init` without flags still works as before (no breaking changes)
+- Husky recommendation message now suggests `tribunal init --with-husky`
 - Summary output reports only what was actually set up (not just what was requested)
 - Updated `INSTALL.md`, `GETTING_STARTED.md`, and `docs/coverage-enforcement.md` with flag-based setup instructions
 
 ## 0.1.0
 
 - Initial release
-- CLI scaffolding via `metaswarm init`
+- CLI scaffolding via `tribunal init`
 - 18 agents, 5 skills, 7 commands, 5 rubrics
 - BEADS knowledge base templates
 - Auto-detection of `.husky/` for pre-push hook installation

@@ -1,5 +1,5 @@
 # CI Pipeline — lint, typecheck, test, coverage
-# Scaffolded by metaswarm init. Customize for your project.
+# Scaffolded by tribunal init. Customize for your project.
 
 name: CI
 

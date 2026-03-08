@@ -1,6 +1,6 @@
-# Contributing to metaswarm
+# Contributing to tribunal
 
-Thank you for your interest in contributing to metaswarm.
+Thank you for your interest in contributing to tribunal.
 
 ## How to Contribute
 
@@ -52,7 +52,7 @@ After making changes, test the plugin locally:
 mkdir /tmp/test-project && cd /tmp/test-project && git init
 
 # Install your local copy as a plugin
-claude plugin add /path/to/metaswarm
+claude plugin add /path/to/tribunal
 
 # In Claude Code, verify skills and commands load correctly
 # Type / and check that start-task, setup, prime, etc. appear

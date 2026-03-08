@@ -1,5 +1,5 @@
 description = "Create a well-structured GitHub Issue with TDD plan and acceptance criteria"
-prompt = """Invoke the metaswarm create-issue skill. The user wants to create a GitHub issue.
+prompt = """Invoke the tribunal create-issue skill. The user wants to create a GitHub issue.
 
 Arguments provided by the user: {{args}}
 

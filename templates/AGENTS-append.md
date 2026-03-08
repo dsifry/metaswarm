@@ -1,12 +1,12 @@
 
-## metaswarm
+## tribunal
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-agent orchestration. It provides 18 specialized agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [tribunal](https://github.com/jpeggdev/tribunal) for multi-agent orchestration. It provides 18 specialized agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
 
 ### Workflow
 
 - **Most tasks**: `$start` -- primes context, guides scoping, picks the right level of process
-- **Complex features** (multi-file, spec-driven): Describe what you want built with a Definition of Done, then say: `Use the full metaswarm orchestration workflow.`
+- **Complex features** (multi-file, spec-driven): Describe what you want built with a Definition of Done, then say: `Use the full tribunal orchestration workflow.`
 
 ### Available Skills
 

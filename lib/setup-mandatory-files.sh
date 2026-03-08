@@ -59,11 +59,11 @@ write_instruction_file() {
   fi
 
   if [ -f "$target" ]; then
-    if grep -q "metaswarm" "$target" 2>/dev/null; then
-      skipped+=("${fname} (already has metaswarm section)")
+    if grep -q "tribunal" "$target" 2>/dev/null; then
+      skipped+=("${fname} (already has tribunal section)")
     else
       cat "$append_tmpl" >> "$target"
-      created+=("${fname} (appended metaswarm section)")
+      created+=("${fname} (appended tribunal section)")
     fi
   else
     if [ -f "$full_tmpl" ]; then
@@ -145,9 +145,9 @@ for entry in "${shims[@]}"; do
   file_name="${entry%%:*}"
   command_name="${entry##*:}"
   shim_path="$commands_dir/${file_name}.md"
-  shim_content="<!-- Created by metaswarm setup. Routes to the metaswarm plugin. Safe to delete if you uninstall metaswarm. -->
+  shim_content="<!-- Created by tribunal setup. Routes to the tribunal plugin. Safe to delete if you uninstall tribunal. -->
 
-Invoke the \`/metaswarm:${command_name}\` skill to handle this request. Pass along any arguments the user provided."
+Invoke the \`/tribunal:${command_name}\` skill to handle this request. Pass along any arguments the user provided."
 
   if [ -f "$shim_path" ]; then
     existing=$(cat "$shim_path")
@@ -156,7 +156,7 @@ Invoke the \`/metaswarm:${command_name}\` skill to handle this request. Pass alo
     else
       # Overwrite — existing content is from a different plugin/project
       printf '%s' "$shim_content" > "$shim_path"
-      created+=(".claude/commands/${file_name}.md (overwritten with metaswarm routing)")
+      created+=(".claude/commands/${file_name}.md (overwritten with tribunal routing)")
     fi
   else
     printf '%s' "$shim_content" > "$shim_path"

@@ -43,7 +43,7 @@ A git hook that runs before every `git push`. Runs lint, typecheck, format check
 
 **Setup:**
 
-1. Run `npx metaswarm init --with-husky` (initializes Husky if needed, copies the hook, and copies coverage thresholds)
+1. Run `npx tribunal init --with-husky` (initializes Husky if needed, copies the hook, and copies coverage thresholds)
 2. Or manually: `npx husky init && cp templates/pre-push .husky/pre-push && chmod +x .husky/pre-push`
 
 The hook uses `jq` if available, falls back to a Node one-liner to read the command from `.coverage-thresholds.json`.
@@ -125,9 +125,9 @@ module.exports = {
 The easiest way to set up all three enforcement gates:
 
 ```bash
-npx metaswarm init --with-husky --with-ci
+npx tribunal init --with-husky --with-ci
 ```
 
 This initializes Husky (if needed), copies the pre-push hook, copies coverage thresholds, and creates the CI workflow — all in one command.
 
-If you already have Husky but no pre-push hook, `metaswarm init` (without flags) will copy the template automatically. If you already have a pre-push hook, it won't be overwritten — merge the coverage enforcement section manually.
+If you already have Husky but no pre-push hook, `tribunal init` (without flags) will copy the template automatically. If you already have a pre-push hook, it won't be overwritten — merge the coverage enforcement section manually.

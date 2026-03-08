@@ -1,13 +1,13 @@
 ---
 name: start
-description: Use when starting work on any task, when the user mentions metaswarm, or when the user wants to begin tracked development work
+description: Use when starting work on any task, when the user mentions tribunal, or when the user wants to begin tracked development work
 auto_activate: true
 triggers:
   - "work on issue"
   - "start issue"
   - "start task"
-  - "use metaswarm"
-  - "@metaswarm"
+  - "use tribunal"
+  - "@tribunal"
   - "agent-ready label"
 ---
 
@@ -118,7 +118,7 @@ See the `design-review-gate` skill for full details.
 
 ## Team Mode Coordination
 
-When multiple Claude Code sessions are active on the same repository (e.g., parallel worktrees), metaswarm automatically enters **Team Mode**. In Team Mode, agents behave as persistent teammates with context retention across sessions and direct inter-agent messaging for coordination. Mode detection is automatic based on the presence of concurrent sessions.
+When multiple Claude Code sessions are active on the same repository (e.g., parallel worktrees), tribunal automatically enters **Team Mode**. In Team Mode, agents behave as persistent teammates with context retention across sessions and direct inter-agent messaging for coordination. Mode detection is automatic based on the presence of concurrent sessions.
 
 For the full Team Mode protocol — including message routing, context sharing, and conflict resolution — see `./guides/agent-coordination.md`.
 
@@ -202,7 +202,7 @@ See `orchestrated-execution` skill for the complete pattern, including work unit
 
 ## External AI Tools (Optional)
 
-When external AI CLI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator can delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI. This enables cost savings through cheaper models and cross-model adversarial review that eliminates single-model blind spots.
+When external AI CLI tools are configured (`.tribunal/external-tools.yaml`), the orchestrator can delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI. This enables cost savings through cheaper models and cross-model adversarial review that eliminates single-model blind spots.
 
 ### How It Integrates
 
@@ -839,19 +839,19 @@ skills/external-tools/          # External AI tool delegation
 skills/visual-review/           # Playwright-based visual review
 └── SKILL.md
 
-commands/                       # Slash commands (invoked as /metaswarm:command-name)
-├── start-task.md               # /metaswarm:start-task
-├── prime.md                    # /metaswarm:prime
-├── review-design.md            # /metaswarm:review-design
-├── self-reflect.md             # /metaswarm:self-reflect
-├── pr-shepherd.md              # /metaswarm:pr-shepherd
-├── handle-pr-comments.md       # /metaswarm:handle-pr-comments
-├── create-issue.md             # /metaswarm:create-issue
-└── metaswarm-setup.md          # /metaswarm:metaswarm-setup
+commands/                       # Slash commands (invoked as /tribunal:command-name)
+├── start-task.md               # /tribunal:start-task
+├── prime.md                    # /tribunal:prime
+├── review-design.md            # /tribunal:review-design
+├── self-reflect.md             # /tribunal:self-reflect
+├── pr-shepherd.md              # /tribunal:pr-shepherd
+├── handle-pr-comments.md       # /tribunal:handle-pr-comments
+├── create-issue.md             # /tribunal:create-issue
+└── tribunal-setup.md          # /tribunal:tribunal-setup
 
 templates/                      # Project scaffolding templates
 ├── CLAUDE.md                   # Full CLAUDE.md template for new projects
-├── CLAUDE-append.md            # Metaswarm section to append to existing CLAUDE.md
+├── CLAUDE-append.md            # Tribunal section to append to existing CLAUDE.md
 ├── UI-FLOWS.md                 # User flow and wireframe documentation template
 ├── gitignore                   # Standard Node.js/TypeScript ignores
 ├── SERVICE-INVENTORY.md        # Service/factory/module tracking template

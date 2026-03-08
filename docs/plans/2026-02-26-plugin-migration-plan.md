@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Migrate metaswarm from npm package distribution to Claude Code plugin with marketplace support, zero Node.js install dependency, and automatic updates.
+**Goal:** Migrate tribunal from npm package distribution to Claude Code plugin with marketplace support, zero Node.js install dependency, and automatic updates.
 
 **Architecture:** Hub-and-spoke plugin with co-located resources. The repo root becomes the plugin root (`.claude-plugin/plugin.json`). Skills reference companion files via `./` relative paths. A sync-resources build script keeps co-located copies in sync with authoritative top-level sources.
 
@@ -19,21 +19,21 @@
 **Files:**
 - Create: `.claude-plugin/plugin.json`
 
-> Note: The old `.claude/plugins/metaswarm/.claude-plugin/plugin.json` is deleted later in Task 18 (cleanup).
+> Note: The old `.claude/plugins/tribunal/.claude-plugin/plugin.json` is deleted later in Task 18 (cleanup).
 
 **Step 1: Create the plugin manifest**
 
 ```json
 {
-  "name": "metaswarm",
+  "name": "tribunal",
   "version": "1.0.0",
   "description": "Multi-agent orchestration framework for Claude Code — 18 agents, 9-phase workflow, quality gates, TDD enforcement",
   "author": {
     "name": "David Sifry",
     "email": "david@sifry.com"
   },
-  "homepage": "https://github.com/dsifry/metaswarm",
-  "repository": "https://github.com/dsifry/metaswarm",
+  "homepage": "https://github.com/jpeggdev/tribunal",
+  "repository": "https://github.com/jpeggdev/tribunal",
   "license": "MIT",
   "keywords": ["orchestration", "agents", "tdd", "quality-gates", "beads"]
 }
@@ -185,53 +185,53 @@ trap "rm -rf $TMPDIR_BASE" EXIT
 echo "Running session-start.sh tests..."
 echo ""
 
-# --- Test 1: New project (no .metaswarm/project-profile.json) ---
+# --- Test 1: New project (no .tribunal/project-profile.json) ---
 echo "Test 1: New project detection"
 TEST_CWD="$TMPDIR_BASE/test1"
 mkdir -p "$TEST_CWD"
 output=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
-assert_contains "Contains setup nudge" "$output" "metaswarm:setup"
+assert_contains "Contains setup nudge" "$output" "tribunal:setup"
 
-# --- Test 2: Configured project (has .metaswarm/project-profile.json) ---
+# --- Test 2: Configured project (has .tribunal/project-profile.json) ---
 echo "Test 2: Configured project"
 TEST_CWD="$TMPDIR_BASE/test2"
-mkdir -p "$TEST_CWD/.metaswarm"
-echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+mkdir -p "$TEST_CWD/.tribunal"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.tribunal/project-profile.json"
 output=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
-assert_not_contains "No setup nudge" "$output" "metaswarm:setup"
+assert_not_contains "No setup nudge" "$output" "tribunal:setup"
 
 # --- Test 3: Legacy install detection ---
 echo "Test 3: Legacy install detection"
 TEST_CWD="$TMPDIR_BASE/test3"
-mkdir -p "$TEST_CWD/.claude/plugins/metaswarm/.claude-plugin"
-echo '{"name":"metaswarm","version":"0.8.0"}' > "$TEST_CWD/.claude/plugins/metaswarm/.claude-plugin/plugin.json"
-mkdir -p "$TEST_CWD/.metaswarm"
-echo '{"distribution":"npm"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+mkdir -p "$TEST_CWD/.claude/plugins/tribunal/.claude-plugin"
+echo '{"name":"tribunal","version":"0.8.0"}' > "$TEST_CWD/.claude/plugins/tribunal/.claude-plugin/plugin.json"
+mkdir -p "$TEST_CWD/.tribunal"
+echo '{"distribution":"npm"}' > "$TEST_CWD/.tribunal/project-profile.json"
 output=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
-assert_contains "Contains migrate message" "$output" "metaswarm:migrate"
+assert_contains "Contains migrate message" "$output" "tribunal:migrate"
 
 # --- Test 4: BEADS dedup detection ---
 echo "Test 4: BEADS dedup detection"
 TEST_CWD="$TMPDIR_BASE/test4"
-mkdir -p "$TEST_CWD/.metaswarm"
-echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+mkdir -p "$TEST_CWD/.tribunal"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.tribunal/project-profile.json"
 # Simulate a BEADS plugin in the cache
 MOCK_CACHE="$TMPDIR_BASE/.claude/plugins/cache/beads-marketplace/beads/1.0.0/.claude-plugin"
 mkdir -p "$MOCK_CACHE"
 echo '{"name":"beads","version":"1.0.0"}' > "$MOCK_CACHE/plugin.json"
 output=$(cd "$TEST_CWD" && HOME="$TMPDIR_BASE" bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
-# When BEADS is installed, metaswarm should skip its own bd prime
+# When BEADS is installed, tribunal should skip its own bd prime
 assert_not_contains "No bd prime when BEADS installed" "$output" "bd prime"
 
 # --- Test 5: Multi-line bd prime output produces valid JSON ---
 echo "Test 5: Multi-line content produces valid JSON"
 TEST_CWD="$TMPDIR_BASE/test5"
-mkdir -p "$TEST_CWD/.metaswarm"
-echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+mkdir -p "$TEST_CWD/.tribunal"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.tribunal/project-profile.json"
 # Create a mock bd that outputs multi-line content
 MOCK_BIN="$TMPDIR_BASE/mock-bin"
 mkdir -p "$MOCK_BIN"
@@ -248,8 +248,8 @@ assert_json_valid "Multi-line output produces valid JSON" "$output"
 # --- Test 6: Idempotency (run twice, same output) ---
 echo "Test 6: Idempotency"
 TEST_CWD="$TMPDIR_BASE/test6"
-mkdir -p "$TEST_CWD/.metaswarm"
-echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+mkdir -p "$TEST_CWD/.tribunal"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.tribunal/project-profile.json"
 output1=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 output2=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 TOTAL=$((TOTAL + 1))
@@ -281,7 +281,7 @@ Expected: FAIL (session-start.sh doesn't exist yet)
 ```bash
 #!/usr/bin/env bash
 # hooks/session-start.sh
-# SessionStart + PreCompact hook for metaswarm plugin
+# SessionStart + PreCompact hook for tribunal plugin
 # Outputs JSON with hookSpecificOutput.additionalContext
 
 set -euo pipefail
@@ -310,13 +310,13 @@ fi
 
 # --- Phase 2: New project detection ---
 new_project=false
-if [ ! -f ".metaswarm/project-profile.json" ]; then
+if [ ! -f ".tribunal/project-profile.json" ]; then
   new_project=true
 fi
 
 # --- Phase 3: Legacy install detection ---
 legacy_install=false
-if [ -f ".claude/plugins/metaswarm/.claude-plugin/plugin.json" ]; then
+if [ -f ".claude/plugins/tribunal/.claude-plugin/plugin.json" ]; then
   legacy_install=true
 fi
 
@@ -324,11 +324,11 @@ fi
 context_parts=()
 
 if [ "$new_project" = true ]; then
-  context_parts+=("Metaswarm is installed but this project hasn't been set up yet. Run \`/metaswarm:setup\` to configure it, or \`/metaswarm:start-task\` to begin working.")
+  context_parts+=("Tribunal is installed but this project hasn't been set up yet. Run \`/tribunal:setup\` to configure it, or \`/tribunal:start-task\` to begin working.")
 fi
 
 if [ "$legacy_install" = true ]; then
-  context_parts+=("This project has metaswarm installed via the old npm method. Run \`/metaswarm:migrate\` to switch to the marketplace plugin for automatic updates.")
+  context_parts+=("This project has tribunal installed via the old npm method. Run \`/tribunal:migrate\` to switch to the marketplace plugin for automatic updates.")
 fi
 
 # Knowledge priming (only if project is set up and BEADS isn't separately priming)
@@ -449,14 +449,14 @@ To:
 ```yaml
 ---
 name: start
-description: Use when starting work on any task, when the user mentions metaswarm, or when the user wants to begin tracked development work
+description: Use when starting work on any task, when the user mentions tribunal, or when the user wants to begin tracked development work
 auto_activate: true
 triggers:
   - "work on issue"
   - "start issue"
   - "start task"
-  - "use metaswarm"
-  - "@metaswarm"
+  - "use tribunal"
+  - "@tribunal"
   - "agent-ready label"
 ---
 ```
@@ -499,10 +499,10 @@ Replace ORCHESTRATION.md with a redirect pointer:
 ```markdown
 # ORCHESTRATION.md has moved
 
-This file is now at `skills/start/SKILL.md` (the main metaswarm orchestration skill).
+This file is now at `skills/start/SKILL.md` (the main tribunal orchestration skill).
 
-If you installed metaswarm via the plugin system, this file loads automatically.
-If you're reading this in an npm-installed project, the content is at `.claude/plugins/metaswarm/skills/beads/SKILL.md`.
+If you installed tribunal via the plugin system, this file loads automatically.
+If you're reading this in an npm-installed project, the content is at `.claude/plugins/tribunal/skills/beads/SKILL.md`.
 ```
 
 **Step 7: Verify the file structure**
@@ -682,12 +682,12 @@ Replace:
 **Step 6: Update create-issue/SKILL.md**
 
 Replace:
-- `.claude/commands/handle-pr-comments.md` → the `/metaswarm:handle-pr-comments` command reference (since commands are now plugin-namespaced, reference the command by name, not file path)
+- `.claude/commands/handle-pr-comments.md` → the `/tribunal:handle-pr-comments` command reference (since commands are now plugin-namespaced, reference the command by name, not file path)
 
 **Step 7: Update handling-pr-comments/SKILL.md**
 
 Replace:
-- `.claude/commands/handle-pr-comments.md` → reference the `/metaswarm:handle-pr-comments` command by name
+- `.claude/commands/handle-pr-comments.md` → reference the `/tribunal:handle-pr-comments` command by name
 
 **Step 8: Verify no old paths remain in skills**
 
@@ -791,7 +791,7 @@ Key replacements in `skills/start/SKILL.md`:
 - `.claude/plugins/your-project/skills/plan-review-gate/` → reference via skill invocation
 - `.claude/plugins/your-project/skills/external-tools/` → reference via skill invocation
 - `.claude/plugins/your-project/skills/visual-review/` → reference via skill invocation
-- `.claude/commands/` → reference via command names `/metaswarm:command-name`
+- `.claude/commands/` → reference via command names `/tribunal:command-name`
 - `.claude/rubrics/` → `./rubrics/` (since we co-located them in Task 9)
 - `guides/` (in the directory listing section) → update to reflect plugin structure
 
@@ -801,7 +801,7 @@ The SKILL.md contains a directory tree showing the plugin layout. Update it to m
 
 **Step 3: Verify no old paths remain**
 
-Run: `grep -n '\.claude/plugins/your-project\|\.claude/plugins/metaswarm\|\.claude/rubrics/\|\.claude/commands/' skills/start/SKILL.md || echo "clean"`
+Run: `grep -n '\.claude/plugins/your-project\|\.claude/plugins/tribunal\|\.claude/rubrics/\|\.claude/commands/' skills/start/SKILL.md || echo "clean"`
 Expected: `clean`
 
 **Step 4: Commit**
@@ -817,7 +817,7 @@ git commit -m "fix: update all path references in main orchestration SKILL.md"
 
 ### Task 11: Create setup skill
 
-The setup skill replaces `npx metaswarm init` + `/metaswarm-setup`. It runs entirely inside Claude Code.
+The setup skill replaces `npx tribunal init` + `/tribunal-setup`. It runs entirely inside Claude Code.
 
 **Files:**
 - Create: `skills/setup/SKILL.md`
@@ -829,7 +829,7 @@ The SKILL.md should contain:
 ```yaml
 ---
 name: setup
-description: Interactive project setup — detects your project, configures metaswarm, writes project-local files
+description: Interactive project setup — detects your project, configures tribunal, writes project-local files
 ---
 ```
 
@@ -838,8 +838,8 @@ Content sections:
 2. **Interactive Questions** — 3-5 AskUserQuestion calls: coverage threshold, external tools, visual review, CI pipeline, git hooks
 3. **File Writing** — using Read tool on `./templates/*`, `./knowledge/*`, `./bin/*`, `./scripts/*` (co-located), then Write tool to project directories
 4. **Command Shim Creation** — generate 6 thin `.claude/commands/*.md` shims
-5. **CLAUDE.md Handling** — create or append metaswarm section
-6. **Profile Creation** — write `.metaswarm/project-profile.json`
+5. **CLAUDE.md Handling** — create or append tribunal section
+6. **Profile Creation** — write `.tribunal/project-profile.json`
 7. **Summary** — report what was done
 
 Key constraints documented in the skill:
@@ -857,14 +857,14 @@ Expected: YAML frontmatter with `name: setup`
 
 ```bash
 git add skills/setup/SKILL.md
-git commit -m "feat: add setup skill replacing npx metaswarm init"
+git commit -m "feat: add setup skill replacing npx tribunal init"
 ```
 
 ---
 
 ### Task 12: Create migrate skill
 
-Handles migration from npm-installed metaswarm to plugin distribution.
+Handles migration from npm-installed tribunal to plugin distribution.
 
 **Files:**
 - Create: `skills/migrate/SKILL.md`
@@ -874,20 +874,20 @@ Handles migration from npm-installed metaswarm to plugin distribution.
 ```yaml
 ---
 name: migrate
-description: Migrate from npm-installed metaswarm to the marketplace plugin — removes redundant files with safety checks
+description: Migrate from npm-installed tribunal to the marketplace plugin — removes redundant files with safety checks
 ---
 ```
 
 Content sections:
 1. **Pre-flight Check** — verify marketplace plugin is loaded and functional
-2. **Inventory** — scan for legacy files (`.claude/plugins/metaswarm/`, `.claude/rubrics/*`, `.claude/guides/*`, `.claude/commands/metaswarm-setup.md`, `.claude/commands/metaswarm-update-version.md`)
-3. **Content Verification** — for each file, compute SHA-256 hash of LF-normalized, trailing-whitespace-stripped content. Compare against known metaswarm hashes. Flag modified files.
+2. **Inventory** — scan for legacy files (`.claude/plugins/tribunal/`, `.claude/rubrics/*`, `.claude/guides/*`, `.claude/commands/tribunal-setup.md`, `.claude/commands/tribunal-update-version.md`)
+3. **Content Verification** — for each file, compute SHA-256 hash of LF-normalized, trailing-whitespace-stripped content. Compare against known tribunal hashes. Flag modified files.
 4. **Dry Run Preview** — display complete list of files that will be removed, flagging customized ones
 5. **User Confirmation** — AskUserQuestion with explicit approval required
 6. **Git Safety** — check for uncommitted changes, recommend stash/commit first
 7. **Removal** — use `git rm` for tracked files (reversible), `rm` for untracked
 8. **Shim Creation** — write 6 command shims
-9. **Profile Update** — set `"distribution": "plugin"` in `.metaswarm/project-profile.json`
+9. **Profile Update** — set `"distribution": "plugin"` in `.tribunal/project-profile.json`
 10. **Summary** — report what was removed and next steps
 11. **Rollback Instructions** — document how to revert if needed
 
@@ -917,13 +917,13 @@ Diagnostic command for troubleshooting.
 ```yaml
 ---
 name: status
-description: Diagnostic status report — shows metaswarm installation state, project setup, and potential issues
+description: Diagnostic status report — shows tribunal installation state, project setup, and potential issues
 ---
 ```
 
 Reports:
 - Installed plugin version (from plugin.json)
-- Project setup state (`.metaswarm/project-profile.json` exists?)
+- Project setup state (`.tribunal/project-profile.json` exists?)
 - Command shims in place? (check `.claude/commands/start-task.md` etc.)
 - Legacy embedded plugin detected? (conflict warning)
 - BEADS plugin separately installed?
@@ -957,8 +957,8 @@ git commit -m "feat: add status skill for diagnostic reporting"
 - Create: `commands/external-tools-health.md` (move from `.claude/commands/`)
 - Create: `commands/setup.md`
 - Create: `commands/update.md`
-- Delete: `commands/metaswarm-setup.md` (replaced by `setup.md`)
-- Delete: `commands/metaswarm-update-version.md` (replaced by `update.md`)
+- Delete: `commands/tribunal-setup.md` (replaced by `setup.md`)
+- Delete: `commands/tribunal-update-version.md` (replaced by `update.md`)
 
 **Step 1: Update existing commands**
 
@@ -969,9 +969,9 @@ Each existing command should be reviewed to ensure it invokes the right skill. M
 ```markdown
 # Brainstorm
 
-Invoke the metaswarm brainstorming extension skill, which wraps superpowers:brainstorming with metaswarm's design review gate handoff.
+Invoke the tribunal brainstorming extension skill, which wraps superpowers:brainstorming with tribunal's design review gate handoff.
 
-Use the `metaswarm:brainstorming-extension` skill. If superpowers is not installed, provide standalone brainstorming guidance.
+Use the `tribunal:brainstorming-extension` skill. If superpowers is not installed, provide standalone brainstorming guidance.
 ```
 
 **Step 3: Create external-tools-health.md**
@@ -984,7 +984,7 @@ Move content from `.claude/commands/external-tools-health.md` (currently only ex
 Check the status of external AI tools (Codex CLI, Gemini CLI) and their configuration.
 
 1. Check if `codex` and `gemini` CLIs are installed
-2. Check if `.metaswarm/external-tools.yaml` exists and is configured
+2. Check if `.tribunal/external-tools.yaml` exists and is configured
 3. Run verification scripts if available
 4. Report status of each tool
 ```
@@ -994,9 +994,9 @@ Check the status of external AI tools (Codex CLI, Gemini CLI) and their configur
 ```markdown
 # Setup
 
-Interactive project setup for metaswarm. Detects your project, configures metaswarm, and writes project-local files.
+Interactive project setup for tribunal. Detects your project, configures tribunal, and writes project-local files.
 
-Invoke the `metaswarm:setup` skill.
+Invoke the `tribunal:setup` skill.
 ```
 
 **Step 5: Create update.md**
@@ -1004,7 +1004,7 @@ Invoke the `metaswarm:setup` skill.
 ```markdown
 # Update
 
-Check for and apply metaswarm updates.
+Check for and apply tribunal updates.
 
 1. Check current plugin version
 2. Check marketplace for latest version
@@ -1016,9 +1016,9 @@ Check for and apply metaswarm updates.
 ```markdown
 # Status
 
-Show metaswarm diagnostic information.
+Show tribunal diagnostic information.
 
-Invoke the `metaswarm:status` skill.
+Invoke the `tribunal:status` skill.
 ```
 
 **Step 7: Verify all commands exist**
@@ -1418,24 +1418,24 @@ git commit -m "feat: add sync-resources.js build script with check and sync mode
 
 ### Task 18: Remove old mirror directories
 
-Remove the `.claude/plugins/metaswarm/` embedded plugin directory and other mirrors from the repo itself. These were created by the old CLI installer and are now redundant since the repo root IS the plugin.
+Remove the `.claude/plugins/tribunal/` embedded plugin directory and other mirrors from the repo itself. These were created by the old CLI installer and are now redundant since the repo root IS the plugin.
 
 **Files:**
-- Delete: `.claude/plugins/metaswarm/` (entire directory)
+- Delete: `.claude/plugins/tribunal/` (entire directory)
 - Delete: `.claude/rubrics/` (if present in repo — check first)
 - Delete: `.claude/guides/` (if present in repo — check first)
 - Delete: `.claude/templates/` (if present in repo — check first)
 
 **Step 1: Verify what mirror directories exist in the repo**
 
-Run: `ls -la .claude/plugins/metaswarm/ .claude/rubrics/ .claude/guides/ .claude/templates/ 2>/dev/null || echo "some dirs missing"`
+Run: `ls -la .claude/plugins/tribunal/ .claude/rubrics/ .claude/guides/ .claude/templates/ 2>/dev/null || echo "some dirs missing"`
 
 **Step 2: Remove mirror directories**
 
 Only remove directories that are mirrors of top-level dirs. Keep `.claude/commands/` (these are the command files auto-discovered by Claude Code) and `.claude/settings.local.json`.
 
 ```bash
-rm -rf .claude/plugins/metaswarm/
+rm -rf .claude/plugins/tribunal/
 # Only remove these if they exist and are mirrors:
 rm -rf .claude/rubrics/
 rm -rf .claude/guides/
@@ -1453,7 +1453,7 @@ Expected: Command files still present
 
 ```bash
 # Stage only the specific directories being removed (avoid accidentally staging unrelated .claude/ changes)
-git rm -rf .claude/plugins/metaswarm/ .claude/rubrics/ .claude/guides/ .claude/templates/ 2>/dev/null || true
+git rm -rf .claude/plugins/tribunal/ .claude/rubrics/ .claude/guides/ .claude/templates/ 2>/dev/null || true
 git commit -m "chore: remove old mirror directories (repo root is now the plugin)"
 ```
 
@@ -1463,7 +1463,7 @@ git commit -m "chore: remove old mirror directories (repo root is now the plugin
 
 **Files:**
 - Modify: `package.json`
-- Modify: `cli/metaswarm.js`
+- Modify: `cli/tribunal.js`
 
 **Step 1: Update package.json version**
 
@@ -1471,18 +1471,18 @@ Change `"version": "0.8.0"` → `"version": "0.9.0"`
 
 Add a deprecation note in description:
 ```json
-"description": "DEPRECATED — Use the Claude Code plugin instead: /plugin marketplace add dsifry/metaswarm-marketplace"
+"description": "DEPRECATED — Use the Claude Code plugin instead: /plugin marketplace add jpeggdev/tribunal-marketplace"
 ```
 
 **Step 2: Add deprecation notice to CLI**
 
-At the top of `cli/metaswarm.js` (after `const VERSION = ...`), add:
+At the top of `cli/tribunal.js` (after `const VERSION = ...`), add:
 
 ```javascript
 console.log('');
-console.log('  ⚠  metaswarm has moved to a Claude Code plugin.');
-console.log('  Install with: /plugin marketplace add dsifry/metaswarm-marketplace');
-console.log('  See: https://github.com/dsifry/metaswarm for details.');
+console.log('  ⚠  tribunal has moved to a Claude Code plugin.');
+console.log('  Install with: /plugin marketplace add jpeggdev/tribunal-marketplace');
+console.log('  See: https://github.com/jpeggdev/tribunal for details.');
 console.log('');
 ```
 
@@ -1491,7 +1491,7 @@ The CLI continues to work — this is just a deprecation notice, not a blocker.
 **Step 3: Commit**
 
 ```bash
-git add package.json cli/metaswarm.js
+git add package.json cli/tribunal.js
 git commit -m "chore: add deprecation notice for npm distribution (v0.9.0)"
 ```
 
@@ -1546,14 +1546,14 @@ The CLAUDE.md template that gets written to user projects needs to reference the
 **Step 1: Update command references in templates/CLAUDE.md**
 
 Update the Available Commands table:
-- `/metaswarm-setup` → `/metaswarm:setup` (or just `/setup` via shim)
-- `/metaswarm-update-version` → `/metaswarm:update`
+- `/tribunal-setup` → `/tribunal:setup` (or just `/setup` via shim)
+- `/tribunal-update-version` → `/tribunal:update`
 - Add `/brainstorm`
-- Add `/metaswarm:external-tools-health`
-- Add `/metaswarm:status`
+- Add `/tribunal:external-tools-health`
+- Add `/tribunal:status`
 
 Update the Quality Gates section:
-- `.claude/plugins/metaswarm/skills/plan-review-gate/SKILL.md` → reference as the `plan-review-gate` skill (no file path needed since it loads from the plugin)
+- `.claude/plugins/tribunal/skills/plan-review-gate/SKILL.md` → reference as the `plan-review-gate` skill (no file path needed since it loads from the plugin)
 
 Update the Guides section:
 - `.claude/guides/` references → these are now loaded from the plugin, so just reference by name
@@ -1590,13 +1590,13 @@ Update the installation section:
 ### Plugin (Recommended)
 In Claude Code, run:
 ```
-/plugin marketplace add dsifry/metaswarm-marketplace
+/plugin marketplace add jpeggdev/tribunal-marketplace
 ```
-Then in any project: `/metaswarm:setup`
+Then in any project: `/tribunal:setup`
 
 ### npm (Deprecated)
 ```
-npx metaswarm init
+npx tribunal init
 ```
 ```
 
@@ -1606,7 +1606,7 @@ Add plugin installation as primary method. Add migration section for existing np
 
 **Step 3: Update GETTING_STARTED.md**
 
-Reference `/metaswarm:setup` instead of `npx metaswarm init`.
+Reference `/tribunal:setup` instead of `npx tribunal init`.
 
 **Step 4: Update CHANGELOG.md**
 
@@ -1614,9 +1614,9 @@ Add v1.0.0 entry with:
 - Plugin distribution via marketplace
 - Zero Node.js dependency for install and core usage
 - Automatic updates
-- `/metaswarm:setup` replaces `npx metaswarm init`
-- `/metaswarm:migrate` for existing users
-- `/metaswarm:status` diagnostic command
+- `/tribunal:setup` replaces `npx tribunal init`
+- `/tribunal:migrate` for existing users
+- `/tribunal:status` diagnostic command
 - Security fix: CI template eval → array execution
 - Security fix: estimate-cost.sh awk variable passing
 - All path references updated to relative `./` paths
@@ -1634,13 +1634,13 @@ git commit -m "docs: update documentation for plugin distribution"
 
 ### Task 23: Create marketplace repository
 
-This is a separate repo (`dsifry/metaswarm-marketplace`). Can be created later.
+This is a separate repo (`jpeggdev/tribunal-marketplace`). Can be created later.
 
 **Step 1: Note the marketplace.json content for later**
 
 ```json
 {
-  "name": "metaswarm-marketplace",
+  "name": "tribunal-marketplace",
   "owner": {
     "name": "David Sifry",
     "email": "david@sifry.com"
@@ -1651,10 +1651,10 @@ This is a separate repo (`dsifry/metaswarm-marketplace`). Can be created later.
   },
   "plugins": [
     {
-      "name": "metaswarm",
+      "name": "tribunal",
       "source": {
         "source": "github",
-        "repo": "dsifry/metaswarm",
+        "repo": "jpeggdev/tribunal",
         "ref": "v1.0.0"
       },
       "description": "18-agent orchestration with quality gates, TDD enforcement, and knowledge capture",
@@ -1673,15 +1673,15 @@ This goes in a new repo at `.claude-plugin/marketplace.json`.
 
 ```bash
 # Create on GitHub
-gh repo create dsifry/metaswarm-marketplace --public --description "Marketplace manifest for the metaswarm Claude Code plugin"
+gh repo create jpeggdev/tribunal-marketplace --public --description "Marketplace manifest for the tribunal Claude Code plugin"
 
 # Clone and add files
-git clone git@github.com:dsifry/metaswarm-marketplace.git /tmp/metaswarm-marketplace
-mkdir -p /tmp/metaswarm-marketplace/.claude-plugin
+git clone git@github.com:jpeggdev/tribunal-marketplace.git /tmp/tribunal-marketplace
+mkdir -p /tmp/tribunal-marketplace/.claude-plugin
 # Write marketplace.json
-cd /tmp/metaswarm-marketplace
+cd /tmp/tribunal-marketplace
 git add .claude-plugin/marketplace.json
-git commit -m "feat: initial marketplace manifest for metaswarm v1.0.0"
+git commit -m "feat: initial marketplace manifest for tribunal v1.0.0"
 git push
 ```
 
@@ -1711,7 +1711,7 @@ Expected: 12 commands listed
 
 **Step 4: Validate no broken path references**
 
-Run: `grep -rn '\.claude/rubrics/\|\.claude/guides/\|\.claude/commands/\|\.claude/plugins/your-project\|\.claude/plugins/metaswarm' skills/ commands/ || echo "clean"`
+Run: `grep -rn '\.claude/rubrics/\|\.claude/guides/\|\.claude/commands/\|\.claude/plugins/your-project\|\.claude/plugins/tribunal' skills/ commands/ || echo "clean"`
 Note: The top-level `agents/` directory is superseded by `skills/start/agents/`. The old `agents/` may still exist for backward compatibility but is not checked here.
 Expected: `clean`
 

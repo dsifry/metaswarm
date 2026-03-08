@@ -1,6 +1,6 @@
 # Project Instructions
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework for Claude Code. It provides 18 specialized agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [tribunal](https://github.com/jpeggdev/tribunal), a multi-agent orchestration framework for Claude Code. It provides 18 specialized agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
 
 ## How to Work in This Project
 
@@ -18,7 +18,7 @@ Describe what you want built, include a Definition of Done, and ask for the full
 
 ```text
 I want you to build [description]. [Tech stack, DoD items, file scope.]
-Use the full metaswarm orchestration workflow.
+Use the full tribunal orchestration workflow.
 ```
 
 This triggers the full pipeline: Research → Plan → Design Review Gate → Work Unit Decomposition → Orchestrated Execution (4-phase loop per unit) → Final Review → PR.
@@ -36,8 +36,8 @@ This triggers the full pipeline: Research → Plan → Design Review Gate → Wo
 | `/brainstorm` | Refine an idea before implementation |
 | `/create-issue` | Create a well-structured GitHub Issue |
 | `/external-tools-health` | Check status of external AI tools (Codex, Gemini) |
-| `/setup` | Interactive guided setup — detects project, configures metaswarm |
-| `/update` | Update metaswarm to latest version |
+| `/setup` | Interactive guided setup — detects project, configures tribunal |
+| `/update` | Update tribunal to latest version |
 | `/status` | Run diagnostic checks on your installation |
 | `/start` | Alias for `/start-task` |
 
@@ -68,7 +68,7 @@ The validation phase of orchestrated execution reads `.coverage-thresholds.json`
 
 ## Workflow Enforcement (MANDATORY)
 
-These rules override any conflicting instructions from third-party skills or plugins. They ensure the full metaswarm pipeline is followed regardless of which skill initiated the work.
+These rules override any conflicting instructions from third-party skills or plugins. They ensure the full tribunal pipeline is followed regardless of which skill initiated the work.
 
 ### After Brainstorming
 
@@ -96,7 +96,7 @@ When a plan is ready for execution, **always ask the user** which execution appr
 
 > **How would you like to execute this plan?**
 >
-> 1. **Metaswarm orchestrated execution** — 4-phase loop per work unit (IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT) with independent quality gates, fresh adversarial reviewers, coverage enforcement, and pre-PR knowledge capture. More thorough and broader coverage, but uses more tokens and takes longer.
+> 1. **Tribunal orchestrated execution** — 4-phase loop per work unit (IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT) with independent quality gates, fresh adversarial reviewers, coverage enforcement, and pre-PR knowledge capture. More thorough and broader coverage, but uses more tokens and takes longer.
 > 2. **Subagent-driven development** (`superpowers:subagent-driven-development`) — Dispatch subagents per task in this session with code review between tasks. Faster, lighter-weight, lower token cost.
 > 3. **Parallel session** (`superpowers:executing-plans`) — Execute in a separate session with batch checkpoints. Good for long-running work you want isolated.
 
@@ -113,7 +113,7 @@ When `superpowers:executing-plans`, `superpowers:subagent-driven-development`, o
 
 ### Use `/start-task` Instead of EnterPlanMode
 
-When starting complex work, use `/start-task` instead of Claude's built-in `EnterPlanMode`. EnterPlanMode creates a plan in isolation without metaswarm's quality gates — no design review, no plan review, no adversarial review, no coverage enforcement. `/start-task` routes through the full pipeline:
+When starting complex work, use `/start-task` instead of Claude's built-in `EnterPlanMode`. EnterPlanMode creates a plan in isolation without tribunal's quality gates — no design review, no plan review, no adversarial review, no coverage enforcement. `/start-task` routes through the full pipeline:
 
 - `/start-task` → complexity assessment → brainstorming (if unclear) → design review gate → plan review gate → execution method choice → orchestrated execution or superpowers execution
 - `EnterPlanMode` → plan → implement (no gates)
@@ -170,7 +170,7 @@ If an agent loses context mid-execution, it recovers by running `bd prime --work
 
 ## External Tools (Optional)
 
-If external AI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator
+If external AI tools are configured (`.tribunal/external-tools.yaml`), the orchestrator
 can delegate implementation and review tasks to Codex CLI and Gemini CLI for cost savings
 and cross-model adversarial review. See `templates/external-tools-setup.md` for setup.
 

@@ -1,13 +1,13 @@
 ---
 name: migrate
-description: Migrate from npm-installed metaswarm to the marketplace plugin — removes redundant files with safety checks
+description: Migrate from npm-installed tribunal to the marketplace plugin — removes redundant files with safety checks
 ---
 
 # Migration Skill
 
-Migrate a project from npm-installed metaswarm (`npx metaswarm init`) to the marketplace plugin. Removes redundant embedded files with a safety protocol that prevents data loss.
+Migrate a project from npm-installed tribunal (`npx tribunal init`) to the marketplace plugin. Removes redundant embedded files with a safety protocol that prevents data loss.
 
-**When to use**: The SessionStart hook detects `.claude/plugins/metaswarm/.claude-plugin/plugin.json` (legacy embedded plugin) and recommends running this skill.
+**When to use**: The SessionStart hook detects `.claude/plugins/tribunal/.claude-plugin/plugin.json` (legacy embedded plugin) and recommends running this skill.
 
 ---
 
@@ -19,7 +19,7 @@ Before presenting any migration preview or file list, ALWAYS lead with this fram
 
 > **What this migration does**: The marketplace plugin now provides all the skills, commands, rubrics, and guides that were previously copied into your project directory. This migration simply removes those redundant copies — the originals now live in the plugin itself.
 >
-> **Nothing is lost**: Your project-specific files (CLAUDE.md, .coverage-thresholds.json, .beads/, bin/, scripts/) are NEVER touched. Only duplicate metaswarm framework files are removed.
+> **Nothing is lost**: Your project-specific files (CLAUDE.md, .coverage-thresholds.json, .beads/, bin/, scripts/) are NEVER touched. Only duplicate tribunal framework files are removed.
 >
 > **Fully reversible**: All removals are staged with `git rm` (not permanently deleted). Before you commit:
 > - Undo everything: `git restore --staged . && git checkout -- .`
@@ -29,40 +29,40 @@ Before presenting any migration preview or file list, ALWAYS lead with this fram
 
 **Tone**: Be reassuring, not alarming. Say "cleaning up XX redundant copies" not "deleting XX files". Say "these files now live in the plugin" not "these files will be removed". Frame the migration as housekeeping, not destruction.
 
-**When showing file counts**: If there are many files (e.g., 40+), explain that the large count is because the old npm installer copied the entire plugin framework into `.claude/plugins/metaswarm/` — that one directory accounts for most of the count, and it's all framework code that's now served directly by the plugin.
+**When showing file counts**: If there are many files (e.g., 40+), explain that the large count is because the old npm installer copied the entire plugin framework into `.claude/plugins/tribunal/` — that one directory accounts for most of the count, and it's all framework code that's now served directly by the plugin.
 
 ---
 
 ## Step 1: Pre-flight Check
 
 1. Confirm this skill is running from the marketplace plugin (if this skill loaded, the plugin is active)
-2. Read `.metaswarm/project-profile.json` -- if `"distribution": "plugin"` is already set, inform the user migration was already completed and exit
-3. Verify `.claude/plugins/metaswarm/.claude-plugin/plugin.json` exists -- if not, there is nothing to migrate; inform the user and exit
+2. Read `.tribunal/project-profile.json` -- if `"distribution": "plugin"` is already set, inform the user migration was already completed and exit
+3. Verify `.claude/plugins/tribunal/.claude-plugin/plugin.json` exists -- if not, there is nothing to migrate; inform the user and exit
 
-If the plugin is not loaded, the user needs to install it first: `/plugin marketplace add dsifry/metaswarm-marketplace`
+If the plugin is not loaded, the user needs to install it first: `/plugin marketplace add jpeggdev/tribunal-marketplace`
 
 ---
 
 ## Step 2: Inventory Legacy Files
 
-Scan for files installed by `npx metaswarm init` that are now provided by the marketplace plugin.
+Scan for files installed by `npx tribunal init` that are now provided by the marketplace plugin.
 
 **Candidates for removal:**
 
 | Category | Path pattern |
 |---|---|
-| Embedded plugin | `.claude/plugins/metaswarm/` (entire directory) |
+| Embedded plugin | `.claude/plugins/tribunal/` (entire directory) |
 | Rubrics | `.claude/rubrics/*.md` |
 | Guides | `.claude/guides/*.md` |
-| Old commands | `.claude/commands/metaswarm-setup.md`, `.claude/commands/metaswarm-update-version.md` |
+| Old commands | `.claude/commands/tribunal-setup.md`, `.claude/commands/tribunal-update-version.md` |
 
-**NEVER removed** (project-local files): `CLAUDE.md`, `.coverage-thresholds.json`, `.metaswarm/project-profile.json`, `.beads/`, `bin/`, `scripts/`, `.github/workflows/`, `.claude/commands/` shims.
+**NEVER removed** (project-local files): `CLAUDE.md`, `.coverage-thresholds.json`, `.tribunal/project-profile.json`, `.beads/`, `bin/`, `scripts/`, `.github/workflows/`, `.claude/commands/` shims.
 
 ---
 
 ## Step 3: Content Verification
 
-For each removal candidate, verify it is an unmodified metaswarm file using SHA-256 hash comparison.
+For each removal candidate, verify it is an unmodified tribunal file using SHA-256 hash comparison.
 
 **Hash protocol:**
 1. Read file content
@@ -96,21 +96,21 @@ All removals are staged (not committed) — you can undo everything before commi
 
 ### Redundant framework files to clean up (XX files)
 These are unmodified copies that the plugin now provides directly:
-- .claude/plugins/metaswarm/ (embedded plugin copy — XX files, now served by marketplace plugin)
+- .claude/plugins/tribunal/ (embedded plugin copy — XX files, now served by marketplace plugin)
 - .claude/rubrics/<each matching file> (now in plugin's rubrics/)
 - .claude/guides/<each matching file> (now in plugin's guides/)
-- .claude/commands/metaswarm-setup.md (replaced by plugin command)
-- .claude/commands/metaswarm-update-version.md (replaced by plugin command)
+- .claude/commands/tribunal-setup.md (replaced by plugin command)
+- .claude/commands/tribunal-update-version.md (replaced by plugin command)
 
 ### Files you've customized (require your decision)
 - .claude/rubrics/code-review-rubric.md (MODIFIED — your changes are preserved until you decide)
 
 ### Your project files (NEVER touched)
-- CLAUDE.md, .coverage-thresholds.json, .metaswarm/, .beads/, bin/, scripts/
+- CLAUDE.md, .coverage-thresholds.json, .tribunal/, .beads/, bin/, scripts/
 
 ### What gets added
 - 6 command shims in .claude/commands/ (thin wrappers that route to plugin commands)
-- .metaswarm/project-profile.json updated with "distribution": "plugin"
+- .tribunal/project-profile.json updated with "distribution": "plugin"
 
 ### How to undo (before committing)
 git restore --staged . && git checkout -- .
@@ -144,11 +144,11 @@ Before executing removals:
 
 **Git-tracked files** -- use `git rm` (staged, reversible via `git checkout`):
 ```bash
-git rm -rf .claude/plugins/metaswarm/
+git rm -rf .claude/plugins/tribunal/
 git rm .claude/rubrics/<each confirmed file>
 git rm .claude/guides/<each confirmed file>
-git rm .claude/commands/metaswarm-setup.md
-git rm .claude/commands/metaswarm-update-version.md
+git rm .claude/commands/tribunal-setup.md
+git rm .claude/commands/tribunal-update-version.md
 ```
 
 **After running**: Reassure: "Done — XX files staged for removal. These are only staged, not committed. Run `git status` to see the staged changes, or `git restore --staged . && git checkout -- .` to undo."
@@ -165,17 +165,17 @@ Write 6 shims to `.claude/commands/` (same as setup skill):
 
 | Shim | Routes to |
 |---|---|
-| `start-task.md` | `/metaswarm:start-task` |
-| `prime.md` | `/metaswarm:prime` |
-| `review-design.md` | `/metaswarm:review-design` |
-| `self-reflect.md` | `/metaswarm:self-reflect` |
-| `pr-shepherd.md` | `/metaswarm:pr-shepherd` |
-| `brainstorm.md` | `/metaswarm:brainstorm` |
+| `start-task.md` | `/tribunal:start-task` |
+| `prime.md` | `/tribunal:prime` |
+| `review-design.md` | `/tribunal:review-design` |
+| `self-reflect.md` | `/tribunal:self-reflect` |
+| `pr-shepherd.md` | `/tribunal:pr-shepherd` |
+| `brainstorm.md` | `/tribunal:brainstorm` |
 
 Each shim:
 ```markdown
-<!-- Created by metaswarm setup. Routes to the metaswarm plugin. Safe to delete if you uninstall metaswarm. -->
-Invoke the `/metaswarm:<command-name>` skill with any arguments the user provided.
+<!-- Created by tribunal setup. Routes to the tribunal plugin. Safe to delete if you uninstall tribunal. -->
+Invoke the `/tribunal:<command-name>` skill with any arguments the user provided.
 ```
 
 If a shim already exists with different content, ask before overwriting.
@@ -184,7 +184,7 @@ If a shim already exists with different content, ask before overwriting.
 
 ## Step 9: Profile Update
 
-Merge these fields into `.metaswarm/project-profile.json` (preserve existing fields):
+Merge these fields into `.tribunal/project-profile.json` (preserve existing fields):
 ```json
 {
   "distribution": "plugin",
@@ -211,13 +211,13 @@ Your project files (CLAUDE.md, .coverage-thresholds.json, .beads/, etc.) were no
 
 ### Next steps
 1. Review staged changes: `git diff --cached --stat`
-2. Commit when satisfied: `git commit -m "chore: migrate metaswarm from npm to marketplace plugin"`
+2. Commit when satisfied: `git commit -m "chore: migrate tribunal from npm to marketplace plugin"`
 3. Verify everything works: try `/start-task`
 
 ### If anything seems wrong
 - Undo before committing: `git restore --staged . && git checkout -- .`
 - Undo after committing: `git revert HEAD`
-- Full re-install: `npx metaswarm install` (npm package still available)
+- Full re-install: `npx tribunal install` (npm package still available)
 ```
 
 ---
@@ -229,7 +229,7 @@ All removals use `git rm`, which only stages changes — files are NOT deleted f
 - **Before committing** (full undo): `git restore --staged . && git checkout -- .`
 - **After committing** (full undo): `git revert HEAD`
 - **Single file recovery**: `git checkout HEAD~1 -- <path>`
-- **Full re-install of old approach**: `npx metaswarm install` (npm package still published)
+- **Full re-install of old approach**: `npx tribunal install` (npm package still published)
 
 ---
 
@@ -237,11 +237,11 @@ All removals use `git rm`, which only stages changes — files are NOT deleted f
 
 | Error | Action |
 |---|---|
-| `.metaswarm/project-profile.json` missing | Create with minimal fields, proceed |
+| `.tribunal/project-profile.json` missing | Create with minimal fields, proceed |
 | `git rm` fails on a file | Log error, skip file, continue |
 | Permission denied | Warn user, skip file, continue |
 | Plugin not loaded | Exit with install instructions |
-| `metaswarm_version < 0.8.0` | Warn manual intervention may be needed |
+| `tribunal_version < 0.8.0` | Warn manual intervention may be needed |
 
 ---
 

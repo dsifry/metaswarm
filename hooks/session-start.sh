@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # hooks/session-start.sh
-# SessionStart + PreCompact hook for metaswarm plugin
+# SessionStart + PreCompact hook for tribunal plugin
 # Outputs JSON with hookSpecificOutput.additionalContext
 
 set -euo pipefail
@@ -34,13 +34,13 @@ fi
 
 # --- Phase 2: New project detection ---
 new_project=false
-if [ ! -f ".metaswarm/project-profile.json" ]; then
+if [ ! -f ".tribunal/project-profile.json" ]; then
   new_project=true
 fi
 
 # --- Phase 3: Legacy install detection ---
 legacy_install=false
-if [ -f ".claude/plugins/metaswarm/.claude-plugin/plugin.json" ]; then
+if [ -f ".claude/plugins/tribunal/.claude-plugin/plugin.json" ]; then
   legacy_install=true
 fi
 
@@ -52,13 +52,13 @@ if [ "$new_project" = false ] && [ "$legacy_install" = false ]; then
   needs_heal=false
 
   # Check the 3 mandatory files
-  if ! grep -q "metaswarm" CLAUDE.md 2>/dev/null; then
+  if ! grep -q "tribunal" CLAUDE.md 2>/dev/null; then
     needs_heal=true
   fi
   if [ ! -f ".coverage-thresholds.json" ]; then
     needs_heal=true
   fi
-  if [ ! -f ".claude/commands/start-task.md" ] || ! grep -q "metaswarm" ".claude/commands/start-task.md" 2>/dev/null; then
+  if [ ! -f ".claude/commands/start-task.md" ] || ! grep -q "tribunal" ".claude/commands/start-task.md" 2>/dev/null; then
     needs_heal=true
   fi
 
@@ -66,10 +66,10 @@ if [ "$new_project" = false ] && [ "$legacy_install" = false ]; then
     # Read coverage command from project profile
     cov_cmd=""
     cov_threshold="100"
-    if command -v node >/dev/null 2>&1 && [ -f ".metaswarm/project-profile.json" ]; then
+    if command -v node >/dev/null 2>&1 && [ -f ".tribunal/project-profile.json" ]; then
       cov_info=$(node -e "
         try {
-          const p = JSON.parse(require('fs').readFileSync('.metaswarm/project-profile.json','utf-8'));
+          const p = JSON.parse(require('fs').readFileSync('.tribunal/project-profile.json','utf-8'));
           const t = p.choices?.coverage_threshold || p.coverage?.threshold || p.thresholds?.coverage || 100;
           const c = p.commands?.coverage || 'pytest --cov --cov-fail-under=' + t;
           console.log(t + '|' + c);
@@ -89,11 +89,11 @@ fi
 context_parts=()
 
 if [ "$new_project" = true ]; then
-  context_parts+=("Metaswarm is installed but this project hasn't been set up yet. Run \`/metaswarm:setup\` to configure it, or \`/metaswarm:start-task\` to begin working.")
+  context_parts+=("Tribunal is installed but this project hasn't been set up yet. Run \`/tribunal:setup\` to configure it, or \`/tribunal:start-task\` to begin working.")
 fi
 
 if [ "$legacy_install" = true ]; then
-  context_parts+=("This project has metaswarm installed via the old npm method. The marketplace plugin is now active and provides all the same skills and commands. Run \`/metaswarm:migrate\` to clean up the redundant copies — this is a safe, reversible operation that only removes duplicate framework files (your project files are never touched).")
+  context_parts+=("This project has tribunal installed via the old npm method. The marketplace plugin is now active and provides all the same skills and commands. Run \`/tribunal:migrate\` to clean up the redundant copies — this is a safe, reversible operation that only removes duplicate framework files (your project files are never touched).")
 fi
 
 # Knowledge priming (only if project is set up and BEADS isn't separately priming)

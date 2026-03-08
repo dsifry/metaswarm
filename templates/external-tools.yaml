@@ -1,6 +1,6 @@
 # External Tools Configuration
-# Copy to .metaswarm/external-tools.yaml in your project root to enable.
-# If this file is absent, external tools are not used (pure metaswarm behavior).
+# Copy to .tribunal/external-tools.yaml in your project root to enable.
+# If this file is absent, external tools are not used (pure tribunal behavior).
 
 adapters:
   codex:

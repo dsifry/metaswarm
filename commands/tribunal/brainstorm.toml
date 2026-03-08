@@ -1,5 +1,5 @@
 description = "Refine an idea through collaborative brainstorming before implementation"
-prompt = """Invoke the metaswarm brainstorm skill. The user wants to brainstorm and refine an idea.
+prompt = """Invoke the tribunal brainstorm skill. The user wants to brainstorm and refine an idea.
 
 Arguments provided by the user: {{args}}
 

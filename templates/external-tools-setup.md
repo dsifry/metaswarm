@@ -1,11 +1,11 @@
 # External Tools Setup Guide
 
 This guide helps you install and configure external AI CLI tools for use with
-metaswarm's cross-model delegation and adversarial review system.
+tribunal's cross-model delegation and adversarial review system.
 
 ## Overview
 
-metaswarm can delegate implementation and review tasks to external AI models,
+tribunal can delegate implementation and review tasks to external AI models,
 enabling cost savings and cross-model adversarial review. Two tools are
 supported in v1:
 
@@ -14,12 +14,12 @@ supported in v1:
 | **OpenAI Codex CLI** | ChatGPT Plus ($20/mo), Pro ($200/mo), or API key (pay-per-token) | Fast implementation with structured JSON output, strong at single-file TypeScript/Python tasks |
 | **Google Gemini CLI** | Free with Google login (1,000 req/day, 60/min on Gemini 2.5 Pro) or API key (free tier: 250 req/day, Flash only) | Cost-effective review and implementation, large context window, zero-cost entry point |
 
-You can install **one or both**. metaswarm adapts automatically based on what is
+You can install **one or both**. tribunal adapts automatically based on what is
 available:
 
 - **Both installed**: Full escalation chain (Model A -> Model B -> Claude -> You). Cross-model adversarial review with three different models.
 - **One installed**: Reduced chain (Model A -> Claude -> You). Cross-model review with two models.
-- **Neither installed**: Pure metaswarm behavior, unchanged. No external tools are invoked.
+- **Neither installed**: Pure tribunal behavior, unchanged. No external tools are invoked.
 
 ---
 
@@ -79,7 +79,7 @@ codex exec "print hello world in python" --ephemeral
 |---------|-------|----------|
 | `command not found: codex` | npm global bin directory is not in PATH | Run `npm bin -g` to find the path, then add it to your shell profile: `export PATH="$(npm bin -g):$PATH"` |
 | `rate_limit_exceeded` or 429 errors | Free/Go API tier has low rate limits | Upgrade your OpenAI plan, or switch to ChatGPT subscription auth (Option B) which has higher limits |
-| Codex hangs indefinitely | Known issue with some rate-limit responses; CLI waits instead of erroring | Press Ctrl+C, then update to the latest version: `npm update -g @openai/codex`. The metaswarm adapter wraps all invocations with a timeout to prevent hangs. |
+| Codex hangs indefinitely | Known issue with some rate-limit responses; CLI waits instead of erroring | Press Ctrl+C, then update to the latest version: `npm update -g @openai/codex`. The tribunal adapter wraps all invocations with a timeout to prevent hangs. |
 | `OPENAI_API_KEY` is set but auth fails | Key may be revoked, expired, or from a different org | Verify at https://platform.openai.com/api-keys. Generate a new key if needed. |
 
 ---
@@ -138,30 +138,30 @@ gemini "print hello world in python" --output-format json | jq .response
 | Problem | Cause | Solution |
 |---------|-------|----------|
 | `command not found: gemini` | npm global bin directory is not in PATH | Run `npm bin -g` to find the path, then add it to your shell profile: `export PATH="$(npm bin -g):$PATH"` |
-| Rate limit loop (CLI freezes or retries endlessly) | Exceeded daily or per-minute quota | Press Ctrl+C, wait a few minutes, and try again. Check your quota at https://aistudio.google.com/. The metaswarm adapter wraps invocations with a timeout to prevent infinite loops. |
+| Rate limit loop (CLI freezes or retries endlessly) | Exceeded daily or per-minute quota | Press Ctrl+C, wait a few minutes, and try again. Check your quota at https://aistudio.google.com/. The tribunal adapter wraps invocations with a timeout to prevent infinite loops. |
 | Node.js version error | Gemini CLI requires Node.js 20 or higher | Check your version: `node --version`. Upgrade if below v20. Use `nvm install 20` if you use nvm. |
 | Google login credentials not found | OAuth tokens may have expired or `~/.gemini/` was deleted | Run `gemini` interactively and re-authenticate with "Login with Google". |
 
 ---
 
-## 3. Configure metaswarm
+## 3. Configure tribunal
 
 ### Copy the config template
 
 ```bash
-mkdir -p .metaswarm
-cp templates/external-tools.yaml .metaswarm/external-tools.yaml
+mkdir -p .tribunal
+cp templates/external-tools.yaml .tribunal/external-tools.yaml
 ```
 
-If you cloned metaswarm into a different location, use the full path:
+If you cloned tribunal into a different location, use the full path:
 
 ```bash
-cp /path/to/metaswarm/templates/external-tools.yaml .metaswarm/external-tools.yaml
+cp /path/to/tribunal/templates/external-tools.yaml .tribunal/external-tools.yaml
 ```
 
 ### Key settings
 
-Edit `.metaswarm/external-tools.yaml` to customize:
+Edit `.tribunal/external-tools.yaml` to customize:
 
 ```yaml
 adapters:
@@ -193,7 +193,7 @@ budget:
   per_session_usd: 20.00         # Max total spend per session
 ```
 
-**Important**: If `.metaswarm/external-tools.yaml` is absent, metaswarm works
+**Important**: If `.tribunal/external-tools.yaml` is absent, tribunal works
 normally without any external tool invocations. The config file is entirely
 optional -- you only need it if you want to customize defaults.
 
@@ -204,7 +204,7 @@ optional -- you only need it if you want to customize defaults.
 Run health checks for all installed tools:
 
 ```bash
-# From your metaswarm installation directory:
+# From your tribunal installation directory:
 skills/external-tools/adapters/codex.sh health | jq .
 skills/external-tools/adapters/gemini.sh health | jq .
 ```
@@ -247,7 +247,7 @@ and config template existence.
 
 ## 5. How It Works
 
-Once external tools are installed and authenticated, the metaswarm orchestrator
+Once external tools are installed and authenticated, the tribunal orchestrator
 automatically handles everything. Here is what happens behind the scenes:
 
 ### Automatic routing

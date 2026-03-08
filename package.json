@@ -1,9 +1,9 @@
 {
-  "name": "metaswarm",
+  "name": "tribunal",
   "version": "0.10.0",
-  "description": "Cross-platform installer for metaswarm — multi-agent orchestration for Claude Code, Codex CLI, and Gemini CLI",
+  "description": "Cross-platform installer for Tribunal — multi-agent orchestration for Claude Code, Codex CLI, and Gemini CLI",
   "bin": {
-    "metaswarm": "cli/metaswarm.js"
+    "tribunal": "cli/tribunal.js"
   },
   "files": [
     "cli/",
@@ -30,12 +30,13 @@
     "agents",
     "orchestration",
     "tdd",
-    "beads"
+    "quality-gates",
+    "tribunal"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dsifry/metaswarm"
+    "url": "https://github.com/jpeggdev/tribunal"
   },
   "engines": {
     "node": ">=18"

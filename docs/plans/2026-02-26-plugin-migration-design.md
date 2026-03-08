@@ -1,4 +1,4 @@
-# Design: Migrate Metaswarm from npm Package to Claude Code Plugin
+# Design: Migrate Tribunal from npm Package to Claude Code Plugin
 
 **Date**: 2026-02-26
 **Status**: APPROVED — passed design review gate (5/5 agents, 3 iterations)
@@ -6,16 +6,16 @@
 
 ## Problem Statement
 
-Metaswarm is currently distributed as an npm package (`npx metaswarm init`) that copies files into the user's project. This creates three problems:
+Tribunal is currently distributed as an npm package (`npx tribunal init`) that copies files into the user's project. This creates three problems:
 
 1. **Installation friction**: Users need Node.js installed even for non-Node projects (Python, Go, Rust, etc.)
 2. **Stale versions**: Users run whatever version they installed. No automatic updates. Many run outdated copies.
-3. **Ecosystem misalignment**: Claude Code has a mature plugin system with marketplace distribution, auto-updates, and skill discovery. Metaswarm uses it partially (files land in `.claude/plugins/metaswarm/`) but bypasses the distribution mechanism entirely.
+3. **Ecosystem misalignment**: Claude Code has a mature plugin system with marketplace distribution, auto-updates, and skill discovery. Tribunal uses it partially (files land in `.claude/plugins/tribunal/`) but bypasses the distribution mechanism entirely.
 
 ## Goals
 
-- **Zero Node.js dependency for install and core usage** — install and run metaswarm from within Claude Code without Node.js. Some optional features (self-reflect scripts, PR comment fetching) require Node.js and are documented as such.
-- **One-command install** — `/plugin marketplace add dsifry/metaswarm-marketplace`
+- **Zero Node.js dependency for install and core usage** — install and run tribunal from within Claude Code without Node.js. Some optional features (self-reflect scripts, PR comment fetching) require Node.js and are documented as such.
+- **One-command install** — `/plugin marketplace add jpeggdev/tribunal-marketplace`
 - **Automatic updates** — marketplace auto-updater keeps users current
 - **Multi-CLI architecture** — structure supports future expansion to Codex, OpenCode, Cursor. Implementation of non-Claude spokes is future work, listed under Architecture Principles, not v1.0 deliverables.
 - **Backward compatible** — existing npm-installed users can migrate or keep working
@@ -23,7 +23,7 @@ Metaswarm is currently distributed as an npm package (`npx metaswarm init`) that
 ## Non-Goals
 
 - Implementing Codex/OpenCode/Cursor spokes in this release (architecture supports it, implementation is future work)
-- Changing metaswarm's orchestration logic, skills, or agent definitions
+- Changing tribunal's orchestration logic, skills, or agent definitions
 - Removing the BEADS integration
 - Renaming the project-local `.beads/` directory (this stays as-is; only the skill directory `skills/beads/` is renamed to `skills/start/`)
 
@@ -59,7 +59,7 @@ Adopting the same pattern as the superpowers plugin: **shared skills written in 
 | `.claude-plugin/` | Claude Code | `plugin.json`, `marketplace.json` | v1.0 (this release) |
 | `.cursor-plugin/` | Cursor | `plugin.json` with explicit paths | Future |
 | `.codex/` | Codex CLI | `INSTALL.md` (symlink instructions) | Future |
-| `.opencode/` | OpenCode | `INSTALL.md`, `plugins/metaswarm.js` | Future |
+| `.opencode/` | OpenCode | `INSTALL.md`, `plugins/tribunal.js` | Future |
 | `commands/` | Claude Code + Cursor | 11 slash commands | v1.0 |
 | `hooks/` | Claude Code + Cursor | SessionStart + PreCompact hooks | v1.0 |
 
@@ -92,7 +92,7 @@ Skills currently hardcode paths like `.claude/rubrics/adversarial-review-rubric.
 | Guides | `pr-shepherd/SKILL.md` | `guides/agent-coordination.md` | 1 |
 | Guides | `ORCHESTRATION.md` | `guides/agent-coordination.md` | 1 |
 | Agents | `ORCHESTRATION.md` | `.claude/plugins/your-project/skills/beads/agents/` | 1 |
-| Plugins | `metaswarm-setup.md` | `.claude/plugins/metaswarm/` | 2 |
+| Plugins | `tribunal-setup.md` | `.claude/plugins/tribunal/` | 2 |
 | Commands | `handling-pr-comments/SKILL.md` | `.claude/commands/handle-pr-comments.md` | 1 |
 | Commands | `create-issue/SKILL.md` | `.claude/commands/handle-pr-comments.md` | 1 |
 
@@ -121,10 +121,10 @@ Following the pattern established by superpowers (`requesting-code-review/code-r
 
 ## Repository Structure
 
-### Plugin Repo (`dsifry/metaswarm`)
+### Plugin Repo (`jpeggdev/tribunal`)
 
 ```
-metaswarm/
+tribunal/
 ├── .claude-plugin/
 │   └── plugin.json
 ├── .cursor-plugin/              # Future
@@ -133,7 +133,7 @@ metaswarm/
 │   └── INSTALL.md
 ├── .opencode/                   # Future
 │   ├── INSTALL.md
-│   └── plugins/metaswarm.js
+│   └── plugins/tribunal.js
 ├── skills/
 │   ├── start/                   # Main entry point (renamed from beads/)
 │   │   ├── SKILL.md             # Orchestration brain (was ORCHESTRATION.md)
@@ -150,7 +150,7 @@ metaswarm/
 │   ├── plan-review-gate/
 │   │   ├── SKILL.md
 │   │   └── rubrics/             # Co-located: plan-review-rubric-adversarial.md
-│   ├── setup/                   # NEW — replaces npx metaswarm init
+│   ├── setup/                   # NEW — replaces npx tribunal init
 │   │   ├── SKILL.md
 │   │   ├── templates/           # Co-located: all project scaffolding templates
 │   │   ├── knowledge/           # Co-located: JSONL templates
@@ -242,10 +242,10 @@ metaswarm/
     └── README.opencode.md       # Future
 ```
 
-### Marketplace Repo (`dsifry/metaswarm-marketplace`)
+### Marketplace Repo (`jpeggdev/tribunal-marketplace`)
 
 ```
-metaswarm-marketplace/
+tribunal-marketplace/
 └── .claude-plugin/
     └── marketplace.json
 ```
@@ -254,7 +254,7 @@ The marketplace repo is lightweight — just the manifest pointing to the plugin
 
 ```json
 {
-  "name": "metaswarm-marketplace",
+  "name": "tribunal-marketplace",
   "owner": {
     "name": "David Sifry",
     "email": "david@sifry.com"
@@ -265,10 +265,10 @@ The marketplace repo is lightweight — just the manifest pointing to the plugin
   },
   "plugins": [
     {
-      "name": "metaswarm",
+      "name": "tribunal",
       "source": {
         "source": "url",
-        "url": "https://github.com/dsifry/metaswarm.git",
+        "url": "https://github.com/jpeggdev/tribunal.git",
         "ref": "v1.0.0"
       },
       "description": "18-agent orchestration with quality gates, TDD enforcement, and knowledge capture",
@@ -281,23 +281,23 @@ The marketplace repo is lightweight — just the manifest pointing to the plugin
 }
 ```
 
-**Release process**: When metaswarm tags a new release (e.g., `v1.1.0`), update the marketplace.json `ref` and `version` fields and push. A CI workflow in the marketplace repo can automate this on tag events in the plugin repo.
+**Release process**: When tribunal tags a new release (e.g., `v1.1.0`), update the marketplace.json `ref` and `version` fields and push. A CI workflow in the marketplace repo can automate this on tag events in the plugin repo.
 
-**Install command**: `/plugin marketplace add dsifry/metaswarm-marketplace`
+**Install command**: `/plugin marketplace add jpeggdev/tribunal-marketplace`
 
 ## plugin.json Specification
 
 ```json
 {
-  "name": "metaswarm",
+  "name": "tribunal",
   "version": "1.0.0",
   "description": "Multi-agent orchestration framework for Claude Code — 18 agents, 9-phase workflow, quality gates, TDD enforcement",
   "author": {
     "name": "David Sifry",
     "email": "david@sifry.com"
   },
-  "homepage": "https://github.com/dsifry/metaswarm",
-  "repository": "https://github.com/dsifry/metaswarm",
+  "homepage": "https://github.com/jpeggdev/tribunal",
+  "repository": "https://github.com/jpeggdev/tribunal",
   "license": "MIT",
   "keywords": ["orchestration", "agents", "tdd", "quality-gates", "beads"]
 }
@@ -318,56 +318,56 @@ No explicit `skills`, `commands`, or `hooks` arrays needed in `plugin.json` when
 
 | User types | Resolves to | Mechanism |
 |---|---|---|
-| "use metaswarm to..." | `/metaswarm:start-task` | Auto-invoked via `start` skill description match |
-| `/start-task` | `/metaswarm:start-task` | Project-local shim (backward compat, canonical short form) |
-| `/metaswarm:start-task` | start-task flow | Direct plugin command (canonical namespaced form) |
+| "use tribunal to..." | `/tribunal:start-task` | Auto-invoked via `start` skill description match |
+| `/start-task` | `/tribunal:start-task` | Project-local shim (backward compat, canonical short form) |
+| `/tribunal:start-task` | start-task flow | Direct plugin command (canonical namespaced form) |
 
 **Canonical form**: `/start-task` (short, matches existing muscle memory)
-**Namespaced form**: `/metaswarm:start-task` (explicit, used in documentation)
-**Natural language**: "use metaswarm to..." (auto-invoked, unavoidable)
+**Namespaced form**: `/tribunal:start-task` (explicit, used in documentation)
+**Natural language**: "use tribunal to..." (auto-invoked, unavoidable)
 
-The `skills/start/SKILL.md` has description: "Use when starting work on any task, when the user mentions metaswarm, or when the user wants to begin tracked development work." This triggers auto-invocation on natural language mentions.
+The `skills/start/SKILL.md` has description: "Use when starting work on any task, when the user mentions tribunal, or when the user wants to begin tracked development work." This triggers auto-invocation on natural language mentions.
 
-**Eliminated**: `/metaswarm:metaswarm` (stuttering anti-pattern) and `/metaswarm` shim (redundant with `/start-task`).
+**Eliminated**: `/tribunal:tribunal` (stuttering anti-pattern) and `/tribunal` shim (redundant with `/start-task`).
 
 ### Plugin commands (always available after install)
 
 | Command | Purpose |
 |---|---|
-| `/metaswarm:start-task` | Begin tracked work with complexity assessment |
-| `/metaswarm:prime` | Load knowledge base into context |
-| `/metaswarm:review-design` | Trigger 5-agent design review gate |
-| `/metaswarm:self-reflect` | Extract learnings after PR merge |
-| `/metaswarm:pr-shepherd` | Monitor PR through to merge |
-| `/metaswarm:handle-pr-comments` | Handle PR review comments |
-| `/metaswarm:create-issue` | Create well-structured GitHub Issue |
-| `/metaswarm:brainstorm` | Brainstorming extension (wraps superpowers:brainstorming) |
-| `/metaswarm:external-tools-health` | Check external AI tools status |
-| `/metaswarm:setup` | Interactive project setup (replaces npx metaswarm init) |
-| `/metaswarm:update` | Check for and apply updates |
+| `/tribunal:start-task` | Begin tracked work with complexity assessment |
+| `/tribunal:prime` | Load knowledge base into context |
+| `/tribunal:review-design` | Trigger 5-agent design review gate |
+| `/tribunal:self-reflect` | Extract learnings after PR merge |
+| `/tribunal:pr-shepherd` | Monitor PR through to merge |
+| `/tribunal:handle-pr-comments` | Handle PR review comments |
+| `/tribunal:create-issue` | Create well-structured GitHub Issue |
+| `/tribunal:brainstorm` | Brainstorming extension (wraps superpowers:brainstorming) |
+| `/tribunal:external-tools-health` | Check external AI tools status |
+| `/tribunal:setup` | Interactive project setup (replaces npx tribunal init) |
+| `/tribunal:update` | Check for and apply updates |
 
-### Project-local shims (created by `/metaswarm:setup`)
+### Project-local shims (created by `/tribunal:setup`)
 
 6 thin `.claude/commands/` files for high-frequency commands. Each shim includes a comment explaining its purpose:
 
 ```markdown
-<!-- Created by metaswarm setup. Routes to the metaswarm plugin. Safe to delete if you uninstall metaswarm. -->
+<!-- Created by tribunal setup. Routes to the tribunal plugin. Safe to delete if you uninstall tribunal. -->
 ```
 
 | Shim | Routes to | Why shimmed |
 |---|---|---|
-| `/start-task` | `/metaswarm:start-task` | Primary entry point, referenced in CLAUDE.md |
-| `/prime` | `/metaswarm:prime` | Used in every session, referenced in workflow rules |
-| `/review-design` | `/metaswarm:review-design` | Referenced in CLAUDE.md workflow enforcement |
-| `/self-reflect` | `/metaswarm:self-reflect` | Referenced in CLAUDE.md workflow enforcement |
-| `/pr-shepherd` | `/metaswarm:pr-shepherd` | High frequency for PR workflows |
-| `/brainstorm` | `/metaswarm:brainstorm` | High frequency, referenced in CLAUDE.md |
+| `/start-task` | `/tribunal:start-task` | Primary entry point, referenced in CLAUDE.md |
+| `/prime` | `/tribunal:prime` | Used in every session, referenced in workflow rules |
+| `/review-design` | `/tribunal:review-design` | Referenced in CLAUDE.md workflow enforcement |
+| `/self-reflect` | `/tribunal:self-reflect` | Referenced in CLAUDE.md workflow enforcement |
+| `/pr-shepherd` | `/tribunal:pr-shepherd` | High frequency for PR workflows |
+| `/brainstorm` | `/tribunal:brainstorm` | High frequency, referenced in CLAUDE.md |
 
 **Selection criteria**: Shimmed commands are those referenced in CLAUDE.md workflow enforcement rules or invoked 10+ times per week in typical usage.
 
-**Not shimmed** (lower frequency, explicit namespace): `/metaswarm:setup`, `/metaswarm:update`, `/metaswarm:handle-pr-comments`, `/metaswarm:create-issue`, `/metaswarm:external-tools-health`, `/metaswarm:status`.
+**Not shimmed** (lower frequency, explicit namespace): `/tribunal:setup`, `/tribunal:update`, `/tribunal:handle-pr-comments`, `/tribunal:create-issue`, `/tribunal:external-tools-health`, `/tribunal:status`.
 
-**Brainstorming interaction**: `/metaswarm:brainstorm` wraps `superpowers:brainstorming` with metaswarm's extension (design review gate handoff). If superpowers is not installed, the command provides standalone brainstorming. The shim `/brainstorm` routes to `/metaswarm:brainstorm`, not directly to superpowers.
+**Brainstorming interaction**: `/tribunal:brainstorm` wraps `superpowers:brainstorming` with tribunal's extension (design review gate handoff). If superpowers is not installed, the command provides standalone brainstorming. The shim `/brainstorm` routes to `/tribunal:brainstorm`, not directly to superpowers.
 
 ## SessionStart Hook
 
@@ -412,15 +412,15 @@ Four-phase detection:
 
 1. **BEADS dedup check** — if standalone BEADS plugin is also installed, skip `bd prime` (let BEADS handle it). Detection is robust: check if `~/.claude/plugins/cache/` contains a directory matching `*/beads/*/` AND that directory contains a `.claude-plugin/plugin.json` with `"name": "beads"`. Simple directory existence is not sufficient (prevents spoofing).
 
-2. **New project detection** — check if `.metaswarm/project-profile.json` exists in CWD. If not, inject nudge: "Metaswarm is installed but this project hasn't been set up yet. Run `/metaswarm:setup` to configure it, or `/metaswarm:start-task` to begin working."
+2. **New project detection** — check if `.tribunal/project-profile.json` exists in CWD. If not, inject nudge: "Tribunal is installed but this project hasn't been set up yet. Run `/tribunal:setup` to configure it, or `/tribunal:start-task` to begin working."
 
-3. **Legacy install detection** — check if `.claude/plugins/metaswarm/.claude-plugin/plugin.json` exists as a project-embedded plugin (old npm install). If found, inject migration message: "This project has metaswarm installed via the old npm method. Run `/metaswarm:migrate` to switch to the marketplace plugin for automatic updates."
+3. **Legacy install detection** — check if `.claude/plugins/tribunal/.claude-plugin/plugin.json` exists as a project-embedded plugin (old npm install). If found, inject migration message: "This project has tribunal installed via the old npm method. Run `/tribunal:migrate` to switch to the marketplace plugin for automatic updates."
 
 4. **Knowledge priming** — if project IS set up and BEADS plugin is NOT separately priming, run `bd prime` (if `bd` is available) to load knowledge base.
 
-## Setup Skill (`/metaswarm:setup`)
+## Setup Skill (`/tribunal:setup`)
 
-Replaces both `npx metaswarm init` and the old `/metaswarm-setup` command. Runs entirely inside Claude Code using standard tools.
+Replaces both `npx tribunal init` and the old `/tribunal-setup` command. Runs entirely inside Claude Code using standard tools.
 
 ### What it does
 
@@ -441,8 +441,8 @@ The setup skill has all templates, knowledge bases, bin scripts, and TS scripts 
 |---|---|---|
 | `CLAUDE.md` | `./templates/CLAUDE.md` | Customized with detected project info |
 | `.coverage-thresholds.json` | `./templates/coverage-thresholds.json` | Threshold from user's answer |
-| `.metaswarm/project-profile.json` | Generated | Detection results + choices |
-| `.metaswarm/external-tools.yaml` | `./templates/external-tools.yaml` | If external tools enabled |
+| `.tribunal/project-profile.json` | Generated | Detection results + choices |
+| `.tribunal/external-tools.yaml` | `./templates/external-tools.yaml` | If external tools enabled |
 | `.beads/knowledge/*.jsonl` | `./knowledge/` | Empty knowledge base templates |
 | `bin/*.sh` | `./bin/` | Shell utilities |
 | `scripts/*.ts` | `./scripts/` | Automation scripts (requires Node.js) |
@@ -461,53 +461,53 @@ The setup skill co-locates all templates within its own directory (`skills/setup
 The `scripts/*.ts` files require `npx tsx` to execute. During setup, if the project does not have Node.js installed, the setup skill:
 - Still copies the scripts (they're needed if Node.js is added later)
 - Warns: "Some advanced features (self-reflect, PR comment fetching) require Node.js. These scripts will work once Node.js is available."
-- Core metaswarm functionality (orchestration, quality gates, TDD) works without Node.js
+- Core tribunal functionality (orchestration, quality gates, TDD) works without Node.js
 
-## Migration Skill (`/metaswarm:migrate`)
+## Migration Skill (`/tribunal:migrate`)
 
-For users who installed via the old `npx metaswarm init` path.
+For users who installed via the old `npx tribunal init` path.
 
 ### Safety protocol
 
 1. **Pre-flight check**: Verify the marketplace plugin is loaded and functional before removing anything
 2. **Dry run preview**: Generate and display a complete list of files that will be removed
-3. **Content verification**: For each file to be removed, verify it matches a known metaswarm file (check for metaswarm header/attribution comment, or compare content hash against known templates). Files that have been modified by the user are flagged as "customized — review before deleting" and are NOT auto-deleted
+3. **Content verification**: For each file to be removed, verify it matches a known tribunal file (check for tribunal header/attribution comment, or compare content hash against known templates). Files that have been modified by the user are flagged as "customized — review before deleting" and are NOT auto-deleted
 4. **User confirmation**: Present the deletion list via AskUserQuestion and require explicit approval
 5. **Git safety**: Recommend `git stash` or commit before proceeding. The migration skill checks for uncommitted changes and warns if present.
 
 ### What it does (after user confirms)
 
 1. **Removes plugin-managed files** (only unmodified ones):
-   - `.claude/plugins/metaswarm/` (entire embedded plugin directory)
-   - `.claude/rubrics/*` files matching metaswarm content hashes
-   - `.claude/guides/*` files matching metaswarm content hashes
-   - `.claude/commands/metaswarm-setup.md` (old setup command)
-   - `.claude/commands/metaswarm-update-version.md` (old update command)
+   - `.claude/plugins/tribunal/` (entire embedded plugin directory)
+   - `.claude/rubrics/*` files matching tribunal content hashes
+   - `.claude/guides/*` files matching tribunal content hashes
+   - `.claude/commands/tribunal-setup.md` (old setup command)
+   - `.claude/commands/tribunal-update-version.md` (old update command)
 2. **Keeps project-local files** (untouched):
    - `CLAUDE.md`
    - `.coverage-thresholds.json`
-   - `.metaswarm/project-profile.json`
+   - `.tribunal/project-profile.json`
    - `.beads/knowledge/`
    - `bin/`, `scripts/`
    - `.github/workflows/`
 3. **Writes command shims** — same 6 shims as setup
-4. **Updates profile** — sets `"distribution": "plugin"` in `.metaswarm/project-profile.json`
+4. **Updates profile** — sets `"distribution": "plugin"` in `.tribunal/project-profile.json`
 5. **Prompts commit** — suggests committing the cleanup
 
 ### Rollback
 
 If migration fails or the user wants to revert:
 - The migration skill does NOT delete files that were already staged or committed — it uses `git rm` so changes are reversible via `git checkout`
-- If the marketplace plugin fails to load after migration, running `npx metaswarm install` (v0.9.0) restores the embedded files
+- If the marketplace plugin fails to load after migration, running `npx tribunal install` (v0.9.0) restores the embedded files
 - Migration documention includes manual recovery steps
 
-## Status Skill (`/metaswarm:status`)
+## Status Skill (`/tribunal:status`)
 
 New diagnostic command for troubleshooting.
 
 Reports:
 - Installed plugin version
-- Whether project setup has been run (`.metaswarm/project-profile.json` exists)
+- Whether project setup has been run (`.tribunal/project-profile.json` exists)
 - Whether command shims are in place
 - Whether legacy embedded plugin is detected (conflict)
 - Whether BEADS plugin is separately installed
@@ -563,11 +563,11 @@ input_cost_per_token=$(awk -v rate="$input_cost_rate" 'BEGIN {print rate / 10000
 
 ### `skills/beads/` → `skills/start/`
 
-The main orchestration skill directory is renamed from `beads/` to `start/`. This yields the plugin command `/metaswarm:start` which is clear, non-stuttering, and semantically meaningful.
+The main orchestration skill directory is renamed from `beads/` to `start/`. This yields the plugin command `/tribunal:start` which is clear, non-stuttering, and semantically meaningful.
 
 - The skill's YAML frontmatter `name:` field is updated to `start`
-- The description triggers auto-invocation: "Use when starting work on any task, when the user mentions metaswarm, or when the user wants to begin tracked development work"
-- `/metaswarm:start-task` (command) routes to the `start` skill
+- The description triggers auto-invocation: "Use when starting work on any task, when the user mentions tribunal, or when the user wants to begin tracked development work"
+- `/tribunal:start-task` (command) routes to the `start` skill
 
 ### Project-local `.beads/` directory — UNCHANGED
 
@@ -581,7 +581,7 @@ The TypeScript scripts retain their `beads-` prefix since they are BEADS-specifi
 
 ### Existing npm-installed users
 
-- **Their projects keep working as-is** — the embedded `.claude/plugins/metaswarm/` directory still functions as a local plugin
+- **Their projects keep working as-is** — the embedded `.claude/plugins/tribunal/` directory still functions as a local plugin
 - **They won't get automatic updates** — same as today, running a snapshot
 - **No forced migration** — old and new can coexist. SessionStart hook gently nudges them
 
@@ -597,11 +597,11 @@ When both the old embedded plugin and new marketplace plugin are loaded:
 
 1. **v0.9.0 (final npm release)**: Publish npm package that:
    - Still works normally (init + install)
-   - Prints deprecation notice on install: "metaswarm has moved to a Claude Code plugin. Install with: `/plugin marketplace add dsifry/metaswarm-marketplace`"
+   - Prints deprecation notice on install: "tribunal has moved to a Claude Code plugin. Install with: `/plugin marketplace add jpeggdev/tribunal-marketplace`"
    - Updates README with migration instructions
    - Includes the security fixes (CI template, awk)
 
-2. **v1.0.0 (plugin release)**: First marketplace release. Full plugin distribution. `/metaswarm:migrate` skill handles cleanup.
+2. **v1.0.0 (plugin release)**: First marketplace release. Full plugin distribution. `/tribunal:migrate` skill handles cleanup.
 
 3. **v0.9.0 npm stays published indefinitely** — never yanked, just deprecated. Users who can't use the plugin system (air-gapped, old Claude Code version) still have a path.
 
@@ -609,7 +609,7 @@ When both the old embedded plugin and new marketplace plugin are loaded:
 
 - npm v0.8.0 (current) → npm v0.9.0 (final, deprecated) → plugin v1.0.0 (first marketplace release)
 - Going forward, only plugin versions are tracked. Semver continues from v1.0.0
-- The migration skill validates: if `.metaswarm/project-profile.json` shows `metaswarm_version < 0.8.0`, warn that manual intervention may be needed
+- The migration skill validates: if `.tribunal/project-profile.json` shows `tribunal_version < 0.8.0`, warn that manual intervention may be needed
 
 ## Breaking Changes
 
@@ -617,7 +617,7 @@ When both the old embedded plugin and new marketplace plugin are loaded:
 |-----------|-----------|--------|
 | Skills (13) | No | Load from plugin cache — transparent. Path references updated to relative |
 | Agents (18) | No | Co-located under `skills/start/agents/` — transparent |
-| Commands (11) | Soft | `/start-task` works via shim. `/metaswarm-setup` → `/metaswarm:setup`. `/metaswarm-update-version` → `/metaswarm:update` |
+| Commands (11) | Soft | `/start-task` works via shim. `/tribunal-setup` → `/tribunal:setup`. `/tribunal-update-version` → `/tribunal:update` |
 | Rubrics (8) | No | Auto-discovered from plugin `rubrics/` dir. Also co-located in skills that reference them |
 | Guides (6) | No | Auto-discovered from plugin `guides/` dir. Also co-located in skills that reference them |
 | CLAUDE.md | No | Still project-local |
@@ -627,12 +627,12 @@ When both the old embedded plugin and new marketplace plugin are loaded:
 
 ## `bd` CLI Dependency
 
-The `bd` CLI (BEADS) is used for knowledge priming, issue tracking, and self-reflection. It is NOT bundled with the metaswarm plugin — it is installed separately.
+The `bd` CLI (BEADS) is used for knowledge priming, issue tracking, and self-reflection. It is NOT bundled with the tribunal plugin — it is installed separately.
 
 **When `bd` is not installed**:
 - SessionStart hook skips knowledge priming (no error)
-- `/metaswarm:prime` warns: "bd CLI not found. Install BEADS for knowledge base features."
-- `/metaswarm:self-reflect` warns: "bd CLI required for self-reflection. See BEADS documentation."
+- `/tribunal:prime` warns: "bd CLI not found. Install BEADS for knowledge base features."
+- `/tribunal:self-reflect` warns: "bd CLI required for self-reflection. See BEADS documentation."
 - Core orchestration (start-task, design review, plan review, orchestrated execution) works without `bd`
 - Issue tracking falls back to GitHub Issues via `gh`
 
@@ -643,7 +643,7 @@ The `bd` CLI (BEADS) is used for knowledge priming, issue tracking, and self-ref
 | Risk | Severity | Mitigation |
 |------|----------|------------|
 | Relative path resolution in skills is fragile (first-attempt CWD bug, Issue #11011) | Medium | Co-locate resources with skills. Use `./` prefix consistently. Test all skill paths during validation |
-| Users have both old embedded plugin + new marketplace plugin | Medium | SessionStart hook detects conflict. Marketplace plugin takes precedence. `/metaswarm:migrate` resolves |
+| Users have both old embedded plugin + new marketplace plugin | Medium | SessionStart hook detects conflict. Marketplace plugin takes precedence. `/tribunal:migrate` resolves |
 | Marketplace auto-update pushes bad release | Medium | Pin marketplace.json to specific git tag + SHA. Rollback = update ref to previous tag |
 | Setup skill can't write files in some permission modes | Low | Standard Write/Bash tools — works in all modes with user approval |
 | BEADS plugin conflict (double bd prime) | Low | SessionStart hook validates BEADS plugin.json content, not just directory existence |
@@ -681,15 +681,15 @@ The `bd` CLI (BEADS) is used for knowledge priming, issue tracking, and self-ref
 
 ## Success Criteria
 
-- [ ] `npx metaswarm` is no longer required for new users
-- [ ] Plugin installs via `/plugin marketplace add dsifry/metaswarm-marketplace`
-- [ ] `/metaswarm:setup` fully replaces `npx metaswarm init` + `/metaswarm-setup`
+- [ ] `npx tribunal` is no longer required for new users
+- [ ] Plugin installs via `/plugin marketplace add jpeggdev/tribunal-marketplace`
+- [ ] `/tribunal:setup` fully replaces `npx tribunal init` + `/tribunal-setup`
 - [ ] All 13 skills load correctly from plugin cache (verified with `/plugin validate .`)
 - [ ] All 11 commands appear in autocomplete
 - [ ] SessionStart hook detects new projects, legacy installs, and BEADS dedup
 - [ ] PreCompact hook re-injects context before compaction
-- [ ] `/metaswarm:migrate` cleanly transitions old installs with safety protocol
-- [ ] `/metaswarm:status` reports accurate diagnostic information
+- [ ] `/tribunal:migrate` cleanly transitions old installs with safety protocol
+- [ ] `/tribunal:status` reports accurate diagnostic information
 - [ ] Existing npm-installed projects continue working without changes
 - [ ] Architecture supports future CLI spokes without modifying shared skills
 - [ ] CI template is safe from command injection
@@ -711,10 +711,10 @@ Items identified during design review that must be addressed during implementati
 9. **Test case: dual-plugin conflict** — manual test scenario for both embedded and marketplace plugin loaded simultaneously. (CTO review, iteration 2)
 10. **PreCompact matcher validation** — confirm empty string `""` matches all compaction events per Claude Code documentation. (PM review, iteration 2)
 11. **`rubrics/` and `guides/` are NOT plugin-auto-discovered** — only `skills/`, `commands/`, `agents/`, `hooks/` are auto-discovered. Top-level `rubrics/` and `guides/` dirs serve as authoritative sync sources only. Correct the "auto-discovery" language in the design. (Architect review, iteration 3)
-12. **Use `"source": "github"` in marketplace.json** — change from `"source": "url", "url": "https://github.com/dsifry/metaswarm.git"` to `"source": "github", "repo": "dsifry/metaswarm"` since the repo is on GitHub. (Architect review, iteration 3)
+12. **Use `"source": "github"` in marketplace.json** — change from `"source": "url", "url": "https://github.com/jpeggdev/tribunal.git"` to `"source": "github", "repo": "jpeggdev/tribunal"` since the repo is on GitHub. (Architect review, iteration 3)
 13. **Hook output format** — `session-start.sh` must output JSON in `hookSpecificOutput.additionalContext` format (matching superpowers pattern). Document the output contract. (Architect review, iteration 3)
-14. **Missing `commands/status.md`** — add to repo structure or document that `/metaswarm:status` is skill-only. (CTO review, iteration 3)
+14. **Missing `commands/status.md`** — add to repo structure or document that `/tribunal:status` is skill-only. (CTO review, iteration 3)
 15. **`typescript-patterns.md` phantom scope** — reference appears in 4 files (coder-agent.md, architecture-rubric.md, security-review-rubric.md, code-review-rubric.md), not just 1. Expand item #2. (CTO review, iteration 3)
-16. **`package.json` disposition after v1.0.0** — update `cli/metaswarm.js` to print deprecation message and exit, or remove `bin` field. (CTO review, iteration 3)
+16. **`package.json` disposition after v1.0.0** — update `cli/tribunal.js` to print deprecation message and exit, or remove `bin` field. (CTO review, iteration 3)
 17. **`session-start.sh` fallback when neither `jq` nor `node` available** — safe default: skip BEADS dedup check, allow both to prime (harmless redundancy). (CTO review, iteration 3)
-18. **`/start-task` should detect missing setup** — if `.metaswarm/project-profile.json` is absent, auto-route to `/metaswarm:setup` rather than relying solely on SessionStart hook. (Designer review, iteration 3)
+18. **`/start-task` should detect missing setup** — if `.tribunal/project-profile.json` is absent, auto-route to `/tribunal:setup` rather than relying solely on SessionStart hook. (Designer review, iteration 3)

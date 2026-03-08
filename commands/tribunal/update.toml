@@ -1,5 +1,5 @@
-description = "Update metaswarm to the latest version"
-prompt = """Invoke the metaswarm update skill. The user wants to update metaswarm.
+description = "Update tribunal to the latest version"
+prompt = """Invoke the tribunal update skill. The user wants to update tribunal.
 
 Arguments provided by the user: {{args}}
 

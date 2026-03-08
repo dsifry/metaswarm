@@ -2,7 +2,7 @@
 
 ## Agents
 
-metaswarm provides 18 specialized agents, each with a defined role in the software development lifecycle.
+tribunal provides 18 specialized agents, each with a defined role in the software development lifecycle.
 
 ### Orchestration Agents
 
@@ -54,7 +54,7 @@ metaswarm provides 18 specialized agents, each with a defined role in the softwa
 
 ## Guides
 
-metaswarm ships 6 development guides in the `guides/` directory. These are reference documents for agents and humans working in the project.
+tribunal ships 6 development guides in the `guides/` directory. These are reference documents for agents and humans working in the project.
 
 | Guide | File | Covers |
 |---|---|---|
@@ -78,7 +78,7 @@ Not every task needs the full orchestration machinery. Use the right level of pr
 
 ### Team Mode
 
-metaswarm automatically detects **Team Mode** when multiple Claude Code sessions are active on the same repository (e.g., in different worktrees or terminals). In Team Mode, agents behave as persistent teammates with context retention across sessions and direct inter-agent messaging for coordination. Mode detection is automatic — no configuration needed. See `guides/agent-coordination.md` for the full Team Mode protocol.
+tribunal automatically detects **Team Mode** when multiple Claude Code sessions are active on the same repository (e.g., in different worktrees or terminals). In Team Mode, agents behave as persistent teammates with context retention across sessions and direct inter-agent messaging for coordination. Mode detection is automatic — no configuration needed. See `guides/agent-coordination.md` for the full Team Mode protocol.
 
 **When to use Orchestrated Execution:**
 
@@ -190,7 +190,7 @@ Delegates implementation and review tasks to external AI CLI tools (OpenAI Codex
 - **Budget enforcement**: Per-task and per-session USD circuit breakers
 - **Health checks**: `/external-tools-health` verifies installation, authentication, and reachability
 
-Configuration: `.metaswarm/external-tools.yaml`. See `templates/external-tools-setup.md` for setup.
+Configuration: `.tribunal/external-tools.yaml`. See `templates/external-tools-setup.md` for setup.
 
 ### Visual Review
 
@@ -213,7 +213,7 @@ Prerequisites: `npx playwright install chromium`
 | `/start-task <id>` | Begin a BEADS-tracked task with full workflow |
 | `/start` | Alias for `/start-task` |
 | `/setup` | Interactive project setup — detects language, framework, test runner, and configures everything |
-| `/update` | Update metaswarm plugin to latest version |
+| `/update` | Update tribunal plugin to latest version |
 | `/status` | Run 9 diagnostic checks on your installation |
 | `/prime` | Load relevant knowledge before starting work |
 | `/review-design <path>` | Run the 6-agent Design Review Gate |
@@ -223,8 +223,8 @@ Prerequisites: `npx playwright install chromium`
 | `/handle-pr-comments <pr>` | Address PR review feedback |
 | `/create-issue` | Create a GitHub issue with agent instructions |
 | `/external-tools-health` | Check status of external AI tools (Codex, Gemini) |
-| `/metaswarm-setup` | Legacy alias for `/setup` |
-| `/metaswarm-update-version` | Legacy alias for `/update` |
+| `/tribunal-setup` | Legacy alias for `/setup` |
+| `/tribunal-update-version` | Legacy alias for `/update` |
 
 ## BEADS CLI Reference
 
@@ -286,7 +286,7 @@ All files in `knowledge/` use JSONL format:
 
 ## Coverage Enforcement
 
-metaswarm supports configurable test coverage thresholds that block PR creation and task completion. This ensures agents cannot ship code that drops coverage below your project's standards.
+tribunal supports configurable test coverage thresholds that block PR creation and task completion. This ensures agents cannot ship code that drops coverage below your project's standards.
 
 ### Setup
 
@@ -361,7 +361,7 @@ This way both agents and CI enforce the same thresholds from a single file.
 
 ### Automated Enforcement Gates
 
-Beyond agent checklists, metaswarm provides two automated enforcement mechanisms:
+Beyond agent checklists, tribunal provides two automated enforcement mechanisms:
 
 - **CI Job**: A GitHub Actions job template (`templates/ci-coverage-job.yml`) that reads and runs `enforcement.command` from `.coverage-thresholds.json`. Add it to your workflow to block merges on coverage failures.
 - **Pre-push Hook**: A Husky-compatible hook (`templates/pre-push`) that runs lint, typecheck, format checks, and coverage enforcement before every `git push`. Configured automatically by `/setup` when `.husky/` exists.

@@ -1,5 +1,5 @@
 description = "Load relevant knowledge from the BEADS knowledge base before starting work"
-prompt = """Invoke the metaswarm prime skill. The user wants to prime their context with relevant knowledge.
+prompt = """Invoke the tribunal prime skill. The user wants to prime their context with relevant knowledge.
 
 Arguments provided by the user: {{args}}
 

@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework. It provides 18 specialized agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [tribunal](https://github.com/jpeggdev/tribunal), a multi-agent orchestration framework. It provides 18 specialized agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
 
 ## How to Work in This Project
 
@@ -18,7 +18,7 @@ Describe what you want built, include a Definition of Done, and ask for the full
 
 ```text
 I want you to build [description]. [Tech stack, DoD items, file scope.]
-Use the full metaswarm orchestration workflow.
+Use the full tribunal orchestration workflow.
 ```
 
 This triggers the full pipeline: Research, Plan, Design Review Gate, Work Unit Decomposition, Orchestrated Execution (4-phase loop per unit), Final Review, PR.
@@ -63,7 +63,7 @@ If a GitHub Issue specifies different coverage requirements, update `.coverage-t
 
 ## Workflow Enforcement (MANDATORY)
 
-These rules override any conflicting instructions. They ensure the full metaswarm pipeline is followed.
+These rules override any conflicting instructions. They ensure the full tribunal pipeline is followed.
 
 ### After Brainstorming
 
@@ -96,7 +96,7 @@ When a plan is produced:
 
 ## External Tools (Optional)
 
-If external AI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator can delegate implementation and review tasks to Codex CLI and Gemini CLI for cost savings and cross-model adversarial review.
+If external AI tools are configured (`.tribunal/external-tools.yaml`), the orchestrator can delegate implementation and review tasks to Codex CLI and Gemini CLI for cost savings and cross-model adversarial review.
 
 ## Guides
 

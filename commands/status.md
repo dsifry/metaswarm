@@ -1,6 +1,6 @@
 # Status
 
-Show metaswarm diagnostic information.
+Show tribunal diagnostic information.
 
 ## Usage
 
@@ -10,7 +10,7 @@ Show metaswarm diagnostic information.
 
 ## Behavior
 
-Invokes the `metaswarm:status` skill, which reports:
+Invokes the `tribunal:status` skill, which reports:
 
 - Installed plugin version
 - Project setup state
@@ -25,5 +25,5 @@ Use this to troubleshoot installation or configuration issues.
 
 ## Related
 
-- `/metaswarm:setup` — configure metaswarm for a project
-- `/metaswarm:migrate` — migrate from npm-installed metaswarm
+- `/tribunal:setup` — configure tribunal for a project
+- `/tribunal:migrate` — migrate from npm-installed tribunal

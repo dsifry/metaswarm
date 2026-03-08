@@ -1,12 +1,12 @@
 # Installation
 
-metaswarm works with Claude Code, Gemini CLI, and Codex CLI. Install for one platform or all three.
+tribunal works with Claude Code, Gemini CLI, and Codex CLI. Install for one platform or all three.
 
 ## Claude Code (Plugin Marketplace)
 
 ```bash
-claude plugin marketplace add dsifry/metaswarm-marketplace
-claude plugin install metaswarm
+claude plugin marketplace add jpeggdev/tribunal-marketplace
+claude plugin install tribunal
 ```
 
 Then in Claude Code:
@@ -18,19 +18,19 @@ Then in Claude Code:
 ## Gemini CLI (Extension)
 
 ```bash
-gemini extensions install https://github.com/dsifry/metaswarm.git
+gemini extensions install https://github.com/jpeggdev/tribunal.git
 ```
 
 Then in Gemini CLI:
 
 ```text
-/metaswarm:setup
+/tribunal:setup
 ```
 
 ## Codex CLI (Skills)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jpeggdev/tribunal/main/.codex/install.sh | bash
 ```
 
 Then in Codex CLI:
@@ -41,24 +41,24 @@ $setup
 
 ## Cross-Platform Installer
 
-Detect all installed CLIs and install metaswarm for each:
+Detect all installed CLIs and install tribunal for each:
 
 ```bash
-npx metaswarm init
+npx tribunal init
 ```
 
 Or target a specific platform:
 
 ```bash
-npx metaswarm init --claude
-npx metaswarm init --codex
-npx metaswarm init --gemini
+npx tribunal init --claude
+npx tribunal init --codex
+npx tribunal init --gemini
 ```
 
 After installing, set up your project:
 
 ```bash
-npx metaswarm setup
+npx tribunal setup
 ```
 
 ## Platform Comparison
@@ -66,10 +66,10 @@ npx metaswarm setup
 | Feature | Claude Code | Gemini CLI | Codex CLI |
 |---|---|---|---|
 | Install method | Plugin marketplace | `gemini extensions install` | Clone + symlink |
-| Commands | `/start-task` | `/metaswarm:start-task` | `$start` |
+| Commands | `/start-task` | `/tribunal:start-task` | `$start` |
 | Instruction file | `CLAUDE.md` | `GEMINI.md` | `AGENTS.md` |
 | Parallel agents | Full (`Task()`) | Experimental | Sequential only |
-| Setup command | `/setup` | `/metaswarm:setup` | `$setup` |
+| Setup command | `/setup` | `/tribunal:setup` | `$setup` |
 
 ## Prerequisites
 
@@ -87,7 +87,7 @@ npx metaswarm setup
 
 ## External Dependencies
 
-metaswarm's skills reference these external skills from the [superpowers](https://github.com/obra/superpowers) Claude Code plugin:
+tribunal's skills reference these external skills from the [superpowers](https://github.com/obra/superpowers) Claude Code plugin:
 
 | Skill | Used By | Purpose |
 |---|---|---|
@@ -103,11 +103,11 @@ metaswarm's skills reference these external skills from the [superpowers](https:
 claude plugin add obra/superpowers
 ```
 
-**Without superpowers**: metaswarm still works — the core orchestration (agents, BEADS, review gates, rubrics) is self-contained. The superpowers references are in skill trigger chains and can be removed or replaced with your own equivalents.
+**Without superpowers**: tribunal still works — the core orchestration (agents, BEADS, review gates, rubrics) is self-contained. The superpowers references are in skill trigger chains and can be removed or replaced with your own equivalents.
 
 ## Optional: External AI Tools
 
-metaswarm can delegate implementation and review tasks to **Codex CLI** (OpenAI) and **Gemini CLI** (Google) for cost savings and cross-model adversarial review. This is entirely optional — metaswarm works fine without any external tools.
+tribunal can delegate implementation and review tasks to **Codex CLI** (OpenAI) and **Gemini CLI** (Google) for cost savings and cross-model adversarial review. This is entirely optional — tribunal works fine without any external tools.
 
 **Quick setup:**
 
@@ -127,23 +127,23 @@ This checks that each tool is installed, authenticated, and responsive.
 
 ## Upgrading to v0.9.0
 
-v0.9.0 moved metaswarm from npm distribution to the Claude Code plugin marketplace. If you're on an older version, follow the instructions for your situation:
+v0.9.0 moved tribunal from npm distribution to the Claude Code plugin marketplace. If you're on an older version, follow the instructions for your situation:
 
 ### From v0.7.x or v0.8.x (npm-installed)
 
-This is the most common upgrade path. Your project has metaswarm files in `.claude/plugins/metaswarm/` that were copied there by `npx metaswarm init`.
+This is the most common upgrade path. Your project has tribunal files in `.claude/plugins/tribunal/` that were copied there by `npx tribunal init`.
 
 1. **Install the plugin:**
    ```bash
-   claude plugin marketplace add dsifry/metaswarm-marketplace
-   claude plugin install metaswarm
+   claude plugin marketplace add jpeggdev/tribunal-marketplace
+   claude plugin install tribunal
    ```
 
 2. **Run the migration** in Claude Code:
    ```text
    /migrate
    ```
-   This detects old `.claude/plugins/metaswarm/` files, verifies content matches the plugin versions, and removes the redundant copies. Your project-specific files (CLAUDE.md, `.coverage-thresholds.json`, `.beads/`, `bin/`, `scripts/`) are never touched. All removals are staged with `git rm` — nothing is permanently deleted until you commit.
+   This detects old `.claude/plugins/tribunal/` files, verifies content matches the plugin versions, and removes the redundant copies. Your project-specific files (CLAUDE.md, `.coverage-thresholds.json`, `.beads/`, `bin/`, `scripts/`) are never touched. All removals are staged with `git rm` — nothing is permanently deleted until you commit.
 
 3. **Verify the migration:**
    ```text
@@ -152,11 +152,11 @@ This is the most common upgrade path. Your project has metaswarm files in `.clau
 
 4. **Review and commit** the cleanup when you're satisfied.
 
-**Command name changes:** The old `/metaswarm-setup` and `/metaswarm-update-version` commands have been renamed to `/setup` and `/update`. Legacy aliases are preserved, so old names still work, but new projects should use the short names.
+**Command name changes:** The old `/tribunal-setup` and `/tribunal-update-version` commands have been renamed to `/setup` and `/update`. Legacy aliases are preserved, so old names still work, but new projects should use the short names.
 
 ### From v0.6.x or earlier (npm-installed, no guided setup)
 
-These versions used `npx metaswarm init --full` without the guided setup skill. Follow the same steps as v0.7.x/v0.8.x above, then re-run `/setup` to take advantage of the interactive configuration:
+These versions used `npx tribunal init --full` without the guided setup skill. Follow the same steps as v0.7.x/v0.8.x above, then re-run `/setup` to take advantage of the interactive configuration:
 
 ```text
 /setup
@@ -188,12 +188,12 @@ This runs 9 diagnostic checks: plugin version, project setup, command shims, leg
 
 ## npm Package (Cross-Platform Installer)
 
-The npm package (`npx metaswarm`) is now the cross-platform installer. It detects your installed CLIs and installs metaswarm for each.
+The npm package (`npx tribunal`) is now the cross-platform installer. It detects your installed CLIs and installs tribunal for each.
 
 ```bash
-npx metaswarm init          # Auto-detect and install for all CLIs
-npx metaswarm setup         # Set up project (writes instruction files)
-npx metaswarm detect        # Show which CLIs are available
+npx tribunal init          # Auto-detect and install for all CLIs
+npx tribunal setup         # Set up project (writes instruction files)
+npx tribunal detect        # Show which CLIs are available
 ```
 
 ## Customizing for Your Project

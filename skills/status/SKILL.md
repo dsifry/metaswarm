@@ -1,11 +1,11 @@
 ---
 name: status
-description: Diagnostic status report — shows metaswarm installation state, project setup, and potential issues
+description: Diagnostic status report — shows tribunal installation state, project setup, and potential issues
 ---
 
 # Status Skill
 
-Generate a diagnostic report of the metaswarm installation, project configuration, and potential issues. Useful for troubleshooting and verifying setup or migration.
+Generate a diagnostic report of the tribunal installation, project configuration, and potential issues. Useful for troubleshooting and verifying setup or migration.
 
 ---
 
@@ -21,9 +21,9 @@ Run each check below and present results in a single formatted report.
 
 ### 2. Project Setup State
 
-- Check if `.metaswarm/project-profile.json` exists in the working directory
-- If present, report key fields: `distribution`, `metaswarm_version`, `language`, `framework`, `test_runner`
-- If absent: `Project setup: NOT CONFIGURED -- run /metaswarm:setup`
+- Check if `.tribunal/project-profile.json` exists in the working directory
+- If present, report key fields: `distribution`, `tribunal_version`, `language`, `framework`, `test_runner`
+- If absent: `Project setup: NOT CONFIGURED -- run /tribunal:setup`
 
 ### 3. Command Shims
 
@@ -31,25 +31,25 @@ Check these 6 files in `.claude/commands/`:
 
 | Shim | Expected |
 |---|---|
-| `start-task.md` | Routes to `/metaswarm:start-task` |
-| `prime.md` | Routes to `/metaswarm:prime` |
-| `review-design.md` | Routes to `/metaswarm:review-design` |
-| `self-reflect.md` | Routes to `/metaswarm:self-reflect` |
-| `pr-shepherd.md` | Routes to `/metaswarm:pr-shepherd` |
-| `brainstorm.md` | Routes to `/metaswarm:brainstorm` |
+| `start-task.md` | Routes to `/tribunal:start-task` |
+| `prime.md` | Routes to `/tribunal:prime` |
+| `review-design.md` | Routes to `/tribunal:review-design` |
+| `self-reflect.md` | Routes to `/tribunal:self-reflect` |
+| `pr-shepherd.md` | Routes to `/tribunal:pr-shepherd` |
+| `brainstorm.md` | Routes to `/tribunal:brainstorm` |
 
-For each: report Present/Missing. If the file exists but does not contain "metaswarm" routing, flag as `present (non-metaswarm content)`.
+For each: report Present/Missing. If the file exists but does not contain "tribunal" routing, flag as `present (non-tribunal content)`.
 
 ### 4. Legacy Embedded Plugin
 
-- Check for `.claude/plugins/metaswarm/.claude-plugin/plugin.json`
-- If found: `DETECTED -- run /metaswarm:migrate`
+- Check for `.claude/plugins/tribunal/.claude-plugin/plugin.json`
+- If found: `DETECTED -- run /tribunal:migrate`
 - If found alongside the marketplace plugin, flag prominently as a conflict
 
 ### 5. BEADS Plugin
 
 - Scan `~/.claude/plugins/cache/` for a directory containing `.claude-plugin/plugin.json` with `"name": "beads"`
-- If found: `installed (standalone)` -- metaswarm defers priming to BEADS
+- If found: `installed (standalone)` -- tribunal defers priming to BEADS
 - If not found: `not separately installed`
 
 ### 6. `bd` CLI
@@ -63,7 +63,7 @@ command -v bd && bd --version 2>/dev/null
 
 ### 7. External Tools
 
-- Read `.metaswarm/external-tools.yaml` -- if absent: `not configured (optional)`
+- Read `.tribunal/external-tools.yaml` -- if absent: `not configured (optional)`
 - If present, check each enabled adapter's availability:
 
 ```bash
@@ -92,7 +92,7 @@ node --version 2>/dev/null
 ## Output Format
 
 ```markdown
-## Metaswarm Status Report
+## Tribunal Status Report
 
 | Component | Status |
 |---|---|
@@ -117,12 +117,12 @@ When issues are found:
 
 ```markdown
 ### Issues Found
-1. Legacy embedded plugin detected alongside marketplace plugin -- run `/metaswarm:migrate`
-2. Command shim `start-task.md` missing -- run `/metaswarm:setup`
+1. Legacy embedded plugin detected alongside marketplace plugin -- run `/tribunal:migrate`
+2. Command shim `start-task.md` missing -- run `/tribunal:setup`
 
 ### Recommendations
 1. Install `bd` CLI for knowledge priming and self-reflect
-2. Configure external tools for cross-model review (`.metaswarm/external-tools.yaml`)
+2. Configure external tools for cross-model review (`.tribunal/external-tools.yaml`)
 ```
 
 ---

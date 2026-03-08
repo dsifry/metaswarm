@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # .codex/install.sh
-# Install metaswarm skills for Codex CLI
+# Install tribunal skills for Codex CLI
 #
 # Usage:
-#   curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/jpeggdev/tribunal/main/.codex/install.sh | bash
 #   # or
 #   bash .codex/install.sh  (from cloned repo)
 
 set -euo pipefail
 
-INSTALL_DIR="${CODEX_HOME:-$HOME/.codex}/metaswarm"
+INSTALL_DIR="${CODEX_HOME:-$HOME/.codex}/tribunal"
 SKILLS_DIR="$HOME/.agents/skills"
-REPO_URL="https://github.com/dsifry/metaswarm.git"
+REPO_URL="https://github.com/jpeggdev/tribunal.git"
 
 echo ""
-echo "  metaswarm — Codex CLI installer"
+echo "  tribunal — Codex CLI installer"
 echo "  ================================"
 echo ""
 
@@ -29,7 +29,7 @@ if [ -d "$INSTALL_DIR" ]; then
     git clone "$REPO_URL" "$INSTALL_DIR"
   }
 else
-  echo "  Cloning metaswarm..."
+  echo "  Cloning tribunal..."
   mkdir -p "$(dirname "$INSTALL_DIR")"
   git clone "$REPO_URL" "$INSTALL_DIR"
 fi
@@ -42,7 +42,7 @@ mkdir -p "$SKILLS_DIR"
 linked=0
 for skill_dir in "$INSTALL_DIR/skills"/*/; do
   [ -d "$skill_dir" ] || continue
-  skill_name="metaswarm-$(basename "$skill_dir")"
+  skill_name="tribunal-$(basename "$skill_dir")"
   target="$SKILLS_DIR/$skill_name"
 
   if [ -L "$target" ]; then
@@ -61,10 +61,10 @@ echo "  Linked $linked skills."
 
 # Copy AGENTS.md template if project doesn't have one
 echo ""
-if [ -f "AGENTS.md" ] && grep -q "metaswarm" "AGENTS.md" 2>/dev/null; then
-  echo "  AGENTS.md already has metaswarm section."
+if [ -f "AGENTS.md" ] && grep -q "tribunal" "AGENTS.md" 2>/dev/null; then
+  echo "  AGENTS.md already has tribunal section."
 elif [ -f "AGENTS.md" ]; then
-  echo "  Note: AGENTS.md exists but doesn't reference metaswarm."
+  echo "  Note: AGENTS.md exists but doesn't reference tribunal."
   echo "  Run \$setup in your project to configure it."
 else
   echo "  Note: No project-level AGENTS.md created."
@@ -72,7 +72,7 @@ else
 fi
 
 echo ""
-echo "  Done! metaswarm installed for Codex CLI."
+echo "  Done! tribunal installed for Codex CLI."
 echo ""
 echo "  Usage (Codex uses the 'name' field from SKILL.md frontmatter):"
 echo "    \$start                   Begin tracked work"

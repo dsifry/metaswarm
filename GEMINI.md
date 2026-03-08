@@ -1,39 +1,39 @@
-# metaswarm
+# tribunal
 
 Multi-agent orchestration framework for software development. 18 specialized agents, 13 skills, quality gates, TDD enforcement.
 
 ## Getting Started
 
-Run `/metaswarm:start-task` to begin tracked work, or `/metaswarm:setup` to configure metaswarm for this project.
+Run `/tribunal:start-task` to begin tracked work, or `/tribunal:setup` to configure tribunal for this project.
 
 ## Available Commands
 
 | Command | Purpose |
 |---|---|
-| `/metaswarm:start-task` | Begin tracked work on a task |
-| `/metaswarm:prime` | Load relevant knowledge before starting |
-| `/metaswarm:review-design` | Trigger design review gate (5 reviewers) |
-| `/metaswarm:pr-shepherd` | Monitor a PR through to merge |
-| `/metaswarm:self-reflect` | Extract learnings after a PR merge |
-| `/metaswarm:handle-pr-comments` | Handle PR review comments |
-| `/metaswarm:brainstorm` | Refine an idea before implementation |
-| `/metaswarm:create-issue` | Create a well-structured GitHub Issue |
-| `/metaswarm:external-tools-health` | Check status of external AI tools |
-| `/metaswarm:setup` | Interactive guided setup |
-| `/metaswarm:status` | Run diagnostic checks |
+| `/tribunal:start-task` | Begin tracked work on a task |
+| `/tribunal:prime` | Load relevant knowledge before starting |
+| `/tribunal:review-design` | Trigger design review gate (5 reviewers) |
+| `/tribunal:pr-shepherd` | Monitor a PR through to merge |
+| `/tribunal:self-reflect` | Extract learnings after a PR merge |
+| `/tribunal:handle-pr-comments` | Handle PR review comments |
+| `/tribunal:brainstorm` | Refine an idea before implementation |
+| `/tribunal:create-issue` | Create a well-structured GitHub Issue |
+| `/tribunal:external-tools-health` | Check status of external AI tools |
+| `/tribunal:setup` | Interactive guided setup |
+| `/tribunal:status` | Run diagnostic checks |
 
 ## Workflow
 
 For complex features, describe what you want with a Definition of Done and say:
-`Use the full metaswarm orchestration workflow.`
+`Use the full tribunal orchestration workflow.`
 
 This runs: Research -> Plan -> Design Review Gate -> Work Unit Decomposition -> Orchestrated Execution (4-phase loop per unit) -> Final Review -> PR.
 
 ## Quality Gates (MANDATORY)
 
-- **After brainstorming** -> MUST run `/metaswarm:review-design` before planning
+- **After brainstorming** -> MUST run `/tribunal:review-design` before planning
 - **After any plan** -> MUST run Plan Review Gate before presenting to user
-- **Before finishing branch** -> MUST run `/metaswarm:self-reflect` before PR
+- **Before finishing branch** -> MUST run `/tribunal:self-reflect` before PR
 - **Coverage** -> `.coverage-thresholds.json` is the single source of truth. BLOCKING gate.
 - **TDD is mandatory** -> Write tests first, watch them fail, then implement
 

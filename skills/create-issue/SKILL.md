@@ -348,7 +348,7 @@ PR is ready for merge ONLY when ALL are true:
 
 ### Reference
 
-See the `/metaswarm:handle-pr-comments` command for detailed protocol.
+See the `/tribunal:handle-pr-comments` command for detailed protocol.
 
 ---
 

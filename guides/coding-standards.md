@@ -1,6 +1,6 @@
 # Coding Standards
 
-When reviewing or writing code in a metaswarm-managed project, enforce the following standards. Flag violations clearly and suggest specific fixes. Be direct and specific.
+When reviewing or writing code in a tribunal-managed project, enforce the following standards. Flag violations clearly and suggest specific fixes. Be direct and specific.
 
 ---
 

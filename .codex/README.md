@@ -1,29 +1,29 @@
-# metaswarm for Codex CLI
+# tribunal for Codex CLI
 
-Install metaswarm's 13 orchestration skills for [Codex CLI](https://github.com/openai/codex).
+Install tribunal's 13 orchestration skills for [Codex CLI](https://github.com/openai/codex).
 
 ## Install
 
 ### Quick install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jpeggdev/tribunal/main/.codex/install.sh | bash
 ```
 
 ### Manual install
 
 ```bash
-git clone https://github.com/dsifry/metaswarm.git ~/.codex/metaswarm
+git clone https://github.com/jpeggdev/tribunal.git ~/.codex/tribunal
 mkdir -p ~/.agents/skills
-for d in ~/.codex/metaswarm/skills/*/; do
-  ln -sf "$d" ~/.agents/skills/metaswarm-$(basename "$d")
+for d in ~/.codex/tribunal/skills/*/; do
+  ln -sf "$d" ~/.agents/skills/tribunal-$(basename "$d")
 done
 ```
 
 ### Via npm (cross-platform installer)
 
 ```bash
-npx metaswarm init --codex
+npx tribunal init --codex
 ```
 
 ## Project Setup
@@ -38,7 +38,7 @@ This detects your project's language, framework, test runner, and tools, then cr
 
 ## How Codex Finds Skills
 
-Codex uses the `name` field from each skill's `SKILL.md` frontmatter — not the directory name. The directory prefix `metaswarm-` is for organization only. You invoke skills using `$name` syntax matching the SKILL.md `name` field.
+Codex uses the `name` field from each skill's `SKILL.md` frontmatter — not the directory name. The directory prefix `tribunal-` is for organization only. You invoke skills using `$name` syntax matching the SKILL.md `name` field.
 
 ## Available Skills
 
@@ -71,7 +71,7 @@ The quality gates and rubric criteria are identical — the same review standard
 ## Updating
 
 ```bash
-cd ~/.codex/metaswarm && git pull
+cd ~/.codex/tribunal && git pull
 ```
 
 Or re-run the install script — it detects existing installations and updates in-place.
@@ -80,7 +80,7 @@ Or re-run the install script — it detects existing installations and updates i
 
 ```bash
 # Remove skill symlinks
-for link in ~/.agents/skills/metaswarm-*; do rm -f "$link"; done
+for link in ~/.agents/skills/tribunal-*; do rm -f "$link"; done
 # Remove installation
-rm -rf ~/.codex/metaswarm
+rm -rf ~/.codex/tribunal
 ```

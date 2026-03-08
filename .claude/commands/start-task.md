@@ -43,8 +43,8 @@ Check if external AI tools (Codex, Gemini) are available for cost savings and cr
   command -v codex >/dev/null 2>&1 && echo "codex: available" || echo "codex: not found"
   command -v gemini >/dev/null 2>&1 && echo "gemini: available" || echo "gemini: not found"
   ```
-- **If tools are detected but `.metaswarm/external-tools.yaml` does not exist**: Suggest the user enable them:
-  > "External tools (Codex/Gemini) are installed but not configured. Run `mkdir -p .metaswarm && cp templates/external-tools.yaml .metaswarm/` to enable cost-saving delegation."
+- **If tools are detected but `.tribunal/external-tools.yaml` does not exist**: Suggest the user enable them:
+  > "External tools (Codex/Gemini) are installed but not configured. Run `mkdir -p .tribunal && cp templates/external-tools.yaml .tribunal/` to enable cost-saving delegation."
 - **If no tools are detected**: Briefly mention they can be installed:
   > "Optional: Install Codex and Gemini CLIs for cost savings and cross-model review — see `templates/external-tools-setup.md`."
 - **If tools are configured and working**: No message needed — proceed silently.

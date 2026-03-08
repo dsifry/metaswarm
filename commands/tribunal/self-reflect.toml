@@ -1,5 +1,5 @@
 description = "Extract learnings from PR comments and session into the knowledge base"
-prompt = """Invoke the metaswarm self-reflect skill. The user wants to capture learnings.
+prompt = """Invoke the tribunal self-reflect skill. The user wants to capture learnings.
 
 Arguments provided by the user: {{args}}
 

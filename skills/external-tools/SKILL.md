@@ -30,7 +30,7 @@ Neither tool is strictly required. The skill adapts based on what is available (
 
 ### Configuration
 
-Per-project config at `.metaswarm/external-tools.yaml` (optional -- if absent, external tools are not used):
+Per-project config at `.tribunal/external-tools.yaml` (optional -- if absent, external tools are not used):
 
 ```yaml
 adapters:
@@ -58,7 +58,7 @@ budget:
 
 - **Both tools available**: Full cross-model delegation and review
 - **One tool available**: Reduced chain with mutual review between the tool and Claude
-- **No tools available**: Existing metaswarm behavior unchanged; skill is a no-op
+- **No tools available**: Existing tribunal behavior unchanged; skill is a no-op
 
 ---
 
@@ -220,7 +220,7 @@ Claude implements (with Model A's branch as reference)
 ### Scenario 3: No External Tools Available
 
 ```
-Existing metaswarm behavior unchanged.
+Existing tribunal behavior unchanged.
 Claude implements via Task() mechanism.
 Standard adversarial review (fresh Task() instance).
 ```
@@ -245,7 +245,7 @@ elif len(available_tools) == 1:
     reviewers = [implementer, claude]  # mutual review
     escalation = [implementer, claude, user]
 else:
-    # pure metaswarm, no change
+    # pure tribunal, no change
     implementer = claude
     reviewers = [claude_fresh_task]
     escalation = [claude, user]

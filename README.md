@@ -1,10 +1,12 @@
-# metaswarm
+# Tribunal
 
-A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 18 specialized AI agents and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
+Multi-agent orchestration framework for Claude Code, Codex CLI, and Gemini CLI. Tribunal is built on [metaswarm](https://github.com/dsifry/metaswarm) by Dave Sifry.
+
+Features debate-driven design, intelligent agent selection with decay-weighted scoring, and layered configuration.
 
 ## What Is This?
 
-metaswarm is an extraction of a production-tested agentic orchestration system. It has been proven in the field writing production-level code with 100% test coverage, mandatory TDD, multi-reviewed spec-driven development, and SDLC best practices across hundreds of PRs. It provides:
+tribunal is an extraction of a production-tested agentic orchestration system. It has been proven in the field writing production-level code with 100% test coverage, mandatory TDD, multi-reviewed spec-driven development, and SDLC best practices across hundreds of PRs. It provides:
 
 - **18 specialized agent personas** (Researcher, Architect, Coder, Security Auditor, PR Shepherd, etc.)
 - **A structured 9-phase workflow**: Research → Plan → Design Review Gate → Work Unit Decomposition → Orchestrated Execution → Final Review → PR Creation → PR Shepherd → Closure & Learning
@@ -64,7 +66,7 @@ Your prompt (spec with DoD items) or GitHub Issue
 ## Repository Structure
 
 ```text
-metaswarm/
+tribunal/
 ├── .claude-plugin/
 │   └── plugin.json           # Claude Code plugin manifest
 ├── gemini-extension.json      # Gemini CLI extension manifest
@@ -90,14 +92,14 @@ metaswarm/
 │   └── visual-review/        # Playwright-based screenshot review
 ├── commands/                  # Slash commands
 │   ├── *.md                  # Claude Code commands (15 files)
-│   └── metaswarm/*.toml      # Gemini CLI commands (12 files)
+│   └── tribunal/*.toml      # Gemini CLI commands (12 files)
 ├── agents/                    # 18 agent persona definitions
 ├── rubrics/                   # Quality review standards
 ├── guides/                    # Development patterns
 ├── knowledge/                 # Knowledge base schema + templates
 ├── templates/                 # Setup templates (CLAUDE.md, AGENTS.md, GEMINI.md + append variants)
 ├── lib/                       # Platform detection, sync, setup scripts
-├── cli/                       # Cross-platform installer (npx metaswarm)
+├── cli/                       # Cross-platform installer (npx tribunal)
 ├── CLAUDE.md                  # Claude Code project instructions
 ├── AGENTS.md                  # Codex CLI project instructions
 ├── GEMINI.md                  # Gemini CLI extension context
@@ -112,8 +114,8 @@ metaswarm/
 ### Claude Code (recommended)
 
 ```bash
-claude plugin marketplace add dsifry/metaswarm-marketplace
-claude plugin install metaswarm
+claude plugin marketplace add jpeggdev/tribunal-marketplace
+claude plugin install tribunal
 ```
 
 Then run `/setup` in Claude Code.
@@ -121,25 +123,25 @@ Then run `/setup` in Claude Code.
 ### Gemini CLI
 
 ```bash
-gemini extensions install https://github.com/dsifry/metaswarm.git
+gemini extensions install https://github.com/jpeggdev/tribunal.git
 ```
 
-Then run `/metaswarm:setup` in your project.
+Then run `/tribunal:setup` in your project.
 
 ### Codex CLI
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jpeggdev/tribunal/main/.codex/install.sh | bash
 ```
 
 Then run `$setup` in your project.
 
 ### Cross-platform installer
 
-Detect installed CLIs and install metaswarm for all of them:
+Detect installed CLIs and install tribunal for all of them:
 
 ```bash
-npx metaswarm init
+npx tribunal init
 ```
 
 ### Start building
@@ -155,7 +157,7 @@ See [INSTALL.md](INSTALL.md) for prerequisites, platform-specific details, and m
 
 ## Self-Learning System
 
-metaswarm doesn't just execute — it learns from every session and gets smarter over time.
+tribunal doesn't just execute — it learns from every session and gets smarter over time.
 
 ### Automatic Reflection
 
@@ -203,7 +205,7 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 | Platform | Install Method | Commands |
 |---|---|---|
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Plugin marketplace | `/start-task`, `/setup`, etc. |
-| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Extension (`gemini extensions install`) | `/metaswarm:start-task`, etc. |
+| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Extension (`gemini extensions install`) | `/tribunal:start-task`, etc. |
 | [Codex CLI](https://github.com/openai/codex) | Skills (`curl \| bash`) | `$start`, `$setup`, etc. |
 
 ## Requirements
@@ -220,10 +222,10 @@ MIT
 
 ## Acknowledgments
 
-metaswarm stands on the shoulders of two key projects:
+tribunal stands on the shoulders of two key projects:
 
-- **[BEADS](https://github.com/steveyegge/beads)** by [Steve Yegge](https://github.com/steveyegge) — The git-native, AI-first issue tracking system that serves as the coordination backbone for all agent task management, dependency tracking, and knowledge priming in metaswarm. BEADS made it possible to treat issue tracking as a first-class part of the codebase rather than an external service.
+- **[BEADS](https://github.com/steveyegge/beads)** by [Steve Yegge](https://github.com/steveyegge) — The git-native, AI-first issue tracking system that serves as the coordination backbone for all agent task management, dependency tracking, and knowledge priming in tribunal. BEADS made it possible to treat issue tracking as a first-class part of the codebase rather than an external service.
 
-- **[Superpowers](https://github.com/obra/superpowers)** by [Jesse Vincent](https://github.com/obra) and contributors — The agentic skills framework and software development methodology that provides foundational skills metaswarm builds on, including brainstorming, test-driven development, systematic debugging, and plan writing. Superpowers demonstrated that disciplined agent workflows aren't overhead — they're what make autonomous development reliable.
+- **[Superpowers](https://github.com/obra/superpowers)** by [Jesse Vincent](https://github.com/obra) and contributors — The agentic skills framework and software development methodology that provides foundational skills tribunal builds on, including brainstorming, test-driven development, systematic debugging, and plan writing. Superpowers demonstrated that disciplined agent workflows aren't overhead — they're what make autonomous development reliable.
 
-metaswarm was created by [Dave Sifry](https://linkedin.com/in/dsifry), founder of Technorati, Linuxcare, and Warmstart, and former tech executive at Lyft and Reddit. Extracted from a production multi-tenant SaaS codebase where it has been writing production-level code with 100% test coverage, TDD, and spec-driven development across hundreds of autonomous PRs.
+tribunal was created by [Dave Sifry](https://linkedin.com/in/dsifry), founder of Technorati, Linuxcare, and Warmstart, and former tech executive at Lyft and Reddit. Extracted from a production multi-tenant SaaS codebase where it has been writing production-level code with 100% test coverage, TDD, and spec-driven development across hundreds of autonomous PRs.

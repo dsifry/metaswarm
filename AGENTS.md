@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This project is **metaswarm** — a multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. It provides 18 specialized agents, 13 orchestration skills, quality gates, and TDD enforcement.
+This project is **tribunal** — a multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. It provides 18 specialized agents, 13 orchestration skills, quality gates, and TDD enforcement.
 
 ## Quick Reference
 
@@ -70,7 +70,7 @@ bd sync               # Sync with git
 
 ## External Tools Routing
 
-When external AI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator can delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI for cost savings and cross-model adversarial review.
+When external AI tools are configured (`.tribunal/external-tools.yaml`), the orchestrator can delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI for cost savings and cross-model adversarial review.
 
 ### Visual Review
 

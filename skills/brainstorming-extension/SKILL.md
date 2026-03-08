@@ -1,6 +1,6 @@
 ---
 name: brainstorming-extension
-description: Enforces design review gate after brainstorming — bridges superpowers:brainstorming into the metaswarm quality pipeline
+description: Enforces design review gate after brainstorming — bridges superpowers:brainstorming into the tribunal quality pipeline
 auto_activate: true
 triggers:
   - after:superpowers:brainstorming
@@ -11,7 +11,7 @@ triggers:
 
 ## Purpose
 
-This skill bridges `superpowers:brainstorming` into the metaswarm quality pipeline by enforcing the Design Review Gate after any design document is created. Without this bridge, brainstorming flows directly into `writing-plans`, bypassing the 5-agent design review that catches architectural, security, and requirements issues before expensive implementation begins.
+This skill bridges `superpowers:brainstorming` into the tribunal quality pipeline by enforcing the Design Review Gate after any design document is created. Without this bridge, brainstorming flows directly into `writing-plans`, bypassing the 5-agent design review that catches architectural, security, and requirements issues before expensive implementation begins.
 
 **This is a critical workflow enforcement point, not a passive extension.**
 

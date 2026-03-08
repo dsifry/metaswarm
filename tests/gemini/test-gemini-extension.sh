@@ -45,15 +45,15 @@ else
   fail "GEMINI.md not found at repo root"
 fi
 
-# 4. GEMINI.md references metaswarm
-if grep -q "metaswarm" "$ROOT/GEMINI.md" 2>/dev/null; then
-  pass "GEMINI.md references metaswarm"
+# 4. GEMINI.md references tribunal
+if grep -q "tribunal" "$ROOT/GEMINI.md" 2>/dev/null; then
+  pass "GEMINI.md references tribunal"
 else
-  fail "GEMINI.md does not reference metaswarm"
+  fail "GEMINI.md does not reference tribunal"
 fi
 
 # 5. TOML commands exist
-TOML_DIR="$ROOT/commands/metaswarm"
+TOML_DIR="$ROOT/commands/tribunal"
 expected_commands=(
   start-task prime review-design self-reflect pr-shepherd brainstorm
   setup update status handle-pr-comments create-issue external-tools-health
@@ -61,9 +61,9 @@ expected_commands=(
 
 for cmd in "${expected_commands[@]}"; do
   if [ -f "$TOML_DIR/$cmd.toml" ]; then
-    pass "commands/metaswarm/$cmd.toml exists"
+    pass "commands/tribunal/$cmd.toml exists"
   else
-    fail "commands/metaswarm/$cmd.toml not found"
+    fail "commands/tribunal/$cmd.toml not found"
   fi
 done
 

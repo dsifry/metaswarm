@@ -1,6 +1,6 @@
 # Brainstorm
 
-Invoke the metaswarm brainstorming extension skill, which wraps `superpowers:brainstorming` with metaswarm's design review gate handoff.
+Invoke the tribunal brainstorming extension skill, which wraps `superpowers:brainstorming` with tribunal's design review gate handoff.
 
 ## Usage
 
@@ -11,7 +11,7 @@ Invoke the metaswarm brainstorming extension skill, which wraps `superpowers:bra
 ## Behavior
 
 1. If `superpowers:brainstorming` is available, invoke it for the collaborative design process
-2. After brainstorming commits a design document, **automatically trigger the design review gate** (`/metaswarm:review-design`)
+2. After brainstorming commits a design document, **automatically trigger the design review gate** (`/tribunal:review-design`)
 3. Wait for all 5 review agents to approve before proceeding to planning
 
 If superpowers is not installed, provide standalone brainstorming guidance:
@@ -23,5 +23,5 @@ If superpowers is not installed, provide standalone brainstorming guidance:
 
 ## Related
 
-- `/metaswarm:review-design` — triggered automatically after brainstorming
+- `/tribunal:review-design` — triggered automatically after brainstorming
 - `superpowers:brainstorming` — the underlying brainstorming skill (if available)

@@ -1,5 +1,5 @@
 description = "Begin tracked work on a task with complexity assessment"
-prompt = """Invoke the metaswarm start-task skill. The user wants to begin tracked work.
+prompt = """Invoke the tribunal start-task skill. The user wants to begin tracked work.
 
 Arguments provided by the user: {{args}}
 

@@ -1,42 +1,42 @@
-# Metaswarm Guided Setup
+# Tribunal Guided Setup
 
-Interactive, Claude-guided setup for metaswarm in your project. Detects your stack, asks targeted questions, and customizes everything automatically.
+Interactive, Claude-guided setup for tribunal in your project. Detects your stack, asks targeted questions, and customizes everything automatically.
 
 ## Usage
 
 ```text
-/metaswarm-setup
+/tribunal-setup
 ```
 
 ---
 
 ## Phase 1: Bootstrap Check
 
-Before anything else, verify that metaswarm components are installed.
+Before anything else, verify that tribunal components are installed.
 
 ### Step 1.1 — Check for plugin directory
 
-Use the Glob tool to check if `.claude/plugins/metaswarm/` exists:
+Use the Glob tool to check if `.claude/plugins/tribunal/` exists:
 
 ```
-Glob: .claude/plugins/metaswarm/**/*
+Glob: .claude/plugins/tribunal/**/*
 ```
 
-- If files are found, metaswarm components are installed. Proceed to Step 1.2.
-- If NO files are found, tell the user: "Metaswarm components aren't installed yet. Let me install them now." Then run via Bash:
+- If files are found, tribunal components are installed. Proceed to Step 1.2.
+- If NO files are found, tell the user: "Tribunal components aren't installed yet. Let me install them now." Then run via Bash:
 
 ```bash
-npx metaswarm install
+npx tribunal install
 ```
 
-Wait for the command to complete. If it fails, tell the user to check their Node.js installation and try `npm install -g metaswarm` manually.
+Wait for the command to complete. If it fails, tell the user to check their Node.js installation and try `npm install -g tribunal` manually.
 
 ### Step 1.2 — Check for existing project profile
 
-Use the Glob tool to check if `.metaswarm/project-profile.json` exists.
+Use the Glob tool to check if `.tribunal/project-profile.json` exists.
 
 - If it exists, read it and present the current configuration summary to the user. Use AskUserQuestion to ask:
-  - "You already have a metaswarm project profile. What would you like to do?"
+  - "You already have a tribunal project profile. What would you like to do?"
   - Options: "Re-run setup (Recommended)" / "Skip setup"
   - If user chooses "Skip setup", stop here with: "Setup skipped. Your existing configuration is unchanged."
   - If user chooses "Re-run setup", continue to Phase 2.
@@ -420,8 +420,8 @@ If the user chose YES for external AI tools:
 4. For installed tools, verify they're authenticated:
    - Codex: run `codex --version` — if it works, it's likely configured
    - Gemini: run `gemini --version` — if it works, it's likely configured
-5. Ensure `.metaswarm/` directory exists (create via Bash `mkdir -p .metaswarm` if needed)
-6. Copy or create `.metaswarm/external-tools.yaml` with both tools configured:
+5. Ensure `.tribunal/` directory exists (create via Bash `mkdir -p .tribunal` if needed)
+6. Copy or create `.tribunal/external-tools.yaml` with both tools configured:
    - Set `enabled: true` for installed tools
    - Set `enabled: false` for tools that aren't installed
 7. Tell the user about any auth steps needed (e.g., "Run `codex login` to authenticate with OpenAI")
@@ -468,16 +468,16 @@ If the user chose YES for BEADS and `bd` is available:
 
 ## Phase 5: Write Project Profile
 
-Create the `.metaswarm/` directory if it doesn't exist:
+Create the `.tribunal/` directory if it doesn't exist:
 ```bash
-mkdir -p .metaswarm
+mkdir -p .tribunal
 ```
 
-Write `.metaswarm/project-profile.json` with the following structure. Use the Write tool.
+Write `.tribunal/project-profile.json` with the following structure. Use the Write tool.
 
 ```json
 {
-  "metaswarm_version": "0.7.0",
+  "tribunal_version": "0.7.0",
   "installed_at": "{current ISO 8601 timestamp}",
   "updated_at": "{current ISO 8601 timestamp}",
   "detection": {
@@ -573,10 +573,10 @@ Files modified:
   - CLAUDE.md (test commands, code quality section)
   - .coverage-thresholds.json (enforcement command, thresholds)
   - .gitignore (language-specific entries)
-  - .metaswarm/project-profile.json (created)
+  - .tribunal/project-profile.json (created)
   {list any other files modified}
 
-You're all set! Try `/start-task` on a small task to see metaswarm in action.
+You're all set! Try `/start-task` on a small task to see tribunal in action.
 ```
 
 ### 6.3 — Post-Setup Tips
@@ -585,7 +585,7 @@ Based on what was configured, offer 1-2 relevant tips:
 
 - If external tools enabled: "Use `/external-tools-health` to check tool status anytime."
 - If BEADS enabled: "Use `/prime` before starting work to load relevant knowledge."
-- If no CI was set up: "Consider adding CI later — metaswarm includes a GitHub Actions template in `templates/ci.yml`."
+- If no CI was set up: "Consider adding CI later — tribunal includes a GitHub Actions template in `templates/ci.yml`."
 - If visual review enabled: "The visual review skill can screenshot your app during development. Agents will use it automatically."
 
 ---
@@ -597,4 +597,4 @@ Throughout the setup process:
 - If any Bash command fails, report the error clearly and offer to skip that step or retry
 - If a file can't be read (permissions, missing), note it and continue with other detection
 - If AskUserQuestion times out or is dismissed, use sensible defaults (100% coverage, no external tools, no visual review)
-- Never leave the project in a half-configured state — if setup is interrupted, the user should be able to re-run `/metaswarm-setup` to pick up where they left off (the Phase 1 re-setup check handles this)
+- Never leave the project in a half-configured state — if setup is interrupted, the user should be able to re-run `/tribunal-setup` to pick up where they left off (the Phase 1 re-setup check handles this)

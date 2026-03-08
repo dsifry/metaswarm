@@ -4,7 +4,7 @@
 
 **Goal:** Build the adapter system that delegates implementation and review tasks to external AI CLI tools (Codex, Gemini) with cross-model adversarial review, sandboxed execution, and availability-aware escalation.
 
-**Architecture:** Shell-script adapters behind a uniform protocol, orchestrated by a metaswarm skill that plugs into the existing 4-phase execution loop. Each adapter translates between the protocol and a specific tool's CLI.
+**Architecture:** Shell-script adapters behind a uniform protocol, orchestrated by a tribunal skill that plugs into the existing 4-phase execution loop. Each adapter translates between the protocol and a specific tool's CLI.
 
 **Tech Stack:** Bash (adapters + helpers), Markdown (skill + rubric + docs), YAML (config)
 
@@ -92,8 +92,8 @@ Create `templates/external-tools.yaml`:
 
 ```yaml
 # External Tools Configuration
-# Copy to .metaswarm/external-tools.yaml in your project root to enable.
-# If this file is absent, external tools are not used (pure metaswarm behavior).
+# Copy to .tribunal/external-tools.yaml in your project root to enable.
+# If this file is absent, external tools are not used (pure tribunal behavior).
 
 adapters:
   codex:
@@ -519,7 +519,7 @@ Create `skills/external-tools/adapters/codex.sh`:
 
 ```bash
 #!/bin/bash
-# codex.sh — OpenAI Codex CLI adapter for metaswarm external-tools
+# codex.sh — OpenAI Codex CLI adapter for tribunal external-tools
 # Usage:
 #   codex.sh health
 #   codex.sh implement --worktree <path> --prompt-file <path> [--attempt N] [--timeout N]
@@ -803,7 +803,7 @@ Create `skills/external-tools/adapters/gemini.sh`:
 
 ```bash
 #!/bin/bash
-# gemini.sh — Google Gemini CLI adapter for metaswarm external-tools
+# gemini.sh — Google Gemini CLI adapter for tribunal external-tools
 # Usage:
 #   gemini.sh health
 #   gemini.sh implement --worktree <path> --prompt-file <path> [--attempt N] [--timeout N]
@@ -1221,8 +1221,8 @@ Delegate coding tasks to external AI CLI tools (OpenAI Codex, Google Gemini) and
 - At least one external tool installed and authenticated:
   - Codex CLI: `npm i -g @openai/codex` + `OPENAI_API_KEY` or `codex login`
   - Gemini CLI: `npm i -g @google/gemini-cli` + `GEMINI_API_KEY` or Google login
-- Config file (optional): `.metaswarm/external-tools.yaml` — see `templates/external-tools.yaml`
-- If no external tools are available, this skill is skipped entirely (pure metaswarm behavior)
+- Config file (optional): `.tribunal/external-tools.yaml` — see `templates/external-tools.yaml`
+- If no external tools are available, this skill is skipped entirely (pure tribunal behavior)
 
 ## Quick Reference
 
@@ -1385,7 +1385,7 @@ The adapter returns structured error types. The orchestrator responds based on t
 
 ## Budget Enforcement
 
-If `.metaswarm/external-tools.yaml` defines budget limits:
+If `.tribunal/external-tools.yaml` defines budget limits:
 - Track cumulative cost across all adapter invocations in the session
 - Before each invocation, check if budget remains
 - If `per_task_usd` exceeded: skip remaining retries, escalate immediately
@@ -1438,11 +1438,11 @@ Create `templates/external-tools-setup.md`:
 # External Tools Setup Guide
 
 This guide helps you install and configure external AI CLI tools for use with
-metaswarm's cross-model delegation and adversarial review system.
+tribunal's cross-model delegation and adversarial review system.
 
 ## Overview
 
-metaswarm can delegate implementation and review tasks to external AI models,
+tribunal can delegate implementation and review tasks to external AI models,
 enabling cost savings and cross-model adversarial review. Supported tools:
 
 | Tool | Cost | Best For |
@@ -1450,7 +1450,7 @@ enabling cost savings and cross-model adversarial review. Supported tools:
 | OpenAI Codex CLI | ChatGPT subscription or API key | Fast implementation, structured output |
 | Google Gemini CLI | Free (1K req/day with Google login) | Cost-effective review, large context |
 
-You can install one or both. metaswarm adapts automatically based on what's available.
+You can install one or both. tribunal adapts automatically based on what's available.
 
 ## 1. Install OpenAI Codex CLI
 
@@ -1528,28 +1528,28 @@ gemini "print hello world in python" --output-format json | jq .response
 | Rate limit loop (CLI freezes) | Ctrl+C, wait a few minutes, try again |
 | Node.js version error | Gemini CLI requires Node.js 20+: `node --version` |
 
-## 3. Configure metaswarm
+## 3. Configure tribunal
 
 Copy the example config to your project:
 
 ```bash
-mkdir -p .metaswarm
-cp /path/to/metaswarm/templates/external-tools.yaml .metaswarm/external-tools.yaml
+mkdir -p .tribunal
+cp /path/to/tribunal/templates/external-tools.yaml .tribunal/external-tools.yaml
 ```
 
-Edit `.metaswarm/external-tools.yaml` to:
+Edit `.tribunal/external-tools.yaml` to:
 - Enable/disable specific tools
 - Set timeout and sandbox preferences
 - Configure cost budgets
 
-If this file is absent, metaswarm works normally without external tools.
+If this file is absent, tribunal works normally without external tools.
 
 ## 4. Verify Setup
 
 Run health checks for all installed tools:
 
 ```bash
-# From your metaswarm installation:
+# From your tribunal installation:
 skills/external-tools/adapters/codex.sh health | jq .
 skills/external-tools/adapters/gemini.sh health | jq .
 ```
@@ -1600,7 +1600,7 @@ Run health checks on all configured external AI tools and report their status.
 2. Run `skills/external-tools/adapters/gemini.sh health` and capture JSON output
 3. Report status of each tool (ready/unavailable) with version and auth info
 4. If any tools are unavailable, suggest setup steps from `templates/external-tools-setup.md`
-5. Check for `.metaswarm/external-tools.yaml` config file — report if present and summarize settings
+5. Check for `.tribunal/external-tools.yaml` config file — report if present and summarize settings
 ```
 
 **Step 2: Commit**
@@ -1632,7 +1632,7 @@ Add a new section after "Quality Gates":
 ```markdown
 ## External Tools (Optional)
 
-If external AI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator
+If external AI tools are configured (`.tribunal/external-tools.yaml`), the orchestrator
 can delegate implementation and review tasks to Codex CLI and Gemini CLI for cost savings
 and cross-model adversarial review. See `templates/external-tools-setup.md` for setup.
 ```

@@ -1,6 +1,6 @@
 # Platform Adaptation Guide
 
-This reference documents how metaswarm skills adapt across Claude Code, Gemini CLI, and Codex CLI. Skills use the Agent Skills standard (SKILL.md with YAML frontmatter) which is portable across all three platforms.
+This reference documents how tribunal skills adapt across Claude Code, Gemini CLI, and Codex CLI. Skills use the Agent Skills standard (SKILL.md with YAML frontmatter) which is portable across all three platforms.
 
 ## Tool Equivalents
 
@@ -19,7 +19,7 @@ This reference documents how metaswarm skills adapt across Claude Code, Gemini C
 
 ### Claude Code (Full Support)
 
-Claude Code provides `Task()` for spawning independent subagents. metaswarm uses this for:
+Claude Code provides `Task()` for spawning independent subagents. tribunal uses this for:
 - Parallel design review (5 agents simultaneously)
 - Adversarial review (fresh reviewer with no prior context)
 - Background research while implementation continues
@@ -48,14 +48,14 @@ Codex CLI has no subagent dispatch. All workflows run sequentially in-session:
 
 ## Command Invocation
 
-Codex uses the `name` field from SKILL.md frontmatter for `$name` invocation — not the directory name. The `metaswarm-` prefix on directory names is for organization only.
+Codex uses the `name` field from SKILL.md frontmatter for `$name` invocation — not the directory name. The `tribunal-` prefix on directory names is for organization only.
 
 | Action | Claude Code | Gemini CLI | Codex CLI |
 |---|---|---|---|
-| Start task | `/start-task` or `/metaswarm:start-task` | `/metaswarm:start-task` | `$start` |
-| Setup | `/setup` or `/metaswarm:setup` | `/metaswarm:setup` | `$setup` |
-| Brainstorm | `/brainstorm` or `/metaswarm:brainstorm` | `/metaswarm:brainstorm` | `$brainstorming-extension` |
-| Review design | `/review-design` or `/metaswarm:review-design` | `/metaswarm:review-design` | `$design-review-gate` |
+| Start task | `/start-task` or `/tribunal:start-task` | `/tribunal:start-task` | `$start` |
+| Setup | `/setup` or `/tribunal:setup` | `/tribunal:setup` | `$setup` |
+| Brainstorm | `/brainstorm` or `/tribunal:brainstorm` | `/tribunal:brainstorm` | `$brainstorming-extension` |
+| Review design | `/review-design` or `/tribunal:review-design` | `/tribunal:review-design` | `$design-review-gate` |
 
 ## Instruction Files
 

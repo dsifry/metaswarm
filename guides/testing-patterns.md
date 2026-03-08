@@ -1,6 +1,6 @@
 # Testing Patterns Guide
 
-This is the canonical guide for how and why we write tests in projects using the metaswarm framework. It covers philosophy, practical patterns, infrastructure, and anti-patterns. Every agent and developer writing tests should read this document.
+This is the canonical guide for how and why we write tests in projects using the tribunal framework. It covers philosophy, practical patterns, infrastructure, and anti-patterns. Every agent and developer writing tests should read this document.
 
 ---
 

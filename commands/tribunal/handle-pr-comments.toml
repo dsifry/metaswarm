@@ -1,5 +1,5 @@
 description = "Handle PR review comments with the full resolution workflow"
-prompt = """Invoke the metaswarm handle-pr-comments skill. The user wants to address PR review comments.
+prompt = """Invoke the tribunal handle-pr-comments skill. The user wants to address PR review comments.
 
 Arguments provided by the user: {{args}}
 

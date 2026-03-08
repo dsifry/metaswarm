@@ -2,28 +2,28 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Replace the monolithic `npx metaswarm init` with a thin bootstrap + Claude-guided interactive setup.
+**Goal:** Replace the monolithic `npx tribunal init` with a thin bootstrap + Claude-guided interactive setup.
 
-**Architecture:** Thin CLI bootstrap (3 files) → `/metaswarm-setup` skill (detects, installs, customizes) + `/metaswarm-update-version` for updates.
+**Architecture:** Thin CLI bootstrap (3 files) → `/tribunal-setup` skill (detects, installs, customizes) + `/tribunal-update-version` for updates.
 
 **Tech Stack:** Node.js CLI, Claude Code skills (markdown), shell commands
 
 ---
 
-### Task 1: Create the metaswarm-setup command
+### Task 1: Create the tribunal-setup command
 
 **Files:**
-- Create: `commands/metaswarm-setup.md`
+- Create: `commands/tribunal-setup.md`
 
 **Description:**
-The slash command that users invoke via `/metaswarm-setup`. This is a command file that triggers the guided-setup skill. It should:
-- Check if metaswarm components are installed (`.claude/plugins/metaswarm/` exists)
-- If not, run `npx metaswarm install` to copy all components
+The slash command that users invoke via `/tribunal-setup`. This is a command file that triggers the guided-setup skill. It should:
+- Check if tribunal components are installed (`.claude/plugins/tribunal/` exists)
+- If not, run `npx tribunal install` to copy all components
 - Run project detection (scan for language/framework/test/lint/CI marker files)
 - Present detection results to user
 - Ask targeted questions using AskUserQuestion (coverage thresholds, external tools, visual review, CI, hooks)
 - Customize CLAUDE.md (fill TODO sections), .coverage-thresholds.json (enforcement command), .gitignore (language ignores)
-- Write `.metaswarm/project-profile.json` with detection results and user choices
+- Write `.tribunal/project-profile.json` with detection results and user choices
 - Run health checks and suggest first task
 
 The command should be comprehensive enough to stand alone (no separate SKILL.md needed — the command IS the skill).
@@ -93,15 +93,15 @@ For .gitignore (append missing entries):
 
 ---
 
-### Task 2: Create the metaswarm-update-version command
+### Task 2: Create the tribunal-update-version command
 
 **Files:**
-- Create: `commands/metaswarm-update-version.md`
+- Create: `commands/tribunal-update-version.md`
 
 **Description:**
-The slash command for updating metaswarm to the latest version. It should:
-1. Read `.metaswarm/project-profile.json` for current version
-2. Run `npx metaswarm@latest install` to refresh all component files
+The slash command for updating tribunal to the latest version. It should:
+1. Read `.tribunal/project-profile.json` for current version
+2. Run `npx tribunal@latest install` to refresh all component files
 3. Read the CHANGELOG from the package to show what's new
 4. Preserve user customizations (never overwrite CLAUDE.md body, .coverage-thresholds.json if user modified enforcement.command, etc.)
 5. Re-run project detection if profile is stale
@@ -110,22 +110,22 @@ The slash command for updating metaswarm to the latest version. It should:
 
 ---
 
-### Task 3: Refactor cli/metaswarm.js — split init and install
+### Task 3: Refactor cli/tribunal.js — split init and install
 
 **Files:**
-- Modify: `cli/metaswarm.js`
+- Modify: `cli/tribunal.js`
 
 **Description:**
 Refactor the CLI to have two subcommands:
 
-**`metaswarm init`** (thin bootstrap):
-- Copy `commands/metaswarm-setup.md` → `.claude/commands/metaswarm-setup.md`
-- Copy `commands/metaswarm-update-version.md` → `.claude/commands/metaswarm-update-version.md`
-- Handle CLAUDE.md: if none exists, create minimal one that mentions metaswarm-setup; if exists without marker, ask to append a reference to `/metaswarm-setup`
-- Print: "metaswarm bootstrapped. Open Claude Code and run: /metaswarm-setup"
+**`tribunal init`** (thin bootstrap):
+- Copy `commands/tribunal-setup.md` → `.claude/commands/tribunal-setup.md`
+- Copy `commands/tribunal-update-version.md` → `.claude/commands/tribunal-update-version.md`
+- Handle CLAUDE.md: if none exists, create minimal one that mentions tribunal-setup; if exists without marker, ask to append a reference to `/tribunal-setup`
+- Print: "tribunal bootstrapped. Open Claude Code and run: /tribunal-setup"
 - Support `--full` flag that runs init + install (legacy behavior for CI/scripting)
 
-**`metaswarm install`** (the file copier):
+**`tribunal install`** (the file copier):
 - Move all current init file-copying logic here
 - Copy all component groups: agents, skills, rubrics, guides, commands, knowledge, scripts, bin, templates
 - Copy ORCHESTRATION.md → SKILL.md
@@ -135,7 +135,7 @@ Refactor the CLI to have two subcommands:
 - Run bd init if available
 - Support `--with-husky` flag
 
-**`metaswarm --help`** — updated to show both commands.
+**`tribunal --help`** — updated to show both commands.
 
 The `install` command should be idempotent (skip existing files, same as current behavior).
 
@@ -148,8 +148,8 @@ The `install` command should be idempotent (skip existing files, same as current
 - Modify: `templates/CLAUDE-append.md` (if it exists)
 
 **Description:**
-- Add `/metaswarm-setup` and `/metaswarm-update-version` to the commands table
-- Add a note at the top: "This project uses metaswarm. Run /metaswarm-setup to configure for your project."
+- Add `/tribunal-setup` and `/tribunal-update-version` to the commands table
+- Add a note at the top: "This project uses tribunal. Run /tribunal-setup to configure for your project."
 - The TODO sections should remain (the setup skill fills them in)
 
 ---
@@ -164,19 +164,19 @@ The `install` command should be idempotent (skip existing files, same as current
 **Description:**
 
 **README.md** — Update the Install section:
-- Primary path: "Open Claude Code in your project and run `/metaswarm-setup`" (if already bootstrapped) or "Run `npx metaswarm init` then `/metaswarm-setup`"
+- Primary path: "Open Claude Code in your project and run `/tribunal-setup`" (if already bootstrapped) or "Run `npx tribunal init` then `/tribunal-setup`"
 - The "That's it" paragraph should emphasize Claude walks you through everything
-- Keep `npx metaswarm init --full` as alternative for CI/scripting
+- Keep `npx tribunal init --full` as alternative for CI/scripting
 
 **INSTALL.md** — Restructure:
 - "Recommended: Claude-Guided Setup" as primary section
-- "Manual Installation" (npx metaswarm init --full) as secondary
-- "Updating" section referencing /metaswarm-update-version
+- "Manual Installation" (npx tribunal init --full) as secondary
+- "Updating" section referencing /tribunal-update-version
 - Remove or simplify the long manual customization matrix (the skill handles this now)
 
 **GETTING_STARTED.md** — Rewrite quickstart:
-- Step 1: `npx metaswarm init`
-- Step 2: Open Claude Code, run `/metaswarm-setup`
+- Step 1: `npx tribunal init`
+- Step 2: Open Claude Code, run `/tribunal-setup`
 - Step 3: Claude detects your project and configures everything
 - Step 4: Run `/start-task` on your first task
 
@@ -189,13 +189,13 @@ The `install` command should be idempotent (skip existing files, same as current
 
 **Description:**
 Add v0.7.0 entry:
-- Claude-guided installation (`/metaswarm-setup`)
-- Self-update command (`/metaswarm-update-version`)
-- Thin bootstrap (npx metaswarm init copies 3 files, not 60+)
+- Claude-guided installation (`/tribunal-setup`)
+- Self-update command (`/tribunal-update-version`)
+- Thin bootstrap (npx tribunal init copies 3 files, not 60+)
 - Project detection (language, framework, test runner, linter, CI, package manager)
 - Auto-customization of CLAUDE.md, coverage thresholds, .gitignore
-- Project profile (.metaswarm/project-profile.json)
-- `npx metaswarm install` as separate command
+- Project profile (.tribunal/project-profile.json)
+- `npx tribunal install` as separate command
 - `--full` flag preserves legacy behavior
 
 ---

@@ -31,47 +31,47 @@ function mkdirp(dir) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-const METASWARM_MARKER = '## metaswarm';
+const TRIBUNAL_MARKER = '## tribunal';
 
 // --- Platform-specific install functions ---
 
 function installClaude() {
   console.log('\n  Installing for Claude Code...\n');
   try {
-    console.log('  Running: claude plugin marketplace add dsifry/metaswarm-marketplace');
-    execSync('claude plugin marketplace add dsifry/metaswarm-marketplace', { stdio: 'inherit' });
-    console.log('  Running: claude plugin install metaswarm');
-    execSync('claude plugin install metaswarm', { stdio: 'inherit' });
+    console.log('  Running: claude plugin marketplace add jpeggdev/tribunal-marketplace');
+    execSync('claude plugin marketplace add jpeggdev/tribunal-marketplace', { stdio: 'inherit' });
+    console.log('  Running: claude plugin install tribunal');
+    execSync('claude plugin install tribunal', { stdio: 'inherit' });
     info('Claude Code plugin installed');
     console.log('  Next: Open Claude Code and run /setup');
   } catch (e) {
     warn(`Claude Code install failed: ${e.message}`);
     console.log('  Try manually:');
-    console.log('    claude plugin marketplace add dsifry/metaswarm-marketplace');
-    console.log('    claude plugin install metaswarm');
+    console.log('    claude plugin marketplace add jpeggdev/tribunal-marketplace');
+    console.log('    claude plugin install tribunal');
   }
 }
 
 function installCodex() {
   console.log('\n  Installing for Codex CLI...\n');
-  const installDir = path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'metaswarm');
+  const installDir = path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'tribunal');
   const skillsDir = path.join(os.homedir(), '.agents', 'skills');
 
   if (fs.existsSync(installDir)) {
     console.log(`  Updating existing installation at ${installDir}...`);
     try {
       execSync('git pull --rebase origin main', { cwd: installDir, stdio: 'inherit' });
-      info('Updated metaswarm');
+      info('Updated tribunal');
     } catch (e) {
       warn(`git pull failed: ${e.message || e}`);
       return;
     }
   } else {
-    console.log(`  Cloning metaswarm to ${installDir}...`);
+    console.log(`  Cloning tribunal to ${installDir}...`);
     mkdirp(path.dirname(installDir));
     try {
-      execSync(`git clone https://github.com/dsifry/metaswarm.git "${installDir}"`, { stdio: 'inherit' });
-      info('Cloned metaswarm');
+      execSync(`git clone https://github.com/jpeggdev/tribunal.git "${installDir}"`, { stdio: 'inherit' });
+      info('Cloned tribunal');
     } catch (e) {
       warn(`Clone failed: ${e.message}`);
       return;
@@ -86,7 +86,7 @@ function installCodex() {
     for (const dir of fs.readdirSync(skillsPath)) {
       const srcDir = path.join(skillsPath, dir);
       if (!fs.statSync(srcDir).isDirectory()) continue;
-      const linkName = `metaswarm-${dir}`;
+      const linkName = `tribunal-${dir}`;
       const linkPath = path.join(skillsDir, linkName);
 
       try {
@@ -111,21 +111,21 @@ function installCodex() {
 function installGemini() {
   console.log('\n  Installing for Gemini CLI...\n');
   try {
-    console.log('  Running: gemini extensions install https://github.com/dsifry/metaswarm.git');
-    execSync('gemini extensions install https://github.com/dsifry/metaswarm.git', { stdio: 'inherit' });
+    console.log('  Running: gemini extensions install https://github.com/jpeggdev/tribunal.git');
+    execSync('gemini extensions install https://github.com/jpeggdev/tribunal.git', { stdio: 'inherit' });
     info('Gemini CLI extension installed');
-    console.log('  Next: In your project, run /metaswarm:setup');
+    console.log('  Next: In your project, run /tribunal:setup');
   } catch (e) {
     warn(`Gemini CLI install failed: ${e.message}`);
     console.log('  Try manually:');
-    console.log('    gemini extensions install https://github.com/dsifry/metaswarm.git');
+    console.log('    gemini extensions install https://github.com/jpeggdev/tribunal.git');
   }
 }
 
 // --- Project-level setup ---
 
 function setupProject(platformFlag) {
-  console.log(`\nmetaswarm v${VERSION} — project setup\n`);
+  console.log(`\ntribunal v${VERSION} — project setup\n`);
 
   const platforms = detectPlatforms();
   const targetPlatforms = [];
@@ -164,11 +164,11 @@ function setupProject(platformFlag) {
       }
     } else {
       const existing = fs.readFileSync(instrPath, 'utf-8');
-      if (existing.includes(METASWARM_MARKER) || existing.includes('metaswarm')) {
-        skip(`${instrFile} (metaswarm reference already present)`);
+      if (existing.includes(TRIBUNAL_MARKER) || existing.includes('tribunal')) {
+        skip(`${instrFile} (tribunal reference already present)`);
       } else if (fs.existsSync(appendTemplate)) {
         fs.appendFileSync(instrPath, '\n' + fs.readFileSync(appendTemplate, 'utf-8'));
-        info(`${instrFile} (appended metaswarm section)`);
+        info(`${instrFile} (appended tribunal section)`);
       }
     }
   }
@@ -195,14 +195,14 @@ function setupProject(platformFlag) {
 
 function printHelp() {
   console.log(`
-metaswarm v${VERSION} — Cross-platform installer
+tribunal v${VERSION} — Cross-platform installer
 
 Usage:
-  metaswarm init [flags]        Install metaswarm for detected CLI tools
-  metaswarm setup [flags]       Set up metaswarm in the current project
-  metaswarm detect              Show which CLI tools are installed
-  metaswarm --help              Show this help
-  metaswarm --version           Show version
+  tribunal init [flags]        Install tribunal for detected CLI tools
+  tribunal setup [flags]       Set up tribunal in the current project
+  tribunal detect              Show which CLI tools are installed
+  tribunal --help              Show this help
+  tribunal --version           Show version
 
 Init flags:
   --claude            Install for Claude Code only
@@ -218,10 +218,10 @@ Setup flags:
   (no flag)           Auto-detect installed CLIs
 
 Examples:
-  npx metaswarm init            Auto-detect and install for all CLIs
-  npx metaswarm init --codex    Install for Codex CLI only
-  npx metaswarm setup           Set up project for detected CLIs
-  npx metaswarm detect          Show which CLIs are available
+  npx tribunal init            Auto-detect and install for all CLIs
+  npx tribunal init --codex    Install for Codex CLI only
+  npx tribunal setup           Set up project for detected CLIs
+  npx tribunal detect          Show which CLIs are available
 `);
 }
 
@@ -229,7 +229,7 @@ async function initCommand(args) {
   const flags = new Set(args);
   const platforms = detectPlatforms();
 
-  console.log(`\nmetaswarm v${VERSION} — init\n`);
+  console.log(`\ntribunal v${VERSION} — init\n`);
   console.log('  Detected CLI tools:\n');
   console.log(getSummary(platforms));
   console.log('');
@@ -254,22 +254,22 @@ async function initCommand(args) {
     if (installed.length === 0) {
       console.log('\n  No supported CLI tools detected.');
       console.log('  Install one of: claude, codex, gemini');
-      console.log('  Then re-run: npx metaswarm init\n');
+      console.log('  Then re-run: npx tribunal init\n');
     }
   }
 
-  console.log('\n  Init complete! Next: run `npx metaswarm setup` in your project.\n');
+  console.log('\n  Init complete! Next: run `npx tribunal setup` in your project.\n');
 }
 
 function detectCommand() {
   const platforms = detectPlatforms();
-  console.log(`\nmetaswarm v${VERSION} — platform detection\n`);
+  console.log(`\ntribunal v${VERSION} — platform detection\n`);
   console.log(getSummary(platforms));
   console.log('');
 
   const installed = Object.entries(platforms).filter(([, p]) => p.installed);
   if (installed.length > 0) {
-    console.log('  Install metaswarm:');
+    console.log('  Install tribunal:');
     for (const [, p] of installed) {
       console.log(`    ${p.name}: ${p.installCommand}`);
     }

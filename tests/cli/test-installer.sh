@@ -17,10 +17,10 @@ echo "=============================="
 echo ""
 
 # 1. CLI entry point exists
-if [ -f "$ROOT/cli/metaswarm.js" ]; then
-  pass "cli/metaswarm.js exists"
+if [ -f "$ROOT/cli/tribunal.js" ]; then
+  pass "cli/tribunal.js exists"
 else
-  fail "cli/metaswarm.js not found"
+  fail "cli/tribunal.js not found"
 fi
 
 # 2. Platform detection module exists
@@ -46,15 +46,15 @@ else
 fi
 
 # 5. CLI help works
-if node "$ROOT/cli/metaswarm.js" --help 2>&1 | grep -q "metaswarm"; then
-  pass "metaswarm --help works"
+if node "$ROOT/cli/tribunal.js" --help 2>&1 | grep -q "tribunal"; then
+  pass "tribunal --help works"
 else
-  fail "metaswarm --help failed"
+  fail "tribunal --help failed"
 fi
 
 # 6. CLI version works
 pkg_ver=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$ROOT/package.json','utf-8')).version)")
-cli_ver=$(node "$ROOT/cli/metaswarm.js" --version 2>&1)
+cli_ver=$(node "$ROOT/cli/tribunal.js" --version 2>&1)
 if [ "$pkg_ver" = "$cli_ver" ]; then
   pass "CLI version ($cli_ver) matches package.json ($pkg_ver)"
 else
@@ -62,10 +62,10 @@ else
 fi
 
 # 7. CLI detect command works
-if node "$ROOT/cli/metaswarm.js" detect 2>&1 | grep -q "platform detection"; then
-  pass "metaswarm detect runs"
+if node "$ROOT/cli/tribunal.js" detect 2>&1 | grep -q "platform detection"; then
+  pass "tribunal detect runs"
 else
-  fail "metaswarm detect failed"
+  fail "tribunal detect failed"
 fi
 
 # 8. Project setup dry run (in temp dir)
@@ -76,9 +76,9 @@ cd "$TMP_DIR"
 git init -q .
 
 # Run setup for claude platform
-node "$ROOT/cli/metaswarm.js" setup --claude 2>&1 | grep -q "setup complete" && \
-  pass "metaswarm setup --claude works" || \
-  fail "metaswarm setup --claude failed"
+node "$ROOT/cli/tribunal.js" setup --claude 2>&1 | grep -q "setup complete" && \
+  pass "tribunal setup --claude works" || \
+  fail "tribunal setup --claude failed"
 
 # Check files were created
 if [ -f "$TMP_DIR/CLAUDE.md" ]; then

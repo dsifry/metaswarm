@@ -59,39 +59,39 @@ trap "rm -rf $TMPDIR_BASE" EXIT
 echo "Running session-start.sh tests..."
 echo ""
 
-# --- Test 1: New project (no .metaswarm/project-profile.json) ---
+# --- Test 1: New project (no .tribunal/project-profile.json) ---
 echo "Test 1: New project detection"
 TEST_CWD="$TMPDIR_BASE/test1"
 mkdir -p "$TEST_CWD"
 output=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
-assert_contains "Contains setup nudge" "$output" "metaswarm:setup"
+assert_contains "Contains setup nudge" "$output" "tribunal:setup"
 
-# --- Test 2: Configured project (has .metaswarm/project-profile.json) ---
+# --- Test 2: Configured project (has .tribunal/project-profile.json) ---
 echo "Test 2: Configured project"
 TEST_CWD="$TMPDIR_BASE/test2"
-mkdir -p "$TEST_CWD/.metaswarm"
-echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+mkdir -p "$TEST_CWD/.tribunal"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.tribunal/project-profile.json"
 output=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
-assert_not_contains "No setup nudge" "$output" "metaswarm:setup"
+assert_not_contains "No setup nudge" "$output" "tribunal:setup"
 
 # --- Test 3: Legacy install detection ---
 echo "Test 3: Legacy install detection"
 TEST_CWD="$TMPDIR_BASE/test3"
-mkdir -p "$TEST_CWD/.claude/plugins/metaswarm/.claude-plugin"
-echo '{"name":"metaswarm","version":"0.8.0"}' > "$TEST_CWD/.claude/plugins/metaswarm/.claude-plugin/plugin.json"
-mkdir -p "$TEST_CWD/.metaswarm"
-echo '{"distribution":"npm"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+mkdir -p "$TEST_CWD/.claude/plugins/tribunal/.claude-plugin"
+echo '{"name":"tribunal","version":"0.8.0"}' > "$TEST_CWD/.claude/plugins/tribunal/.claude-plugin/plugin.json"
+mkdir -p "$TEST_CWD/.tribunal"
+echo '{"distribution":"npm"}' > "$TEST_CWD/.tribunal/project-profile.json"
 output=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
-assert_contains "Contains migrate message" "$output" "metaswarm:migrate"
+assert_contains "Contains migrate message" "$output" "tribunal:migrate"
 
 # --- Test 4: BEADS dedup detection ---
 echo "Test 4: BEADS dedup detection"
 TEST_CWD="$TMPDIR_BASE/test4"
-mkdir -p "$TEST_CWD/.metaswarm"
-echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+mkdir -p "$TEST_CWD/.tribunal"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.tribunal/project-profile.json"
 # Simulate a BEADS plugin in the cache
 MOCK_CACHE="$TMPDIR_BASE/.claude/plugins/cache/beads-marketplace/beads/1.0.0/.claude-plugin"
 mkdir -p "$MOCK_CACHE"
@@ -102,8 +102,8 @@ assert_json_valid "Output is valid JSON" "$output"
 # --- Test 5: Multi-line bd prime output produces valid JSON ---
 echo "Test 5: Multi-line content produces valid JSON"
 TEST_CWD="$TMPDIR_BASE/test5"
-mkdir -p "$TEST_CWD/.metaswarm"
-echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+mkdir -p "$TEST_CWD/.tribunal"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.tribunal/project-profile.json"
 # Create a mock bd that outputs multi-line content
 MOCK_BIN="$TMPDIR_BASE/mock-bin"
 mkdir -p "$MOCK_BIN"
@@ -120,8 +120,8 @@ assert_json_valid "Multi-line output produces valid JSON" "$output"
 # --- Test 6: Idempotency (run twice, same output) ---
 echo "Test 6: Idempotency"
 TEST_CWD="$TMPDIR_BASE/test6"
-mkdir -p "$TEST_CWD/.metaswarm"
-echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+mkdir -p "$TEST_CWD/.tribunal"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.tribunal/project-profile.json"
 output1=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 output2=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 TOTAL=$((TOTAL + 1))

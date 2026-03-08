@@ -6,7 +6,7 @@
 
 ## Problem
 
-The metaswarm orchestrator (Claude) consumes expensive tokens on every task, including simple ones that cheaper models handle well. Meanwhile, using a single model for both implementation and review creates blind spots — shared reasoning patterns mean shared failure modes.
+The tribunal orchestrator (Claude) consumes expensive tokens on every task, including simple ones that cheaper models handle well. Meanwhile, using a single model for both implementation and review creates blind spots — shared reasoning patterns mean shared failure modes.
 
 ## Solution
 
@@ -21,7 +21,7 @@ A skill and adapter system that delegates implementation and review tasks to ext
 1. **One job, one invocation** — an external tool implements OR reviews, never self-validates
 2. **Minimal permissions** — sandboxed execution, scoped to the task's working directory
 3. **Orchestrator verifies independently** — external tools never gate their own output
-4. **Trust nothing, verify everything** — consistent with metaswarm's existing philosophy
+4. **Trust nothing, verify everything** — consistent with tribunal's existing philosophy
 
 ## External Tools Targeted (v1)
 
@@ -39,7 +39,7 @@ Both tools support:
 ## Architecture
 
 ```
-metaswarm/
+tribunal/
 ├── skills/
 │   └── external-tools/
 │       ├── skill.md                  # Orchestration skill (routing, escalation, 4-phase integration)
@@ -56,7 +56,7 @@ metaswarm/
 
 ### Configuration
 
-Per-project config at `.metaswarm/external-tools.yaml` (optional — if absent, external tools are not used):
+Per-project config at `.tribunal/external-tools.yaml` (optional — if absent, external tools are not used):
 
 ```yaml
 adapters:
@@ -256,7 +256,7 @@ Worst case: 3 attempts before user alert.
 ### No external models available:
 
 ```
-Existing metaswarm behavior unchanged.
+Existing tribunal behavior unchanged.
 Claude implements via Task() mechanism.
 Standard adversarial review (fresh Task() instance).
 ```
@@ -275,7 +275,7 @@ elif len(available_tools) == 1:
     reviewers = [implementer, claude]  # mutual review
     escalation = [implementer, claude, user]
 else:
-    # pure metaswarm, no change
+    # pure tribunal, no change
     implementer = claude
     reviewers = [claude_fresh_task]
     escalation = [claude, user]
@@ -425,7 +425,7 @@ These learnings improve future routing decisions automatically.
 
 ## Context Packaging: The Prompt File
 
-The prompt file is the key interface between metaswarm and external tools. It must be self-contained — the external tool has no access to BEADS, knowledge base, or conversation history.
+The prompt file is the key interface between tribunal and external tools. It must be self-contained — the external tool has no access to BEADS, knowledge base, or conversation history.
 
 ### Prompt File Structure
 
@@ -460,7 +460,7 @@ To add support for a new external tool (e.g., `cursor`, `aider`, `cline`):
 2. Use `_common.sh` helpers for worktree, temp files, logging, scope verification
 3. Handle tool-specific CLI flags and output parsing internally
 4. Return the standard JSON output format
-5. Add the tool to `.metaswarm/external-tools.yaml`
+5. Add the tool to `.tribunal/external-tools.yaml`
 6. Add a Docker image or sandbox profile if needed
 
 The adapter is responsible for translating between the uniform protocol and the tool's specific CLI. All tool-specific quirks stay inside the adapter.

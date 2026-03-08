@@ -1,44 +1,44 @@
 # Getting Started
 
-This guide walks you through your first metaswarm-orchestrated workflow.
+This guide walks you through your first tribunal-orchestrated workflow.
 
-## Step 1: Install metaswarm
+## Step 1: Install tribunal
 
 Choose your platform:
 
 **Claude Code:**
 ```bash
-claude plugin marketplace add dsifry/metaswarm-marketplace
-claude plugin install metaswarm
+claude plugin marketplace add jpeggdev/tribunal-marketplace
+claude plugin install tribunal
 ```
 
 **Gemini CLI:**
 ```bash
-gemini extensions install https://github.com/dsifry/metaswarm.git
+gemini extensions install https://github.com/jpeggdev/tribunal.git
 ```
 
 **Codex CLI:**
 ```bash
-curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jpeggdev/tribunal/main/.codex/install.sh | bash
 ```
 
 **All platforms at once:**
 ```bash
-npx metaswarm init
+npx tribunal init
 ```
 
 Then run setup in your project:
 - Claude Code: `/setup`
-- Gemini CLI: `/metaswarm:setup`
+- Gemini CLI: `/tribunal:setup`
 - Codex CLI: `$setup`
 
 The setup skill detects your project's language, framework, test runner, and tools, then configures everything interactively.
 
-> **Upgrading from an older version?** If you previously installed via `npx metaswarm init` (pre-v0.10.0), run `/migrate` in Claude Code to clean up old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details.
+> **Upgrading from an older version?** If you previously installed via `npx tribunal init` (pre-v0.10.0), run `/migrate` in Claude Code to clean up old npm-installed files. See [INSTALL.md](INSTALL.md#upgrading-to-v090) for details.
 
 Start your first task:
 - Claude Code: `/start-task`
-- Gemini CLI: `/metaswarm:start-task`
+- Gemini CLI: `/tribunal:start-task`
 - Codex CLI: `$start`
 
 Verify it worked:
@@ -56,7 +56,7 @@ echo '{"id": "pattern-001", "type": "pattern", "fact": "All API routes require a
 
 ## One-Shot Build: From Empty Repo to Working App
 
-The fastest way to see metaswarm in action is to give it a project to build from scratch. Here's the full recipe.
+The fastest way to see tribunal in action is to give it a project to build from scratch. Here's the full recipe.
 
 ### 1. Set up the project
 
@@ -66,13 +66,13 @@ git init
 npm init -y        # or whatever your stack needs
 ```
 
-Then open Claude Code and tell it to install metaswarm:
+Then open Claude Code and tell it to install tribunal:
 
 ```text
-> Read through https://github.com/dsifry/metaswarm and install it for my project.
+> Read through https://github.com/jpeggdev/tribunal and install it for my project.
 ```
 
-Or install directly: `claude plugin marketplace add dsifry/metaswarm-marketplace` then `claude plugin install metaswarm`, then run `/setup`.
+Or install directly: `claude plugin marketplace add jpeggdev/tribunal-marketplace` then `claude plugin install tribunal`, then run `/setup`.
 
 ### 2. Tell Claude what to build
 
@@ -102,7 +102,7 @@ File scope:
 - src/shared/ — Shared types
 - src/server/**/*.test.ts — Backend tests
 
-Use the full metaswarm orchestration workflow:
+Use the full tribunal orchestration workflow:
 research the codebase, create an implementation plan, run the design
 review gate, decompose into work units, and execute each through the
 4-phase loop (implement, validate, adversarial review, commit).
@@ -153,7 +153,7 @@ After all work units pass and the final comprehensive review is clean, the PR Sh
 
 ### What just happened
 
-In one prompt, metaswarm:
+In one prompt, tribunal:
 - Decomposed your spec into discrete work units with dependency ordering
 - Implemented each unit with TDD (tests first, then code)
 - Independently validated every unit (ran tsc, eslint, vitest itself — never trusted the coding agent)
@@ -178,7 +178,7 @@ You described what you wanted. The system figured out how to build it.
 
 ## The Pieces (Step by Step)
 
-The rest of this guide walks through metaswarm's components individually. If you just ran the one-shot build above, you've already seen all of these in action.
+The rest of this guide walks through tribunal's components individually. If you just ran the one-shot build above, you've already seen all of these in action.
 
 ## Step 2: Start Your First Task
 
@@ -227,7 +227,7 @@ bd ready
 /start-task <task-id>
 ```
 
-**Team Mode**: If multiple Claude Code sessions are active on the same repository, metaswarm automatically detects this and enables Team Mode with persistent teammates and direct inter-agent messaging. No configuration needed — see `guides/agent-coordination.md` for details.
+**Team Mode**: If multiple Claude Code sessions are active on the same repository, tribunal automatically detects this and enables Team Mode with persistent teammates and direct inter-agent messaging. No configuration needed — see `guides/agent-coordination.md` for details.
 
 **Development Guides**: The `guides/` directory contains 6 reference guides covering coding standards, testing patterns, git workflow, worktree development, build validation, and agent coordination. Agents load these automatically when relevant.
 
@@ -363,7 +363,7 @@ Append JSONL entries to the appropriate file in `knowledge/`:
 
 ## Optional: Set Up External Tools
 
-metaswarm can delegate work to Codex (OpenAI) and Gemini (Google) for cost savings and cross-model adversarial review. This is optional — skip this section if you only want to use Claude.
+tribunal can delegate work to Codex (OpenAI) and Gemini (Google) for cost savings and cross-model adversarial review. This is optional — skip this section if you only want to use Claude.
 
 1. **Install** the CLIs:
    ```bash
@@ -377,7 +377,7 @@ metaswarm can delegate work to Codex (OpenAI) and Gemini (Google) for cost savin
 
 3. **Copy the config** into your project:
    ```bash
-   mkdir -p .metaswarm && cp templates/external-tools.yaml .metaswarm/
+   mkdir -p .tribunal && cp templates/external-tools.yaml .tribunal/
    ```
 
 4. **Verify** everything works:
