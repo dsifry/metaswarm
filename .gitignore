@@ -24,3 +24,6 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# Tribunal agent performance stats (local per-machine)
+tribunal-stats.jsonl

@@ -1,0 +1,77 @@
+# tribunal.yaml — Layered configuration for Tribunal
+# Common settings apply to all CLI tools. Tool-specific blocks override common.
+# Resolution: effective_config = deep_merge(common, tool_specific[active_cli])
+#
+# Scalars: tool-specific wins
+# Objects: recursively merged
+# Arrays: tool-specific replaces entirely
+
+common:
+  timeout_seconds: 300
+  sandbox: docker
+
+  coverage:
+    lines: 100
+    branches: 100
+    functions: 100
+    statements: 100
+
+  enforcement:
+    command: "pnpm test:coverage"
+    block_pr_creation: true
+    block_task_completion: true
+
+  debate:
+    rounds: 2
+    agents:
+      - architect
+      - security
+      - cto
+    allow_extra_round: true
+
+  agent_selection:
+    strategy: weighted_decay
+    decay_rate: 0.1
+    min_samples: 3
+    static_priority:
+      default:
+        - gemini
+        - codex
+        - claude
+      implementation:
+        - gemini
+        - codex
+        - claude
+      review:
+        - claude
+        - gemini
+        - codex
+      planning:
+        - claude
+        - codex
+        - gemini
+      testing:
+        - gemini
+        - codex
+        - claude
+
+  escalation:
+    max_retries: 3
+    max_total_attempts: 7
+    alert_user_on_exhaustion: true
+
+  health_check:
+    per_task: true
+
+# claude:
+#   timeout_seconds: 600
+#   role: orchestrator
+
+# gemini:
+#   timeout_seconds: 180
+#   sandbox: none
+#   coverage:
+#     branches: 90
+
+# codex:
+#   sandbox: platform
