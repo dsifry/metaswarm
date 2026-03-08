@@ -225,7 +225,7 @@ Examples:
 `);
 }
 
-async function initCommand(args) {
+function initCommand(args) {
   const flags = new Set(args);
   const platforms = detectPlatforms();
 

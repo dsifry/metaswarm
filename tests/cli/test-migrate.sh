@@ -76,7 +76,7 @@ fi
 
 # --- Test: does not overwrite existing tribunal.yaml ---
 TMPDIR2=$(mktemp -d)
-trap 'rm -rf "$TMPDIR2"' EXIT
+trap 'rm -rf "$TMPDIR" "$TMPDIR2"' EXIT
 
 echo "existing: true" > "$TMPDIR2/tribunal.yaml"
 mkdir -p "$TMPDIR2/.metaswarm"
