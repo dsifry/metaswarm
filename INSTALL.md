@@ -5,7 +5,7 @@ tribunal works with Claude Code, Gemini CLI, and Codex CLI. Install for one plat
 ## Claude Code (Plugin Marketplace)
 
 ```bash
-claude plugin marketplace add jpeggdev/tribunal-marketplace
+claude plugin marketplace add jpeggdev/tribunal
 claude plugin install tribunal
 ```
 
@@ -135,7 +135,7 @@ This is the most common upgrade path. Your project has tribunal files in `.claud
 
 1. **Install the plugin:**
    ```bash
-   claude plugin marketplace add jpeggdev/tribunal-marketplace
+   claude plugin marketplace add jpeggdev/tribunal
    claude plugin install tribunal
    ```
 

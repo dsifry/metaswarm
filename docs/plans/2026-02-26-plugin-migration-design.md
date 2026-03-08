@@ -15,7 +15,7 @@ Tribunal is currently distributed as an npm package (`npx tribunal init`) that c
 ## Goals
 
 - **Zero Node.js dependency for install and core usage** — install and run tribunal from within Claude Code without Node.js. Some optional features (self-reflect scripts, PR comment fetching) require Node.js and are documented as such.
-- **One-command install** — `/plugin marketplace add jpeggdev/tribunal-marketplace`
+- **One-command install** — `/plugin marketplace add jpeggdev/tribunal`
 - **Automatic updates** — marketplace auto-updater keeps users current
 - **Multi-CLI architecture** — structure supports future expansion to Codex, OpenCode, Cursor. Implementation of non-Claude spokes is future work, listed under Architecture Principles, not v1.0 deliverables.
 - **Backward compatible** — existing npm-installed users can migrate or keep working
@@ -242,10 +242,10 @@ tribunal/
     └── README.opencode.md       # Future
 ```
 
-### Marketplace Repo (`jpeggdev/tribunal-marketplace`)
+### Marketplace Repo (`jpeggdev/tribunal`)
 
 ```
-tribunal-marketplace/
+tribunal/
 └── .claude-plugin/
     └── marketplace.json
 ```
@@ -254,7 +254,7 @@ The marketplace repo is lightweight — just the manifest pointing to the plugin
 
 ```json
 {
-  "name": "tribunal-marketplace",
+  "name": "tribunal",
   "owner": {
     "name": "David Sifry",
     "email": "david@sifry.com"
@@ -283,7 +283,7 @@ The marketplace repo is lightweight — just the manifest pointing to the plugin
 
 **Release process**: When tribunal tags a new release (e.g., `v1.1.0`), update the marketplace.json `ref` and `version` fields and push. A CI workflow in the marketplace repo can automate this on tag events in the plugin repo.
 
-**Install command**: `/plugin marketplace add jpeggdev/tribunal-marketplace`
+**Install command**: `/plugin marketplace add jpeggdev/tribunal`
 
 ## plugin.json Specification
 
@@ -597,7 +597,7 @@ When both the old embedded plugin and new marketplace plugin are loaded:
 
 1. **v0.9.0 (final npm release)**: Publish npm package that:
    - Still works normally (init + install)
-   - Prints deprecation notice on install: "tribunal has moved to a Claude Code plugin. Install with: `/plugin marketplace add jpeggdev/tribunal-marketplace`"
+   - Prints deprecation notice on install: "tribunal has moved to a Claude Code plugin. Install with: `/plugin marketplace add jpeggdev/tribunal`"
    - Updates README with migration instructions
    - Includes the security fixes (CI template, awk)
 
@@ -682,7 +682,7 @@ The `bd` CLI (BEADS) is used for knowledge priming, issue tracking, and self-ref
 ## Success Criteria
 
 - [ ] `npx tribunal` is no longer required for new users
-- [ ] Plugin installs via `/plugin marketplace add jpeggdev/tribunal-marketplace`
+- [ ] Plugin installs via `/plugin marketplace add jpeggdev/tribunal`
 - [ ] `/tribunal:setup` fully replaces `npx tribunal init` + `/tribunal-setup`
 - [ ] All 13 skills load correctly from plugin cache (verified with `/plugin validate .`)
 - [ ] All 11 commands appear in autocomplete

@@ -114,7 +114,7 @@ tribunal/
 ### Claude Code (recommended)
 
 ```bash
-claude plugin marketplace add jpeggdev/tribunal-marketplace
+claude plugin marketplace add jpeggdev/tribunal
 claude plugin install tribunal
 ```
 

@@ -39,7 +39,7 @@ Before presenting any migration preview or file list, ALWAYS lead with this fram
 2. Read `.tribunal/project-profile.json` -- if `"distribution": "plugin"` is already set, inform the user migration was already completed and exit
 3. Verify `.claude/plugins/tribunal/.claude-plugin/plugin.json` exists -- if not, there is nothing to migrate; inform the user and exit
 
-If the plugin is not loaded, the user needs to install it first: `/plugin marketplace add jpeggdev/tribunal-marketplace`
+If the plugin is not loaded, the user needs to install it first: `/plugin marketplace add jpeggdev/tribunal`
 
 ---
 

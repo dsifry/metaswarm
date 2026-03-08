@@ -1471,7 +1471,7 @@ Change `"version": "0.8.0"` → `"version": "0.9.0"`
 
 Add a deprecation note in description:
 ```json
-"description": "DEPRECATED — Use the Claude Code plugin instead: /plugin marketplace add jpeggdev/tribunal-marketplace"
+"description": "DEPRECATED — Use the Claude Code plugin instead: /plugin marketplace add jpeggdev/tribunal"
 ```
 
 **Step 2: Add deprecation notice to CLI**
@@ -1481,7 +1481,7 @@ At the top of `cli/tribunal.js` (after `const VERSION = ...`), add:
 ```javascript
 console.log('');
 console.log('  ⚠  tribunal has moved to a Claude Code plugin.');
-console.log('  Install with: /plugin marketplace add jpeggdev/tribunal-marketplace');
+console.log('  Install with: /plugin marketplace add jpeggdev/tribunal');
 console.log('  See: https://github.com/jpeggdev/tribunal for details.');
 console.log('');
 ```
@@ -1590,7 +1590,7 @@ Update the installation section:
 ### Plugin (Recommended)
 In Claude Code, run:
 ```
-/plugin marketplace add jpeggdev/tribunal-marketplace
+/plugin marketplace add jpeggdev/tribunal
 ```
 Then in any project: `/tribunal:setup`
 
@@ -1634,13 +1634,13 @@ git commit -m "docs: update documentation for plugin distribution"
 
 ### Task 23: Create marketplace repository
 
-This is a separate repo (`jpeggdev/tribunal-marketplace`). Can be created later.
+This is a separate repo (`jpeggdev/tribunal`). Can be created later.
 
 **Step 1: Note the marketplace.json content for later**
 
 ```json
 {
-  "name": "tribunal-marketplace",
+  "name": "tribunal",
   "owner": {
     "name": "David Sifry",
     "email": "david@sifry.com"
@@ -1673,13 +1673,13 @@ This goes in a new repo at `.claude-plugin/marketplace.json`.
 
 ```bash
 # Create on GitHub
-gh repo create jpeggdev/tribunal-marketplace --public --description "Marketplace manifest for the tribunal Claude Code plugin"
+gh repo create jpeggdev/tribunal --public --description "Marketplace manifest for the tribunal Claude Code plugin"
 
 # Clone and add files
-git clone git@github.com:jpeggdev/tribunal-marketplace.git /tmp/tribunal-marketplace
-mkdir -p /tmp/tribunal-marketplace/.claude-plugin
+git clone git@github.com:jpeggdev/tribunal.git /tmp/tribunal
+mkdir -p /tmp/tribunal/.claude-plugin
 # Write marketplace.json
-cd /tmp/tribunal-marketplace
+cd /tmp/tribunal
 git add .claude-plugin/marketplace.json
 git commit -m "feat: initial marketplace manifest for tribunal v1.0.0"
 git push

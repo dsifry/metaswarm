@@ -8,7 +8,7 @@ Choose your platform:
 
 **Claude Code:**
 ```bash
-claude plugin marketplace add jpeggdev/tribunal-marketplace
+claude plugin marketplace add jpeggdev/tribunal
 claude plugin install tribunal
 ```
 
@@ -72,7 +72,7 @@ Then open Claude Code and tell it to install tribunal:
 > Read through https://github.com/jpeggdev/tribunal and install it for my project.
 ```
 
-Or install directly: `claude plugin marketplace add jpeggdev/tribunal-marketplace` then `claude plugin install tribunal`, then run `/setup`.
+Or install directly: `claude plugin marketplace add jpeggdev/tribunal` then `claude plugin install tribunal`, then run `/setup`.
 
 ### 2. Tell Claude what to build
 
