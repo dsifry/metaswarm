@@ -50,6 +50,7 @@ bd doctor         # Check system health
 | **Designer Agent**        | UX/API design review           | Design review gate (parallel)      |
 | **Security Design Agent** | Security threat modeling       | Design review gate (parallel)      |
 | **CTO Agent**             | TDD readiness & plan review    | Design review gate (parallel)      |
+| **Debate Agents**        | Propose & critique solutions   | Research complete (before design review) |
 | **Coder Agent**           | TDD implementation             | Design review gate approved        |
 | **Code Review Agent**     | Internal code review           | Implementation complete            |
 | **Security Auditor**      | Security review (code)         | Implementation complete            |
@@ -270,6 +271,14 @@ GitHub Issue #123 (agent-ready label)
 │       Research Phase                 │
 │  Researcher Agent explores codebase  │
 └─────────────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────────────────────────┐
+│       Debate Phase (if configured)               │
+│  Agents propose & critique solutions             │
+│  User selects approach → becomes design doc      │
+│  Config: tribunal.yaml → common.debate           │
+└─────────────────────────────────────────────────┘
         │
         ▼
 ┌─────────────────────────────────────┐

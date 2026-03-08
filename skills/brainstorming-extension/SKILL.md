@@ -107,11 +107,21 @@ Spawning reviews:
 This typically takes 2-3 minutes...
 ```
 
-### Step 2: Invoke the Design Review Gate
+### Step 2: Run Debate Phase (if configured)
+
+Check `tribunal.yaml` for debate configuration. If `debate.rounds > 0` and `debate.agents` is non-empty:
+
+1. Invoke the `debate` skill with the design document and research findings
+2. Wait for user to select an approach
+3. The selected approach replaces the original design document
+
+If debate is not configured (no tribunal.yaml or debate section), skip directly to the design review gate.
+
+### Step 3: Invoke the Design Review Gate
 
 Invoke the `design-review-gate` skill with the path to the design document. This spawns all 5 review agents in parallel.
 
-### Step 3: Report Results
+### Step 4: Report Results
 
 **If ALL APPROVED:**
 
@@ -157,7 +167,7 @@ Please revise the design document and I'll re-run the review gate.
 (Iteration 1 of 3)
 ```
 
-### Step 4: Iterate or Proceed
+### Step 5: Iterate or Proceed
 
 - If NEEDS_REVISION: Help user address issues, re-run gate (max 3 iterations)
 - If ALL APPROVED: Proceed to planning phase
