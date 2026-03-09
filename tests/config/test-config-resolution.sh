@@ -109,9 +109,11 @@ if [ $RC -ne 0 ]; then
 else
   set +e
   LINES=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.lines)" 2>&1)
-  BRANCHES=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.branches)" 2>&1)
-  FUNCTIONS=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.functions)" 2>&1)
   PARSE_RC=$?
+  BRANCHES=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.branches)" 2>&1)
+  PARSE_RC=$(( PARSE_RC | $? ))
+  FUNCTIONS=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.functions)" 2>&1)
+  PARSE_RC=$(( PARSE_RC | $? ))
   set -e
   if [ $PARSE_RC -ne 0 ]; then
     fail "nested merge: JSON parse failed"

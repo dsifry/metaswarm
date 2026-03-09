@@ -2,6 +2,8 @@
 
 > **Note**: `/tribunal-update-version` is preserved as a legacy alias for `/update`.
 
+> **v1.0.0+**: Plugin-based installations receive automatic updates via the marketplace. The npm commands below apply only to the legacy npm v0.9.0 installation. Legacy npm users should migrate via `/migrate`.
+
 Update tribunal to the latest version, refresh component files, and re-detect project context.
 
 ## Usage

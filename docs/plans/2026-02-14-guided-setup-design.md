@@ -40,7 +40,7 @@ Copies ONLY:
 - Minimal CLAUDE.md entry (create or append) pointing to `/tribunal-setup`
 
 Prints:
-```
+```text
 tribunal bootstrapped.
 Open Claude Code and run: /tribunal-setup
 ```

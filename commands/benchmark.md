@@ -3,7 +3,7 @@ name: benchmark
 description: Fetch and compare CLI tool benchmark data
 ---
 
-# /benchmark
+# $benchmark
 
 Search for recent CLI tool benchmarks and synthesize results into a ranked summary.
 
@@ -11,7 +11,7 @@ Search for recent CLI tool benchmarks and synthesize results into a ranked summa
 
 ```text
 $benchmark                          Benchmark all task types
-$benchmark --task-type coding       Benchmark a specific task type
+$benchmark --task-type implementation  Benchmark a specific task type
 $benchmark --update-config          Update static_priority in tribunal.yaml based on results
 ```
 
@@ -20,7 +20,7 @@ $benchmark --update-config          Update static_priority in tribunal.yaml base
 1. Performs a web search for recent CLI tool benchmark results (Gemini CLI, OpenAI Codex, Claude Code, etc.)
 2. Collects scores from recognized benchmark sources (SWE-bench, HumanEval, coding competitions, etc.)
 3. Synthesizes findings into a ranked summary table
-4. Optionally updates `static_priority` in `tribunal.yaml` to reflect benchmark rankings
+4. Optionally updates `static_priority` in `tribunal.yaml` to reflect benchmark rankings (updates each task type: default, implementation, review, planning, testing)
 
 ## Example Output
 
@@ -43,8 +43,15 @@ Composite Ranking (averaged):
   2. gemini    — 78.9
   3. codex     — 78.9
 
-Current static_priority: gemini, codex, claude
-Suggested static_priority: claude, gemini, codex
+Current static_priority:
+  default: gemini, codex, claude
+  implementation: gemini, codex, claude
+  review: claude, gemini, codex
+  planning: claude, codex, gemini
+  testing: gemini, codex, claude
+
+Suggested static_priority (all task types):
+  claude, gemini, codex
 
 Run $benchmark --update-config to apply the suggested order.
 ```
@@ -53,7 +60,7 @@ Run $benchmark --update-config to apply the suggested order.
 
 | Flag | Description |
 |------|-------------|
-| `--task-type <type>` | Filter benchmarks to a specific task type (coding, review, debug) |
+| `--task-type <type>` | Filter benchmarks to a specific task type (implementation, review, planning, testing) |
 | `--update-config` | Write suggested `static_priority` to `tribunal.yaml` |
 | `--sources` | List recognized benchmark sources |
 
