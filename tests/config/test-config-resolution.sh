@@ -44,8 +44,13 @@ set -e
 if [ $RC -ne 0 ]; then
   fail "common-only: resolver exited non-zero"
 else
-  TIMEOUT=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.timeout_seconds)")
-  if [ "$TIMEOUT" = "300" ]; then
+  set +e
+  TIMEOUT=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.timeout_seconds)" 2>&1)
+  PARSE_RC=$?
+  set -e
+  if [ $PARSE_RC -ne 0 ]; then
+    fail "common-only: JSON parse failed"
+  elif [ "$TIMEOUT" = "300" ]; then
     pass "common-only: timeout_seconds = 300"
   else
     fail "common-only: expected 300, got $TIMEOUT"
@@ -69,8 +74,13 @@ set -e
 if [ $RC -ne 0 ]; then
   fail "scalar override: resolver exited non-zero"
 else
-  TIMEOUT=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.timeout_seconds)")
-  if [ "$TIMEOUT" = "600" ]; then
+  set +e
+  TIMEOUT=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.timeout_seconds)" 2>&1)
+  PARSE_RC=$?
+  set -e
+  if [ $PARSE_RC -ne 0 ]; then
+    fail "scalar override: JSON parse failed"
+  elif [ "$TIMEOUT" = "600" ]; then
     pass "scalar override: claude timeout_seconds = 600"
   else
     fail "scalar override: expected 600, got $TIMEOUT"
@@ -97,10 +107,15 @@ set -e
 if [ $RC -ne 0 ]; then
   fail "nested merge: resolver exited non-zero"
 else
-  LINES=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.lines)")
-  BRANCHES=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.branches)")
-  FUNCTIONS=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.functions)")
-  if [ "$LINES" = "100" ] && [ "$BRANCHES" = "90" ] && [ "$FUNCTIONS" = "100" ]; then
+  set +e
+  LINES=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.lines)" 2>&1)
+  BRANCHES=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.branches)" 2>&1)
+  FUNCTIONS=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.functions)" 2>&1)
+  PARSE_RC=$?
+  set -e
+  if [ $PARSE_RC -ne 0 ]; then
+    fail "nested merge: JSON parse failed"
+  elif [ "$LINES" = "100" ] && [ "$BRANCHES" = "90" ] && [ "$FUNCTIONS" = "100" ]; then
     pass "nested merge: gemini overrides branches only, lines+functions inherited"
   else
     fail "nested merge: expected 100/90/100, got $LINES/$BRANCHES/$FUNCTIONS"
@@ -132,8 +147,13 @@ set -e
 if [ $RC -ne 0 ]; then
   fail "array replace: resolver exited non-zero"
 else
-  COUNT=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.debate.agents.length)")
-  if [ "$COUNT" = "4" ]; then
+  set +e
+  COUNT=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.debate.agents.length)" 2>&1)
+  PARSE_RC=$?
+  set -e
+  if [ $PARSE_RC -ne 0 ]; then
+    fail "array replace: JSON parse failed"
+  elif [ "$COUNT" = "4" ]; then
     pass "array replace: claude debate agents = 4 (replaced, not merged)"
   else
     fail "array replace: expected 4, got $COUNT"
@@ -156,8 +176,13 @@ set -e
 if [ $RC -ne 0 ]; then
   fail "missing tool block: resolver exited non-zero"
 else
-  TIMEOUT=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.timeout_seconds)")
-  if [ "$TIMEOUT" = "300" ]; then
+  set +e
+  TIMEOUT=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.timeout_seconds)" 2>&1)
+  PARSE_RC=$?
+  set -e
+  if [ $PARSE_RC -ne 0 ]; then
+    fail "missing tool block: JSON parse failed"
+  elif [ "$TIMEOUT" = "300" ]; then
     pass "missing tool block: codex falls back to common"
   else
     fail "missing tool block: expected 300, got $TIMEOUT"

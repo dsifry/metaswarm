@@ -10,9 +10,9 @@ Search for recent CLI tool benchmarks and synthesize results into a ranked summa
 ## Usage
 
 ```text
-/benchmark                          Benchmark all task types
-/benchmark --task-type coding       Benchmark a specific task type
-/benchmark --update-config          Update static_priority in tribunal.yaml based on results
+$benchmark                          Benchmark all task types
+$benchmark --task-type coding       Benchmark a specific task type
+$benchmark --update-config          Update static_priority in tribunal.yaml based on results
 ```
 
 ## Behavior
@@ -46,7 +46,7 @@ Composite Ranking (averaged):
 Current static_priority: gemini, codex, claude
 Suggested static_priority: claude, gemini, codex
 
-Run /benchmark --update-config to apply the suggested order.
+Run $benchmark --update-config to apply the suggested order.
 ```
 
 ## Options

@@ -256,7 +256,7 @@ When an agent fails, log the failure but do not retry within the debate — retr
 
 ## Related Skills
 
-- `research` — Upstream: provides the research findings that feed into debate context
-- `design-review-gate` — Downstream: reviews the design document produced from the winning approach
-- `brainstorming-extension` — Bridges brainstorming into the quality pipeline; invokes debate when configured
-- `config` — Manages `tribunal.yaml` where debate settings are stored
+- `$research` — Upstream: provides the research findings that feed into debate context
+- `$design-review-gate` — Downstream: reviews the design document produced from the winning approach
+- `$brainstorming-extension` — Bridges brainstorming into the quality pipeline; invokes debate when configured
+- `$config` — Manages `tribunal.yaml` where debate settings are stored

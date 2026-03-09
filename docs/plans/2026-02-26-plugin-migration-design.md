@@ -244,13 +244,15 @@ tribunal/
 
 ### Marketplace Repo (`jpeggdev/tribunal`)
 
+> **Note**: The marketplace repo and plugin repo are the same repository (`jpeggdev/tribunal`). This is a deliberate design simplification — the marketplace manifest lives alongside the plugin source code, eliminating the need for a separate registry repo.
+
 ```
 tribunal/
 └── .claude-plugin/
     └── marketplace.json
 ```
 
-The marketplace repo is lightweight — just the manifest pointing to the plugin repo via git URL. No submodules needed.
+The marketplace manifest lives in the same repo as the plugin source. No separate registry repo or submodules needed.
 
 ```json
 {
@@ -267,8 +269,8 @@ The marketplace repo is lightweight — just the manifest pointing to the plugin
     {
       "name": "tribunal",
       "source": {
-        "source": "url",
-        "url": "https://github.com/jpeggdev/tribunal.git",
+        "source": "github",
+        "repo": "jpeggdev/tribunal",
         "ref": "v1.0.0"
       },
       "description": "18-agent orchestration with quality gates, TDD enforcement, and knowledge capture",

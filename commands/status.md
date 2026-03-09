@@ -10,7 +10,7 @@ Show tribunal diagnostic information.
 
 ## Behavior
 
-Invokes the `status` skill, which reports:
+Invokes the `$status` skill, which reports:
 
 - Installed plugin version
 - Project setup state

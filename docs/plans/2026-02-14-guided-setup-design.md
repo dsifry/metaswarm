@@ -13,7 +13,7 @@ Split installation into a **thin CLI bootstrap** and a **Claude-driven interacti
 
 ### Architecture
 
-```
+```text
 Path A (CLI-first):                    Path B (Claude-first):
 npx tribunal init                     User tells Claude: "Set up tribunal"
   └── copies 3 files                     └── Claude invokes /tribunal-setup

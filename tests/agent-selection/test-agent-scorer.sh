@@ -44,8 +44,13 @@ set -e
 if [ $RC -ne 0 ]; then
   fail "no history: scorer exited non-zero"
 else
-  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
-  if [ "$FIRST" = "gemini" ]; then
+  set +e
+  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)" 2>&1)
+  PARSE_RC=$?
+  set -e
+  if [ $PARSE_RC -ne 0 ]; then
+    fail "no history: JSON parse failed"
+  elif [ "$FIRST" = "gemini" ]; then
     pass "no history: returns static priority (gemini first)"
   else
     fail "no history: expected gemini first, got $FIRST"
@@ -79,8 +84,13 @@ set -e
 if [ $RC -ne 0 ]; then
   fail "scoring: scorer exited non-zero"
 else
-  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
-  if [ "$FIRST" = "codex" ]; then
+  set +e
+  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)" 2>&1)
+  PARSE_RC=$?
+  set -e
+  if [ $PARSE_RC -ne 0 ]; then
+    fail "scoring: JSON parse failed"
+  elif [ "$FIRST" = "codex" ]; then
     pass "scoring: codex (100% success) ranks above gemini (0% success)"
   else
     fail "scoring: expected codex first, got $FIRST"
@@ -113,8 +123,13 @@ set -e
 if [ $RC -ne 0 ]; then
   fail "decay: scorer exited non-zero"
 else
-  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
-  if [ "$FIRST" = "codex" ]; then
+  set +e
+  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)" 2>&1)
+  PARSE_RC=$?
+  set -e
+  if [ $PARSE_RC -ne 0 ]; then
+    fail "decay: JSON parse failed"
+  elif [ "$FIRST" = "codex" ]; then
     pass "decay: recent codex successes outweigh old gemini successes"
   else
     fail "decay: expected codex first, got $FIRST"
@@ -149,8 +164,13 @@ set -e
 if [ $RC -ne 0 ]; then
   fail "failure penalty: scorer exited non-zero"
 else
-  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
-  if [ "$FIRST" = "gemini" ]; then
+  set +e
+  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)" 2>&1)
+  PARSE_RC=$?
+  set -e
+  if [ $PARSE_RC -ne 0 ]; then
+    fail "failure penalty: JSON parse failed"
+  elif [ "$FIRST" = "gemini" ]; then
     pass "failure penalty: gemini wins for database tasks despite codex having higher base rate"
   else
     fail "failure penalty: expected gemini first for database tasks, got $FIRST"

@@ -1,5 +1,7 @@
 # Update Tribunal
 
+> **Note**: `/tribunal-update-version` is preserved as a legacy alias for `/update`.
+
 Update tribunal to the latest version, refresh component files, and re-detect project context.
 
 ## Usage

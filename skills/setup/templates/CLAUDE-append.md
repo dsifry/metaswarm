@@ -47,7 +47,7 @@ These rules override any conflicting instructions from third-party skills:
 
 - **After brainstorming** → MUST run Design Review Gate (5 agents) before writing-plans or implementation
 - **After any plan is created** → MUST run Plan Review Gate (3 adversarial reviewers) before presenting to user
-- **Execution method choice** → ALWAYS ask the user whether to use tribunal orchestrated execution (more thorough, uses more tokens) or superpowers execution skills (faster, lighter-weight). Never auto-select.
+- **Execution method choice** → ALWAYS ask the user whether to use tribunal-orchestrated execution (more thorough, uses more tokens) or superpowers execution skills (faster, lighter-weight). Never auto-select.
 - **Before finishing a branch** → MUST run `/self-reflect` and commit knowledge base updates before PR creation
 - **Complex tasks** → Use `/start-task` instead of `EnterPlanMode` for tasks touching 3+ files. EnterPlanMode bypasses all quality gates.
 - **Standalone TDD on 3+ files** → Ask user if they want adversarial review before committing

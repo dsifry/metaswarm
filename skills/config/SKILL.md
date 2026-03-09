@@ -39,7 +39,7 @@ gemini:
 
 The effective config for a tool is computed as:
 
-```
+```yaml
 effective_config = deep_merge(common, tool_specific[tool_name])
 ```
 
