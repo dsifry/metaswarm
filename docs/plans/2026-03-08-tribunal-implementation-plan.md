@@ -1,6 +1,6 @@
 # Tribunal Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use jpegg:build to implement this plan task-by-task.
+> **For Claude:** This plan was reviewed through the standard plan-review gate process. The user chooses the execution method at runtime per the workflow enforcement rules in CLAUDE.md.
 
 **Goal:** Fork metaswarm into Tribunal with layered configuration, brainstorming debate, and intelligent agent selection.
 
@@ -573,7 +573,7 @@ DEBATE PHASE (this skill)
     ↓
 Design Review Gate (5 agents approve/reject the chosen approach)
     ↓
-Planning → Execution → PR
+Planning → Plan Review Gate (3 reviewers) → Execution → PR
 ```
 
 ---
@@ -1730,7 +1730,7 @@ Expected: All 3 tests PASS
 
 **Step 5: Create the migrate command doc**
 
-Create `commands/migrate-from-metaswarm.md`:
+Create `commands/migrate.md`:
 
 ```markdown
 # Migrate from Metaswarm
@@ -1740,7 +1740,7 @@ Upgrade a metaswarm project to Tribunal. Converts config files and renames direc
 ## Usage
 
 ```text
-/migrate-from-metaswarm
+/migrate
 ```
 
 ## Behavior
@@ -1778,7 +1778,7 @@ node lib/migrate-config.js .
 **Step 6: Commit**
 
 ```bash
-git add tests/cli/test-migrate.sh lib/migrate-config.js commands/migrate-from-metaswarm.md
+git add tests/cli/test-migrate.sh lib/migrate-config.js commands/migrate.md
 git commit -m "feat: add migration command from metaswarm to tribunal"
 ```
 

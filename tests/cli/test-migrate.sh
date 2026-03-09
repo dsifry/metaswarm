@@ -56,6 +56,12 @@ else
   fail ".tribunal/ directory not found"
 fi
 
+if [ ! -d "$TMPDIR/.metaswarm" ]; then
+  pass ".metaswarm/ removed after migration"
+else
+  fail ".metaswarm/ still exists after migration"
+fi
+
 # Check coverage values were migrated
 LINES=$(node "$ROOT/lib/resolve-config.js" "$TMPDIR/tribunal.yaml" "claude" 2>&1 | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.coverage.lines)")
 

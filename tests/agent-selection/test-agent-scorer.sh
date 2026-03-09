@@ -30,6 +30,7 @@ trap 'rm -rf "$TMPDIR"' EXIT
 cat > "$TMPDIR/stats.jsonl" << 'JSONL'
 JSONL
 
+set +e
 RESULT=$(node "$ROOT/lib/agent-scorer.js" \
   --stats "$TMPDIR/stats.jsonl" \
   --task-type "implementation" \
@@ -37,13 +38,18 @@ RESULT=$(node "$ROOT/lib/agent-scorer.js" \
   --static-priority "gemini,codex,claude" \
   --min-samples 3 \
   --decay-rate 0.1 2>&1)
+RC=$?
+set -e
 
-FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
-
-if [ "$FIRST" = "gemini" ]; then
-  pass "no history: returns static priority (gemini first)"
+if [ $RC -ne 0 ]; then
+  fail "no history: scorer exited non-zero"
 else
-  fail "no history: expected gemini first, got $FIRST"
+  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
+  if [ "$FIRST" = "gemini" ]; then
+    pass "no history: returns static priority (gemini first)"
+  else
+    fail "no history: expected gemini first, got $FIRST"
+  fi
 fi
 
 # --- Test: tool with high recent success rate ranks higher ---
@@ -59,6 +65,7 @@ cat > "$TMPDIR/stats.jsonl" << JSONL
 {"timestamp":"$YESTERDAY","tool":"gemini","task_type":"implementation","success":false,"tags":[]}
 JSONL
 
+set +e
 RESULT=$(node "$ROOT/lib/agent-scorer.js" \
   --stats "$TMPDIR/stats.jsonl" \
   --task-type "implementation" \
@@ -66,13 +73,18 @@ RESULT=$(node "$ROOT/lib/agent-scorer.js" \
   --static-priority "gemini,codex,claude" \
   --min-samples 3 \
   --decay-rate 0.1 2>&1)
+RC=$?
+set -e
 
-FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
-
-if [ "$FIRST" = "codex" ]; then
-  pass "scoring: codex (100% success) ranks above gemini (0% success)"
+if [ $RC -ne 0 ]; then
+  fail "scoring: scorer exited non-zero"
 else
-  fail "scoring: expected codex first, got $FIRST"
+  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
+  if [ "$FIRST" = "codex" ]; then
+    pass "scoring: codex (100% success) ranks above gemini (0% success)"
+  else
+    fail "scoring: expected codex first, got $FIRST"
+  fi
 fi
 
 # --- Test: decay weights recent results more ---
@@ -87,6 +99,7 @@ cat > "$TMPDIR/stats.jsonl" << JSONL
 {"timestamp":"$NOW","tool":"codex","task_type":"implementation","success":true,"tags":[]}
 JSONL
 
+set +e
 RESULT=$(node "$ROOT/lib/agent-scorer.js" \
   --stats "$TMPDIR/stats.jsonl" \
   --task-type "implementation" \
@@ -94,13 +107,18 @@ RESULT=$(node "$ROOT/lib/agent-scorer.js" \
   --static-priority "gemini,codex" \
   --min-samples 3 \
   --decay-rate 0.1 2>&1)
+RC=$?
+set -e
 
-FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
-
-if [ "$FIRST" = "codex" ]; then
-  pass "decay: recent codex successes outweigh old gemini successes"
+if [ $RC -ne 0 ]; then
+  fail "decay: scorer exited non-zero"
 else
-  fail "decay: expected codex first, got $FIRST"
+  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
+  if [ "$FIRST" = "codex" ]; then
+    pass "decay: recent codex successes outweigh old gemini successes"
+  else
+    fail "decay: expected codex first, got $FIRST"
+  fi
 fi
 
 # --- Test: failure pattern penalty ---
@@ -116,6 +134,7 @@ cat > "$TMPDIR/stats.jsonl" << JSONL
 {"timestamp":"$YESTERDAY","tool":"gemini","task_type":"implementation","success":true,"tags":["database","migration"]}
 JSONL
 
+set +e
 RESULT=$(node "$ROOT/lib/agent-scorer.js" \
   --stats "$TMPDIR/stats.jsonl" \
   --task-type "implementation" \
@@ -124,13 +143,18 @@ RESULT=$(node "$ROOT/lib/agent-scorer.js" \
   --min-samples 3 \
   --decay-rate 0.1 \
   --task-tags "database,async" 2>&1)
+RC=$?
+set -e
 
-FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
-
-if [ "$FIRST" = "gemini" ]; then
-  pass "failure penalty: gemini wins for database tasks despite codex having higher base rate"
+if [ $RC -ne 0 ]; then
+  fail "failure penalty: scorer exited non-zero"
 else
-  fail "failure penalty: expected gemini first for database tasks, got $FIRST"
+  FIRST=$(echo "$RESULT" | node -e "const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.ranking[0].tool)")
+  if [ "$FIRST" = "gemini" ]; then
+    pass "failure penalty: gemini wins for database tasks despite codex having higher base rate"
+  else
+    fail "failure penalty: expected gemini first for database tasks, got $FIRST"
+  fi
 fi
 
 # --- Summary ---

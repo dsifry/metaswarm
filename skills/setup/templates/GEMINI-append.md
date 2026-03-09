@@ -16,7 +16,7 @@ This project uses [tribunal](https://github.com/jpeggdev/tribunal) for multi-age
 | `/tribunal:prime` | Load relevant knowledge before starting |
 | `/tribunal:review-design` | Trigger design review gate (5 reviewers) |
 | `/tribunal:pr-shepherd` | Monitor a PR through to merge |
-| `/tribunal:self-reflect` | Extract learnings after a PR merge |
+| `/tribunal:self-reflect` | Extract learnings before PR creation |
 | `/tribunal:handle-pr-comments` | Handle PR review comments |
 | `/tribunal:brainstorm` | Refine an idea before implementation |
 | `/tribunal:create-issue` | Create a well-structured GitHub Issue |

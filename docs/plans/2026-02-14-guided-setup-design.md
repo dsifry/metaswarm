@@ -1,6 +1,6 @@
 # Claude-Guided Installation Experience — Design Document
 
-> **Status**: Approved
+> **Status**: Approved (Superseded — command names below have been replaced by plugin-based commands in the plugin migration design. See `docs/plans/2026-02-26-plugin-migration-design.md`.)
 > **Date**: 2026-02-14
 
 ## Problem

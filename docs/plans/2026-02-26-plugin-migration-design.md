@@ -15,7 +15,7 @@ Tribunal is currently distributed as an npm package (`npx tribunal init`) that c
 ## Goals
 
 - **Zero Node.js dependency for install and core usage** — install and run tribunal from within Claude Code without Node.js. Some optional features (self-reflect scripts, PR comment fetching) require Node.js and are documented as such.
-- **One-command install** — `/plugin marketplace add jpeggdev/tribunal`
+- **Two-command install** — `/plugin marketplace add jpeggdev/tribunal` then `claude plugin install tribunal`
 - **Automatic updates** — marketplace auto-updater keeps users current
 - **Multi-CLI architecture** — structure supports future expansion to Codex, OpenCode, Cursor. Implementation of non-Claude spokes is future work, listed under Architecture Principles, not v1.0 deliverables.
 - **Backward compatible** — existing npm-installed users can migrate or keep working
@@ -256,7 +256,7 @@ The marketplace repo is lightweight — just the manifest pointing to the plugin
 {
   "name": "tribunal",
   "owner": {
-    "name": "David Sifry",
+    "name": "Dave Sifry",
     "email": "david@sifry.com"
   },
   "metadata": {
@@ -283,7 +283,9 @@ The marketplace repo is lightweight — just the manifest pointing to the plugin
 
 **Release process**: When tribunal tags a new release (e.g., `v1.1.0`), update the marketplace.json `ref` and `version` fields and push. A CI workflow in the marketplace repo can automate this on tag events in the plugin repo.
 
-**Install command**: `/plugin marketplace add jpeggdev/tribunal`
+**Install commands**:
+1. `/plugin marketplace add jpeggdev/tribunal` (registers the plugin in the marketplace)
+2. `claude plugin install tribunal` (installs the plugin locally)
 
 ## plugin.json Specification
 
@@ -293,7 +295,7 @@ The marketplace repo is lightweight — just the manifest pointing to the plugin
   "version": "1.0.0",
   "description": "Multi-agent orchestration framework for Claude Code — 18 agents, 9-phase workflow, quality gates, TDD enforcement",
   "author": {
-    "name": "David Sifry",
+    "name": "Dave Sifry",
     "email": "david@sifry.com"
   },
   "homepage": "https://github.com/jpeggdev/tribunal",
@@ -345,6 +347,7 @@ The `skills/start/SKILL.md` has description: "Use when starting work on any task
 | `/tribunal:external-tools-health` | Check external AI tools status |
 | `/tribunal:setup` | Interactive project setup (replaces npx tribunal init) |
 | `/tribunal:update` | Check for and apply updates |
+| `/tribunal:status` | Show diagnostic information and troubleshooting |
 
 ### Project-local shims (created by `/tribunal:setup`)
 
@@ -563,7 +566,7 @@ input_cost_per_token=$(awk -v rate="$input_cost_rate" 'BEGIN {print rate / 10000
 
 ### `skills/beads/` → `skills/start/`
 
-The main orchestration skill directory is renamed from `beads/` to `start/`. This yields the plugin command `/tribunal:start` which is clear, non-stuttering, and semantically meaningful.
+The main orchestration skill directory is renamed from `beads/` to `start/`. The canonical command is `/tribunal:start-task` which is clear, non-stuttering, and semantically meaningful.
 
 - The skill's YAML frontmatter `name:` field is updated to `start`
 - The description triggers auto-invocation: "Use when starting work on any task, when the user mentions tribunal, or when the user wants to begin tracked development work"
@@ -597,7 +600,7 @@ When both the old embedded plugin and new marketplace plugin are loaded:
 
 1. **v0.9.0 (final npm release)**: Publish npm package that:
    - Still works normally (init + install)
-   - Prints deprecation notice on install: "tribunal has moved to a Claude Code plugin. Install with: `/plugin marketplace add jpeggdev/tribunal`"
+   - Prints deprecation notice on install: "tribunal has moved to a Claude Code plugin. Install with: `/plugin marketplace add jpeggdev/tribunal` then `claude plugin install tribunal`"
    - Updates README with migration instructions
    - Includes the security fixes (CI template, awk)
 
@@ -682,7 +685,7 @@ The `bd` CLI (BEADS) is used for knowledge priming, issue tracking, and self-ref
 ## Success Criteria
 
 - [ ] `npx tribunal` is no longer required for new users
-- [ ] Plugin installs via `/plugin marketplace add jpeggdev/tribunal`
+- [ ] Plugin installs via `/plugin marketplace add jpeggdev/tribunal` then `claude plugin install tribunal`
 - [ ] `/tribunal:setup` fully replaces `npx tribunal init` + `/tribunal-setup`
 - [ ] All 13 skills load correctly from plugin cache (verified with `/plugin validate .`)
 - [ ] All 11 commands appear in autocomplete

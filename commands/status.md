@@ -10,7 +10,7 @@ Show tribunal diagnostic information.
 
 ## Behavior
 
-Invokes the `tribunal:status` skill, which reports:
+Invokes the `status` skill, which reports:
 
 - Installed plugin version
 - Project setup state
@@ -25,5 +25,5 @@ Use this to troubleshoot installation or configuration issues.
 
 ## Related
 
-- `/tribunal:setup` — configure tribunal for a project
-- `/tribunal:migrate` — migrate from npm-installed tribunal
+- `/setup` — configure tribunal for a project
+- `/migrate` — migrate from npm-installed tribunal

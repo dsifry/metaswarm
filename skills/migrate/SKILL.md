@@ -143,8 +143,14 @@ Before executing removals:
 > "Staging the redundant files for removal. These are all framework copies — your project files are untouched. Nothing is committed yet."
 
 **Git-tracked files** -- use `git rm` (staged, reversible via `git checkout`):
+
+> **Important**: Only remove files that were verified as unmodified in Step 3 (hash match). Do NOT blanket-remove the entire `.claude/plugins/tribunal/` directory if it contains user-modified files. Remove verified files individually, or remove the directory only after confirming every file inside matched its plugin counterpart.
+
 ```bash
+# Only after ALL files in the directory are verified unmodified:
 git rm -rf .claude/plugins/tribunal/
+# Or, if some files were modified, remove only verified files individually:
+# git rm .claude/plugins/tribunal/<each verified file>
 git rm .claude/rubrics/<each confirmed file>
 git rm .claude/guides/<each confirmed file>
 git rm .claude/commands/tribunal-setup.md
@@ -173,7 +179,7 @@ Write 6 shims to `.claude/commands/` (same as setup skill):
 | `brainstorm.md` | `/tribunal:brainstorm` |
 
 Each shim:
-```markdown
+```md
 <!-- Created by tribunal setup. Routes to the tribunal plugin. Safe to delete if you uninstall tribunal. -->
 Invoke the `/tribunal:<command-name>` skill with any arguments the user provided.
 ```

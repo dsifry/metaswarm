@@ -76,9 +76,11 @@ cd "$TMP_DIR"
 git init -q .
 
 # Run setup for claude platform
-node "$ROOT/cli/tribunal.js" setup --claude 2>&1 | grep -q "setup complete" && \
-  pass "tribunal setup --claude works" || \
+if node "$ROOT/cli/tribunal.js" setup --claude 2>&1 | grep -q "setup complete"; then
+  pass "tribunal setup --claude works"
+else
   fail "tribunal setup --claude failed"
+fi
 
 # Check files were created
 if [ -f "$TMP_DIR/CLAUDE.md" ]; then

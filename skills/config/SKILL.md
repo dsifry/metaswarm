@@ -65,6 +65,7 @@ Outputs the resolved config as JSON to stdout.
 ### Programmatic
 
 ```javascript
+const fs = require('fs');
 const { resolveConfig, deepMerge, parseYaml } = require('./lib/resolve-config');
 
 const yamlText = fs.readFileSync('tribunal.yaml', 'utf8');

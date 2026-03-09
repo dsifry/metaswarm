@@ -4,7 +4,7 @@ Multi-agent orchestration framework for software development. 18 specialized age
 
 ## Getting Started
 
-Run `/tribunal:start-task` to begin tracked work, or `/tribunal:setup` to configure tribunal for this project.
+Run `/tribunal:start-task` to begin tracked work, or `/tribunal:setup` to configure tribunal for this project. In Gemini CLI, all commands use the `/tribunal:<command>` prefix.
 
 ## Available Commands
 
@@ -27,7 +27,7 @@ Run `/tribunal:start-task` to begin tracked work, or `/tribunal:setup` to config
 For complex features, describe what you want with a Definition of Done and say:
 `Use the full tribunal orchestration workflow.`
 
-This runs: Research -> Plan -> Design Review Gate -> Work Unit Decomposition -> Orchestrated Execution (4-phase loop per unit) -> Final Review -> PR.
+This runs: Research -> Brainstorm -> Design Review Gate -> Plan -> Plan Review Gate -> Execute -> Final Review -> PR.
 
 ## Quality Gates (MANDATORY)
 

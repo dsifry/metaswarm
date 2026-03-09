@@ -281,6 +281,18 @@ GitHub Issue #123 (agent-ready label)
 └─────────────────────────────────────────────────┘
         │
         ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    DESIGN REVIEW GATE (PARALLEL)                          │
+│                                                                           │
+│  ┌─────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐ ┌───────┐ │
+│  │   PM    │ │ Architect│ │ Designer │ │ Security │ │UX Revw.│ │  CTO  │ │
+│  │(users)  │ │  (tech)  │ │ (UX/API) │ │ (threats)│ │(flows) │ │ (TDD) │ │
+│  └─────────┘ └──────────┘ └──────────┘ └──────────┘ └────────┘ └───────┘ │
+│                                                                           │
+│  ALL must approve (max 3 iterations)                                      │
+└──────────────────────────────────────────────────────────────────────────┘
+        │
+        ▼
 ┌─────────────────────────────────────┐
 │       Planning Phase                 │
 │  Architect Agent creates plan        │
@@ -841,13 +853,23 @@ skills/visual-review/           # Playwright-based visual review
 
 commands/                       # Slash commands (invoked as /tribunal:command-name)
 ├── start-task.md               # /tribunal:start-task
+├── start.md                    # /tribunal:start (alias for start-task)
 ├── prime.md                    # /tribunal:prime
 ├── review-design.md            # /tribunal:review-design
 ├── self-reflect.md             # /tribunal:self-reflect
 ├── pr-shepherd.md              # /tribunal:pr-shepherd
 ├── handle-pr-comments.md       # /tribunal:handle-pr-comments
 ├── create-issue.md             # /tribunal:create-issue
-└── tribunal-setup.md          # /tribunal:tribunal-setup
+├── brainstorm.md               # /tribunal:brainstorm
+├── external-tools-health.md    # /tribunal:external-tools-health
+├── setup.md                    # /tribunal:setup
+├── status.md                   # /tribunal:status
+├── stats.md                    # /tribunal:stats
+├── update.md                   # /tribunal:update
+├── benchmark.md                # /tribunal:benchmark
+├── migrate-from-metaswarm.md   # /tribunal:migrate-from-metaswarm
+├── tribunal-setup.md           # /tribunal:tribunal-setup
+└── tribunal-update-version.md  # /tribunal:tribunal-update-version
 
 templates/                      # Project scaffolding templates
 ├── CLAUDE.md                   # Full CLAUDE.md template for new projects

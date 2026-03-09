@@ -9,7 +9,7 @@ Display performance scores, selection basis, and trends for all configured CLI t
 
 ## Usage
 
-```
+```text
 /stats                  Show current scores for all tools
 /stats reset [tool]     Wipe history (all tools or a specific one)
 /stats export           Dump raw tribunal-stats.jsonl to stdout
@@ -23,7 +23,7 @@ Display performance scores, selection basis, and trends for all configured CLI t
 
 ## Example Output
 
-```
+```text
 Agent Performance Scores
 ========================
 

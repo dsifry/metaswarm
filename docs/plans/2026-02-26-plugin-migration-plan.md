@@ -1,6 +1,6 @@
 # Plugin Migration Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** This plan was reviewed through the standard plan-review gate process (3/3 reviewers passed). The user chooses the execution method at runtime per the workflow enforcement rules in CLAUDE.md.
 
 **Goal:** Migrate tribunal from npm package distribution to Claude Code plugin with marketplace support, zero Node.js install dependency, and automatic updates.
 
@@ -29,7 +29,7 @@
   "version": "1.0.0",
   "description": "Multi-agent orchestration framework for Claude Code — 18 agents, 9-phase workflow, quality gates, TDD enforcement",
   "author": {
-    "name": "David Sifry",
+    "name": "Dave Sifry",
     "email": "david@sifry.com"
   },
   "homepage": "https://github.com/jpeggdev/tribunal",
@@ -971,7 +971,7 @@ Each existing command should be reviewed to ensure it invokes the right skill. M
 
 Invoke the tribunal brainstorming extension skill, which wraps superpowers:brainstorming with tribunal's design review gate handoff.
 
-Use the `tribunal:brainstorming-extension` skill. If superpowers is not installed, provide standalone brainstorming guidance.
+Use the `tribunal:brainstorm` skill (which invokes the `brainstorming-extension` skill). If superpowers is not installed, provide standalone brainstorming guidance.
 ```
 
 **Step 3: Create external-tools-health.md**
@@ -1642,7 +1642,7 @@ This is a separate repo (`jpeggdev/tribunal`). Can be created later.
 {
   "name": "tribunal",
   "owner": {
-    "name": "David Sifry",
+    "name": "Dave Sifry",
     "email": "david@sifry.com"
   },
   "metadata": {

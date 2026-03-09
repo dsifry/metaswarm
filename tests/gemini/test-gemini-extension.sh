@@ -45,11 +45,11 @@ else
   fail "GEMINI.md not found at repo root"
 fi
 
-# 4. GEMINI.md references tribunal
-if grep -q "tribunal" "$ROOT/GEMINI.md" 2>/dev/null; then
-  pass "GEMINI.md references tribunal"
+# 4. GEMINI.md references tribunal commands
+if grep -q "/tribunal:start-task" "$ROOT/GEMINI.md" 2>/dev/null; then
+  pass "GEMINI.md references tribunal commands"
 else
-  fail "GEMINI.md does not reference tribunal"
+  fail "GEMINI.md does not reference tribunal commands"
 fi
 
 # 5. TOML commands exist

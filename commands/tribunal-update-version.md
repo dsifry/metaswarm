@@ -5,7 +5,7 @@ Update tribunal to the latest version, refresh component files, and re-detect pr
 ## Usage
 
 ```text
-/tribunal-update-version
+/update
 ```
 
 ## Steps
@@ -14,7 +14,7 @@ Update tribunal to the latest version, refresh component files, and re-detect pr
 
 - Read `.tribunal/project-profile.json` and extract `tribunal_version`
 - If the file doesn't exist, stop and tell the user:
-  > No project profile found. Run `/tribunal-setup` first to initialize tribunal.
+  > No project profile found. Run `/setup` first to initialize tribunal.
 - Display the current version to the user
 
 ### 2. Fetch Latest Version
@@ -46,7 +46,7 @@ Update tribunal to the latest version, refresh component files, and re-detect pr
 - If changes are detected (e.g., project switched from Jest to Vitest):
   - Show what changed
   - Ask user if they want to re-customize affected files (e.g., update coverage commands in CLAUDE.md)
-  - If yes, apply the same customization logic from `/tribunal-setup`
+  - If yes, apply the same customization logic from `/setup`
 
 ### 6. Update Project Profile
 

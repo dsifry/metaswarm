@@ -9,7 +9,7 @@ Search for recent CLI tool benchmarks and synthesize results into a ranked summa
 
 ## Usage
 
-```
+```text
 /benchmark                          Benchmark all task types
 /benchmark --task-type coding       Benchmark a specific task type
 /benchmark --update-config          Update static_priority in tribunal.yaml based on results
@@ -24,7 +24,7 @@ Search for recent CLI tool benchmarks and synthesize results into a ranked summa
 
 ## Example Output
 
-```
+```text
 CLI Tool Benchmark Summary
 ==========================
 

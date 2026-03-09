@@ -41,7 +41,7 @@ scoring:
 
 For tools with at least `min_samples` observations:
 
-```
+```text
 raw_score = sum(outcome_i * e^(-lambda * age_i)) / sum(e^(-lambda * age_i))
 confidence = weight_total / (weight_total + 1)
 score = confidence * raw_score + (1 - confidence) * 0.5
@@ -66,7 +66,7 @@ After computing the base score, apply a penalty for recent failures matching the
 
 When a tool has fewer than `min_samples` observations, its score is derived from its position in `static_priority`:
 
-```
+```text
 score = (total_tools - position_index) / total_tools
 ```
 
@@ -74,7 +74,7 @@ Position 0 (first in list) gets the highest score.
 
 ## Selection Flow
 
-```
+```text
 Task arrives with type + tags
         |
         v

@@ -20,7 +20,7 @@ This prevents single-perspective designs from reaching the review gate, catches 
 
 ## Pipeline Position
 
-```
+```text
 Research → DEBATE → Design Review Gate → Planning → Execution → PR
 ```
 

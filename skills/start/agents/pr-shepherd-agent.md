@@ -17,7 +17,7 @@ The PR Shepherd Agent monitors a PR from creation through merge. It handles CI f
 
 This agent leverages the existing `your-project:pr-shepherd` skill for the core PR monitoring logic. It adds BEADS integration for task tracking.
 
-**See**: the `tribunal:pr-shepherd` skill for detailed PR monitoring behavior.
+**See**: `/tribunal:pr-shepherd` for detailed PR monitoring behavior.
 
 ---
 

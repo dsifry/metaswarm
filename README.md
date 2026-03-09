@@ -114,7 +114,7 @@ tribunal/
 ### Claude Code (recommended)
 
 ```bash
-claude plugin marketplace add jpeggdev/tribunal
+claude mcp add-from-marketplace jpeggdev/tribunal
 claude plugin install tribunal
 ```
 
@@ -146,7 +146,7 @@ npx tribunal init
 
 ### Start building
 
-Run `/start-task` (Claude/Gemini) or `$start` (Codex) and describe what you want in plain English. No issue required.
+Run `/start-task` (Claude) or `/tribunal:start-task` (Gemini) or `$start` (Codex) and describe what you want in plain English. No issue required.
 
 ```text
 /start-task Add a webhook system with retry logic, signature verification,

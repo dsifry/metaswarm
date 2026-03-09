@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: Create the tribunal-setup command
+## Task 1: Create the tribunal-setup command
 
 **Files:**
 - Create: `commands/tribunal-setup.md`
@@ -93,7 +93,7 @@ For .gitignore (append missing entries):
 
 ---
 
-### Task 2: Create the tribunal-update-version command
+## Task 2: Create the tribunal-update-version command
 
 **Files:**
 - Create: `commands/tribunal-update-version.md`
@@ -110,7 +110,7 @@ The slash command for updating tribunal to the latest version. It should:
 
 ---
 
-### Task 3: Refactor cli/tribunal.js — split init and install
+## Task 3: Refactor cli/tribunal.js — split init and install
 
 **Files:**
 - Modify: `cli/tribunal.js`
@@ -141,7 +141,7 @@ The `install` command should be idempotent (skip existing files, same as current
 
 ---
 
-### Task 4: Update templates/CLAUDE.md for new commands
+## Task 4: Update templates/CLAUDE.md for new commands
 
 **Files:**
 - Modify: `templates/CLAUDE.md`
@@ -154,7 +154,7 @@ The `install` command should be idempotent (skip existing files, same as current
 
 ---
 
-### Task 5: Update documentation (README, INSTALL, GETTING_STARTED)
+## Task 5: Update documentation (README, INSTALL, GETTING_STARTED)
 
 **Files:**
 - Modify: `README.md`
@@ -182,7 +182,7 @@ The `install` command should be idempotent (skip existing files, same as current
 
 ---
 
-### Task 6: Update CHANGELOG and commit
+## Task 6: Update CHANGELOG and commit
 
 **Files:**
 - Modify: `CHANGELOG.md`

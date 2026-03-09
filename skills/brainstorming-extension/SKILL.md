@@ -111,7 +111,7 @@ This typically takes 2-3 minutes...
 
 Check `tribunal.yaml` for debate configuration. If `debate.rounds > 0` and `debate.agents` is non-empty:
 
-1. Invoke the `debate` skill with the design document and research findings
+1. Invoke `/tribunal:debate` with the design document and research findings
 2. Wait for user to select an approach
 3. The selected approach replaces the original design document
 
@@ -119,7 +119,7 @@ If debate is not configured (no tribunal.yaml or debate section), skip directly 
 
 ### Step 3: Invoke the Design Review Gate
 
-Invoke the `design-review-gate` skill with the path to the design document. This spawns all 5 review agents in parallel.
+Invoke `/tribunal:review-design` with the path to the design document. This spawns all 5 review agents in parallel.
 
 ### Step 4: Report Results
 

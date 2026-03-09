@@ -57,6 +57,12 @@ function installCodex() {
   const installDir = path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'tribunal');
   const skillsDir = path.join(os.homedir(), '.agents', 'skills');
 
+  // Validate installDir doesn't contain shell metacharacters
+  if (/[;&|`$(){}]/.test(installDir)) {
+    warn('Invalid characters in install directory path');
+    return;
+  }
+
   if (fs.existsSync(installDir)) {
     console.log(`  Updating existing installation at ${installDir}...`);
     try {
@@ -164,7 +170,7 @@ function setupProject(platformFlag) {
       }
     } else {
       const existing = fs.readFileSync(instrPath, 'utf-8');
-      if (existing.includes(TRIBUNAL_MARKER) || existing.includes('tribunal')) {
+      if (existing.includes(TRIBUNAL_MARKER)) {
         skip(`${instrFile} (tribunal reference already present)`);
       } else if (fs.existsSync(appendTemplate)) {
         fs.appendFileSync(instrPath, '\n' + fs.readFileSync(appendTemplate, 'utf-8'));

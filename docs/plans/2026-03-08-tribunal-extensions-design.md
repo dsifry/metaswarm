@@ -4,7 +4,7 @@
 **Status**: Approved
 **Fork point**: metaswarm commit `03ce5da`
 
-Tribunal is a fork of [metaswarm](https://github.com/dsifry/metaswarm) by Daniel Sifry that adds three features: layered configuration, brainstorming debate, and intelligent agent selection. It also renames and rebrands the project.
+Tribunal is a fork of [metaswarm](https://github.com/dsifry/metaswarm) by Dave Sifry that adds three features: layered configuration, brainstorming debate, and intelligent agent selection. It also renames and rebrands the project.
 
 ---
 
@@ -21,7 +21,7 @@ Tribunal is a fork of [metaswarm](https://github.com/dsifry/metaswarm) by Daniel
 | Escalation | Dynamic based on scores, not hardcoded order | Best-performing tool goes first |
 | Health checks | Pre-flight + per-task dispatch | Tokens expire, rate limits reset mid-session |
 | Auth model | Subscription-based CLI logins, verified at startup | No API keys needed |
-| License | MIT, dual copyright (jpeggdev + Daniel Sifry) | MIT requires preserving original copyright |
+| License | MIT, dual copyright (jpeggdev + Dave Sifry) | MIT requires preserving original copyright |
 
 ---
 
@@ -117,7 +117,7 @@ DEBATE PHASE (NEW)
     ↓
 Design Review Gate (5 agents approve/reject)
     ↓
-Planning → Execution → PR
+Planning → Plan Review Gate (3 reviewers) → Execution → PR
 ```
 
 The debate happens after research (so agents have context) and before the design review gate (so the gate reviews a design that's already been challenged).
@@ -276,7 +276,7 @@ Dynamic based on scores — not a fixed chain. The system always tries the highe
 
 ```bash
 tribunal benchmark                    # research all task types
-tribunal benchmark --task-type coding # focus on one type
+tribunal benchmark --task-type implementation # focus on one type
 ```
 
 Searches the web for recent benchmarks and community consensus on CLI tool performance. Outputs a ranked summary with sources. Optionally updates `static_priority` in `tribunal.yaml` so defaults start informed.
@@ -379,7 +379,7 @@ common:
 **LICENSE** (dual copyright):
 ```
 Copyright (c) 2026 jpeggdev
-Copyright (c) 2025 Daniel Sifry (metaswarm)
+Copyright (c) 2025 Dave Sifry (metaswarm)
 
 MIT License...
 ```
@@ -389,10 +389,10 @@ MIT License...
 # Attribution
 
 Tribunal is a fork of [metaswarm](https://github.com/dsifry/metaswarm)
-by Daniel Sifry, licensed under the MIT License.
+by Dave Sifry, licensed under the MIT License.
 
 Original project: https://github.com/dsifry/metaswarm
 Fork point: commit 03ce5da (2026-03-08)
 ```
 
-**README.md** includes: "Tribunal is built on [metaswarm](https://github.com/dsifry/metaswarm) by Daniel Sifry."
+**README.md** includes: "Tribunal is built on [metaswarm](https://github.com/dsifry/metaswarm) by Dave Sifry."
