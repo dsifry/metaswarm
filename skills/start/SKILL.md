@@ -53,6 +53,7 @@ bd doctor         # Check system health
 | **Coder Agent**           | TDD implementation             | Design review gate approved        |
 | **Code Review Agent**     | Internal code review           | Implementation complete            |
 | **Security Auditor**      | Security review (code)         | Implementation complete            |
+| **Release Engineer Agent** | Safe delivery from merge through production | QA approves PR, PR reaches merge readiness |
 | **PR Shepherd**           | PR lifecycle management        | PR created                         |
 
 See `./agents/` directory for detailed agent definitions.
@@ -357,6 +358,13 @@ GitHub Issue #123 (agent-ready label)
         ▼
 ┌─────────────────────────────────────┐
 │       Human Approval & Merge         │
+└─────────────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────────────┐
+│       Release Engineer                │
+│  Pre-merge verify → merge → CI →     │
+│  deploy → post-deploy QA → release   │
 └─────────────────────────────────────┘
         │
         ▼
@@ -788,6 +796,7 @@ skills/start/                   # This skill (main orchestration)
 │   ├── coder-agent.md          # TDD implementation
 │   ├── code-review-agent.md    # Internal code review (collaborative + adversarial modes)
 │   ├── security-auditor-agent.md # Security review (implementation)
+│   ├── release-engineer-agent.md # Merge → deploy → verify → release
 │   └── pr-shepherd-agent.md    # PR lifecycle management
 ├── guides/                     # Development guides
 │   ├── agent-coordination.md   # Team Mode, inter-agent messaging
@@ -800,7 +809,8 @@ skills/start/                   # This skill (main orchestration)
 │   ├── plan-review-rubric.md   # Used by CTO Agent
 │   ├── code-review-rubric.md   # Used by Code Review Agent (collaborative mode)
 │   ├── adversarial-review-rubric.md # Used by Code Review Agent (adversarial mode)
-│   └── security-review-rubric.md # Used by Security Auditor Agent
+│   ├── security-review-rubric.md # Used by Security Auditor Agent
+│   └── release-engineering-rubric.md # Used by Release Engineer Agent
 └── references/                 # Reference docs for other tools
     ├── codex-tools.md          # OpenAI Codex CLI reference
     ├── cursor-tools.md         # Cursor tools reference
