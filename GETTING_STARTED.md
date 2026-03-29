@@ -22,6 +22,11 @@ gemini extensions install https://github.com/dsifry/metaswarm.git
 curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
 ```
 
+**Qwen Code CLI:**
+```bash
+curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.qwen/install.sh | bash
+```
+
 **All platforms at once:**
 ```bash
 npx metaswarm init
@@ -31,6 +36,7 @@ Then run setup in your project:
 - Claude Code: `/setup`
 - Gemini CLI: `/metaswarm:setup`
 - Codex CLI: `$setup`
+- Qwen Code CLI: `$setup`
 
 The setup skill detects your project's language, framework, test runner, and tools, then configures everything interactively.
 
@@ -40,6 +46,7 @@ Start your first task:
 - Claude Code: `/start-task`
 - Gemini CLI: `/metaswarm:start-task`
 - Codex CLI: `$start`
+- Qwen Code CLI: `$start`
 
 Verify it worked:
 

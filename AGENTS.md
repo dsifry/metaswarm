@@ -1,10 +1,10 @@
 # Agent Instructions
 
-This project is **metaswarm** — a multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. It provides 18 specialized agents, 13 orchestration skills, quality gates, and TDD enforcement.
+This project is **metaswarm** — a multi-agent orchestration framework for Claude Code, Gemini CLI, Codex CLI, and Qwen Code CLI. It provides 18 specialized agents, 13 orchestration skills, quality gates, and TDD enforcement.
 
 ## Quick Reference
 
-Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` syntax.
+Codex and Qwen discover skills by their SKILL.md `name` field. Invoke with `$name` syntax.
 
 | Invoke | Purpose |
 |---|---|

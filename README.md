@@ -1,6 +1,6 @@
 # metaswarm
 
-A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 18 specialized AI agents and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
+A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, Codex CLI, and Qwen Code CLI. Coordinate 18 specialized AI agents and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
 
 ## What Is This?
 
@@ -71,6 +71,9 @@ metaswarm/
 ├── .codex/
 │   ├── install.sh            # Codex CLI install script
 │   └── README.md             # Codex CLI usage guide
+├── .qwen/
+│   ├── install.sh            # Qwen Code CLI install script
+│   └── README.md             # Qwen Code CLI usage guide
 ├── hooks/
 │   ├── hooks.json            # SessionStart + PreCompact hook definitions
 │   └── session-start.sh      # Context priming (platform-aware)
@@ -130,6 +133,14 @@ Then run `/metaswarm:setup` in your project.
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
+```
+
+Then run `$setup` in your project.
+
+### Qwen Code CLI
+
+```bash
+curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.qwen/install.sh | bash
 ```
 
 Then run `$setup` in your project.
@@ -205,10 +216,11 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Plugin marketplace | `/start-task`, `/setup`, etc. |
 | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Extension (`gemini extensions install`) | `/metaswarm:start-task`, etc. |
 | [Codex CLI](https://github.com/openai/codex) | Skills (`curl \| bash`) | `$start`, `$setup`, etc. |
+| [Qwen Code CLI](https://github.com/QwenLM/qwen-code) | Skills (`curl \| bash`) | `$start`, `$setup`, etc. |
 
 ## Requirements
 
-- One of: Claude Code, Gemini CLI, or Codex CLI
+- One of: Claude Code, Gemini CLI, Codex CLI, or Qwen Code CLI
 - Node.js 18+ (for automation scripts)
 - [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+ — for task tracking (recommended)
 - GitHub CLI (`gh`) — for PR automation (recommended)

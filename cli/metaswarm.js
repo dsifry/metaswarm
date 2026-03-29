@@ -122,6 +122,62 @@ function installGemini() {
   }
 }
 
+function installQwen() {
+  console.log('\n  Installing for Qwen Code CLI...\n');
+  const installDir = path.join(process.env.QWEN_HOME || path.join(os.homedir(), '.qwen'), 'metaswarm');
+  const skillsDir = path.join(os.homedir(), '.qwen', 'skills');
+
+  if (fs.existsSync(installDir)) {
+    console.log(`  Updating existing installation at ${installDir}...`);
+    try {
+      execSync('git pull --rebase origin main', { cwd: installDir, stdio: 'inherit' });
+      info('Updated metaswarm');
+    } catch (e) {
+      warn(`git pull failed: ${e.message || e}`);
+      return;
+    }
+  } else {
+    console.log(`  Cloning metaswarm to ${installDir}...`);
+    mkdirp(path.dirname(installDir));
+    try {
+      execSync(`git clone https://github.com/dsifry/metaswarm.git "${installDir}"`, { stdio: 'inherit' });
+      info('Cloned metaswarm');
+    } catch (e) {
+      warn(`Clone failed: ${e.message}`);
+      return;
+    }
+  }
+
+  // Symlink skills
+  mkdirp(skillsDir);
+  const skillsPath = path.join(installDir, 'skills');
+  if (fs.existsSync(skillsPath)) {
+    let linked = 0;
+    for (const dir of fs.readdirSync(skillsPath)) {
+      const srcDir = path.join(skillsPath, dir);
+      if (!fs.statSync(srcDir).isDirectory()) continue;
+      const linkName = `metaswarm-${dir}`;
+      const linkPath = path.join(skillsDir, linkName);
+
+      try {
+        if (fs.lstatSync(linkPath).isSymbolicLink()) {
+          fs.unlinkSync(linkPath);
+        } else if (fs.existsSync(linkPath)) {
+          warn(`${linkPath} exists as a directory, skipping`);
+          continue;
+        }
+      } catch (e) {
+        if (e.code !== 'ENOENT') warn(`Unexpected error checking ${linkPath}: ${e.message}`);
+      }
+
+      fs.symlinkSync(srcDir, linkPath);
+      linked++;
+    }
+    info(`Linked ${linked} skills into ${skillsDir}`);
+  }
+  console.log('  Next: In your project, run $setup');
+}
+
 // --- Project-level setup ---
 
 function setupProject(platformFlag) {
@@ -132,7 +188,7 @@ function setupProject(platformFlag) {
 
   if (platformFlag === 'all') {
     // Explicit --all: target all platforms regardless of install status
-    targetPlatforms.push('claude', 'codex', 'gemini');
+    targetPlatforms.push('claude', 'codex', 'gemini', 'qwen');
   } else if (!platformFlag) {
     // No flag: auto-detect which are installed
     for (const [key, p] of Object.entries(platforms)) {
@@ -208,18 +264,21 @@ Init flags:
   --claude            Install for Claude Code only
   --codex             Install for Codex CLI only
   --gemini            Install for Gemini CLI only
+  --qwen              Install for Qwen Code CLI only
   (no flag)           Auto-detect installed CLIs and install for all
 
 Setup flags:
   --claude            Write CLAUDE.md only
   --codex             Write AGENTS.md only
   --gemini            Write GEMINI.md only
+  --qwen              Write QWEN.md only
   --all               Write instruction files for all platforms
   (no flag)           Auto-detect installed CLIs
 
 Examples:
   npx metaswarm init            Auto-detect and install for all CLIs
   npx metaswarm init --codex    Install for Codex CLI only
+  npx metaswarm init --qwen     Install for Qwen Code CLI only
   npx metaswarm setup           Set up project for detected CLIs
   npx metaswarm detect          Show which CLIs are available
 `);
@@ -235,7 +294,7 @@ async function initCommand(args) {
   console.log('');
 
   // Determine which platforms to install for
-  const explicit = flags.has('--claude') || flags.has('--codex') || flags.has('--gemini');
+  const explicit = flags.has('--claude') || flags.has('--codex') || flags.has('--gemini') || flags.has('--qwen');
 
   if (flags.has('--claude') || (!explicit && platforms.claude.installed)) {
     installClaude();
@@ -249,11 +308,15 @@ async function initCommand(args) {
     installGemini();
   }
 
+  if (flags.has('--qwen') || (!explicit && platforms.qwen.installed)) {
+    installQwen();
+  }
+
   if (!explicit) {
     const installed = Object.values(platforms).filter(p => p.installed);
     if (installed.length === 0) {
       console.log('\n  No supported CLI tools detected.');
-      console.log('  Install one of: claude, codex, gemini');
+      console.log('  Install one of: claude, codex, gemini, qwen');
       console.log('  Then re-run: npx metaswarm init\n');
     }
   }
@@ -290,6 +353,7 @@ if (cmd === 'init') {
   if (flags.has('--claude')) platformFlag = 'claude';
   else if (flags.has('--codex')) platformFlag = 'codex';
   else if (flags.has('--gemini')) platformFlag = 'gemini';
+  else if (flags.has('--qwen')) platformFlag = 'qwen';
   else if (flags.has('--all')) platformFlag = 'all';
   setupProject(platformFlag);
 } else if (cmd === 'detect') {
