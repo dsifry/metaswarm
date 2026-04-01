@@ -1,6 +1,6 @@
 {
   "name": "metaswarm",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Cross-platform installer for metaswarm — multi-agent orchestration for Claude Code, Codex CLI, and Gemini CLI",
   "bin": {
     "metaswarm": "cli/metaswarm.js"

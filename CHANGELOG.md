@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.11.0
+
+### Changed
+- **Beads integration updated for standalone plugin (v0.63.3+)**: Metaswarm now defers to the standalone beads plugin (`/plugin install beads` from steveyegge/beads marketplace) for context priming, semantic summarization, and config management
+- **Context recovery simplified**: `bd prime` now runs automatically via the beads plugin's SessionStart and PreCompact hooks — agents no longer need to call it manually
+- **`/self-reflect` references `bd compact`**: Semantic summarization of closed issues now uses the beads plugin's native `bd compact` command instead of the former custom script
+- **`bd decision` for persistent decision tracking**: Key Decisions sections in CLAUDE.md templates, orchestrated-execution, and worktree-development guide now reference `bd decision` for recording architectural decisions that survive compaction
+- **Developer setup and README templates**: Updated to recommend standalone beads plugin installation from marketplace as the primary path
+
+### Removed
+- `scripts/beads-self-reflect.ts` — replaced by `bd compact` in the standalone beads plugin
+- `templates/beads-config.yaml` — beads plugin manages its own configuration
+- Setup copies of both files (`skills/setup/scripts/`, `skills/setup/templates/`)
+
+### Added
+- `tests/templates/test-beads-cleanup.sh` — 27-assertion regression test for beads integration cleanup
+- 2 new test cases in `tests/hooks/test-session-start.sh` — verify dedup behavior (bd prime skipped when standalone beads detected, called when not)
+
 ## 0.10.0
 
 ### Added
