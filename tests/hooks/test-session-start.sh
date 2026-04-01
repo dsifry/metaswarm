@@ -99,6 +99,43 @@ echo '{"name":"beads","version":"1.0.0"}' > "$MOCK_CACHE/plugin.json"
 output=$(cd "$TEST_CWD" && HOME="$TMPDIR_BASE" bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
 
+# --- Test 4b: BEADS dedup skips bd prime when standalone beads is installed ---
+echo "Test 4b: BEADS dedup skips bd prime when standalone plugin detected"
+TEST_CWD="$TMPDIR_BASE/test4b"
+mkdir -p "$TEST_CWD/.metaswarm"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+# Reuse MOCK_CACHE from test 4 (beads plugin present)
+# Create a mock bd that outputs a sentinel value
+MOCK_BIN_4B="$TMPDIR_BASE/mock-bin-4b"
+mkdir -p "$MOCK_BIN_4B"
+cat > "$MOCK_BIN_4B/bd" << 'MOCKBD'
+#!/bin/bash
+echo "BEADS_PRIME_SENTINEL_SHOULD_NOT_APPEAR"
+MOCKBD
+chmod +x "$MOCK_BIN_4B/bd"
+output=$(cd "$TEST_CWD" && HOME="$TMPDIR_BASE" PATH="$MOCK_BIN_4B:$PATH" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "Output is valid JSON" "$output"
+assert_not_contains "bd prime NOT called when standalone beads detected" "$output" "BEADS_PRIME_SENTINEL_SHOULD_NOT_APPEAR"
+
+# --- Test 4c: bd prime IS called when standalone beads is NOT installed ---
+echo "Test 4c: bd prime IS called when standalone beads is NOT detected"
+TEST_CWD="$TMPDIR_BASE/test4c"
+mkdir -p "$TEST_CWD/.metaswarm"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+# Use an empty HOME with no beads plugin cache
+EMPTY_HOME="$TMPDIR_BASE/empty-home"
+mkdir -p "$EMPTY_HOME"
+MOCK_BIN_4C="$TMPDIR_BASE/mock-bin-4c"
+mkdir -p "$MOCK_BIN_4C"
+cat > "$MOCK_BIN_4C/bd" << 'MOCKBD'
+#!/bin/bash
+echo "BEADS_PRIME_SENTINEL_SHOULD_APPEAR"
+MOCKBD
+chmod +x "$MOCK_BIN_4C/bd"
+output=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" PATH="$MOCK_BIN_4C:$PATH" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "Output is valid JSON" "$output"
+assert_contains "bd prime IS called when no standalone beads" "$output" "BEADS_PRIME_SENTINEL_SHOULD_APPEAR"
+
 # --- Test 5: Multi-line bd prime output produces valid JSON ---
 echo "Test 5: Multi-line content produces valid JSON"
 TEST_CWD="$TMPDIR_BASE/test5"

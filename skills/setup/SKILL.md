@@ -254,12 +254,14 @@ Write them to `bin/` in the project. Make executable with `chmod +x`. Skip any t
 #### TypeScript Scripts
 
 Read each file from `./scripts/`:
-- `beads-self-reflect.ts`, `beads-fetch-pr-comments.ts`, `beads-fetch-conversation-history.ts`
+- `beads-fetch-pr-comments.ts`, `beads-fetch-conversation-history.ts`
 
 Write them to `scripts/` in the project. Skip any that already exist.
 
+**Note**: The former `beads-self-reflect.ts` script is no longer bundled — the standalone beads plugin (v0.63.3+) provides `bd compact` for semantic summarization natively.
+
 **Node.js dependency warning**: If Node.js was NOT detected as the project language, print:
-> "Note: scripts/*.ts require Node.js (npx tsx) to run. Some advanced features (self-reflect, PR comment fetching) will work once Node.js is available. Core metaswarm functionality does not require Node.js."
+> "Note: scripts/*.ts require Node.js (npx tsx) to run. Some advanced features (PR comment fetching, conversation history) will work once Node.js is available. Core metaswarm functionality does not require Node.js."
 
 #### Conditional Files
 

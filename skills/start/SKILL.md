@@ -656,11 +656,14 @@ The prime command outputs relevant facts categorized as:
 Run self-reflection to extract learnings:
 
 ```bash
-# Fetch recent PR comments
+# Fetch recent PR comments (metaswarm-specific GitHub integration)
 GITHUB_TOKEN=$(gh auth token) npx tsx scripts/beads-fetch-pr-comments.ts --days 7
 
 # Use self-reflect skill to evaluate and add learnings
 /self-reflect
+
+# Compact closed issues (semantic summarization via beads plugin)
+bd compact
 ```
 
 Or spawn Knowledge Curator agent:

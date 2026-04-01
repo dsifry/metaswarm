@@ -183,7 +183,17 @@ For each validated learning, add it to the appropriate knowledge base JSONL file
 
 Before adding, check for semantic duplicates in existing knowledge files.
 
-## Step 7: Generate Report
+## Step 7: Semantic Summarization via bd compact
+
+The standalone beads plugin (v0.63.3+) provides `bd compact` for semantic summarization of closed issues. After capturing learnings, run:
+
+```bash
+bd compact
+```
+
+This replaces the former `beads-self-reflect.ts` script — `bd compact` handles knowledge base statistics, summarization, and cleanup natively.
+
+## Step 8: Generate Report
 
 ```markdown
 ## Self-Reflection Results

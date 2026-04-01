@@ -387,7 +387,7 @@ Quality standards used by review agents:
 | Script | Purpose |
 |---|---|
 | `scripts/beads-fetch-pr-comments.ts` | Fetch PR review comments from GitHub |
-| `scripts/beads-self-reflect.ts` | Generate knowledge base statistics |
+| `scripts/beads-fetch-conversation-history.ts` | Extract conversation history from Claude Code sessions |
 | `bin/pr-comments-check.sh` | Verify all review comments addressed |
 | `bin/pr-comments-filter.sh` | Filter actionable vs non-actionable comments |
 | `bin/external-tools-verify.sh` | End-to-end verification of external tools setup (15 checks) |

@@ -166,7 +166,7 @@ Approved plans, project context, and execution state are persisted to `.beads/` 
 - **Project context** → `.beads/context/project-context.md` (updated after each work unit commit)
 - **Execution state** → `.beads/context/execution-state.md` (updated after each phase transition)
 
-If an agent loses context mid-execution, it recovers by running `bd prime --work-type recovery`, which reloads the approved plan, completed work, and current position from disk. This eliminates the need to re-run expensive review gates after compaction.
+**Note:** The standalone beads plugin (v0.63.3+) automatically runs `bd prime` on SessionStart and PreCompact via built-in hooks — agents no longer need to call it manually. If context is lost mid-execution, the beads plugin will re-prime automatically on the next session or compaction event. For explicit recovery, run `bd prime --work-type recovery` to reload the approved plan, completed work, and current position from disk.
 
 ## External Tools (Optional)
 
@@ -198,7 +198,9 @@ Development patterns and standards are documented in `guides/`:
 ## Key Decisions
 
 <!-- Document important architectural decisions here so agents have context.
-     These get loaded during knowledge priming (/prime). -->
+     These get loaded during knowledge priming (/prime).
+     Use `bd decision` to record decisions persistently in the beads database
+     with rationale tracking — these survive compaction and are available across sessions. -->
 
 ## Notes
 

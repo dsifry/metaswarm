@@ -61,10 +61,18 @@ Issues in Beads are:
 
 ## Get Started with Beads
 
-Try Beads in your own projects:
+### Install the standalone beads plugin (recommended)
 
 ```bash
-# Install Beads
+# Install from the Claude Code marketplace
+/plugin install beads    # from steveyegge/beads marketplace
+```
+
+The beads plugin (v0.63.3+) automatically handles context priming on SessionStart and PreCompact, provides `bd compact` for semantic summarization, `bd decision` for architectural decision tracking, and ships a `@task-agent` that autonomously finds and completes ready tasks.
+
+### Or install the CLI directly
+
+```bash
 curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
 
 # Initialize in your repo
@@ -77,6 +85,7 @@ bd create "Try out Beads"
 ## Learn More
 
 - **Documentation**: [github.com/steveyegge/beads/docs](https://github.com/steveyegge/beads/tree/main/docs)
+- **Marketplace Plugin**: [steveyegge/beads](https://github.com/steveyegge/beads)
 - **Quick Start Guide**: Run `bd quickstart`
 - **Examples**: [github.com/steveyegge/beads/examples](https://github.com/steveyegge/beads/tree/main/examples)
 

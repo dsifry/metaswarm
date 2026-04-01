@@ -5,7 +5,7 @@ This guide helps you set up BEADS (Bug/Enhancement Agent Delegation System) on y
 ## Prerequisites
 
 - **Claude Code** installed and configured
-- **Node.js** 18+ with pnpm
+- **Node.js** 18+ with pnpm (for metaswarm-specific scripts)
 - **Git** configured with SSH access to the repo
 - **Slack workspace** access (for Slack integration)
 
@@ -13,19 +13,23 @@ This guide helps you set up BEADS (Bug/Enhancement Agent Delegation System) on y
 
 ## Quick Start
 
+### Install the standalone beads plugin
+
 ```bash
-# 1. Verify BEADS CLI is installed
+# Install the beads plugin from the Claude Code marketplace
+/plugin install beads    # from steveyegge/beads marketplace
+
+# Verify BEADS CLI is installed
 bd --version
 
-# 2. Check system health
+# Check system health
 bd doctor
 
-# 3. View current issues
+# View current issues
 bd list
-
-# 4. Test knowledge priming
-npx tsx scripts/beads-prime.ts --compact
 ```
+
+The standalone beads plugin (v0.63.3+) automatically handles context priming via built-in SessionStart and PreCompact hooks — no manual priming scripts needed.
 
 ---
 
@@ -157,55 +161,28 @@ Add this line (runs every Monday at 9am):
 
 ## Using BEADS with Claude Code
 
-### Auto-Priming Hook (Recommended)
+### Automatic Knowledge Priming
 
-Configure Claude Code to auto-prime knowledge at session start:
+The standalone beads plugin (v0.63.3+) automatically runs `bd prime` on SessionStart and PreCompact via built-in hooks. No manual configuration is needed — the plugin handles context priming out of the box.
 
-1. Create/edit `.claude/settings.local.json`:
-
-```json
-{
-  "hooks": {
-    "PreCompact": [
-      {
-        "hooks": [{ "command": "bash scripts/beads-auto-prime.sh", "type": "command" }],
-        "matcher": ""
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [{ "command": "bash scripts/beads-auto-prime.sh", "type": "command" }],
-        "matcher": ""
-      }
-    ]
-  }
-}
-```
-
-The auto-prime hook will:
-
-- Output `bd prime` workflow context
-- Detect any in-progress BEADS task (`bd list --status=in_progress`)
-- Extract keywords from the task title
-- Run `beads-prime.ts` with those keywords
-- Fall back to general priming if no task is claimed
+If the beads plugin is installed, metaswarm's session hook detects it and skips its own priming to avoid duplicate context.
 
 ### Manual Knowledge Priming
 
-If not using the hook, prime your context manually:
+For explicit priming outside the automatic hooks:
 
 ```bash
+# General priming
+bd prime
+
+# For recovery after context loss
+bd prime --work-type recovery
+
 # For implementation work
-pnpm tsx scripts/beads-prime.ts --work-type implementation --keywords "feature" "area"
+bd prime --work-type implementation
 
 # For debugging
-pnpm tsx scripts/beads-prime.ts --work-type debugging --keywords "error" "component"
-
-# For planning
-pnpm tsx scripts/beads-prime.ts --work-type planning --keywords "architecture" "design"
-
-# Compact output (less verbose)
-pnpm tsx scripts/beads-prime.ts --compact
+bd prime --work-type debugging
 ```
 
 ### Common Workflows
@@ -241,8 +218,11 @@ bd create --title "Write tests" --type task --parent <epic-id>
 # Close completed tasks
 bd close <task-id> --reason "Implementation complete"
 
-# Self-reflect (capture learnings)
-npx tsx scripts/beads-self-reflect.ts
+# Compact closed issues (semantic summarization)
+bd compact
+
+# Record architectural decisions
+bd decision "Chose X over Y because Z"
 ```
 
 ---
@@ -251,7 +231,7 @@ npx tsx scripts/beads-self-reflect.ts
 
 ```text
 .beads/
-  config.yaml           # BEADS configuration
+  config.yaml           # BEADS configuration (managed by beads plugin)
   issues.jsonl          # Issue database
   metadata.json         # Repo metadata
   knowledge/            # Knowledge base
@@ -263,9 +243,8 @@ npx tsx scripts/beads-self-reflect.ts
   temp/                 # Temporary files (gitignored)
 
 scripts/
-  beads-prime.ts        # Knowledge priming CLI
-  beads-self-reflect.ts # Post-task reflection
-  beads-slack-daemon.ts # Slack Socket Mode daemon
+  beads-fetch-pr-comments.ts          # Fetch PR review comments from GitHub (metaswarm-specific)
+  beads-fetch-conversation-history.ts  # Extract conversation history from Claude Code sessions (metaswarm-specific)
 ```
 
 ---
@@ -275,11 +254,11 @@ scripts/
 ### "bd: command not found"
 
 ```bash
-# Install BEADS CLI
-curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
+# Install the beads plugin from Claude Code marketplace
+/plugin install beads    # from steveyegge/beads marketplace
 
-# Or via npm
-npm install -g @anthropic/beads
+# Or install BEADS CLI directly
+curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
 ```
 
 ### Slack daemon won't connect
@@ -359,4 +338,4 @@ bd doctor                   # Health check
 
 ---
 
-_Last updated: January 2026_
+_Last updated: March 2026_

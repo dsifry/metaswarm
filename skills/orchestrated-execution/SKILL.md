@@ -630,6 +630,8 @@ When reaching a checkpoint, present this report and **wait for explicit human ap
 - <decision-1>: <rationale>
 - <decision-2>: <rationale>
 
+Record significant decisions persistently with `bd decision "<decision>: <rationale>"` so they survive compaction and are available across sessions.
+
 ### What Comes Next
 - WU-003: <description>
 - WU-004: <description>
