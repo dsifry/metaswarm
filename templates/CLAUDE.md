@@ -160,13 +160,36 @@ After all work units pass final review but BEFORE creating the PR, run `/self-re
 
 ### Context Recovery (Surviving Compaction)
 
-Approved plans, project context, and execution state are persisted to `.beads/` so agents can recover after context compaction or session interruption:
+metaswarm uses two complementary systems for context recovery:
 
-- **Approved plans** → `.beads/plans/active-plan.md` (written after plan review gate + user approval)
-- **Project context** → `.beads/context/project-context.md` (updated after each work unit commit)
-- **Execution state** → `.beads/context/execution-state.md` (updated after each phase transition)
+**1. Memory files** (`.metaswarm/memory/`) — persistent project memory that survives compaction and session restarts:
+- `active-state.md` — current task, phase, progress, blockers, key files
+- `decisions.md` — architecture decisions with reasoning
+- `gotchas.md` — project-specific pitfalls
+- `feedback.md` — user corrections and preferences
 
-**Note:** The standalone beads plugin (v0.63.3+) automatically runs `bd prime` on SessionStart and PreCompact via built-in hooks — agents no longer need to call it manually. If context is lost mid-execution, the beads plugin will re-prime automatically on the next session or compaction event. For explicit recovery, run `bd prime --work-type recovery` to reload the approved plan, completed work, and current position from disk.
+Update these at phase transitions, when making decisions, discovering gotchas, or receiving user feedback. The `pre-compact.sh` hook automatically loads them on SessionStart and injects them into the compaction summary on PreCompact.
+
+**2. Session state** (`.metaswarm/session-state.json`) — machine-readable execution checkpoint:
+```json
+{
+  "task": "current task description",
+  "phase": "IMPLEMENT",
+  "completedSteps": ["step1", "step2"],
+  "nextSteps": ["step3"],
+  "fileScope": ["src/auth/*.ts"],
+  "blockedBy": null,
+  "lastUpdated": "ISO-8601"
+}
+```
+Update after each phase transition so recovery knows exactly where to resume.
+
+**3. Beads persistence** (optional, if beads plugin is installed):
+- **Approved plans** → `.beads/plans/active-plan.md`
+- **Project context** → `.beads/context/project-context.md`
+- **Execution state** → `.beads/context/execution-state.md`
+
+The standalone beads plugin (v0.63.3+) automatically runs `bd prime` on SessionStart and PreCompact. For explicit recovery, run `bd prime --work-type recovery`.
 
 ## External Tools (Optional)
 
