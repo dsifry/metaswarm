@@ -127,7 +127,28 @@ else
   fi
 fi
 
-# --- File 3: 6 command shims in .claude/commands/ ---
+# --- File 3: Memory directory ---
+memory_dir="$PROJECT_DIR/.metaswarm/memory"
+state_file="$PROJECT_DIR/.metaswarm/session-state.json"
+memory_template_dir="$PLUGIN_ROOT/templates/memory"
+if [ ! -d "$memory_dir" ] && [ -d "$memory_template_dir" ]; then
+  mkdir -p "$memory_dir"
+  for tmpl in "$memory_template_dir"/*.md; do
+    [ -f "$tmpl" ] || continue
+    cp "$tmpl" "$memory_dir/"
+    created+=(".metaswarm/memory/$(basename "$tmpl")")
+  done
+  if [ -f "$memory_template_dir/session-state.json" ] && [ ! -f "$state_file" ]; then
+    cp "$memory_template_dir/session-state.json" "$state_file"
+    created+=(".metaswarm/session-state.json")
+  fi
+else
+  if [ -d "$memory_dir" ]; then
+    skipped+=(".metaswarm/memory/ (already exists)")
+  fi
+fi
+
+# --- File 4: 6 command shims in .claude/commands/ ---
 commands_dir="$PROJECT_DIR/.claude/commands"
 mkdir -p "$commands_dir"
 
