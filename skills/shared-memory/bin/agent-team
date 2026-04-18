@@ -1,0 +1,204 @@
+#!/usr/bin/env node
+// agent-team — native primitives for multi-team coordination (Q3)
+//
+// Provides lightweight, file-backed primitives on top of shared-memory:
+//   - claim/release  : lease-based task claiming (prevents two teams grabbing same issue)
+//   - list           : active leases with TTL
+//   - expire         : purge expired leases
+//   - status         : who is on what, where
+//
+// Leases are stored as global episodic entries keyed `lease:<issue>`.
+// Each lease has an expires_at; the next `list` or `claim` auto-expires stale ones.
+//
+// Usage:
+//   agent-team claim AGE-123 [--for 60] [--as team-2] [--note "..."]
+//   agent-team release AGE-123
+//   agent-team list [--team team-1] [--all]
+//   agent-team expire
+//   agent-team status
+
+'use strict';
+
+const path = require('path');
+const LIB = process.env.SHARED_MEMORY_LIB || path.resolve(process.env.HOME, '.claude/shared-memory/lib');
+const store = require(path.join(LIB, 'store.js'));
+
+function parseArgs(argv) {
+  const a = { _: [] };
+  for (let i = 0; i < argv.length; i++) {
+    const x = argv[i];
+    if (x.startsWith('--')) {
+      const k = x.slice(2); const n = argv[i + 1];
+      if (n === undefined || n.startsWith('--')) a[k] = true;
+      else { a[k] = n; i++; }
+    } else a._.push(x);
+  }
+  return a;
+}
+
+function resolveTeam() {
+  if (process.env.SS_SYNC_TEAM) return process.env.SS_SYNC_TEAM;
+  try {
+    const cfg = require(path.resolve(process.env.HOME, '.skrivstore/lib/config.js'));
+    return cfg.resolveTeamAndProject().team;
+  } catch (_) { return 'team-unknown'; }
+}
+
+function die(msg) { process.stderr.write(`agent-team: ${msg}\n`); process.exit(1); }
+
+function allLeases() {
+  return store.search({ query: 'lease', scopes: ['global'], types: ['episodic'], limit: 500 })
+    .filter((e) => e.key && e.key.startsWith('lease:'));
+}
+
+function parseLease(e) {
+  try { return { e, b: JSON.parse(e.body) }; } catch { return null; }
+}
+
+function isExpired(lease) {
+  return lease.b.expires_at && Date.now() > lease.b.expires_at;
+}
+
+function issueFromArgs(args) {
+  const issue = args._[0];
+  if (!issue) die('issue id required (e.g. AGE-123 or path/to/file)');
+  return issue;
+}
+
+function cmd_claim(args) {
+  const issue = issueFromArgs(args);
+  const team = args.as || resolveTeam();
+  const minutes = args.for ? Number(args.for) : 60;
+  const key = `lease:${issue}`;
+
+  const existing = store.get({ scope: 'global', key });
+  if (existing) {
+    const lease = parseLease(existing);
+    if (lease && !isExpired(lease) && lease.b.team !== team) {
+      die(`already claimed by ${lease.b.team} until ${new Date(lease.b.expires_at).toISOString()} (use --as ${lease.b.team} to extend, or wait)`);
+    }
+  }
+
+  const body = {
+    issue,
+    team,
+    note: args.note || '',
+    claimed_at: Date.now(),
+    expires_at: Date.now() + minutes * 60000,
+    renewed: existing ? ((parseLease(existing)?.b.renewed || 0) + 1) : 0,
+  };
+
+  store.put({
+    scope: 'global', type: 'episodic', key,
+    title: `[lease ${team}] ${issue}`,
+    body: JSON.stringify(body, null, 2),
+    tags: ['lease', team, issue],
+    team, source: 'agent-team',
+  });
+  console.log(`claimed ${issue} for ${team}, expires ${new Date(body.expires_at).toISOString()}`);
+}
+
+function cmd_release(args) {
+  const issue = issueFromArgs(args);
+  const team = args.as || resolveTeam();
+  const key = `lease:${issue}`;
+  const e = store.get({ scope: 'global', key });
+  if (!e) die(`no lease on ${issue}`);
+  const lease = parseLease(e);
+  if (lease && lease.b.team !== team && !args.force) {
+    die(`lease owned by ${lease.b.team}, not ${team} (use --force to override)`);
+  }
+  // Mark as released by expiring immediately. Preserves history.
+  const body = { ...(lease?.b || {}), released_at: Date.now(), expires_at: Date.now() - 1 };
+  store.put({
+    scope: 'global', type: 'episodic', key,
+    title: `[lease released ${team}] ${issue}`,
+    body: JSON.stringify(body, null, 2),
+    tags: ['lease', 'released', team, issue],
+    team, source: 'agent-team',
+  });
+  console.log(`released ${issue}`);
+}
+
+function cmd_list(args) {
+  const leases = allLeases().map(parseLease).filter(Boolean);
+  const now = Date.now();
+  const filtered = leases.filter((l) => {
+    if (args.team && l.b.team !== args.team) return false;
+    if (!args.all && isExpired(l)) return false;
+    return true;
+  });
+  if (!filtered.length) { console.log('(no active leases)'); return; }
+  for (const l of filtered) {
+    const mins = Math.round((l.b.expires_at - now) / 60000);
+    const status = isExpired(l) ? 'EXPIRED' : `${mins}m left`;
+    const released = l.b.released_at ? ' (released)' : '';
+    console.log(`  ${l.b.issue.padEnd(24)} ${l.b.team.padEnd(10)} ${status}${released}${l.b.note ? ' — ' + l.b.note : ''}`);
+  }
+}
+
+function cmd_expire() {
+  const leases = allLeases().map(parseLease).filter(Boolean);
+  let n = 0;
+  for (const l of leases) {
+    if (!isExpired(l)) continue;
+    if (l.b.expired_tombstoned) continue;
+    const body = { ...l.b, expired_tombstoned: Date.now() };
+    store.put({
+      scope: 'global', type: 'episodic', key: l.e.key,
+      title: `[lease expired ${l.b.team}] ${l.b.issue}`,
+      body: JSON.stringify(body, null, 2),
+      tags: ['lease', 'expired', l.b.team, l.b.issue],
+      team: l.b.team, source: 'agent-team',
+    });
+    n++;
+  }
+  console.log(`tombstoned ${n} expired lease(s)`);
+}
+
+function cmd_status() {
+  const team = resolveTeam();
+  const active = allLeases().map(parseLease).filter(Boolean).filter((l) => !isExpired(l));
+  const mine = active.filter((l) => l.b.team === team);
+  const others = active.filter((l) => l.b.team !== team);
+
+  console.log(`team: ${team}`);
+  console.log(`my leases: ${mine.length}`);
+  for (const l of mine) {
+    const mins = Math.round((l.b.expires_at - Date.now()) / 60000);
+    console.log(`  ${l.b.issue} (${mins}m left)${l.b.note ? ' — ' + l.b.note : ''}`);
+  }
+  console.log(`other teams: ${others.length}`);
+  for (const l of others) {
+    const mins = Math.round((l.b.expires_at - Date.now()) / 60000);
+    console.log(`  ${l.b.issue} by ${l.b.team} (${mins}m left)`);
+  }
+}
+
+function main() {
+  const [cmd, ...rest] = process.argv.slice(2);
+  const args = parseArgs(rest);
+  switch (cmd) {
+    case 'claim':   return cmd_claim(args);
+    case 'release': return cmd_release(args);
+    case 'list':    return cmd_list(args);
+    case 'expire':  return cmd_expire();
+    case 'status':  return cmd_status();
+    case 'help': case '--help': case '-h': case undefined:
+      return console.log(`agent-team - native primitives for multi-team coordination
+
+Commands:
+  claim <issue> [--for <min>] [--as <team>] [--note "..."]
+                              Acquire a lease on an issue (default 60 min)
+  release <issue> [--force]   Release a lease (force to override other-team locks)
+  list [--team X] [--all]     Show active leases (or all including expired)
+  expire                      Tombstone expired leases
+  status                      Summary of your team's leases and others
+
+Leases stored as global episodic entries in shared-memory (key=lease:<issue>).
+Integrates with handoff and memory CLIs.`);
+    default: die(`unknown command: ${cmd}`);
+  }
+}
+
+try { main(); } catch (e) { die(e.stack || e.message); }
