@@ -9,8 +9,9 @@
 
 set -euo pipefail
 
-INSTALL_DIR="${CODEX_HOME:-$HOME/.codex}/metaswarm"
-SKILLS_DIR="$HOME/.agents/skills"
+CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"
+INSTALL_DIR="$CODEX_ROOT/metaswarm"
+SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
 REPO_URL="https://github.com/dsifry/metaswarm.git"
 
 echo ""
@@ -42,8 +43,9 @@ mkdir -p "$SKILLS_DIR"
 linked=0
 for skill_dir in "$INSTALL_DIR/skills"/*/; do
   [ -d "$skill_dir" ] || continue
-  skill_name="metaswarm-$(basename "$skill_dir")"
+  skill_name="$(basename "$skill_dir")"
   target="$SKILLS_DIR/$skill_name"
+  legacy_target="$SKILLS_DIR/metaswarm-$skill_name"
 
   if [ -L "$target" ]; then
     # Update existing symlink
@@ -51,6 +53,12 @@ for skill_dir in "$INSTALL_DIR/skills"/*/; do
   elif [ -d "$target" ]; then
     echo "  Warning: $target exists as a directory, skipping"
     continue
+  fi
+
+  if [ -L "$legacy_target" ]; then
+    rm "$legacy_target"
+  elif [ -e "$legacy_target" ]; then
+    echo "  Warning: legacy path $legacy_target exists and was not removed"
   fi
 
   ln -sf "$skill_dir" "$target"

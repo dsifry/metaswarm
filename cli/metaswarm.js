@@ -54,8 +54,9 @@ function installClaude() {
 
 function installCodex() {
   console.log('\n  Installing for Codex CLI...\n');
-  const installDir = path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'metaswarm');
-  const skillsDir = path.join(os.homedir(), '.agents', 'skills');
+  const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex');
+  const installDir = path.join(codexHome, 'metaswarm');
+  const skillsDir = path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'skills');
 
   if (fs.existsSync(installDir)) {
     console.log(`  Updating existing installation at ${installDir}...`);
@@ -86,8 +87,9 @@ function installCodex() {
     for (const dir of fs.readdirSync(skillsPath)) {
       const srcDir = path.join(skillsPath, dir);
       if (!fs.statSync(srcDir).isDirectory()) continue;
-      const linkName = `metaswarm-${dir}`;
+      const linkName = dir;
       const linkPath = path.join(skillsDir, linkName);
+      const legacyLinkPath = path.join(skillsDir, `metaswarm-${dir}`);
 
       try {
         if (fs.lstatSync(linkPath).isSymbolicLink()) {
@@ -98,6 +100,16 @@ function installCodex() {
         }
       } catch (e) {
         if (e.code !== 'ENOENT') warn(`Unexpected error checking ${linkPath}: ${e.message}`);
+      }
+
+      try {
+        if (fs.lstatSync(legacyLinkPath).isSymbolicLink()) {
+          fs.unlinkSync(legacyLinkPath);
+        } else if (fs.existsSync(legacyLinkPath)) {
+          warn(`Legacy skill path ${legacyLinkPath} exists and was not removed`);
+        }
+      } catch (e) {
+        if (e.code !== 'ENOENT') warn(`Unexpected error checking ${legacyLinkPath}: ${e.message}`);
       }
 
       fs.symlinkSync(srcDir, linkPath);

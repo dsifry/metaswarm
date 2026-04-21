@@ -1,6 +1,6 @@
 # metaswarm for Codex CLI
 
-Install metaswarm's 13 orchestration skills for [Codex CLI](https://github.com/openai/codex).
+Install metaswarm's Codex skills for [Codex CLI](https://github.com/openai/codex).
 
 ## Install
 
@@ -14,11 +14,13 @@ curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install
 
 ```bash
 git clone https://github.com/dsifry/metaswarm.git ~/.codex/metaswarm
-mkdir -p ~/.agents/skills
+mkdir -p ~/.codex/skills
 for d in ~/.codex/metaswarm/skills/*/; do
-  ln -sf "$d" ~/.agents/skills/metaswarm-$(basename "$d")
+  ln -sf "$d" ~/.codex/skills/$(basename "$d")
 done
 ```
+
+If `CODEX_HOME` is set, use `$CODEX_HOME` in place of `~/.codex`.
 
 ### Via npm (cross-platform installer)
 
@@ -38,7 +40,7 @@ This detects your project's language, framework, test runner, and tools, then cr
 
 ## How Codex Finds Skills
 
-Codex uses the `name` field from each skill's `SKILL.md` frontmatter — not the directory name. The directory prefix `metaswarm-` is for organization only. You invoke skills using `$name` syntax matching the SKILL.md `name` field.
+Codex uses the `name` field from each skill's `SKILL.md` frontmatter — not the directory name. metaswarm installs skills into `${CODEX_HOME:-$HOME/.codex}/skills/`, and you invoke them with `$name` syntax matching the `SKILL.md` frontmatter.
 
 ## Available Skills
 
@@ -53,6 +55,7 @@ Codex uses the `name` field from each skill's `SKILL.md` frontmatter — not the
 | `$pr-shepherd` | `pr-shepherd` | Monitor a PR through to merge |
 | `$handling-pr-comments` | `handling-pr-comments` | Handle PR review comments |
 | `$create-issue` | `create-issue` | Create a well-structured GitHub Issue |
+| `$spec-gap-review` | `spec-gap-review` | Audit a spec or design doc against repo reality |
 | `$external-tools` | `external-tools` | Check/use external AI tools |
 | `$status` | `status` | Run diagnostic checks |
 | `$migrate` | `migrate` | Migrate from npm installation |
@@ -80,7 +83,7 @@ Or re-run the install script — it detects existing installations and updates i
 
 ```bash
 # Remove skill symlinks
-for link in ~/.agents/skills/metaswarm-*; do rm -f "$link"; done
+for d in ~/.codex/metaswarm/skills/*/; do rm -f ~/.codex/skills/$(basename "$d"); done
 # Remove installation
 rm -rf ~/.codex/metaswarm
 ```

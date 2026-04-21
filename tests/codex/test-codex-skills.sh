@@ -35,6 +35,13 @@ else
   fail "install.sh missing proper shebang"
 fi
 
+# 2b. Install script targets the Codex skills directory
+if grep -Fq 'SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"' "$ROOT/.codex/install.sh"; then
+  pass "install.sh targets \$CODEX_HOME/skills"
+else
+  fail "install.sh does not target \$CODEX_HOME/skills"
+fi
+
 # 3. AGENTS.md exists at repo root
 if [ -f "$ROOT/AGENTS.md" ]; then
   pass "AGENTS.md exists at repo root"
@@ -90,6 +97,36 @@ else
   fail ".codex/README.md not found"
 fi
 
+# 6b. README documents Codex skill installation and the new review skill
+if grep -Fq '~/.codex/skills' "$ROOT/.codex/README.md"; then
+  pass ".codex/README.md documents ~/.codex/skills"
+else
+  fail ".codex/README.md does not document ~/.codex/skills"
+fi
+
+if grep -Fq '$spec-gap-review' "$ROOT/.codex/README.md"; then
+  pass ".codex/README.md lists the spec-gap-review skill"
+else
+  fail ".codex/README.md does not list the spec-gap-review skill"
+fi
+
+# 6c. codex-plan-review command documents how to find/install its backing skill
+if [ -f "$ROOT/commands/codex-plan-review.md" ]; then
+  pass "commands/codex-plan-review.md exists"
+  if grep -Fq '${CODEX_HOME:-$HOME/.codex}/skills/spec-gap-review/SKILL.md' "$ROOT/commands/codex-plan-review.md"; then
+    pass "codex-plan-review checks the Codex home skill path"
+  else
+    fail "codex-plan-review does not check the Codex home skill path"
+  fi
+  if grep -Fq 'npx metaswarm init --codex' "$ROOT/commands/codex-plan-review.md"; then
+    pass "codex-plan-review documents how to install the skill"
+  else
+    fail "codex-plan-review does not document how to install the skill"
+  fi
+else
+  fail "commands/codex-plan-review.md not found"
+fi
+
 # 7. Template files exist
 for tmpl in AGENTS.md AGENTS-append.md; do
   if [ -f "$ROOT/templates/$tmpl" ]; then
@@ -105,7 +142,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 for skill_dir in "$ROOT/skills"/*/; do
   [ -d "$skill_dir" ] || continue
-  skill_name="metaswarm-$(basename "$skill_dir")"
+  skill_name="$(basename "$skill_dir")"
   ln -sf "$skill_dir" "$TMP_DIR/$skill_name"
 done
 
