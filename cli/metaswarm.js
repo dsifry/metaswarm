@@ -124,15 +124,18 @@ function installCodex() {
         if (e.code !== 'ENOENT') warn(`Unexpected error checking ${linkPath}: ${e.message}`);
       }
 
+      let skipForLegacyDir = false;
       try {
         if (fs.lstatSync(legacyLinkPath).isSymbolicLink()) {
           fs.unlinkSync(legacyLinkPath);
         } else if (fs.existsSync(legacyLinkPath)) {
-          warn(`Legacy skill path ${legacyLinkPath} exists and was not removed`);
+          warn(`Legacy skill path ${legacyLinkPath} exists as a real directory; skipping ${dir}. Remove it manually and re-run to avoid a duplicate skill entry alongside the new ${linkPath} symlink.`);
+          skipForLegacyDir = true;
         }
       } catch (e) {
         if (e.code !== 'ENOENT') warn(`Unexpected error checking ${legacyLinkPath}: ${e.message}`);
       }
+      if (skipForLegacyDir) continue;
 
       fs.symlinkSync(srcDir, linkPath);
       linked++;

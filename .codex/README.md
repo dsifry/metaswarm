@@ -82,6 +82,8 @@ Or re-run the install script — it detects existing installations and updates i
 ## Uninstall
 
 ```bash
+# If CODEX_HOME is set, replace ~/.codex below with "$CODEX_HOME"
+# (or substitute "${CODEX_HOME:-$HOME/.codex}" for both paths).
 # Remove skill symlinks
 for d in ~/.codex/metaswarm/skills/*/; do rm -f ~/.codex/skills/$(basename "$d"); done
 # Remove installation

@@ -46,7 +46,7 @@ Run these checks before starting the loop. Stop and tell the user exactly what t
 3. **Spec-gap-review skill present**: `${CODEX_HOME:-$HOME/.codex}/skills/spec-gap-review/SKILL.md` exists. During the migration window, also accept `${CODEX_HOME:-$HOME/.codex}/skills/metaswarm-spec-gap-review/SKILL.md`. If neither exists, tell the user: *"Install metaswarm's Codex skills first: `npx metaswarm init --codex` or `curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash`."*
 4. **External tools enabled**: `.metaswarm/external-tools.yaml` in the repo has `adapters.codex.enabled: true`. If the file is missing or the flag is false, tell the user: *"Enable codex first: set `adapters.codex.enabled: true` in `.metaswarm/external-tools.yaml`."*
 5. **Plan file exists** and is readable.
-6. **Sibling path**: `<plan-stem>-codexreview.md` in the same directory as the plan. If a stale sibling exists from a prior unrelated run, warn the user and ask whether to overwrite or append.
+6. **Sibling path**: `<plan-stem>-codexreview.md` in the same directory as the plan. If a stale sibling exists from a prior unrelated run, warn the user and ask whether to overwrite (start fresh) or continue (skill picks up from the last saved round). Default: continue. See "If the sibling file exists on entry" below for details.
 7. **Stdin-close probe** (detects non-TTY stdin hang). Run:
    ```bash
    # Portable 15 s cap: prefer timeout/gtimeout; otherwise use a pure-bash watchdog.
@@ -95,7 +95,7 @@ Choose the prompt based on iteration and the resolved `critical_from_round`:
 
 **Round 1** (always uses the baseline prompt, regardless of profile):
 
-```
+```text
 Review the implementation plan at <PLAN_PATH> using the spec-gap-review skill.
 Ground the review in the current repository at <CWD>.
 Save the review to <SIBLING_PATH>.
@@ -106,7 +106,7 @@ In the `## Prioritized issues` section, prefix every bullet with its gap ID, e.g
 
 **Variant A — Critical-Only delta** (used when `critical_from_round != never` AND current round ≥ `critical_from_round`; applies to `speed` and `balanced` profiles):
 
-```
+```text
 Re-review the implementation plan at <PLAN_PATH> using the spec-gap-review skill in Critical-Only Mode.
 Compare against the prior review at <SIBLING_PATH>.
 Update that file in place with a round-aware delta.
@@ -116,7 +116,7 @@ In the `## Prioritized issues` section, prefix every bullet with its gap ID, e.g
 
 **Variant B — Full-review delta** (used when `critical_from_round == never`, OR current round < `critical_from_round`; applies to `quality` profile):
 
-```
+```text
 Re-review the implementation plan at <PLAN_PATH> using the spec-gap-review skill.
 Compare against the prior review at <SIBLING_PATH>.
 Update that file in place with a round-aware delta review.
@@ -306,7 +306,7 @@ Report one of these outcomes:
 
 ### ACCEPTED (round N, score X/100)
 
-```
+```text
 CODEX PLAN REVIEW: ACCEPTED
 Profile: <profile-name>
 Plan: <PLAN_PATH>
@@ -327,7 +327,7 @@ Unless `--no-commit`:
 
 ### MAX_ROUNDS (round cap hit)
 
-```
+```text
 CODEX PLAN REVIEW: MAX_ROUNDS
 Profile: <profile-name>
 Plan: <PLAN_PATH>
@@ -346,7 +346,7 @@ List the remaining P0 and P1 findings. Offer three options:
 
 **Recommendation hint**: if the last-round Overall delta is ≥ +5, mark option (2) as recommended. The loop is converging; one more re-run is likely to reach ACCEPT. Format:
 
-```
+```markdown
 2. **Revise manually and re-run** ← recommended (score trending up: +<delta> last round)
 ```
 
@@ -369,7 +369,7 @@ Each row preserves the exact gap ID from the final sibling file. `<relative-sibl
 
 ### STALLED
 
-```
+```text
 CODEX PLAN REVIEW: STALLED
 Profile: <profile-name>
 Plan: <PLAN_PATH>
@@ -383,7 +383,7 @@ This usually means Claude's fix pass isn't addressing the real issue Codex is fl
 
 ### ERROR
 
-```
+```text
 CODEX PLAN REVIEW: ERROR
 Phase: <preflight | codex-invocation | file-parse>
 Detail: <message>
@@ -417,7 +417,7 @@ The two counters are independent by design:
 
 If a user runs `/codex-plan-review plan.md` once and hits MAX_ROUNDS, then runs it again days later after revisions, the skill might emit `Round 4` on the first Codex call while the command reports `iteration 1 of 3`. **Both are correct.** On iteration 1, **always** log both unconditionally (not only when they diverge — the unconditional log aids debugging and costs nothing):
 
-```
+```text
 [codex-plan-review] iteration 1 of 3
 [codex-plan-review] skill reports this is round N of plan review lineage
 ```

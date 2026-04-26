@@ -11,7 +11,7 @@ set -euo pipefail
 
 CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"
 INSTALL_DIR="$CODEX_ROOT/metaswarm"
-SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
+SKILLS_DIR="$CODEX_ROOT/skills"
 REPO_URL="https://github.com/dsifry/metaswarm.git"
 
 echo ""
@@ -41,11 +41,16 @@ fi
 LEGACY_AGENTS_DIR="$HOME/.agents/skills"
 if [ -d "$LEGACY_AGENTS_DIR" ]; then
   legacy_removed=0
+  # nullglob so an unmatched `metaswarm-*` glob expands to nothing instead of
+  # iterating once over the literal pattern (which the symlink test would skip,
+  # but cleaner to never iterate at all).
+  shopt -s nullglob
   for legacy_link in "$LEGACY_AGENTS_DIR"/metaswarm-*; do
     [ -L "$legacy_link" ] || continue
     rm "$legacy_link"
     legacy_removed=$((legacy_removed + 1))
   done
+  shopt -u nullglob
   if [ "$legacy_removed" -gt 0 ]; then
     echo "  Removed $legacy_removed legacy symlink(s) from $LEGACY_AGENTS_DIR."
   fi
@@ -75,7 +80,10 @@ for skill_dir in "$INSTALL_DIR/skills"/*/; do
   if [ -L "$legacy_target" ]; then
     rm "$legacy_target"
   elif [ -e "$legacy_target" ]; then
-    echo "  Warning: legacy path $legacy_target exists and was not removed"
+    echo "  Warning: legacy path $legacy_target exists as a real directory; skipping $skill_name."
+    echo "           Remove it manually (rm -rf \"$legacy_target\") and re-run to avoid"
+    echo "           a duplicate skill entry alongside the new $target symlink."
+    continue
   fi
 
   ln -sf "$skill_dir" "$target"

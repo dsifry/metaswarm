@@ -36,7 +36,8 @@ else
 fi
 
 # 2b. Install script targets the Codex skills directory
-if grep -Fq 'SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"' "$ROOT/.codex/install.sh"; then
+if grep -Fq 'CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}"' "$ROOT/.codex/install.sh" \
+   && grep -Fq 'SKILLS_DIR="$CODEX_ROOT/skills"' "$ROOT/.codex/install.sh"; then
   pass "install.sh targets \$CODEX_HOME/skills"
 else
   fail "install.sh does not target \$CODEX_HOME/skills"

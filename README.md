@@ -89,7 +89,7 @@ metaswarm/
 │   ├── external-tools/       # Cross-model AI delegation (Codex, Gemini CLI)
 │   └── visual-review/        # Playwright-based screenshot review
 ├── commands/                  # Slash commands
-│   ├── *.md                  # Claude Code commands (15 files)
+│   ├── *.md                  # Claude Code commands (16 files)
 │   └── metaswarm/*.toml      # Gemini CLI commands (12 files)
 ├── agents/                    # 18 agent persona definitions
 ├── rubrics/                   # Quality review standards
