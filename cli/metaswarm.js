@@ -56,7 +56,7 @@ function installCodex() {
   console.log('\n  Installing for Codex CLI...\n');
   const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex');
   const installDir = path.join(codexHome, 'metaswarm');
-  const skillsDir = path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'skills');
+  const skillsDir = path.join(codexHome, 'skills');
 
   if (fs.existsSync(installDir)) {
     console.log(`  Updating existing installation at ${installDir}...`);

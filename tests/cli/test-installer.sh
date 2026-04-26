@@ -53,7 +53,8 @@ else
 fi
 
 # 5b. Codex installer targets the Codex skills directory
-if grep -Fq "path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'skills')" "$ROOT/cli/metaswarm.js"; then
+if grep -Fq "const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex');" "$ROOT/cli/metaswarm.js" \
+   && grep -Fq "const skillsDir = path.join(codexHome, 'skills');" "$ROOT/cli/metaswarm.js"; then
   pass "cli Codex install uses \$CODEX_HOME/skills"
 else
   fail "cli Codex install does not use \$CODEX_HOME/skills"

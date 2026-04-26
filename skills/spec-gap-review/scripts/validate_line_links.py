@@ -13,7 +13,7 @@ LINK_RE = re.compile(r"\]\((/[^)#]+)(?:#L(\d+)(?:C\d+)?)?\)")
 
 def validate_file(md_path: Path) -> list[str]:
     errors: list[str] = []
-    text = md_path.read_text()
+    text = md_path.read_text(encoding="utf-8")
     for match in LINK_RE.finditer(text):
         target = Path(match.group(1))
         line = int(match.group(2)) if match.group(2) else None
@@ -23,7 +23,8 @@ def validate_file(md_path: Path) -> list[str]:
             continue
 
         if line is not None:
-            total = sum(1 for _ in target.open())
+            with target.open(encoding="utf-8") as f:
+                total = sum(1 for _ in f)
             if not (1 <= line <= total):
                 errors.append(f"{md_path}: {target}#L{line} out of range (1..{total})")
     return errors

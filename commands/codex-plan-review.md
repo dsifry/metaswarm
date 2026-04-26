@@ -148,7 +148,14 @@ fi
 # If neither exists, the hang-watcher below is the only ceiling. That's acceptable —
 # the watcher catches the real failure modes; the 3600s ceiling is a belt on top of
 # suspenders. Do NOT block the command on requiring coreutils.
-$TIMEOUT_CMD codex exec --sandbox workspace-write --json "<PROMPT>" < /dev/null &
+#
+# CODEX_LOG captures combined stdout/stderr so the hang-watcher (below) can use
+# log size as one of its activity signals. Without it, $CODEX_LOG would be unset,
+# `wc -c < "$CODEX_LOG"` always emits 0, and the watcher loses one of its four
+# signals — risking false-positive `codex-hang` on reasoning-heavy rounds with
+# no tool calls and no sibling-file writes yet.
+CODEX_LOG=$(mktemp)
+$TIMEOUT_CMD codex exec --sandbox workspace-write --json "<PROMPT>" < /dev/null >"$CODEX_LOG" 2>&1 &
 codex_pid=$!
 ```
 
