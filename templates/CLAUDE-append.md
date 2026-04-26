@@ -20,6 +20,7 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 | `/handle-pr-comments` | Handle PR review comments |
 | `/brainstorm` | Refine an idea before implementation |
 | `/create-issue` | Create a well-structured GitHub Issue |
+| `/codex-plan-review` | Iterative Codex review of an implementation plan (requires Codex CLI + `npx metaswarm init --codex`) |
 
 ### Quality Gates
 

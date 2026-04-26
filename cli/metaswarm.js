@@ -79,6 +79,28 @@ function installCodex() {
     }
   }
 
+  // One-time sweep: remove dangling metaswarm-* symlinks from the legacy
+  // ~/.agents/skills location used by 0.10/0.11.
+  const legacyAgentsDir = path.join(os.homedir(), '.agents', 'skills');
+  if (fs.existsSync(legacyAgentsDir)) {
+    let legacyRemoved = 0;
+    for (const entry of fs.readdirSync(legacyAgentsDir)) {
+      if (!entry.startsWith('metaswarm-')) continue;
+      const legacyPath = path.join(legacyAgentsDir, entry);
+      try {
+        if (fs.lstatSync(legacyPath).isSymbolicLink()) {
+          fs.unlinkSync(legacyPath);
+          legacyRemoved++;
+        }
+      } catch (e) {
+        if (e.code !== 'ENOENT') warn(`Unexpected error checking ${legacyPath}: ${e.message}`);
+      }
+    }
+    if (legacyRemoved > 0) {
+      info(`Removed ${legacyRemoved} legacy symlink(s) from ${legacyAgentsDir}`);
+    }
+  }
+
   // Symlink skills
   mkdirp(skillsDir);
   const skillsPath = path.join(installDir, 'skills');
@@ -95,7 +117,7 @@ function installCodex() {
         if (fs.lstatSync(linkPath).isSymbolicLink()) {
           fs.unlinkSync(linkPath);
         } else if (fs.existsSync(linkPath)) {
-          warn(`${linkPath} exists as a directory, skipping`);
+          warn(`${linkPath} exists as a real directory (not a symlink); skipping. Remove it manually and re-run to install the managed copy.`);
           continue;
         }
       } catch (e) {

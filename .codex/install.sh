@@ -35,6 +35,22 @@ else
   git clone "$REPO_URL" "$INSTALL_DIR"
 fi
 
+# One-time sweep: remove dangling metaswarm-* symlinks from the legacy
+# ~/.agents/skills location used by 0.10/0.11. Safe to run on machines
+# that never had it (the directory check skips it).
+LEGACY_AGENTS_DIR="$HOME/.agents/skills"
+if [ -d "$LEGACY_AGENTS_DIR" ]; then
+  legacy_removed=0
+  for legacy_link in "$LEGACY_AGENTS_DIR"/metaswarm-*; do
+    [ -L "$legacy_link" ] || continue
+    rm "$legacy_link"
+    legacy_removed=$((legacy_removed + 1))
+  done
+  if [ "$legacy_removed" -gt 0 ]; then
+    echo "  Removed $legacy_removed legacy symlink(s) from $LEGACY_AGENTS_DIR."
+  fi
+fi
+
 # Symlink skills
 echo ""
 echo "  Symlinking skills into $SKILLS_DIR..."
@@ -51,7 +67,8 @@ for skill_dir in "$INSTALL_DIR/skills"/*/; do
     # Update existing symlink
     rm "$target"
   elif [ -d "$target" ]; then
-    echo "  Warning: $target exists as a directory, skipping"
+    echo "  Warning: $target exists as a real directory (not a symlink); skipping."
+    echo "           Remove it manually (rm -rf \"$target\") and re-run if you want the managed copy."
     continue
   fi
 

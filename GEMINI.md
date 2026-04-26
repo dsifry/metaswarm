@@ -1,6 +1,6 @@
 # metaswarm
 
-Multi-agent orchestration framework for software development. 18 specialized agents, 13 skills, quality gates, TDD enforcement.
+Multi-agent orchestration framework for software development. 18 specialized agents, 14 skills, quality gates, TDD enforcement.
 
 ## Getting Started
 
