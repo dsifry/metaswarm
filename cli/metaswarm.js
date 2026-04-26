@@ -54,8 +54,9 @@ function installClaude() {
 
 function installCodex() {
   console.log('\n  Installing for Codex CLI...\n');
-  const installDir = path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'metaswarm');
-  const skillsDir = path.join(os.homedir(), '.agents', 'skills');
+  const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex');
+  const installDir = path.join(codexHome, 'metaswarm');
+  const skillsDir = path.join(codexHome, 'skills');
 
   if (fs.existsSync(installDir)) {
     console.log(`  Updating existing installation at ${installDir}...`);
@@ -78,6 +79,28 @@ function installCodex() {
     }
   }
 
+  // One-time sweep: remove dangling metaswarm-* symlinks from the legacy
+  // ~/.agents/skills location used by 0.10/0.11.
+  const legacyAgentsDir = path.join(os.homedir(), '.agents', 'skills');
+  if (fs.existsSync(legacyAgentsDir)) {
+    let legacyRemoved = 0;
+    for (const entry of fs.readdirSync(legacyAgentsDir)) {
+      if (!entry.startsWith('metaswarm-')) continue;
+      const legacyPath = path.join(legacyAgentsDir, entry);
+      try {
+        if (fs.lstatSync(legacyPath).isSymbolicLink()) {
+          fs.unlinkSync(legacyPath);
+          legacyRemoved++;
+        }
+      } catch (e) {
+        if (e.code !== 'ENOENT') warn(`Unexpected error checking ${legacyPath}: ${e.message}`);
+      }
+    }
+    if (legacyRemoved > 0) {
+      info(`Removed ${legacyRemoved} legacy symlink(s) from ${legacyAgentsDir}`);
+    }
+  }
+
   // Symlink skills
   mkdirp(skillsDir);
   const skillsPath = path.join(installDir, 'skills');
@@ -86,19 +109,33 @@ function installCodex() {
     for (const dir of fs.readdirSync(skillsPath)) {
       const srcDir = path.join(skillsPath, dir);
       if (!fs.statSync(srcDir).isDirectory()) continue;
-      const linkName = `metaswarm-${dir}`;
+      const linkName = dir;
       const linkPath = path.join(skillsDir, linkName);
+      const legacyLinkPath = path.join(skillsDir, `metaswarm-${dir}`);
 
       try {
         if (fs.lstatSync(linkPath).isSymbolicLink()) {
           fs.unlinkSync(linkPath);
         } else if (fs.existsSync(linkPath)) {
-          warn(`${linkPath} exists as a directory, skipping`);
+          warn(`${linkPath} exists as a real directory (not a symlink); skipping. Remove it manually and re-run to install the managed copy.`);
           continue;
         }
       } catch (e) {
         if (e.code !== 'ENOENT') warn(`Unexpected error checking ${linkPath}: ${e.message}`);
       }
+
+      let skipForLegacyDir = false;
+      try {
+        if (fs.lstatSync(legacyLinkPath).isSymbolicLink()) {
+          fs.unlinkSync(legacyLinkPath);
+        } else if (fs.existsSync(legacyLinkPath)) {
+          warn(`Legacy skill path ${legacyLinkPath} exists as a real directory; skipping ${dir}. Remove it manually and re-run to avoid a duplicate skill entry alongside the new ${linkPath} symlink.`);
+          skipForLegacyDir = true;
+        }
+      } catch (e) {
+        if (e.code !== 'ENOENT') warn(`Unexpected error checking ${legacyLinkPath}: ${e.message}`);
+      }
+      if (skipForLegacyDir) continue;
 
       fs.symlinkSync(srcDir, linkPath);
       linked++;

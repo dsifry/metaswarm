@@ -52,6 +52,14 @@ else
   fail "metaswarm --help failed"
 fi
 
+# 5b. Codex installer targets the Codex skills directory
+if grep -Fq "const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex');" "$ROOT/cli/metaswarm.js" \
+   && grep -Fq "const skillsDir = path.join(codexHome, 'skills');" "$ROOT/cli/metaswarm.js"; then
+  pass "cli Codex install uses \$CODEX_HOME/skills"
+else
+  fail "cli Codex install does not use \$CODEX_HOME/skills"
+fi
+
 # 6. CLI version works
 pkg_ver=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$ROOT/package.json','utf-8')).version)")
 cli_ver=$(node "$ROOT/cli/metaswarm.js" --version 2>&1)

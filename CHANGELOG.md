@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.12.0
+
+### Added
+- **`/codex-plan-review` slash command**: Iterative Codex-based plan review loop (`commands/codex-plan-review.md`). Codex reviews an implementation plan, Claude reads P0/P1 findings and patches the plan, then Codex re-reviews — until all blocking issues close or max rounds hit. Three tunable profiles (`speed` / `balanced` / `quality`), profile-aware terminal conditions (ACCEPT requires score ≥ floor in `quality`), score-trajectory tracking, hang-watcher, and a `Deferred Gaps (codex)` schema for partial wins.
+- **`spec-gap-review` skill** (`skills/spec-gap-review/`): Codex-runnable skill that audits implementation guides, architecture docs, UX specs, infrastructure plans, memory designs, and roadmaps against the actual repository. Stable 6-dimension rubric, gap IDs (G01, G02…), file:line citations, multi-round delta scoring, and a `validate_line_links.py` helper that verifies every saved citation.
+
+### Changed
+- **Codex skill installation path**: Skills now install to `${CODEX_HOME:-$HOME/.codex}/skills/` (was `~/.agents/skills/metaswarm-*`). Symlink names no longer carry the `metaswarm-` prefix — `$skill-name` invocation matches the SKILL.md `name` field directly.
+- **Both Codex installers** (`.codex/install.sh`, `cli/metaswarm.js`) now sweep dangling `metaswarm-*` symlinks from the legacy `~/.agents/skills/` location on next install, so users upgrading from 0.10/0.11 don't accumulate stale links.
+- **Pre-existing real-directory case**: install scripts now print a clear remediation hint ("Remove it manually and re-run") when a target path exists as a real directory instead of a managed symlink.
+- Counts updated across manifests and root README/GEMINI.md: 13 skills → 14, 15 commands → 16.
+
 ## 0.11.0
 
 ### Changed

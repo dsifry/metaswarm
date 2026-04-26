@@ -192,6 +192,21 @@ Delegates implementation and review tasks to external AI CLI tools (OpenAI Codex
 
 Configuration: `.metaswarm/external-tools.yaml`. See `templates/external-tools-setup.md` for setup.
 
+### Spec Gap Review
+
+**Path**: `skills/spec-gap-review/SKILL.md`
+
+Codex-runnable critical review of implementation guides, design docs, UX specs, infrastructure plans, and roadmaps against the actual repository — not against the doc's own aspirations.
+
+- **Stable 6-dimension rubric**: scope clarity, behavior completeness, contract specificity, repo alignment, technical feasibility, sequencing/operability — weighted to a `/100` Overall readiness score with `Quality /100` and `Completeness /100` rollups
+- **Gap tracker with stable IDs** (G01, G02…): carry-forward across rounds with `closed | partial | open | new` status
+- **File:line citations** on every finding, validated by `scripts/validate_line_links.py`
+- **Doc-type focus checks**: implementation guide, strategy, memory, UX/API, infrastructure, long-lived agent — each adds 2-4 unscored deepening checks
+- **Critical-Only Mode** for delta rounds focused on P0/P1 blockers
+- **Driven by `/codex-plan-review`**: the slash command runs the iterative review-and-patch loop; the skill runs a single review pass
+
+Requires Codex CLI installed and authenticated. Install Codex skills with `npx metaswarm init --codex` (or the curl one-liner in `.codex/README.md`).
+
 ### Visual Review
 
 **Path**: `skills/visual-review/SKILL.md`

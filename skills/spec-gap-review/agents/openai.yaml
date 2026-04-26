@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec Gap Review"
+  short_description: "Audit specs against repo reality"
+  default_prompt: "Use $spec-gap-review to review this design doc against the current codebase and rate its implementation readiness."

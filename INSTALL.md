@@ -15,6 +15,12 @@ Then in Claude Code:
 /setup
 ```
 
+**Note on `/codex-plan-review`**: this command shells out to the Codex CLI for iterative plan review. To use it from Claude Code, you also need:
+1. Codex CLI installed (`npm i -g @openai/codex`) and authenticated.
+2. metaswarm's Codex skills symlinked into `${CODEX_HOME:-$HOME/.codex}/skills/` via `npx metaswarm init --codex` or the Codex install script below.
+
+The command's preflight check will tell you exactly which step is missing.
+
 ## Gemini CLI (Extension)
 
 ```bash
