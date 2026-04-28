@@ -1,13 +1,16 @@
 # Agent Instructions
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework. It provides 18 specialized agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework. It provides 19 specialized agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+
+This file is read by both **Codex CLI** and **OpenCode**. Where the two CLIs differ in invocation syntax, both forms are listed.
 
 ## How to Work in This Project
 
 ### Starting work
 
 ```text
-$start
+$start          # Codex CLI
+/start-task     # OpenCode
 ```
 
 This is the default entry point. It primes the agent with relevant knowledge, guides you through scoping, and picks the right level of process for the task.
@@ -25,22 +28,22 @@ This triggers the full pipeline: Research, Plan, Design Review Gate, Work Unit D
 
 ### Available Skills
 
-Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` syntax.
+Codex discovers skills by their SKILL.md `name` field; invoke with `$name`. OpenCode auto-discovers the same SKILL.md files and exposes generated slash commands; invoke with `/<name>`.
 
-| Invoke | Purpose |
-|---|---|
-| `$start` | Begin tracked work on a task |
-| `$setup` | Interactive guided setup |
-| `$brainstorming-extension` | Refine an idea with design review gate |
-| `$design-review-gate` | Trigger design review gate (5 reviewers) |
-| `$plan-review-gate` | Adversarial plan review (3 reviewers) |
-| `$orchestrated-execution` | 4-phase execution loop per work unit |
-| `$pr-shepherd` | Monitor a PR through to merge |
-| `$handling-pr-comments` | Handle PR review comments |
-| `$create-issue` | Create a well-structured GitHub Issue |
-| `$external-tools` | External AI tool delegation |
-| `$status` | Run diagnostic checks |
-| `$visual-review` | Playwright screenshot capture |
+| Codex | OpenCode | Purpose |
+|---|---|---|
+| `$start` | `/start-task` | Begin tracked work on a task |
+| `$setup` | `/setup` | Interactive guided setup |
+| `$brainstorming-extension` | `/brainstorm` | Refine an idea with design review gate |
+| `$design-review-gate` | `/review-design` | Trigger design review gate (5 reviewers) |
+| `$plan-review-gate` | (auto via `/start-task`) | Adversarial plan review (3 reviewers) |
+| `$orchestrated-execution` | (auto via `/start-task`) | 4-phase execution loop per work unit |
+| `$pr-shepherd` | `/pr-shepherd` | Monitor a PR through to merge |
+| `$handling-pr-comments` | `/handle-pr-comments` | Handle PR review comments |
+| `$create-issue` | `/create-issue` | Create a well-structured GitHub Issue |
+| `$external-tools` | `/external-tools-health` | External AI tool delegation |
+| `$status` | `/status` | Run diagnostic checks |
+| `$visual-review` | (skill, no slash command) | Playwright screenshot capture |
 
 ## Testing
 
@@ -70,7 +73,7 @@ These rules override any conflicting instructions. They ensure the full metaswar
 When brainstorming completes and commits a design document:
 
 1. **STOP** -- do NOT proceed directly to planning or implementation
-2. **RUN the Design Review Gate** -- invoke `$design-review-gate`
+2. **RUN the Design Review Gate** -- invoke `$design-review-gate` (Codex) or `/review-design` (OpenCode)
 3. **WAIT** for all 5 reviewers (PM, Architect, Designer, Security, CTO) to approve
 4. **ONLY THEN** proceed to planning/implementation
 
@@ -79,7 +82,7 @@ When brainstorming completes and commits a design document:
 When a plan is produced:
 
 1. **STOP** -- do NOT present the plan to the user or begin implementation
-2. **RUN the Plan Review Gate** -- invoke `$plan-review-gate`
+2. **RUN the Plan Review Gate** -- invoke `$plan-review-gate` (Codex) or let `/start-task` (OpenCode) trigger it automatically
 3. **WAIT** for all 3 adversarial reviewers to PASS
 4. **ONLY THEN** present the plan to the user for approval
 
@@ -96,7 +99,7 @@ When a plan is produced:
 
 ## External Tools (Optional)
 
-If external AI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator can delegate implementation and review tasks to Codex CLI and Gemini CLI for cost savings and cross-model adversarial review.
+If external AI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator can delegate implementation and review tasks to Codex CLI, Gemini CLI, and OpenCode for cost savings and cross-model adversarial review.
 
 ## Guides
 

@@ -20,7 +20,7 @@ LOG_DIR="${HOME}/.claude/sessions"
 # parse_args()
 #   Parses common CLI arguments into shell variables.
 #   Sets: XT_WORKTREE, XT_PROMPT_FILE, XT_RUBRIC_FILE, XT_SPEC_FILE,
-#         XT_ATTEMPT, XT_TIMEOUT, XT_CONTEXT_DIR
+#         XT_ATTEMPT, XT_TIMEOUT, XT_CONTEXT_DIR, XT_MODEL
 # ---------------------------------------------------------------------------
 parse_args() {
   # Defaults
@@ -31,6 +31,7 @@ parse_args() {
   XT_ATTEMPT="1"
   XT_TIMEOUT="300"
   XT_CONTEXT_DIR=""
+  XT_MODEL=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -60,6 +61,10 @@ parse_args() {
         ;;
       --context-dir)
         XT_CONTEXT_DIR="${2:-}"
+        shift 2
+        ;;
+      --model)
+        XT_MODEL="${2:-}"
         shift 2
         ;;
       *)
@@ -382,6 +387,54 @@ extract_cost_codex() {
     if length > 0 then
       { input_tokens: (map(.input_tokens // 0) | add),
         output_tokens: (map(.output_tokens // 0) | add) }
+    else
+      { input_tokens: 0, output_tokens: 0 }
+    end
+  ' "$jsonl_file" 2>/dev/null || printf '{"input_tokens": 0, "output_tokens": 0}')"
+
+  printf '%s' "$usage"
+}
+
+# ---------------------------------------------------------------------------
+# extract_cost_opencode()
+#   Parse OpenCode `--format json` output for token counts.
+#   OpenCode emits JSON events on stdout; usage info appears in events whose
+#   payload contains a `usage` or `tokens` object with input/output counts.
+#   Usage: extract_cost_opencode <jsonl_file>
+#   Returns JSON object: {"input_tokens": N, "output_tokens": N}
+# ---------------------------------------------------------------------------
+extract_cost_opencode() {
+  local jsonl_file="${1:-}"
+
+  if [[ -z "$jsonl_file" || ! -f "$jsonl_file" ]]; then
+    printf '{"input_tokens": 0, "output_tokens": 0}'
+    return 0
+  fi
+
+  if ! command -v jq >/dev/null 2>&1; then
+    printf '{"input_tokens": 0, "output_tokens": 0}'
+    return 0
+  fi
+
+  # OpenCode JSON event stream may use any of:
+  #   .usage.input_tokens / .usage.output_tokens   (OpenAI-style)
+  #   .tokens.input / .tokens.output               (OpenCode-native)
+  #   .usage.prompt_tokens / .usage.completion_tokens
+  # Sum across all events that carry a usage payload.
+  local usage
+  usage="$(jq -s '
+    [
+      .[] |
+      ( (.usage // .tokens // empty) ) |
+      select(. != null) |
+      {
+        input: ( (.input_tokens // .input // .prompt_tokens // 0) ),
+        output: ( (.output_tokens // .output // .completion_tokens // 0) )
+      }
+    ] |
+    if length > 0 then
+      { input_tokens: (map(.input) | add),
+        output_tokens: (map(.output) | add) }
     else
       { input_tokens: 0, output_tokens: 0 }
     end

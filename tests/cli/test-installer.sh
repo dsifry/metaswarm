@@ -93,6 +93,25 @@ else
   fail "setup did not create .coverage-thresholds.json"
 fi
 
+# 8b. Multi-flag setup honors every requested platform (regression: review #1).
+#     `metaswarm setup --codex --opencode` previously silently dropped --opencode
+#     because the dispatcher only consumed keys[0] from parsePlatformFlags().
+TMP_MULTI=$(mktemp -d)
+cd "$TMP_MULTI"
+git init -q .
+
+# Codex and OpenCode share AGENTS.md, and Claude writes CLAUDE.md.
+# Combine them so we can prove both code paths ran in one invocation.
+node "$ROOT/cli/metaswarm.js" setup --claude --codex 2>&1 >/dev/null
+
+if [ -f "$TMP_MULTI/CLAUDE.md" ] && [ -f "$TMP_MULTI/AGENTS.md" ]; then
+  pass "setup --claude --codex writes both CLAUDE.md and AGENTS.md"
+else
+  fail "setup --claude --codex dropped a platform (CLAUDE.md=$([ -f "$TMP_MULTI/CLAUDE.md" ] && echo y || echo n), AGENTS.md=$([ -f "$TMP_MULTI/AGENTS.md" ] && echo y || echo n))"
+fi
+rm -rf "$TMP_MULTI"
+cd "$TMP_DIR"
+
 # 9. Version sync across manifests
 versions_match=true
 first_ver=""

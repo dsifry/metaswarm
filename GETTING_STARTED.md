@@ -22,6 +22,11 @@ gemini extensions install https://github.com/dsifry/metaswarm.git
 curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
 ```
 
+**OpenCode:**
+```bash
+npx metaswarm init --opencode
+```
+
 **All platforms at once:**
 ```bash
 npx metaswarm init
@@ -31,6 +36,7 @@ Then run setup in your project:
 - Claude Code: `/setup`
 - Gemini CLI: `/metaswarm:setup`
 - Codex CLI: `$setup`
+- OpenCode: `/setup`
 
 The setup skill detects your project's language, framework, test runner, and tools, then configures everything interactively.
 
@@ -40,6 +46,7 @@ Start your first task:
 - Claude Code: `/start-task`
 - Gemini CLI: `/metaswarm:start-task`
 - Codex CLI: `$start`
+- OpenCode: `/start-task`
 
 Verify it worked:
 
@@ -363,7 +370,7 @@ Append JSONL entries to the appropriate file in `knowledge/`:
 
 ## Optional: Set Up External Tools
 
-metaswarm can delegate work to Codex (OpenAI) and Gemini (Google) for cost savings and cross-model adversarial review. This is optional — skip this section if you only want to use Claude.
+metaswarm can delegate work to Codex (OpenAI), Gemini (Google), and OpenCode (multi-model) for cost savings and cross-model adversarial review. This is optional — skip this section if you only want to use Claude.
 
 1. **Install** the CLIs:
    ```bash

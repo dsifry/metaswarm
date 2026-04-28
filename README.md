@@ -1,6 +1,6 @@
 # metaswarm
 
-A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 18 specialized AI agents and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
+A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, Codex CLI, and [OpenCode](https://opencode.ai). Coordinate 18 specialized AI agents and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
 
 ## What Is This?
 
@@ -14,7 +14,7 @@ metaswarm is an extraction of a production-tested agentic orchestration system. 
 - **Git-native task tracking**: Uses [BEADS](https://github.com/steveyegge/beads) (`bd` CLI) for issue/task management, dependencies, and knowledge priming
 - **Knowledge base**: JSONL-based fact store for patterns, gotchas, decisions, and anti-patterns — agents prime from this before every task
 - **Quality rubrics**: Standardized review criteria for code, architecture, security, testing, planning, and adversarial spec compliance
-- **External AI tool delegation**: Optionally delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI for cost savings and cross-model adversarial review
+- **External AI tool delegation**: Optionally delegate implementation and review tasks to OpenAI Codex CLI, Google Gemini CLI, and OpenCode for cost savings and cross-model adversarial review
 - **Visual review**: Playwright-based screenshot capture for reviewing web UIs, presentations, and rendered pages
 - **PR lifecycle automation**: Autonomous CI monitoring, review comment handling, and thread resolution
 - **Workflow enforcement**: Mandatory quality gate intercepts at every handoff point — agents cannot skip design review, plan review, or knowledge capture
@@ -134,6 +134,14 @@ curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install
 
 Then run `$setup` in your project.
 
+### OpenCode
+
+```bash
+npx metaswarm init --opencode
+```
+
+OpenCode auto-discovers metaswarm skills from `~/.agents/skills/` (the same directory the Codex install populates), so no separate plugin or marketplace install is required. Then run `/setup` in your project. See [`docs/README.opencode.md`](docs/README.opencode.md) for details.
+
 ### Cross-platform installer
 
 Detect installed CLIs and install metaswarm for all of them:
@@ -144,7 +152,7 @@ npx metaswarm init
 
 ### Start building
 
-Run `/start-task` (Claude/Gemini) or `$start` (Codex) and describe what you want in plain English. No issue required.
+Run `/start-task` (Claude/Gemini/OpenCode) or `$start` (Codex) and describe what you want in plain English. No issue required.
 
 ```text
 /start-task Add a webhook system with retry logic, signature verification,
@@ -205,10 +213,11 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Plugin marketplace | `/start-task`, `/setup`, etc. |
 | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Extension (`gemini extensions install`) | `/metaswarm:start-task`, etc. |
 | [Codex CLI](https://github.com/openai/codex) | Skills (`curl \| bash`) | `$start`, `$setup`, etc. |
+| [OpenCode](https://opencode.ai) | Auto-discovery (`npx metaswarm init --opencode`) | `/start-task`, `/setup`, etc. |
 
 ## Requirements
 
-- One of: Claude Code, Gemini CLI, or Codex CLI
+- One of: Claude Code, Gemini CLI, Codex CLI, or OpenCode
 - Node.js 18+ (for automation scripts)
 - [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+ — for task tracking (recommended)
 - GitHub CLI (`gh`) — for PR automation (recommended)

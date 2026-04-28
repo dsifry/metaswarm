@@ -1,0 +1,8 @@
+---
+description: "Handle PR review comments with the full resolution workflow"
+---
+Invoke the metaswarm handle-pr-comments skill. The user wants to address PR review comments.
+
+Arguments provided by the user: $ARGUMENTS
+
+Fetch inline comments and review bodies, handle "outside diff range" comments, resolve threads, iterate until all comments are addressed.

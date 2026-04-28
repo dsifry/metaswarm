@@ -1,23 +1,23 @@
 # Agent Instructions
 
-This project is **metaswarm** — a multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. It provides 19 specialized agents, 13 orchestration skills, quality gates, and TDD enforcement.
+This project is **metaswarm** — a multi-agent orchestration framework for Claude Code, Gemini CLI, Codex CLI, and OpenCode. It provides 19 specialized agents, 13 orchestration skills, quality gates, and TDD enforcement.
 
 ## Quick Reference
 
-Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` syntax.
+This file is read by both **Codex CLI** and **OpenCode**. Codex invokes skills via `$name`; OpenCode exposes equivalent slash commands as `/<name>`.
 
-| Invoke | Purpose |
-|---|---|
-| `$start` | Begin tracked work on a task |
-| `$setup` | Interactive guided setup for a project |
-| `$brainstorming-extension` | Refine an idea before implementation |
-| `$design-review-gate` | Trigger design review gate (5 reviewers) |
-| `$plan-review-gate` | Adversarial plan review (3 reviewers) |
-| `$orchestrated-execution` | 4-phase execution loop per work unit |
-| `$pr-shepherd` | Monitor a PR through to merge |
-| `$handling-pr-comments` | Handle PR review comments |
-| `$create-issue` | Create a well-structured GitHub Issue |
-| `$status` | Run diagnostic checks |
+| Codex | OpenCode | Purpose |
+|---|---|---|
+| `$start` | `/start-task` | Begin tracked work on a task |
+| `$setup` | `/setup` | Interactive guided setup for a project |
+| `$brainstorming-extension` | `/brainstorm` | Refine an idea before implementation |
+| `$design-review-gate` | `/review-design` | Trigger design review gate (5 reviewers) |
+| `$plan-review-gate` | (auto via `/start-task`) | Adversarial plan review (3 reviewers) |
+| `$orchestrated-execution` | (auto via `/start-task`) | 4-phase execution loop per work unit |
+| `$pr-shepherd` | `/pr-shepherd` | Monitor a PR through to merge |
+| `$handling-pr-comments` | `/handle-pr-comments` | Handle PR review comments |
+| `$create-issue` | `/create-issue` | Create a well-structured GitHub Issue |
+| `$status` | `/status` | Run diagnostic checks |
 
 ## BEADS Issue Tracking
 
@@ -70,7 +70,7 @@ bd sync               # Sync with git
 
 ## External Tools Routing
 
-When external AI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator can delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI for cost savings and cross-model adversarial review.
+When external AI tools are configured (`.metaswarm/external-tools.yaml`), the orchestrator can delegate implementation and review tasks to OpenAI Codex CLI, Google Gemini CLI, and OpenCode for cost savings and cross-model adversarial review.
 
 ### Visual Review
 

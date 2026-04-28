@@ -181,7 +181,7 @@ All 3 reviewers must APPROVE before the plan proceeds to implementation. Sits be
 
 **Path**: `skills/external-tools/SKILL.md`
 
-Delegates implementation and review tasks to external AI CLI tools (OpenAI Codex CLI, Google Gemini CLI) for cost savings and cross-model adversarial review:
+Delegates implementation and review tasks to external AI CLI tools (OpenAI Codex CLI, Google Gemini CLI, OpenCode) for cost savings and cross-model adversarial review:
 
 - **Adapter protocol**: Uniform shell adapter interface (health, implement, review) with structured JSON output
 - **Cross-model review**: Writer is always reviewed by a different AI model, eliminating single-model blind spots
@@ -222,7 +222,7 @@ Prerequisites: `npx playwright install chromium`
 | `/pr-shepherd <pr>` | Monitor PR through to merge |
 | `/handle-pr-comments <pr>` | Address PR review feedback |
 | `/create-issue` | Create a GitHub issue with agent instructions |
-| `/external-tools-health` | Check status of external AI tools (Codex, Gemini) |
+| `/external-tools-health` | Check status of external AI tools (Codex, Gemini, OpenCode) |
 | `/metaswarm-setup` | Legacy alias for `/setup` |
 | `/metaswarm-update-version` | Legacy alias for `/update` |
 
@@ -404,7 +404,7 @@ The full orchestration lifecycle:
 | 2b. Plan Validation | Issue Orchestrator | Pre-flight checklist (architecture, deps, API contracts, security, UI/UX) |
 | 3. Design Review | PM + Architect + Designer + Security + UX Reviewer + CTO (parallel) | APPROVE/REVISE verdicts |
 | 4. Work Unit Decomposition | Issue Orchestrator | Work units with DoD items, file scopes, dependency graph |
-| 5. Orchestrated Execution | Coder (or External Tool) + Orchestrator + Adversarial Reviewer (per unit) | IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT loop (optionally delegates to Codex/Gemini) |
+| 5. Orchestrated Execution | Coder (or External Tool) + Orchestrator + Adversarial Reviewer (per unit) | IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT loop (optionally delegates to Codex/Gemini/OpenCode) |
 | 6. Final Comprehensive Review | Issue Orchestrator | Cross-unit integration check, full test suite |
 | 7. PR Creation | Issue Orchestrator | GitHub PR |
 | 8. PR Shepherd | PR Shepherd | CI fixes, comment responses |

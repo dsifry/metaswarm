@@ -15,6 +15,22 @@ adapters:
     timeout_seconds: 300
     sandbox: none
     auth_env_var: "GEMINI_API_KEY"   # Or use Google login (no key needed)
+  opencode:
+    enabled: true
+    # OpenCode supports many providers; pick any provider/model the user
+    # has credentials for. Examples:
+    #   anthropic/claude-opus-4.7
+    #   openai/gpt-5
+    #   google/gemini-2.5-pro
+    #   openrouter/anthropic/claude-sonnet-4
+    model: "anthropic/claude-opus-4.7"
+    timeout_seconds: 300
+    sandbox: none
+    # Auth is detected from any provider env var: ANTHROPIC_API_KEY,
+    # OPENAI_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY, OPENROUTER_API_KEY,
+    # GROQ_API_KEY, MISTRAL_API_KEY, OPENCODE_API_KEY, or stored providers
+    # via `opencode providers`.
+    auth_env_var: "ANTHROPIC_API_KEY"
 
 routing:
   # How to pick the implementer for a task:
@@ -24,7 +40,7 @@ routing:
   default_implementer: "cheapest-available"
 
   # Order for escalation when a tool fails after max retries
-  escalation_order: ["codex", "gemini", "claude"]
+  escalation_order: ["codex", "gemini", "opencode", "claude"]
 
 budget:
   per_task_usd: 2.00               # Circuit breaker: max spend per task before user alert

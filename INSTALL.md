@@ -1,6 +1,6 @@
 # Installation
 
-metaswarm works with Claude Code, Gemini CLI, and Codex CLI. Install for one platform or all three.
+metaswarm works with Claude Code, Gemini CLI, Codex CLI, and OpenCode. Install for one platform or all four.
 
 ## Claude Code (Plugin Marketplace)
 
@@ -39,6 +39,20 @@ Then in Codex CLI:
 $setup
 ```
 
+## OpenCode (Auto-Discovery)
+
+```bash
+npx metaswarm init --opencode
+```
+
+OpenCode auto-discovers `SKILL.md` files from `~/.agents/skills/`, which the Codex install path populates. So this command reuses the Codex install location and OpenCode picks up all 13 skills automatically — no plugin or marketplace install needed. Then in OpenCode:
+
+```text
+/setup
+```
+
+See [`docs/README.opencode.md`](docs/README.opencode.md) and [`.opencode/README.md`](.opencode/README.md) for details.
+
 ## Cross-Platform Installer
 
 Detect all installed CLIs and install metaswarm for each:
@@ -53,6 +67,7 @@ Or target a specific platform:
 npx metaswarm init --claude
 npx metaswarm init --codex
 npx metaswarm init --gemini
+npx metaswarm init --opencode
 ```
 
 After installing, set up your project:
@@ -63,17 +78,17 @@ npx metaswarm setup
 
 ## Platform Comparison
 
-| Feature | Claude Code | Gemini CLI | Codex CLI |
-|---|---|---|---|
-| Install method | Plugin marketplace | `gemini extensions install` | Clone + symlink |
-| Commands | `/start-task` | `/metaswarm:start-task` | `$start` |
-| Instruction file | `CLAUDE.md` | `GEMINI.md` | `AGENTS.md` |
-| Parallel agents | Full (`Task()`) | Experimental | Sequential only |
-| Setup command | `/setup` | `/metaswarm:setup` | `$setup` |
+| Feature | Claude Code | Gemini CLI | Codex CLI | OpenCode |
+|---|---|---|---|---|
+| Install method | Plugin marketplace | `gemini extensions install` | Clone + symlink | Auto-discovery via `~/.agents/skills/` |
+| Commands | `/start-task` | `/metaswarm:start-task` | `$start` | `/start-task` |
+| Instruction file | `CLAUDE.md` | `GEMINI.md` | `AGENTS.md` | `AGENTS.md` (shared with Codex) |
+| Parallel agents | Full (`Task()`) | Experimental | Sequential only | Full (`task`/`@mention`) |
+| Setup command | `/setup` | `/metaswarm:setup` | `$setup` | `/setup` |
 
 ## Prerequisites
 
-1. **One of**: Claude Code, Gemini CLI, or Codex CLI
+1. **One of**: Claude Code, Gemini CLI, Codex CLI, or OpenCode
 2. **BEADS CLI** (`bd`) — Git-native issue tracking (recommended)
    ```bash
    curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
@@ -107,12 +122,13 @@ claude plugin add obra/superpowers
 
 ## Optional: External AI Tools
 
-metaswarm can delegate implementation and review tasks to **Codex CLI** (OpenAI) and **Gemini CLI** (Google) for cost savings and cross-model adversarial review. This is entirely optional — metaswarm works fine without any external tools.
+metaswarm can delegate implementation and review tasks to **Codex CLI** (OpenAI), **Gemini CLI** (Google), and **OpenCode** (multi-model) for cost savings and cross-model adversarial review. This is entirely optional — metaswarm works fine without any external tools.
 
 **Quick setup:**
 
 ```bash
 npm i -g @openai/codex @google/gemini-cli
+# OpenCode: see https://opencode.ai/docs/install
 ```
 
 After installing, see [`templates/external-tools-setup.md`](templates/external-tools-setup.md) for the full configuration guide (authentication, model selection, budget controls, and routing options).

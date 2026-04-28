@@ -1,11 +1,12 @@
 ---
 name: external-tools
-description: Delegate implementation and review tasks to external AI CLI tools (Codex, Gemini) with cross-model adversarial review
+description: Delegate implementation and review tasks to external AI CLI tools (Codex, Gemini, OpenCode) with cross-model adversarial review
 auto_activate: false
 triggers:
   - "use external tools"
   - "delegate to codex"
   - "delegate to gemini"
+  - "delegate to opencode"
   - "cross-model review"
 ---
 
@@ -13,7 +14,7 @@ triggers:
 
 ## Purpose
 
-This skill delegates implementation and review tasks to external AI CLI tools (OpenAI Codex CLI, Google Gemini CLI), enabling cost savings through cheaper models and cross-model adversarial review that eliminates single-model blind spots. Three core principles govern every interaction: **one job per invocation** (an external tool implements OR reviews, never self-validates), **minimal permissions** (sandboxed execution scoped to the task's working directory with only the tool's own API key), and **the orchestrator verifies independently** (external tools report facts only, the orchestrator judges pass/fail).
+This skill delegates implementation and review tasks to external AI CLI tools (OpenAI Codex CLI, Google Gemini CLI, OpenCode), enabling cost savings through cheaper models and cross-model adversarial review that eliminates single-model blind spots. Three core principles govern every interaction: **one job per invocation** (an external tool implements OR reviews, never self-validates), **minimal permissions** (sandboxed execution scoped to the task's working directory with only the tool's own API key), and **the orchestrator verifies independently** (external tools report facts only, the orchestrator judges pass/fail).
 
 ---
 
@@ -25,8 +26,9 @@ This skill delegates implementation and review tasks to external AI CLI tools (O
 |------|---------|------|
 | OpenAI Codex CLI | `npm i -g @openai/codex` | API key or ChatGPT subscription |
 | Google Gemini CLI | `npm i -g @google/gemini-cli` | Google login (free 1K req/day) or API key |
+| OpenCode | `curl -fsSL https://opencode.ai/install \| bash` | Any provider key (Anthropic, OpenAI, Google, OpenRouter, …) |
 
-Neither tool is strictly required. The skill adapts based on what is available (see Escalation Model below).
+None of these tools is strictly required. The skill adapts based on what is available (see Escalation Model below).
 
 ### Configuration
 

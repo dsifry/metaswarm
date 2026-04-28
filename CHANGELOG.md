@@ -1,5 +1,34 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- **`metaswarm setup` multi-flag was silently dropping platforms**: `npx metaswarm setup --claude --codex` previously wrote only `CLAUDE.md` (the first flag won) instead of both `CLAUDE.md` and `AGENTS.md`. The dispatcher in `cli/metaswarm.js` now passes the full `parsePlatformFlags()` key list into `setupProject()`, which iterates over every requested platform. Regression test added in `tests/cli/test-installer.sh`.
+- **`installOpenCode()` output clarified**: post-install message no longer suggests `lib/sync-resources.js` populates `.opencode/commands/` for downstream projects (it doesn't — the directory ships with the metaswarm checkout itself).
+- **`.opencode/commands/README.md`**: added a banner documenting that every `<name>.md` in this directory is generator output from `lib/sync-resources.js` and must not be hand-edited.
+
+### Added
+- **Platform registry**: `lib/platform-registry.js` is now the single source of truth for all supported CLI hosts (Claude Code, Codex CLI, Gemini CLI, OpenCode). Adding a 5th CLI in the future requires touching only 3 files (registry + installer + tests).
+  - `lib/platform-detect.js` refactored to consume the registry — no more per-platform `detectX()` branches
+  - `cli/metaswarm.js` install dispatcher and `--<platform>` flag parsing now iterate over `platformKeys()` via a new `parsePlatformFlags()` helper
+  - `lib/sync-resources.js` `syncTomlCommands` / `syncOpenCodeCommands` collapsed into one `FORMAT_GENERATORS`-driven driver; new platforms with command files just declare `commandFormat` in the registry
+  - `tests/lib/test-platform-registry.js` — 21 assertions covering the registry contract
+- **OpenCode external-tools adapter**: `skills/external-tools/adapters/opencode.sh` with `health`, `implement`, and `review` commands. Uses `opencode run --pure --format json --dir <worktree>` for headless invocation; supports any OpenCode-compatible provider (Anthropic, OpenAI, Google, OpenRouter, etc.) via `--model provider/model` or `METASWARM_OPENCODE_MODEL` env override.
+  - `_common.sh` extended with `extract_cost_opencode()` (parses OpenCode JSON event stream for token usage) and `--model` arg in `parse_args()` (`XT_MODEL`)
+  - `templates/external-tools.yaml` includes an `opencode` adapter block; escalation order updated to `[codex, gemini, opencode, claude]`
+  - `skills/external-tools/SKILL.md` lists OpenCode in prerequisites and triggers
+  - `commands/external-tools-health.md` and `commands/metaswarm/external-tools-health.toml` updated to check all three external tools
+  - `tests/external-tools/test-opencode-adapter.sh` — 25-assertion structural test (no network/cost)
+- **OpenCode support** ([#41](https://github.com/dsifry/metaswarm/issues/41)): metaswarm is now installable for [OpenCode](https://opencode.ai) via `npx metaswarm init --opencode`. OpenCode auto-discovers metaswarm skills from `~/.agents/skills/` (the same path the Codex install populates), so no plugin or marketplace install is required.
+  - 12 generated `.opencode/commands/*.md` slash commands (`/start-task`, `/setup`, `/brainstorm`, `/review-design`, `/pr-shepherd`, `/handle-pr-comments`, `/create-issue`, `/prime`, `/self-reflect`, `/status`, `/update`, `/external-tools-health`)
+  - `lib/sync-resources.js` extended with OpenCode generator; commands stay in sync with Gemini TOML via `--check`/`--sync`
+  - `detectOpenCode()` in `lib/platform-detect.js`; OpenCode shows in the cross-platform installer summary
+  - `installOpenCode()` and `--opencode` flag in `cli/metaswarm.js` for both `init` and `setup`
+  - `.opencode/README.md`, `docs/README.opencode.md`, `skills/start/references/opencode-tools.md`, and OpenCode column in `skills/start/references/platform-adaptation.md`
+  - `AGENTS.md` (template, append, and root) updated to address both Codex CLI and OpenCode
+  - `tests/opencode/test-opencode-discovery.sh` regression test
+- **Phase 0 spike doc**: `docs/plans/2026-04-28-opencode-spike.md` — full discovery, plugin SDK, and integration analysis used to size the work
+
 ## 0.11.0
 
 ### Changed
