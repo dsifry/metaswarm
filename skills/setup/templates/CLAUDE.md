@@ -36,6 +36,7 @@ This triggers the full pipeline: Research → Plan → Design Review Gate → Wo
 | `/brainstorm` | Refine an idea before implementation |
 | `/create-issue` | Create a well-structured GitHub Issue |
 | `/external-tools-health` | Check status of external AI tools (Codex, Gemini) |
+| `/codex-plan-review` | Iterative Codex review of an implementation plan (requires Codex CLI + `npx metaswarm init --codex`) |
 | `/setup` | Interactive guided setup — detects project, configures metaswarm |
 | `/update` | Update metaswarm to latest version |
 | `/status` | Run diagnostic checks on your installation |

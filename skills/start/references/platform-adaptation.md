@@ -48,7 +48,7 @@ Codex CLI has no subagent dispatch. All workflows run sequentially in-session:
 
 ## Command Invocation
 
-Codex uses the `name` field from SKILL.md frontmatter for `$name` invocation — not the directory name. The `metaswarm-` prefix on directory names is for organization only.
+Codex uses the `name` field from SKILL.md frontmatter for `$name` invocation — not the directory name. metaswarm installs Codex skills into `${CODEX_HOME:-$HOME/.codex}/skills/` by folder name, while invocation still comes from the frontmatter `name`.
 
 | Action | Claude Code | Gemini CLI | Codex CLI |
 |---|---|---|---|

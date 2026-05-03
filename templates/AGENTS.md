@@ -38,6 +38,7 @@ Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` synta
 | `$pr-shepherd` | Monitor a PR through to merge |
 | `$handling-pr-comments` | Handle PR review comments |
 | `$create-issue` | Create a well-structured GitHub Issue |
+| `$spec-gap-review` | Audit a spec or design doc against repo reality |
 | `$external-tools` | External AI tool delegation |
 | `$status` | Run diagnostic checks |
 | `$visual-review` | Playwright screenshot capture |

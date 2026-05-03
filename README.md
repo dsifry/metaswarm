@@ -1,6 +1,6 @@
 # metaswarm
 
-A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 18 specialized AI agents and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
+A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 18 specialized AI agents and 14 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
 
 ## What Is This?
 
@@ -89,7 +89,7 @@ metaswarm/
 │   ├── external-tools/       # Cross-model AI delegation (Codex, Gemini CLI)
 │   └── visual-review/        # Playwright-based screenshot review
 ├── commands/                  # Slash commands
-│   ├── *.md                  # Claude Code commands (15 files)
+│   ├── *.md                  # Claude Code commands (16 files)
 │   └── metaswarm/*.toml      # Gemini CLI commands (12 files)
 ├── agents/                    # 18 agent persona definitions
 ├── rubrics/                   # Quality review standards
