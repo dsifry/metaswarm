@@ -1,6 +1,6 @@
 # Codex Plan Gap Review
 
-Run iterative Codex reviews on an implementation plan (or any design doc) using the `spec-gap-review` skill from `${CODEX_HOME:-$HOME/.codex}/skills/spec-gap-review/`. Codex reviews the plan, Claude reads P0/P1 findings and patches the plan, then Codex re-reviews — until all blocking issues are resolved or max rounds reached. During the installer transition, also accept the legacy metaswarm-prefixed path if it already exists.
+Run iterative Codex reviews on an implementation plan (or any design doc) using the `$spec-gap-review` skill (installed at `${CODEX_HOME:-$HOME/.codex}/skills/spec-gap-review/`). Codex reviews the plan, Claude reads P0/P1 findings and patches the plan, then Codex re-reviews — until all blocking issues are resolved or max rounds reached. During the installer transition, also accept the legacy metaswarm-prefixed path if it already exists.
 
 ## Arguments
 
@@ -96,7 +96,7 @@ Choose the prompt based on iteration and the resolved `critical_from_round`:
 **Round 1** (always uses the baseline prompt, regardless of profile):
 
 ```text
-Review the implementation plan at <PLAN_PATH> using the spec-gap-review skill.
+Review the implementation plan at <PLAN_PATH> using the `$spec-gap-review` skill.
 Ground the review in the current repository at <CWD>.
 Save the review to <SIBLING_PATH>.
 In the `## Prioritized issues` section, prefix every bullet with its gap ID, e.g. `- **G01** (P1) — <finding>`. This is required for downstream parsing.
@@ -107,7 +107,7 @@ In the `## Prioritized issues` section, prefix every bullet with its gap ID, e.g
 **Variant A — Critical-Only delta** (used when `critical_from_round != never` AND current round ≥ `critical_from_round`; applies to `speed` and `balanced` profiles):
 
 ```text
-Re-review the implementation plan at <PLAN_PATH> using the spec-gap-review skill in Critical-Only Mode.
+Re-review the implementation plan at <PLAN_PATH> using the `$spec-gap-review` skill in Critical-Only Mode.
 Compare against the prior review at <SIBLING_PATH>.
 Update that file in place with a round-aware delta.
 Focus on P0 and P1 issues only. Carry forward stable gap IDs.
@@ -117,7 +117,7 @@ In the `## Prioritized issues` section, prefix every bullet with its gap ID, e.g
 **Variant B — Full-review delta** (used when `critical_from_round == never`, OR current round < `critical_from_round`; applies to `quality` profile):
 
 ```text
-Re-review the implementation plan at <PLAN_PATH> using the spec-gap-review skill.
+Re-review the implementation plan at <PLAN_PATH> using the `$spec-gap-review` skill.
 Compare against the prior review at <SIBLING_PATH>.
 Update that file in place with a round-aware delta review.
 Focus on P0, P1, and P2 issues. Carry forward stable gap IDs.
@@ -221,7 +221,7 @@ If codex exits non-zero:
 
 After a successful codex invocation, read `<SIBLING_PATH>`.
 
-Expected structure (from spec-gap-review skill Output Shape):
+Expected structure (from `$spec-gap-review` skill Output Shape):
 
 | Section | What it contains |
 |---|---|
@@ -254,7 +254,7 @@ If the file is not usable, classify precisely — the fix for each sub-case diff
 - Count P0 entries whose gap-tracker status is `open`, `partial`, or `new` (ignore `closed`).
 - Count P1 entries whose gap-tracker status is `open`, `partial`, or `new`.
 
-If `## Prioritized issues` bullets lack GID prefixes despite the prompt instruction, fall back to `## Detailed findings` which always cites the GID next to the severity.
+If `## Prioritized issues` bullets lack GID prefixes despite the prompt instruction, attempt a deterministic fallback only if the sibling file's `## Detailed findings` section explicitly includes GIDs alongside severities. If no deterministic GID-to-severity mapping is recoverable from either section, classify as `file-parse` (Step 3) — do not guess.
 
 **Evaluate terminal conditions in this order:**
 
@@ -286,7 +286,7 @@ Otherwise continue to Step 5.
 
 If the profile includes P2 in iteration 2+ (quality), Codex is run without Critical-Only Mode so its output carries P2 findings to act on. If the profile excludes P2 (speed, balanced), Critical-Only Mode is active and P2 is only addressed when the skill promotes it to blocking per its own Critical-Only rule.
 
-Rationale: the first review has the most signal. Most P2/P3 findings are cheap to fix alongside P0/P1 while the plan is open. In subsequent rounds, P2/P3 "noise" distracts from the blockers and risks churning on stable-by-design choices. The spec-gap-review skill's rule — *"Do not keep re-penalizing a deliberate design choice… if the choice is internally consistent, repo-aligned, and operationally workable, treat it as a tradeoff, not a standing gap"* — further supports ignoring stable P2/P3 after iteration 1.
+Rationale: the first review has the most signal. Most P2/P3 findings are cheap to fix alongside P0/P1 while the plan is open. In subsequent rounds, P2/P3 "noise" distracts from the blockers and risks churning on stable-by-design choices. The `$spec-gap-review` skill's rule — *"Do not keep re-penalizing a deliberate design choice… if the choice is internally consistent, repo-aligned, and operationally workable, treat it as a tradeoff, not a standing gap"* — further supports ignoring stable P2/P3 after iteration 1.
 
 **Drift exception for iteration 2+.** You MAY touch P2/P3 content in iteration 2+ when it's necessary to remove drift introduced by a P0/P1 fix — e.g., if a P1 invariant rewrite leaves contradictory prose in a section flagged as P2 in round 1, update the P2-flagged content to resolve the contradiction. You may NOT touch P2/P3 content in iteration 2+ for independent improvement. The test is: "Does leaving this P2/P3 content intact make my P0/P1 fix incomplete or self-contradictory?" If yes, touch it. If no, leave it.
 
@@ -393,7 +393,7 @@ For preflight errors, tell the user the exact fix. For codex-invocation errors, 
 
 ## Division of Labor (Command vs Skill)
 
-This command and the `spec-gap-review` Codex skill both have "round" and "loop" concepts. They are **deliberately different**, with a clean ownership split. Claude should never try to override the skill's internal logic — read its output, trust it, and act.
+This command and the `$spec-gap-review` Codex skill both have "round" and "loop" concepts. They are **deliberately different**, with a clean ownership split. Claude should never try to override the skill's internal logic — read its output, trust it, and act.
 
 | Concern | Owned by | Notes |
 |---|---|---|
@@ -443,7 +443,7 @@ Preflight asks whether to overwrite (start fresh) or continue (skill will pick u
 
 ## Notes
 
-- **Doc-type agnostic.** `spec-gap-review` handles PRDs, implementation guides, strategy docs, infrastructure plans, memory designs. This command doesn't care what kind of doc you pass.
+- **Doc-type agnostic.** `$spec-gap-review` handles PRDs, implementation guides, strategy docs, infrastructure plans, memory designs. This command doesn't care what kind of doc you pass.
 - **No mid-loop commits.** Intermediate iterations are not committed. The sibling file preserves round-to-round history inside itself via gap ID status evolution (`new` → `open` → `partial` → `closed`). At ACCEPT, one commit contains the final plan + final review file.
-- **Not a substitute for `plan-review-gate`.** This runs AFTER the metaswarm plan-review-gate passes — Codex is a cross-model second opinion, not a replacement for the 3 adversarial Claude reviewers.
+- **Not a substitute for `$plan-review-gate`.** This runs AFTER the metaswarm `$plan-review-gate` passes — Codex is a cross-model second opinion, not a replacement for the 3 adversarial Claude reviewers.
 - **Related**: `.metaswarm/external-tools.yaml` also controls code-level Codex review in orchestrated execution (Codex as implementer or reviewer in work units). That's a separate pipeline; this command only reviews planning documents.
