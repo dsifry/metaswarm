@@ -183,6 +183,7 @@ The 3600 s `timeout` catches catastrophic hangs but wastes an hour of wall-clock
 hang_count=0
 last_log_size=0
 last_sibling_size=0
+hang_killed=false
 while kill -0 "$codex_pid" 2>/dev/null; do
   sleep 60
   cpu=$(ps -p "$codex_pid" -o pcpu= 2>/dev/null | tr -d ' ')
@@ -195,8 +196,9 @@ while kill -0 "$codex_pid" 2>/dev/null; do
      && [[ "$sibling_size" == "$last_sibling_size" ]]; then
     hang_count=$((hang_count + 1))
     if [[ "$hang_count" -ge 5 ]]; then
+      hang_killed=true
       kill "$codex_pid" 2>/dev/null
-      break  # classify as codex-hang below
+      break  # classify as codex-hang below (gated on $hang_killed)
     fi
   else
     hang_count=0
@@ -213,8 +215,8 @@ Why all four signals in the conjunction (not just CPU)? A codex run streaming re
 **If the watcher kills codex**: classify as `codex-hang` (distinct from `codex-timeout` which means the 3600 s ceiling tripped). Retry once with the same prompt. If it hangs again, ERROR with phase `codex-hang`: *"Codex stalled at 0 % CPU / 0 network / 0 file I/O for 5 min. Verify `< /dev/null` is in the invocation and that codex 0.121.0+ is installed. See command docs §'Why `< /dev/null`'."*
 
 If codex exits non-zero:
+- `$hang_killed == true`: classify as `codex-hang` (above). Check this **first**, before consulting `$codex_exit`, because the SIGTERM exit code (typically 143) is otherwise indistinguishable from any other non-zero exit.
 - Exit code 124 (from `timeout`): classify as `codex-timeout`. Retry once. Second failure → ERROR phase `codex-timeout`.
-- Exit code from hang-watcher `kill`: classify as `codex-hang` (above).
 - Any other non-zero: first failure retry once with the same prompt; second failure stop the loop, report stderr + exit code, suggest `codex login status` to the user.
 
 ### Step 3: Read the sibling file
