@@ -20,6 +20,30 @@ Every run must produce:
 
 Do not replace the core rubric with an ad hoc checklist. Tailor the findings, not the scorecard.
 
+## Depth Gates
+
+Use the normal workflow for baseline reviews. Escalate to breakthrough mode when ordinary review depth is unlikely to move the document meaningfully closer to `100`.
+
+Enter breakthrough mode when any of these are true:
+
+- the same document has had `2+` prior reviews
+- the score is `90+` but below `100`
+- the user says the plan is stuck, asks for a deep dive, or asks how to break through
+- an open or partial gap repeats across rounds
+- the `Path to 100` would otherwise repeat prior advice without new evidence
+
+Breakthrough mode requires:
+
+- reread the full target document, not only changed sections
+- reread the latest prior review and every open or partial gap ID
+- inspect every repo surface named by the plan, plus adjacent tests, schemas, scripts, configs, generated/sample artifacts, and ignore rules when relevant
+- build a claim/contract matrix for fields, commands, statuses, APIs, artifacts, acceptance criteria, and externally sourced facts
+- explain why prior rounds did not reach `100`
+- split repeated partial gaps into exact missing edits or evidence
+- make the `Path to 100` patch-grade, not advisory
+
+Do not finish breakthrough mode with generic advice. Every remaining point must map to a concrete missing document change, repo verification, or external source check.
+
 ## Workflow
 
 1. Classify the target document.
@@ -52,24 +76,47 @@ Do not replace the core rubric with an ad hoc checklist. Tailor the findings, no
    - how it is threaded through intermediate types or configs
    - where it is finally rendered, consumed, or asserted
    Do not treat a field as "specified" if any hop is missing.
-7. Check volatile external claims only when needed.
+7. Build a claim/contract matrix when the plan introduces or revises contracts.
+   Use a compact table with:
+   `Claim | Producer | Carrier | Consumer | Verification | Evidence | Status`.
+   Include rows for new fields, status enums, commands, API surfaces, artifacts, acceptance criteria, upstream statuses, and dated external claims.
+   Omit the table only when the document truly has no contract-like claims.
+8. Check volatile external claims only when needed.
    Browse only for unstable or authoritative facts such as API limits, pricing, model capabilities, product approvals, regulations, or vendor docs.
    Prefer official or primary sources.
    Include exact dates in the report when a claim is time-sensitive.
-8. Verify upstream status claims whenever the document says another doc, design, PR, bead, phase, or gate is `approved`, `ready`, `closed`, `in progress`, or similar.
+9. Verify upstream status claims whenever the document says another doc, design, PR, bead, phase, or gate is `approved`, `ready`, `closed`, `in progress`, or similar.
    Check the referenced source's current status line and, when available, its latest sibling companion review instead of trusting the target doc's narration.
-9. For later-round reviews, compare against the latest prior review for the same doc.
+10. For later-round reviews, compare against the latest prior review for the same doc.
    Look for sibling `*-codexreview.md` files, earlier review sections, or user-provided prior reviews.
    Carry forward unresolved gap IDs.
    Only award recovered points when the document or repo evidence actually changed.
-10. Write a critical report.
+   If a gap remains partial after `2` rounds, split it into concrete sub-gaps.
+   If the same recommendation appears twice, replace it with exact missing edits and evidence.
+   Every open gap must explain why the prior attempted fix was insufficient.
+11. Apply score caps before finalizing scores.
+   Caps are ceilings, not automatic scores; lower scores may still be warranted.
+12. Run an adversarial final pass.
+   Ask what would make an implementer waste a day, what assumption could break the next phase, what appears only once, what is future intent disguised as current state, what a test writer could not assert, and what a PR reviewer would challenge.
+13. Write a critical report.
    Make findings primary.
    Distinguish clearly between:
    - what the current repo does
    - what the document claims
    - what is merely future intent
-11. Validate every file:line reference if you save a review file.
+14. Validate every file:line reference if you save a review file.
    Use the bundled validator script after writing markdown with `#L...` links.
+
+## Minimum Repo Exploration
+
+Do not treat these as optional when they match the document type. If a surface is absent, cite that as evidence instead of silently skipping it.
+
+- Implementation guide: inspect target modules, adjacent tests, package scripts, types or schemas, CLI entrypoints, generated or sample artifacts, and `.gitignore` paths for claimed commit artifacts.
+- Strategy: inspect current architecture entrypoints, existing capabilities, package scripts, major source directories, tests, and any named upstream docs or decisions.
+- Memory or knowledge-system doc: inspect persistence code, migrations or schema, query layer, isolation/privacy boundaries, lifecycle jobs, and test fixtures.
+- UX/API contract: inspect request/response types, API routes or CLI output, renderer/output code, tests, examples, and resume/error handling paths.
+- Infrastructure/deployment plan: inspect scripts, config, deploy files, environment docs, storage/auth/runtime layers, and cost/quota claims that need current sources.
+- Long-lived/background-agent plan: inspect persistence and recovery primitives, job/checkpoint abstractions, instrumentation hooks, schema assumptions, and evaluation loops.
 
 ## Core Rubric
 
@@ -113,6 +160,29 @@ Do not award `100/100` unless:
 - all major claims are backed by repo evidence or dated external sources
 - the plan includes a concrete verification path
 
+To award `100`, prove implementation readiness from the perspective of a fresh engineer starting the work tomorrow. The review must show that:
+
+- every named current file exists, or every future file is clearly introduced as new work
+- every new field, status, counter, API, command, and artifact has a complete producer → carrier → consumer → verification path
+- every command can run as written, or is explicitly marked as future after the prerequisite step that creates it
+- every acceptance criterion maps to a concrete verification step
+- every upstream dependency has a current status check
+- every phase starts from the actual current repo state
+- no unresolved contradiction remains between prose, types, examples, tests, commands, artifacts, and revision logs
+
+### Score Caps
+
+Apply these caps consistently:
+
+- Any unverified current-state repo claim caps repo alignment at `3/5`.
+- Any migration that starts from an imagined baseline caps repo alignment at `2/5`.
+- Any required field, counter, status, API, command, or artifact missing a producer/carrier/consumer/verification hop caps contract specificity at `3/5`.
+- Any command or artifact path that cannot work as written caps sequencing, verification, and operational readiness at `3/5`.
+- Any stale or unsourced volatile external fact that drives design choices caps technical feasibility at `3/5`.
+- Any open `P1` caps overall readiness below `95`.
+- Any repeated unresolved `P1` across rounds caps overall readiness below `90` unless the review narrows it into exact remaining edits and evidence.
+- Any unresolved `P0` caps overall readiness below `80`.
+
 ## Multi-Round Progression
 
 When reviewing the same plan across multiple rounds:
@@ -129,6 +199,30 @@ When reviewing the same plan across multiple rounds:
 - Include a `Path to 100` section that lists the exact missing evidence or revisions needed to recover the remaining points.
 - Keep the recommended next actions capped at the `5` highest-leverage fixes.
 - If a prior review is unavailable, say so explicitly and treat the run as a new baseline.
+
+## Gap Closure Rules
+
+Do not mark a gap `closed` merely because the document acknowledges it, promises later work, or says the revision fixed it. Close a gap only when the spec actually resolves the implementation risk with aligned prose, contracts, examples, commands, tests, artifacts, and repo evidence as applicable.
+
+Common false-closure signals:
+
+- the fix appears only in the revision log
+- one example changed but the canonical contract still drifts
+- the plan says "handled later" without sequencing and verification
+- the fix introduces a new undefined field, term, phase, command, status, or prerequisite
+- implementation evidence exists only in prose, not in the relevant types, commands, tests, artifacts, or source references
+
+## Path to 100 Standard
+
+Make `Path to 100` patch-grade. Each item must name:
+
+- the exact document section or contract to revise
+- the exact repo evidence, upstream status, or external source needed
+- the command, schema, field, artifact, or acceptance criterion to normalize
+- the verification command or assertion expected after revision
+- the approximate points recoverable
+
+Avoid vague advice such as "clarify verification" or "tighten sequencing." Replace it with the exact missing edit or evidence that would recover the score.
 
 ## Review Standards
 
@@ -164,10 +258,12 @@ Use this structure unless the user asks for a different format:
 3. `Rollups`: `Overall readiness`, `Quality`, `Completeness`, and score deltas when applicable.
 4. `Core scorecard`: every rubric dimension with `score`, `weight`, `points`, and `delta`.
 5. `Gap tracker`: stable gap IDs with status (`closed`, `partial`, `open`, `new`) and points recoverable.
-6. `Detailed findings`: grouped by rubric area with file:line references.
-7. `Prioritized issues`: `P0` to `P3`.
-8. `Path to 100`: exact changes needed to recover the remaining points.
-9. `Recommended next actions`: the smallest set of changes most likely to move the score materially next round.
+6. `Breakthrough notes`: include only when breakthrough mode was triggered; explain why prior rounds stalled and what deeper evidence changed the review.
+7. `Claim/contract matrix`: include when the document has contract-like claims.
+8. `Detailed findings`: grouped by rubric area with file:line references.
+9. `Prioritized issues`: `P0` to `P3`.
+10. `Path to 100`: exact changes needed to recover the remaining points.
+11. `Recommended next actions`: the smallest set of changes most likely to move the score materially next round.
 
 ## Severity Model
 

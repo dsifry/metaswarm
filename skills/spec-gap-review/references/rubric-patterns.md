@@ -8,6 +8,104 @@ Use the material below to choose `2-4` doc-type focus checks that deepen the rev
 
 Use these patterns across doc types when the document introduces new contracts, new commands, or multi-round revisions.
 
+### Breakthrough Mode For Stuck Reviews
+
+Use when a review is late-round, high-scoring but not complete, or repeating prior advice.
+
+Required moves:
+
+- Reread the full target doc and latest prior review before scoring.
+- List every open or partial gap ID and state whether the current document changed the relevant evidence.
+- Inspect the repo surfaces that would prove or disprove each gap, including adjacent tests and generated/sample artifacts.
+- Convert repeated broad gaps into narrower sub-gaps that identify the exact missing section, command, field, source, or assertion.
+- Add a short diagnosis of why earlier rounds stalled.
+
+Common reasons rounds stall:
+
+- The review keeps accepting revision-log claims instead of rereading the canonical body.
+- The gap is acknowledged but not resolved in the executable contract.
+- Examples were updated but types, commands, or tests still use the old shape.
+- The plan remains internally coherent but starts from a repo baseline that does not exist.
+- The `Path to 100` says what quality is missing but not what edit would prove it.
+
+Typical path-to-100 upgrades:
+
+- Replace "clarify" with exact edits to a named section or contract.
+- Replace "add tests" with the command, assertion, fixture, and expected artifact.
+- Replace "verify upstream" with the exact source file, PR, bead, status line, or external official page to check.
+- Split a recurring partial gap into independently closable evidence gaps.
+
+### Claim / Contract Matrix
+
+Use for any doc that introduces or changes fields, statuses, APIs, commands, artifacts, acceptance criteria, upstream status claims, or volatile external facts.
+
+Suggested columns:
+
+| Claim | Producer | Carrier | Consumer | Verification | Evidence | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| New output field | Function/event that creates it | Type/schema/config/artifact that stores or passes it | Renderer/API/test/user-facing output | Test/command/assertion | Repo file:line or dated source | open/partial/closed |
+
+Common failure modes:
+
+- A field has a producer and example output but no carrier type.
+- A command appears in validation steps before the CLI contract defines it.
+- An artifact is rendered but never made writable, tracked, or referenced by commit steps.
+- An acceptance criterion is clear but has no verification command.
+- An upstream approval claim has no current source check.
+
+Typical path-to-100 upgrades:
+
+- Add a canonical contract section and make all snippets point to it.
+- Thread every field through producer, carrier, consumer, and verification.
+- Mark future commands as unavailable until the work unit that creates them.
+- Remove matrix rows from examples unless the proposed path can produce them.
+
+### Score Cap Calibration
+
+Use caps as ceilings, then score lower when the actual evidence is worse.
+
+Common caps:
+
+- Unverified current-state repo claims cap repo alignment at `3/5`.
+- Imagined repo baseline caps repo alignment at `2/5`.
+- Missing producer/carrier/consumer/verification hop caps contract specificity at `3/5`.
+- Non-executable commands or impossible artifact paths cap operational readiness at `3/5`.
+- Stale or unsourced volatile external facts that drive decisions cap feasibility at `3/5`.
+- Any open `P1` caps overall readiness below `95`; repeated unresolved `P1` caps below `90` unless narrowed.
+- Any unresolved `P0` caps overall readiness below `80`.
+
+Typical path-to-100 upgrades:
+
+- State the cap explicitly in the scorecard note.
+- Identify the exact evidence needed to lift the cap.
+- Do not recover points for acknowledgements, only for corrected contracts or verified sources.
+
+### Patch-Grade Path To 100
+
+Weak path item:
+
+- "Clarify verification."
+
+Strong path item:
+
+- "In `Verification`, map AC-03 to `npm test -- --run pipeline-health`, update examples to the canonical `--review-id` flag, and state the expected artifact at `reviews/<id>/summary.json` so the acceptance criterion is executable. Recoverable: `3` points."
+
+Weak path item:
+
+- "Resolve producer/consumer gaps."
+
+Strong path item:
+
+- "In `Telemetry Contract`, add the producer for `pipeline_health.missingFields`, thread it through the stats type used by the writer, and add a renderer assertion that the field appears only when populated. Recoverable: `4` points."
+
+Checklist for every path item:
+
+- Names exact doc location.
+- Names exact repo evidence or source check.
+- Names exact field, command, artifact, or criterion.
+- Names verification.
+- Names recoverable points.
+
 ### Intra-Doc Consistency
 
 Suggested focus checks:
