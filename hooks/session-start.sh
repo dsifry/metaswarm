@@ -6,15 +6,16 @@
 set -euo pipefail
 
 # --- Phase 0: Self-locate plugin root ---
-# Works with Claude Code ($CLAUDE_PLUGIN_ROOT), Gemini CLI ($extensionPath),
-# or direct invocation (derive from script location)
+# Works with Codex ($PLUGIN_ROOT), Claude Code ($CLAUDE_PLUGIN_ROOT),
+# Gemini CLI ($extensionPath), or direct invocation (derive from script location)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-${extensionPath:-$(cd "$SCRIPT_DIR/.." && pwd)}}"
+PLUGIN_ROOT="${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-${extensionPath:-$(cd "$SCRIPT_DIR/.." && pwd)}}}"
 
 # --- Phase 1: BEADS dedup check ---
 # If standalone BEADS plugin is installed, skip knowledge priming (let BEADS handle it)
 beads_standalone=false
-beads_plugin_cache="${HOME}/.claude/plugins/cache"
+beads_plugin_caches=("${HOME}/.claude/plugins/cache" "${CODEX_HOME:-${HOME}/.codex}/plugins/cache")
+for beads_plugin_cache in "${beads_plugin_caches[@]}"; do
 if [ -d "$beads_plugin_cache" ]; then
   # Look for a BEADS plugin with name "beads" in plugin.json
   while IFS= read -r -d '' pjson; do
@@ -29,8 +30,10 @@ if [ -d "$beads_plugin_cache" ]; then
       beads_standalone=true
       break
     fi
-  done < <(find "$beads_plugin_cache" -path "*/.claude-plugin/plugin.json" -print0 2>/dev/null || true)
+  done < <(find "$beads_plugin_cache" \( -path "*/.claude-plugin/plugin.json" -o -path "*/.codex-plugin/plugin.json" \) -print0 2>/dev/null || true)
 fi
+  [ "$beads_standalone" = true ] && break
+done
 
 # --- Phase 2: New project detection ---
 new_project=false

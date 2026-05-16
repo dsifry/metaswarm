@@ -129,7 +129,9 @@ Then run `/metaswarm:setup` in your project.
 ### Codex CLI
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
+codex plugin marketplace add dsifry/metaswarm-marketplace
+codex
+# Open /plugins, select the metaswarm marketplace, and install metaswarm.
 ```
 
 Then run `$setup` in your project.

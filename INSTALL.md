@@ -27,10 +27,12 @@ Then in Gemini CLI:
 /metaswarm:setup
 ```
 
-## Codex CLI (Skills)
+## Codex CLI (Plugin Marketplace)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
+codex plugin marketplace add dsifry/metaswarm-marketplace
+codex
+# Then open /plugins, select the metaswarm marketplace, and install metaswarm.
 ```
 
 Then in Codex CLI:
@@ -38,6 +40,8 @@ Then in Codex CLI:
 ```text
 $setup
 ```
+
+Legacy fallback: if plugin marketplaces are unavailable in your Codex build, use `.codex/install.sh` to clone metaswarm and symlink the skills manually.
 
 ## Cross-Platform Installer
 
@@ -65,7 +69,7 @@ npx metaswarm setup
 
 | Feature | Claude Code | Gemini CLI | Codex CLI |
 |---|---|---|---|
-| Install method | Plugin marketplace | `gemini extensions install` | Clone + symlink |
+| Install method | Plugin marketplace | `gemini extensions install` | Plugin marketplace |
 | Commands | `/start-task` | `/metaswarm:start-task` | `$start` |
 | Instruction file | `CLAUDE.md` | `GEMINI.md` | `AGENTS.md` |
 | Parallel agents | Full (`Task()`) | Experimental | Sequential only |
@@ -83,11 +87,12 @@ npx metaswarm setup
    brew install gh   # macOS
    gh auth login
    ```
-4. **Superpowers Plugin** (optional, Claude Code only) — See [External Dependencies](#external-dependencies)
+4. **Superpowers Plugin** (optional, Claude Code and Codex) — See [External Dependencies](#external-dependencies)
+5. **GTG CLI** (`gtg`) — For the fastest PR readiness checks in `pr-shepherd`
 
 ## External Dependencies
 
-metaswarm's skills reference these external skills from the [superpowers](https://github.com/obra/superpowers) Claude Code plugin:
+metaswarm's skills reference external skills from the [superpowers](https://github.com/obra/superpowers) plugin. Superpowers is available for Claude Code and as a Codex plugin.
 
 | Skill | Used By | Purpose |
 |---|---|---|
@@ -97,13 +102,17 @@ metaswarm's skills reference these external skills from the [superpowers](https:
 | `superpowers:writing-plans` | Design Review Gate, Brainstorming Extension | Detailed implementation plan generation |
 | `superpowers:using-git-worktrees` | Design Review Gate | Isolated workspace creation for parallel dev |
 
-**Install superpowers** (follow their README for current instructions):
+**Install superpowers** (follow their README and marketplace docs for current instructions):
 ```bash
 # See: https://github.com/obra/superpowers
 claude plugin add obra/superpowers
+
+# Codex: install from the claude-plugins-official marketplace in /plugins
 ```
 
 **Without superpowers**: metaswarm still works — the core orchestration (agents, BEADS, review gates, rubrics) is self-contained. The superpowers references are in skill trigger chains and can be removed or replaced with your own equivalents.
+
+**BEADS and GTG**: metaswarm does not auto-install runtime CLIs. Install `bd` for BEADS issue tracking and knowledge priming, and install `gtg` for consolidated PR readiness checks. The standalone Beads plugin is optional; metaswarm detects it and defers priming when present.
 
 ## Optional: External AI Tools
 
@@ -184,7 +193,7 @@ If you skip the manual migration, the session-start hook will detect the old npm
 /status
 ```
 
-This runs 9 diagnostic checks: plugin version, project setup, command shims, legacy install detection, BEADS plugin, bd CLI, external tools, coverage thresholds, and Node.js.
+This runs platform-aware diagnostic checks: plugin version, project setup, platform install state, command shims where applicable, legacy install detection, BEADS plugin, bd CLI, gtg CLI, external tools, coverage thresholds, and Node.js.
 
 ## npm Package (Cross-Platform Installer)
 

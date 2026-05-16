@@ -1,0 +1,43 @@
+{
+  "name": "metaswarm",
+  "version": "0.11.0",
+  "description": "Multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI — 19 agents, 13 skills, quality gates, and TDD enforcement",
+  "author": {
+    "name": "David Sifry",
+    "email": "david@sifry.com"
+  },
+  "homepage": "https://github.com/dsifry/metaswarm",
+  "repository": "https://github.com/dsifry/metaswarm",
+  "license": "MIT",
+  "keywords": [
+    "orchestration",
+    "agents",
+    "tdd",
+    "quality-gates",
+    "beads",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "metaswarm",
+    "shortDescription": "Multi-agent orchestration, quality gates, TDD, and PR shepherding for Codex",
+    "longDescription": "Use metaswarm to plan, decompose, execute, review, and shepherd development work with specialized agent roles, BEADS-backed tracking, strict quality gates, and cross-platform support for Claude Code, Gemini CLI, and Codex CLI.",
+    "developerName": "David Sifry",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/dsifry/metaswarm",
+    "privacyPolicyURL": "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
+    "termsOfServiceURL": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
+    "defaultPrompt": [
+      "Use metaswarm to set up this project.",
+      "Use metaswarm to start tracked work on this task.",
+      "Use metaswarm to shepherd this PR until it is ready to merge."
+    ],
+    "brandColor": "#0F766E",
+    "screenshots": []
+  }
+}

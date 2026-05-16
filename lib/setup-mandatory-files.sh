@@ -127,42 +127,46 @@ else
   fi
 fi
 
-# --- File 3: 6 command shims in .claude/commands/ ---
+# --- File 3: Claude command shims (Claude/all only) ---
+if [ "$PLATFORM" = "claude" ] || [ "$PLATFORM" = "all" ]; then
 commands_dir="$PROJECT_DIR/.claude/commands"
 mkdir -p "$commands_dir"
 
-shims=(
-  "start-task:start-task"
-  "start:start-task"
-  "prime:prime"
-  "review-design:review-design"
-  "self-reflect:self-reflect"
-  "pr-shepherd:pr-shepherd"
-  "brainstorm:brainstorm"
-)
+  shims=(
+    "start-task:start-task"
+    "start:start-task"
+    "prime:prime"
+    "review-design:review-design"
+    "self-reflect:self-reflect"
+    "pr-shepherd:pr-shepherd"
+    "brainstorm:brainstorm"
+  )
 
-for entry in "${shims[@]}"; do
-  file_name="${entry%%:*}"
-  command_name="${entry##*:}"
-  shim_path="$commands_dir/${file_name}.md"
-  shim_content="<!-- Created by metaswarm setup. Routes to the metaswarm plugin. Safe to delete if you uninstall metaswarm. -->
+  for entry in "${shims[@]}"; do
+    file_name="${entry%%:*}"
+    command_name="${entry##*:}"
+    shim_path="$commands_dir/${file_name}.md"
+    shim_content="<!-- Created by metaswarm setup. Routes to the metaswarm plugin. Safe to delete if you uninstall metaswarm. -->
 
 Invoke the \`/metaswarm:${command_name}\` skill to handle this request. Pass along any arguments the user provided."
 
-  if [ -f "$shim_path" ]; then
-    existing=$(cat "$shim_path")
-    if [ "$existing" = "$shim_content" ]; then
-      skipped+=(".claude/commands/${file_name}.md (already correct)")
+    if [ -f "$shim_path" ]; then
+      existing=$(cat "$shim_path")
+      if [ "$existing" = "$shim_content" ]; then
+        skipped+=(".claude/commands/${file_name}.md (already correct)")
+      else
+        # Overwrite — existing content is from a different plugin/project
+        printf '%s' "$shim_content" > "$shim_path"
+        created+=(".claude/commands/${file_name}.md (overwritten with metaswarm routing)")
+      fi
     else
-      # Overwrite — existing content is from a different plugin/project
       printf '%s' "$shim_content" > "$shim_path"
-      created+=(".claude/commands/${file_name}.md (overwritten with metaswarm routing)")
+      created+=(".claude/commands/${file_name}.md")
     fi
-  else
-    printf '%s' "$shim_content" > "$shim_path"
-    created+=(".claude/commands/${file_name}.md")
-  fi
-done
+  done
+else
+  skipped+=(".claude/commands shims (not needed for ${PLATFORM})")
+fi
 
 # --- Output results as JSON ---
 echo "{"

@@ -5,15 +5,25 @@ description: Interactive project setup — detects your project, configures meta
 
 # Setup
 
-Interactive, Claude-guided setup for metaswarm. Detects your stack, asks targeted questions, writes project-local files, and creates command shims. Replaces both `npx metaswarm init` and the old `/metaswarm-setup` command.
+Interactive setup for metaswarm. Detects your stack, asks targeted questions, writes project-local files, and creates platform-appropriate instruction files and command shims. Replaces both `npx metaswarm init` and the old `/metaswarm-setup` command.
 
 <CRITICAL-REQUIREMENTS>
-Setup MUST produce these 3 mandatory outputs. A shell script handles them automatically — you MUST run it.
+Setup MUST produce the mandatory outputs for the active platform. A shell script handles them automatically — you MUST run it.
 
 After Phase 2 (user questions), determine the correct coverage command from the detection results, then run this Bash command:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>"
+PLUGIN_ROOT="${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-${extensionPath:-}}}"
+if [ -z "$PLUGIN_ROOT" ]; then
+  setup_script="$(find "${CODEX_HOME:-$HOME/.codex}/plugins/cache" -path '*/metaswarm/*/lib/setup-mandatory-files.sh' -print -quit 2>/dev/null)"
+  if [ -n "$setup_script" ]; then
+    PLUGIN_ROOT="$(cd "$(dirname "$setup_script")/.." && pwd)"
+  fi
+fi
+if [ -z "$PLUGIN_ROOT" ] && [ -f "$(pwd)/lib/setup-mandatory-files.sh" ]; then
+  PLUGIN_ROOT="$(pwd)"
+fi
+bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform>
 ```
 
 Where:
@@ -24,11 +34,16 @@ Where:
   - jest/npm → `"npx jest --coverage"`
   - go → `"go test -coverprofile=coverage.out ./..."`
   - cargo → `"cargo tarpaulin --fail-under <threshold>"`
+- `<platform>` is `codex`, `claude`, `gemini`, or `all`. Prefer:
+  - `codex` when running in Codex (`PLUGIN_ROOT` or `CODEX_HOME` is present, or the user invoked `$setup`)
+  - `claude` when running in Claude Code (`CLAUDE_PLUGIN_ROOT` is present, or the user invoked `/setup`)
+  - `gemini` when running in Gemini (`extensionPath` is present, or the user invoked `/metaswarm:setup`)
+  - `all` only when the user explicitly asks to configure every supported CLI
 
 The script handles:
-1. **CLAUDE.md** — appends metaswarm section (or writes new), skips if already present
+1. **Instruction file** — `AGENTS.md` for Codex, `CLAUDE.md` for Claude, `GEMINI.md` for Gemini; appends metaswarm section (or writes new), skips if already present
 2. **`.coverage-thresholds.json`** — writes at project root with correct thresholds and command
-3. **6 shims in `.claude/commands/`** — writes `start-task.md`, `prime.md`, `review-design.md`, `self-reflect.md`, `pr-shepherd.md`, `brainstorm.md`
+3. **Claude command shims** — for Claude/all only, writes `.claude/commands/start-task.md`, `prime.md`, `review-design.md`, `self-reflect.md`, `pr-shepherd.md`, `brainstorm.md`
 
 The script outputs JSON with what was created/skipped/errored. Check that `"status": "ok"`.
 
@@ -212,26 +227,36 @@ Use AskUserQuestion to ask ONLY questions relevant based on detection. 3-5 quest
 This is the FIRST thing to do after Phase 2. Determine the coverage command, then run:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>"
+PLUGIN_ROOT="${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-${extensionPath:-}}}"
+if [ -z "$PLUGIN_ROOT" ]; then
+  setup_script="$(find "${CODEX_HOME:-$HOME/.codex}/plugins/cache" -path '*/metaswarm/*/lib/setup-mandatory-files.sh' -print -quit 2>/dev/null)"
+  if [ -n "$setup_script" ]; then
+    PLUGIN_ROOT="$(cd "$(dirname "$setup_script")/.." && pwd)"
+  fi
+fi
+if [ -z "$PLUGIN_ROOT" ] && [ -f "$(pwd)/lib/setup-mandatory-files.sh" ]; then
+  PLUGIN_ROOT="$(pwd)"
+fi
+bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform>
 ```
 
-Example for Python with pytest at 100%:
+Example for Codex with Python/pytest at 100%:
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" 100 "pytest --cov --cov-fail-under=100"
+bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" 100 "pytest --cov --cov-fail-under=100" --platform codex
 ```
 
 Check the JSON output. If `"status": "ok"`, the 3 mandatory files are done. Report to the user what was created.
 
 If the script fails or is not found, write the files manually (see CRITICAL-REQUIREMENTS above for what they are).
 
-### Step 2: Customize CLAUDE.md TODO sections
+### Step 2: Customize instruction-file TODO sections
 
-If CLAUDE.md was newly written (not appended), use Edit to replace the TODO placeholders:
+If the instruction file was newly written (not appended), use Edit to replace the TODO placeholders:
 - Replace `npm test` / `npm run test:coverage` with the detected test/coverage commands
 - Replace `TypeScript strict mode` / `ESLint + Prettier` with the detected language tools
 - Remove the `<!-- TODO: ... -->` comment lines
 
-If CLAUDE.md was appended to (existing file), this step is not needed.
+If the instruction file was appended to (existing file), this step is not needed.
 
 ---
 
@@ -379,17 +404,20 @@ Setup complete! Here's what was configured:
   Visual review:   {Enabled/Disabled}
 
 Mandatory files:
-  ✔ CLAUDE.md          — {written new / appended metaswarm section / already had it}
+  ✔ {instruction file} — {written new / appended metaswarm section / already had it}
   ✔ .coverage-thresholds.json — {threshold}% coverage, enforcement: `{command}`
-  ✔ .claude/commands/   — 6 shims: start-task, prime, review-design, self-reflect, pr-shepherd, brainstorm
+  ✔ .claude/commands/   — Claude only: shims for start-task, prime, review-design, self-reflect, pr-shepherd, brainstorm
 
 Other files written:
   {list every other file written or modified with its path}
 
-You're all set! Run /start-task to begin working.
+You're all set! Run the platform's start command to begin working.
 ```
 
-**Command naming**: When recommending commands to the user, always use the short shim names (`/start-task`, `/prime`, `/brainstorm`, etc.), NOT the namespaced plugin names (`/metaswarm:start-task`). The shims you just created in `.claude/commands/` make the short names work. The short names are easier to type and remember.
+**Command naming**: When recommending commands to the user, use the active platform's names:
+- Claude Code: short shim names (`/start-task`, `/prime`, `/brainstorm`, etc.), NOT namespaced plugin names (`/metaswarm:start-task`)
+- Codex: skill names (`$start`, `$setup`, `$status`, `$pr-shepherd`)
+- Gemini: namespaced commands (`/metaswarm:start-task`, `/metaswarm:setup`)
 
 Offer 1-2 relevant tips based on configuration:
 - If external tools enabled: "Use `/external-tools-health` to check tool status."
@@ -419,9 +447,19 @@ If `/start-task` is invoked and `.metaswarm/project-profile.json` does not exist
 Before saying "setup complete", run this Bash command to verify the 3 mandatory files:
 
 ```bash
-echo "CLAUDE.md:"; grep -c "metaswarm" CLAUDE.md 2>/dev/null || echo "MISSING"; echo "coverage:"; ls .coverage-thresholds.json 2>/dev/null || echo "MISSING"; echo "shims:"; ls .claude/commands/start-task.md .claude/commands/prime.md .claude/commands/brainstorm.md 2>/dev/null || echo "MISSING"
+platform="${METASWARM_PLATFORM:-codex}"
+case "$platform" in
+  claude) instruction_file="CLAUDE.md" ;;
+  gemini) instruction_file="GEMINI.md" ;;
+  *) instruction_file="AGENTS.md" ;;
+esac
+echo "$instruction_file:"; grep -c "metaswarm" "$instruction_file" 2>/dev/null || echo "MISSING"
+echo "coverage:"; ls .coverage-thresholds.json 2>/dev/null || echo "MISSING"
+if [ "$platform" = "claude" ]; then
+  echo "shims:"; ls .claude/commands/start-task.md .claude/commands/prime.md .claude/commands/brainstorm.md 2>/dev/null || echo "MISSING"
+fi
 ```
 
 If any output says "MISSING", go back and run the setup-mandatory-files.sh script or create the files manually. Do NOT declare success with missing files.
 
-When reporting available commands to the user, use the **short names** (`/start-task`, `/prime`, `/brainstorm`, etc.) — NOT the namespaced names (`/metaswarm:start-task`). The command shims make the short names work. Do NOT recommend commands that don't exist (e.g., `/metaswarm:start`, `/metaswarm:status`, `/metaswarm:architect-agent`).
+When reporting available commands to the user, use the active platform's command style. Do NOT recommend commands that do not exist on that platform (for example, do not recommend Claude slash-command shims in Codex).

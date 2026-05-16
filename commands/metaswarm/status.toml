@@ -3,5 +3,5 @@ prompt = """Invoke the metaswarm status skill. The user wants to check their ins
 
 Arguments provided by the user: {{args}}
 
-Run all 9 diagnostic checks: plugin version, project setup, command shims, legacy install, BEADS, bd CLI, external tools, coverage thresholds, Node.js.
+Run the platform-aware diagnostic checks: plugin version, project setup, platform install state, command shims where applicable, legacy install, BEADS, bd CLI, gtg CLI, external tools, coverage thresholds, Node.js.
 """

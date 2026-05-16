@@ -1,16 +1,32 @@
 # metaswarm for Codex CLI
 
-Install metaswarm's 13 orchestration skills for [Codex CLI](https://github.com/openai/codex).
+Install metaswarm's orchestration skills as a [Codex CLI](https://github.com/openai/codex) plugin.
 
 ## Install
 
-### Quick install
+### Plugin marketplace install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/dsifry/metaswarm/main/.codex/install.sh | bash
+codex plugin marketplace add dsifry/metaswarm-marketplace
+codex
+# In Codex, open /plugins, select the metaswarm marketplace, and install metaswarm.
 ```
 
-### Manual install
+### Local checkout install
+
+From a metaswarm checkout:
+
+```bash
+codex plugin marketplace add /path/to/metaswarm
+codex
+# In Codex, open /plugins, select "metaswarm", and install metaswarm.
+```
+
+The repo-local marketplace points at the public metaswarm repository root. For testing an unmerged branch, use a temporary marketplace whose plugin source URL is a `file://` URL or a pushed branch ref.
+
+### Legacy manual install
+
+Use this only if your Codex build does not support plugins:
 
 ```bash
 git clone https://github.com/dsifry/metaswarm.git ~/.codex/metaswarm
@@ -58,25 +74,25 @@ Codex uses the `name` field from each skill's `SKILL.md` frontmatter — not the
 | `$migrate` | `migrate` | Migrate from npm installation |
 | `$visual-review` | `visual-review` | Playwright screenshot capture |
 
-## Limitations
+## Execution Model
 
-Codex CLI does not have a `Task()` equivalent for spawning subagents. This means:
+Codex supports skills and subagents, but the exact orchestration surface is not identical to Claude Code. metaswarm skills should follow `skills/start/references/codex-tools.md` for tool mapping.
 
-- **Design review** runs sequentially (each reviewer perspective one at a time) instead of in parallel
-- **Adversarial review** uses rubrics as structured checklists rather than fresh isolated reviewers
-- **Background tasks** are not available; all work runs in the current session
+- Use `$setup`, `$start`, `$status`, and `$pr-shepherd` in Codex.
+- Do not use Claude slash-command shims in Codex.
+- Plugin hooks are optional in Codex and require the `plugin_hooks` feature. Core metaswarm workflows do not depend on hooks.
 
-The quality gates and rubric criteria are identical — the same review standards apply regardless of platform. The difference is execution mode (sequential vs parallel), not review thoroughness.
+The quality gates and rubric criteria are identical across platforms. The difference is invocation and tool mapping, not review standards.
 
 ## Updating
 
-```bash
-cd ~/.codex/metaswarm && git pull
-```
-
-Or re-run the install script — it detects existing installations and updates in-place.
+Use Codex's plugin marketplace update flow for plugin installs. For legacy manual installs, re-run `.codex/install.sh` or pull the clone under `~/.codex/metaswarm`.
 
 ## Uninstall
+
+Use Codex's `/plugins` UI to uninstall plugin installs.
+
+For legacy manual installs:
 
 ```bash
 # Remove skill symlinks
