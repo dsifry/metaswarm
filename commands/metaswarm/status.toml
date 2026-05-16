@@ -1,7 +1,5 @@
 description = "Run diagnostic checks on your metaswarm installation"
-prompt = """$status
-
-The user wants to check their installation status.
+prompt = """Invoke the metaswarm status skill. The user wants to check their installation status.
 
 Arguments provided by the user: {{args}}
 

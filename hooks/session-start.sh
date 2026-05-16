@@ -110,12 +110,28 @@ fi
 # --- Phase 4: Build context message ---
 context_parts=()
 
+setup_cmd='$setup'
+start_cmd='$start'
+migrate_cmd='$migrate'
+case "$METASWARM_PLATFORM" in
+  claude)
+    setup_cmd='/setup'
+    start_cmd='/start-task'
+    migrate_cmd='/migrate'
+    ;;
+  gemini)
+    setup_cmd='/metaswarm:setup'
+    start_cmd='/metaswarm:start-task'
+    migrate_cmd='/metaswarm:migrate'
+    ;;
+esac
+
 if [ "$new_project" = true ]; then
-  context_parts+=("Metaswarm is installed but this project hasn't been set up yet. Run \`\$setup\` to configure it, or \`\$start\` to begin working.")
+  context_parts+=("Metaswarm is installed but this project hasn't been set up yet. Run \`${setup_cmd}\` to configure it, or \`${start_cmd}\` to begin working.")
 fi
 
 if [ "$legacy_install" = true ]; then
-  context_parts+=("This project has metaswarm installed via the old npm method. The marketplace plugin is now active and provides all the same skills and commands. Run \`\$migrate\` to clean up the redundant copies — this is a safe, reversible operation that only removes duplicate framework files (your project files are never touched).")
+  context_parts+=("This project has metaswarm installed via the old npm method. The marketplace plugin is now active and provides all the same skills and commands. Run \`${migrate_cmd}\` to clean up the redundant copies — this is a safe, reversible operation that only removes duplicate framework files (your project files are never touched).")
 fi
 
 # Knowledge priming (only if project is set up and BEADS isn't separately priming)
