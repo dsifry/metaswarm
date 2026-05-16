@@ -157,7 +157,7 @@ When issues are found:
 
 ```markdown
 ### Issues Found
-1. Legacy embedded plugin detected alongside marketplace plugin -- run `/migrate`
+1. Legacy embedded plugin detected alongside marketplace plugin -- run `$migrate`
 2. Codex plugin not installed from a marketplace -- install from `/plugins` after adding the marketplace
 
 ### Recommendations

@@ -5,6 +5,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HOOK_SCRIPT="$SCRIPT_DIR/../../hooks/session-start.sh"
 PASS=0
 FAIL=0
@@ -52,6 +53,32 @@ assert_not_contains() {
   fi
 }
 
+assert_file_exists() {
+  local desc="$1"
+  local file="$2"
+  TOTAL=$((TOTAL + 1))
+  if [ -f "$file" ]; then
+    PASS=$((PASS + 1))
+    echo "  PASS: $desc"
+  else
+    FAIL=$((FAIL + 1))
+    echo "  FAIL: $desc — expected file: $file"
+  fi
+}
+
+assert_file_not_exists() {
+  local desc="$1"
+  local file="$2"
+  TOTAL=$((TOTAL + 1))
+  if [ -e "$file" ]; then
+    FAIL=$((FAIL + 1))
+    echo "  FAIL: $desc — should NOT exist: $file"
+  else
+    PASS=$((PASS + 1))
+    echo "  PASS: $desc"
+  fi
+}
+
 # --- Test setup ---
 TMPDIR_BASE=$(mktemp -d)
 trap "rm -rf $TMPDIR_BASE" EXIT
@@ -65,7 +92,7 @@ TEST_CWD="$TMPDIR_BASE/test1"
 mkdir -p "$TEST_CWD"
 output=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
-assert_contains "Contains setup nudge" "$output" "metaswarm:setup"
+assert_contains "Contains setup nudge" "$output" '$setup'
 
 # --- Test 2: Configured project (has .metaswarm/project-profile.json) ---
 echo "Test 2: Configured project"
@@ -74,7 +101,29 @@ mkdir -p "$TEST_CWD/.metaswarm"
 echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
 output=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
-assert_not_contains "No setup nudge" "$output" "metaswarm:setup"
+assert_not_contains "No setup nudge" "$output" '$setup'
+
+# --- Test 2b: Codex self-heal writes Codex files only ---
+echo "Test 2b: Codex self-heal is platform-aware"
+TEST_CWD="$TMPDIR_BASE/test2b"
+mkdir -p "$TEST_CWD/.metaswarm"
+echo '{"distribution":"plugin","coverage":{"threshold":93},"commands":{"coverage":"npm test -- --coverage"}}' > "$TEST_CWD/.metaswarm/project-profile.json"
+output=$(cd "$TEST_CWD" && PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "Output is valid JSON" "$output"
+assert_file_exists "Creates AGENTS.md" "$TEST_CWD/AGENTS.md"
+assert_file_exists "Creates coverage thresholds" "$TEST_CWD/.coverage-thresholds.json"
+assert_file_not_exists "Does not create Claude shims" "$TEST_CWD/.claude/commands/start-task.md"
+
+# --- Test 2c: Claude self-heal still writes Claude command shims ---
+echo "Test 2c: Claude self-heal keeps Claude support"
+TEST_CWD="$TMPDIR_BASE/test2c"
+mkdir -p "$TEST_CWD/.metaswarm"
+echo '{"distribution":"plugin","coverage":{"threshold":88},"commands":{"coverage":"npm test -- --coverage"}}' > "$TEST_CWD/.metaswarm/project-profile.json"
+output=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "Output is valid JSON" "$output"
+assert_file_exists "Creates CLAUDE.md" "$TEST_CWD/CLAUDE.md"
+assert_file_exists "Creates Claude command shims" "$TEST_CWD/.claude/commands/start-task.md"
+assert_file_exists "Creates coverage thresholds" "$TEST_CWD/.coverage-thresholds.json"
 
 # --- Test 3: Legacy install detection ---
 echo "Test 3: Legacy install detection"
@@ -85,7 +134,7 @@ mkdir -p "$TEST_CWD/.metaswarm"
 echo '{"distribution":"npm"}' > "$TEST_CWD/.metaswarm/project-profile.json"
 output=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
-assert_contains "Contains migrate message" "$output" "metaswarm:migrate"
+assert_contains "Contains migrate message" "$output" '$migrate'
 
 # --- Test 4: BEADS dedup detection ---
 echo "Test 4: BEADS dedup detection"

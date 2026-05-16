@@ -36,8 +36,8 @@ Where:
   - cargo → `"cargo tarpaulin --fail-under <threshold>"`
 - `<platform>` is `codex`, `claude`, `gemini`, or `all`. Prefer:
   - `codex` when running in Codex (`PLUGIN_ROOT` or `CODEX_HOME` is present, or the user invoked `$setup`)
-  - `claude` when running in Claude Code (`CLAUDE_PLUGIN_ROOT` is present, or the user invoked `/setup`)
-  - `gemini` when running in Gemini (`extensionPath` is present, or the user invoked `/metaswarm:setup`)
+  - `claude` when running in Claude Code (`CLAUDE_PLUGIN_ROOT` is present, or the setup skill was invoked there)
+  - `gemini` when running in Gemini (`extensionPath` is present, or the setup skill was invoked there)
   - `all` only when the user explicitly asks to configure every supported CLI
 
 The script handles:
@@ -241,6 +241,7 @@ bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<covera
 ```
 
 Example for Codex with Python/pytest at 100%:
+
 ```bash
 bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" 100 "pytest --cov --cov-fail-under=100" --platform codex
 ```
@@ -414,13 +415,10 @@ Other files written:
 You're all set! Run the platform's start command to begin working.
 ```
 
-**Command naming**: When recommending commands to the user, use the active platform's names:
-- Claude Code: short shim names (`/start-task`, `/prime`, `/brainstorm`, etc.), NOT namespaced plugin names (`/metaswarm:start-task`)
-- Codex: skill names (`$start`, `$setup`, `$status`, `$pr-shepherd`)
-- Gemini: namespaced commands (`/metaswarm:start-task`, `/metaswarm:setup`)
+**Command naming**: When recommending metaswarm skills to the user, use `$name` forms (`$start`, `$setup`, `$status`, `$pr-shepherd`) unless the active platform has already created and selected its own command shims.
 
 Offer 1-2 relevant tips based on configuration:
-- If external tools enabled: "Use `/external-tools-health` to check tool status."
+- If external tools enabled: "Use `$external-tools` to check tool status."
 - If no CI set up: "Consider adding CI later -- metaswarm includes a template at `./templates/ci.yml`."
 - If visual review enabled: "The visual review skill will screenshot your app during development."
 
@@ -428,7 +426,7 @@ Offer 1-2 relevant tips based on configuration:
 
 ## Missing Setup Auto-Detection
 
-If `/start-task` is invoked and `.metaswarm/project-profile.json` does not exist, the start skill should auto-route here. This skill will run the full setup flow, then hand back to `/start-task` to continue with the user's original request.
+If `$start` is invoked and `.metaswarm/project-profile.json` does not exist, the start skill should auto-route here. This skill will run the full setup flow, then hand back to `$start` to continue with the user's original request.
 
 ---
 
@@ -447,11 +445,16 @@ If `/start-task` is invoked and `.metaswarm/project-profile.json` does not exist
 Before saying "setup complete", run this Bash command to verify the 3 mandatory files:
 
 ```bash
-platform="${METASWARM_PLATFORM:-codex}"
+platform="${METASWARM_PLATFORM:-${CLAUDE_PLUGIN_ROOT:+claude}}"
+platform="${platform:-${extensionPath:+gemini}}"
+platform="${platform:-${CODEX_HOME:+codex}}"
+platform="${platform:-${PLUGIN_ROOT:+codex}}"
+platform="${platform:-claude}"
 case "$platform" in
   claude) instruction_file="CLAUDE.md" ;;
   gemini) instruction_file="GEMINI.md" ;;
-  *) instruction_file="AGENTS.md" ;;
+  codex) instruction_file="AGENTS.md" ;;
+  *) echo "UNKNOWN PLATFORM: $platform"; exit 1 ;;
 esac
 echo "$instruction_file:"; grep -c "metaswarm" "$instruction_file" 2>/dev/null || echo "MISSING"
 echo "coverage:"; ls .coverage-thresholds.json 2>/dev/null || echo "MISSING"
@@ -462,4 +465,4 @@ fi
 
 If any output says "MISSING", go back and run the setup-mandatory-files.sh script or create the files manually. Do NOT declare success with missing files.
 
-When reporting available commands to the user, use the active platform's command style. Do NOT recommend commands that do not exist on that platform (for example, do not recommend Claude slash-command shims in Codex).
+When reporting available commands to the user, use `$name` skill invocation unless the active platform has its own confirmed command shims. Do NOT recommend commands that do not exist on that platform.

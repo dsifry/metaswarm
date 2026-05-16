@@ -129,8 +129,8 @@ fi
 
 # --- File 3: Claude command shims (Claude/all only) ---
 if [ "$PLATFORM" = "claude" ] || [ "$PLATFORM" = "all" ]; then
-commands_dir="$PROJECT_DIR/.claude/commands"
-mkdir -p "$commands_dir"
+  commands_dir="$PROJECT_DIR/.claude/commands"
+  mkdir -p "$commands_dir"
 
   shims=(
     "start-task:start-task"

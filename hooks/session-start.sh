@@ -9,29 +9,42 @@ set -euo pipefail
 # Works with Codex ($PLUGIN_ROOT), Claude Code ($CLAUDE_PLUGIN_ROOT),
 # Gemini CLI ($extensionPath), or direct invocation (derive from script location)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CODEX_PLUGIN_ROOT="${PLUGIN_ROOT:-}"
 PLUGIN_ROOT="${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-${extensionPath:-$(cd "$SCRIPT_DIR/.." && pwd)}}}"
+METASWARM_PLATFORM="${METASWARM_PLATFORM:-}"
+if [ -z "$METASWARM_PLATFORM" ]; then
+  if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+    METASWARM_PLATFORM="claude"
+  elif [ -n "${extensionPath:-}" ]; then
+    METASWARM_PLATFORM="gemini"
+  elif [ -n "$CODEX_PLUGIN_ROOT" ] || [ -n "${CODEX_HOME:-}" ]; then
+    METASWARM_PLATFORM="codex"
+  else
+    METASWARM_PLATFORM="claude"
+  fi
+fi
 
 # --- Phase 1: BEADS dedup check ---
 # If standalone BEADS plugin is installed, skip knowledge priming (let BEADS handle it)
 beads_standalone=false
 beads_plugin_caches=("${HOME}/.claude/plugins/cache" "${CODEX_HOME:-${HOME}/.codex}/plugins/cache")
 for beads_plugin_cache in "${beads_plugin_caches[@]}"; do
-if [ -d "$beads_plugin_cache" ]; then
-  # Look for a BEADS plugin with name "beads" in plugin.json
-  while IFS= read -r -d '' pjson; do
-    pname=""
-    if command -v jq >/dev/null 2>&1; then
-      pname=$(jq -r '.name // empty' "$pjson" 2>/dev/null || true)
-    elif command -v node >/dev/null 2>&1; then
-      pname=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf-8')).name||'')}catch{console.log('')}" "$pjson" 2>/dev/null || true)
-    fi
-    # Neither jq nor node available — skip dedup check (safe default: allow both to prime)
-    if [ "$pname" = "beads" ]; then
-      beads_standalone=true
-      break
-    fi
-  done < <(find "$beads_plugin_cache" \( -path "*/.claude-plugin/plugin.json" -o -path "*/.codex-plugin/plugin.json" \) -print0 2>/dev/null || true)
-fi
+  if [ -d "$beads_plugin_cache" ]; then
+    # Look for a BEADS plugin with name "beads" in plugin.json
+    while IFS= read -r -d '' pjson; do
+      pname=""
+      if command -v jq >/dev/null 2>&1; then
+        pname=$(jq -r '.name // empty' "$pjson" 2>/dev/null || true)
+      elif command -v node >/dev/null 2>&1; then
+        pname=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf-8')).name||'')}catch{console.log('')}" "$pjson" 2>/dev/null || true)
+      fi
+      # Neither jq nor node available — skip dedup check (safe default: allow both to prime)
+      if [ "$pname" = "beads" ]; then
+        beads_standalone=true
+        break
+      fi
+    done < <(find "$beads_plugin_cache" \( -path "*/.claude-plugin/plugin.json" -o -path "*/.codex-plugin/plugin.json" \) -print0 2>/dev/null || true)
+  fi
   [ "$beads_standalone" = true ] && break
 done
 
@@ -54,14 +67,20 @@ if [ "$new_project" = false ] && [ "$legacy_install" = false ]; then
   setup_script="${PLUGIN_ROOT}/lib/setup-mandatory-files.sh"
   needs_heal=false
 
-  # Check the 3 mandatory files
-  if ! grep -q "metaswarm" CLAUDE.md 2>/dev/null; then
+  case "$METASWARM_PLATFORM" in
+    codex) instruction_file="AGENTS.md" ;;
+    gemini) instruction_file="GEMINI.md" ;;
+    *) instruction_file="CLAUDE.md" ;;
+  esac
+
+  if ! grep -q "metaswarm" "$instruction_file" 2>/dev/null; then
     needs_heal=true
   fi
   if [ ! -f ".coverage-thresholds.json" ]; then
     needs_heal=true
   fi
-  if [ ! -f ".claude/commands/start-task.md" ] || ! grep -q "metaswarm" ".claude/commands/start-task.md" 2>/dev/null; then
+  if { [ "$METASWARM_PLATFORM" = "claude" ] || [ "$METASWARM_PLATFORM" = "all" ]; } \
+    && { [ ! -f ".claude/commands/start-task.md" ] || ! grep -q "metaswarm" ".claude/commands/start-task.md" 2>/dev/null; }; then
     needs_heal=true
   fi
 
@@ -84,7 +103,7 @@ if [ "$new_project" = false ] && [ "$legacy_install" = false ]; then
     [ -z "$cov_cmd" ] && cov_cmd="pytest --cov --cov-fail-under=${cov_threshold}"
 
     # Run the setup script silently
-    bash "$setup_script" "$(pwd)" "$cov_threshold" "$cov_cmd" >/dev/null 2>&1 || true
+    bash "$setup_script" "$(pwd)" "$cov_threshold" "$cov_cmd" --platform "$METASWARM_PLATFORM" >/dev/null 2>&1 || true
   fi
 fi
 
@@ -92,11 +111,11 @@ fi
 context_parts=()
 
 if [ "$new_project" = true ]; then
-  context_parts+=("Metaswarm is installed but this project hasn't been set up yet. Run \`/metaswarm:setup\` to configure it, or \`/metaswarm:start-task\` to begin working.")
+  context_parts+=("Metaswarm is installed but this project hasn't been set up yet. Run \`\$setup\` to configure it, or \`\$start\` to begin working.")
 fi
 
 if [ "$legacy_install" = true ]; then
-  context_parts+=("This project has metaswarm installed via the old npm method. The marketplace plugin is now active and provides all the same skills and commands. Run \`/metaswarm:migrate\` to clean up the redundant copies — this is a safe, reversible operation that only removes duplicate framework files (your project files are never touched).")
+  context_parts+=("This project has metaswarm installed via the old npm method. The marketplace plugin is now active and provides all the same skills and commands. Run \`\$migrate\` to clean up the redundant copies — this is a safe, reversible operation that only removes duplicate framework files (your project files are never touched).")
 fi
 
 # Knowledge priming (only if project is set up and BEADS isn't separately priming)
