@@ -14,8 +14,8 @@ Generate a diagnostic report of the metaswarm installation, project configuratio
 Run each check below and present results in a single formatted report. Detect the active platform first:
 
 - Codex: `PLUGIN_ROOT` or `CODEX_HOME` is present, `.codex-plugin/plugin.json` is the active manifest, or the user invoked `$status`
-- Claude Code: `CLAUDE_PLUGIN_ROOT` is present, `.claude-plugin/plugin.json` is the active manifest, or the user invoked `/status`
-- Gemini: `extensionPath` is present, `gemini-extension.json` is the active manifest, or the user invoked `/metaswarm:status`
+- Claude Code: `CLAUDE_PLUGIN_ROOT` is present, `.claude-plugin/plugin.json` is the active manifest, or the user invoked `$status`
+- Gemini: `extensionPath` is present, `gemini-extension.json` is the active manifest, or the user invoked `$status`
 
 ### 1. Plugin Version
 
@@ -31,8 +31,8 @@ Run each check below and present results in a single formatted report. Detect th
 - If present, report key fields: `distribution`, `metaswarm_version`, `language`, `framework`, `test_runner`
 - If absent, report the platform-specific setup command:
   - Codex: `Project setup: NOT CONFIGURED -- run $setup`
-  - Claude Code: `Project setup: NOT CONFIGURED -- run /setup`
-  - Gemini: `Project setup: NOT CONFIGURED -- run /metaswarm:setup`
+  - Claude Code: `Project setup: NOT CONFIGURED -- run $setup`
+  - Gemini: `Project setup: NOT CONFIGURED -- run $setup`
 
 ### 3. Platform Install State
 
