@@ -71,7 +71,7 @@ When checking a Codex project, report `not applicable (Codex uses $skill-name in
 ### 5. Legacy Embedded Plugin
 
 - Check for `.claude/plugins/metaswarm/.claude-plugin/plugin.json`
-- If found: `DETECTED -- run /metaswarm:migrate`
+- If found: `DETECTED -- run $migrate`
 - If found alongside the marketplace plugin, flag prominently as a conflict
 
 ### 6. BEADS Plugin
