@@ -1,6 +1,6 @@
 # Installation
 
-metaswarm works with Claude Code, Gemini CLI, and Codex CLI. Install for one platform or all three.
+metaswarm works with Claude Code, Gemini CLI, Codex CLI, and OpenCode. Install for one platform or all four.
 
 ## Claude Code (Plugin Marketplace)
 
@@ -67,17 +67,17 @@ npx metaswarm setup
 
 ## Platform Comparison
 
-| Feature | Claude Code | Gemini CLI | Codex CLI |
-|---|---|---|---|
-| Install method | Plugin marketplace | `gemini extensions install` | Plugin marketplace |
-| Commands | `/start-task` | `/metaswarm:start-task` | `$start` |
-| Instruction file | `CLAUDE.md` | `GEMINI.md` | `AGENTS.md` |
-| Parallel agents | Full (`Task()`) | Experimental | Sequential only |
-| Setup command | `/setup` | `/metaswarm:setup` | `$setup` |
+| Feature | Claude Code | Gemini CLI | Codex CLI | OpenCode |
+|---|---|---|---|---|---|
+| Install method | Plugin marketplace | `gemini extensions install` | Plugin marketplace | Static config (`.opencode/`) |
+| Commands | `/start-task` | `/metaswarm:start-task` | `$start` | `/start-task` |
+| Instruction file | `CLAUDE.md` | `GEMINI.md` | `AGENTS.md` | `.opencode/OPENCODE.md` |
+| Parallel agents | Full (`Task()`) | Experimental | Sequential only | Sequential only |
+| Setup command | `/setup` | `/metaswarm:setup` | `$setup` | `npx metaswarm setup --opencode` |
 
 ## Prerequisites
 
-1. **One of**: Claude Code, Gemini CLI, or Codex CLI
+1. **One of**: Claude Code, Gemini CLI, Codex CLI, or OpenCode
 2. **BEADS CLI** (`bd`) — Git-native issue tracking (recommended)
    ```bash
    curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash

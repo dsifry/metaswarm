@@ -1,0 +1,52 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [".opencode/OPENCODE.md"],
+  "command": {
+    "setup": {
+      "template": "{file:.opencode/commands/setup.md}",
+      "description": "Interactive project setup — detects your project, configures metaswarm, writes project-local files"
+    },
+    "start-task": {
+      "template": "{file:.opencode/commands/start-task.md}",
+      "description": "Begin tracked work on a task with complexity assessment"
+    },
+    "prime": {
+      "template": "{file:.opencode/commands/prime.md}",
+      "description": "Load relevant knowledge from the BEADS knowledge base before starting work"
+    },
+    "review-design": {
+      "template": "{file:.opencode/commands/review-design.md}",
+      "description": "Architecture-focused design review (single architect-agent in this POC; full 5-agent gate not yet registered)"
+    },
+    "design-review-gate": {
+      "template": "{file:.opencode/commands/design-review-gate.md}",
+      "description": "Automatic review gate that runs after brainstorming completes - spawns PM, Architect, Designer, Security, and CTO agents in parallel"
+    },
+    "orchestrated-execution": {
+      "template": "{file:.opencode/commands/orchestrated-execution.md}",
+      "description": "4-phase execution loop for work units - IMPLEMENT, VALIDATE, ADVERSARIAL REVIEW, COMMIT"
+    }
+  },
+  "agent": {
+    "issue-orchestrator": {
+      "description": "Main coordinator per issue — spawns sub-agents, runs 4-phase execution loop",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/issue-orchestrator.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "architect-agent": {
+      "description": "Reviews technical architecture and creates implementation plans",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/architect-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    }
+  }
+}

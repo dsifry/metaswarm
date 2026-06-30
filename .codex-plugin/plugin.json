@@ -1,7 +1,7 @@
 {
   "name": "metaswarm",
   "version": "0.12.0",
-  "description": "Multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI — 19 agents, 14 skills, quality gates, and TDD enforcement",
+  "description": "Multi-agent orchestration framework for Claude Code, Gemini CLI, Codex CLI, and OpenCode — 19 agents, 14 skills, quality gates, and TDD enforcement",
   "author": {
     "name": "David Sifry",
     "email": "david@sifry.com"
@@ -20,8 +20,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "metaswarm",
-    "shortDescription": "Multi-agent orchestration, quality gates, TDD, and PR shepherding for Codex",
-    "longDescription": "Use metaswarm to plan, decompose, execute, review, and shepherd development work with specialized agent roles, BEADS-backed tracking, strict quality gates, and cross-platform support for Claude Code, Gemini CLI, and Codex CLI.",
+    "shortDescription": "Multi-agent orchestration, quality gates, TDD, and PR shepherding for Codex and OpenCode",
+    "longDescription": "Use metaswarm to plan, decompose, execute, review, and shepherd development work with specialized agent roles, BEADS-backed tracking, strict quality gates, and cross-platform support for Claude Code, Gemini CLI, Codex CLI, and OpenCode.",
     "developerName": "David Sifry",
     "category": "Coding",
     "capabilities": [

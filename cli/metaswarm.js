@@ -12,6 +12,8 @@ const CWD = process.cwd();
 const VERSION = require(path.join(PKG_ROOT, 'package.json')).version;
 
 const { detectPlatforms, getSummary } = require(path.join(PKG_ROOT, 'lib', 'platform-detect'));
+const OC_COMMANDS = ['setup', 'start-task', 'prime', 'review-design', 'design-review-gate', 'orchestrated-execution'];
+const OC_AGENTS = ['issue-orchestrator', 'architect-agent'];
 
 // --- Helpers ---
 
@@ -122,6 +124,77 @@ function installGemini() {
   }
 }
 
+// --- OpenCode-specific setup ---
+
+function setupOpenCode() {
+  const opencodeDir = path.join(CWD, '.opencode');
+  const commandsDir = path.join(opencodeDir, 'commands');
+  const agentsDir = path.join(opencodeDir, 'agents');
+
+  // 1. opencode.json (from template)
+  const configPath = path.join(CWD, 'opencode.json');
+  const configTemplate = path.join(PKG_ROOT, 'templates', 'opencode.json');
+
+  if (!fs.existsSync(configPath)) {
+    if (fs.existsSync(configTemplate)) {
+      fs.copyFileSync(configTemplate, configPath);
+      info('opencode.json (written from template)');
+    } else {
+      warn('opencode.json template not found');
+    }
+  } else {
+    skip('opencode.json');
+  }
+
+  // 2. Command files
+  mkdirp(commandsDir);
+  for (const cmd of OC_COMMANDS) {
+    const src = path.join(PKG_ROOT, 'commands', `${cmd}.md`);
+    const dest = path.join(commandsDir, `${cmd}.md`);
+    if (!fs.existsSync(dest)) {
+      if (fs.existsSync(src)) {
+        fs.copyFileSync(src, dest);
+        info(`.opencode/commands/${cmd}.md`);
+      } else {
+        warn(`.opencode/commands/${cmd}.md — source not found at commands/${cmd}.md`);
+      }
+    } else {
+      skip(`.opencode/commands/${cmd}.md`);
+    }
+  }
+
+  // 3. Agent files
+  mkdirp(agentsDir);
+  for (const agent of OC_AGENTS) {
+    const src = path.join(PKG_ROOT, 'agents', `${agent}.md`);
+    const dest = path.join(agentsDir, `${agent}.md`);
+    if (!fs.existsSync(dest)) {
+      if (fs.existsSync(src)) {
+        fs.copyFileSync(src, dest);
+        info(`.opencode/agents/${agent}.md`);
+      } else {
+        warn(`.opencode/agents/${agent}.md — source not found at agents/${agent}.md`);
+      }
+    } else {
+      skip(`.opencode/agents/${agent}.md`);
+    }
+  }
+
+  // 4. Instruction file
+  const instrPath = path.join(opencodeDir, 'OPENCODE.md');
+  const instrTemplate = path.join(PKG_ROOT, 'templates', 'OPENCODE.md');
+  if (!fs.existsSync(instrPath)) {
+    if (fs.existsSync(instrTemplate)) {
+      fs.copyFileSync(instrTemplate, instrPath);
+      info('.opencode/OPENCODE.md (written from template)');
+    } else {
+      warn('.opencode/OPENCODE.md template not found');
+    }
+  } else {
+    skip('.opencode/OPENCODE.md');
+  }
+}
+
 // --- Project-level setup ---
 
 function setupProject(platformFlag) {
@@ -132,7 +205,7 @@ function setupProject(platformFlag) {
 
   if (platformFlag === 'all') {
     // Explicit --all: target all platforms regardless of install status
-    targetPlatforms.push('claude', 'codex', 'gemini');
+    targetPlatforms.push('claude', 'codex', 'gemini', 'opencode');
   } else if (!platformFlag) {
     // No flag: auto-detect which are installed
     for (const [key, p] of Object.entries(platforms)) {
@@ -147,7 +220,15 @@ function setupProject(platformFlag) {
 
   console.log(`  Setting up for: ${targetPlatforms.join(', ')}\n`);
 
+  // Handle OpenCode separately (more files than just an instruction file)
+  const hasOpenCode = targetPlatforms.includes('opencode');
+  if (hasOpenCode) {
+    setupOpenCode();
+    console.log('');
+  }
+
   for (const plat of targetPlatforms) {
+    if (plat === 'opencode') continue; // already handled by setupOpenCode()
     const p = platforms[plat];
     const instrFile = p.instructionFile;
     const instrPath = path.join(CWD, instrFile);
@@ -185,8 +266,12 @@ function setupProject(platformFlag) {
 
   console.log('\n  Project setup complete!');
   for (const plat of targetPlatforms) {
-    const p = platforms[plat];
-    console.log(`  ${p.name}: Run ${p.setupCommand} for full interactive configuration`);
+    if (plat === 'opencode') {
+      console.log('  OpenCode: Config written. Run `opencode` to start using metaswarm commands.');
+    } else {
+      const p = platforms[plat];
+      console.log(`  ${p.name}: Run ${p.setupCommand} for full interactive configuration`);
+    }
   }
   console.log('');
 }
@@ -208,19 +293,22 @@ Init flags:
   --claude            Install for Claude Code only
   --codex             Install for Codex CLI only
   --gemini            Install for Gemini CLI only
+  --opencode          Point to project setup (OpenCode needs no global install)
   (no flag)           Auto-detect installed CLIs and install for all
 
 Setup flags:
   --claude            Write CLAUDE.md only
   --codex             Write AGENTS.md only
   --gemini            Write GEMINI.md only
-  --all               Write instruction files for all platforms
+  --opencode          Generate opencode.json, copy commands and agents
+  --all               Write configs for all platforms
   (no flag)           Auto-detect installed CLIs
 
 Examples:
   npx metaswarm init            Auto-detect and install for all CLIs
   npx metaswarm init --codex    Install for Codex CLI only
   npx metaswarm setup           Set up project for detected CLIs
+  npx metaswarm setup --opencode  Set up project for OpenCode only
   npx metaswarm detect          Show which CLIs are available
 `);
 }
@@ -235,7 +323,7 @@ async function initCommand(args) {
   console.log('');
 
   // Determine which platforms to install for
-  const explicit = flags.has('--claude') || flags.has('--codex') || flags.has('--gemini');
+  const explicit = flags.has('--claude') || flags.has('--codex') || flags.has('--gemini') || flags.has('--opencode');
 
   if (flags.has('--claude') || (!explicit && platforms.claude.installed)) {
     installClaude();
@@ -249,11 +337,17 @@ async function initCommand(args) {
     installGemini();
   }
 
+  if (flags.has('--opencode')) {
+    info('OpenCode: no marketplace install needed — run `npx metaswarm setup --opencode` in your project');
+  } else if (!explicit && platforms.opencode.installed) {
+    info('OpenCode detected — run `npx metaswarm setup --opencode` in your project');
+  }
+
   if (!explicit) {
     const installed = Object.values(platforms).filter(p => p.installed);
     if (installed.length === 0) {
       console.log('\n  No supported CLI tools detected.');
-      console.log('  Install one of: claude, codex, gemini');
+      console.log('  Install one of: claude, codex, gemini, opencode');
       console.log('  Then re-run: npx metaswarm init\n');
     }
   }
@@ -290,6 +384,7 @@ if (cmd === 'init') {
   if (flags.has('--claude')) platformFlag = 'claude';
   else if (flags.has('--codex')) platformFlag = 'codex';
   else if (flags.has('--gemini')) platformFlag = 'gemini';
+  else if (flags.has('--opencode')) platformFlag = 'opencode';
   else if (flags.has('--all')) platformFlag = 'all';
   setupProject(platformFlag);
 } else if (cmd === 'detect') {
