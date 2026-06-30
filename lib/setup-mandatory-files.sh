@@ -3,7 +3,7 @@
 # Writes the 3 mandatory setup files that the agent keeps skipping.
 # Called by the setup skill after detection and user questions.
 #
-# Usage: setup-mandatory-files.sh <project-dir> <coverage-threshold> <coverage-command> [--platform claude|codex|gemini|all]
+# Usage: setup-mandatory-files.sh <project-dir> <coverage-threshold> <coverage-command> [--platform claude|codex|gemini|opencode|all]
 #
 # Arguments:
 #   project-dir       - Project root directory
@@ -28,7 +28,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --platform)
       if [ $# -lt 2 ]; then
-        echo "Error: --platform requires a value (claude, codex, gemini, or all)" >&2
+        echo "Error: --platform requires a value (claude, codex, gemini, opencode, or all)" >&2
         exit 1
       fi
       PLATFORM="$2"; shift 2 ;;
@@ -75,6 +75,39 @@ write_instruction_file() {
   fi
 }
 
+# Helper: copy a file only when the destination does not already exist,
+# preserving local edits when the script is re-run on existing projects.
+copy_if_missing() {
+  local src="$1" dest="$2" label="$3"
+  if [ ! -f "$src" ]; then
+    errors+=("${label} — source not found at $src")
+    return 0
+  fi
+  if [ -f "$dest" ]; then
+    skipped+=("${label} (already exists)")
+  else
+    cp "$src" "$dest"
+    created+=("${label}")
+  fi
+}
+
+# Helper: write the OpenCode integration files (copy-only-when-missing).
+write_opencode_files() {
+  mkdir -p "$PROJECT_DIR/.opencode/commands" "$PROJECT_DIR/.opencode/agents"
+  copy_if_missing "$TEMPLATE_DIR/opencode.json" \
+    "$PROJECT_DIR/opencode.json" "opencode.json"
+  for cmd in setup start-task prime review-design design-review-gate orchestrated-execution; do
+    copy_if_missing "$PLUGIN_ROOT/commands/${cmd}.md" \
+      "$PROJECT_DIR/.opencode/commands/${cmd}.md" ".opencode/commands/${cmd}.md"
+  done
+  for agent in issue-orchestrator architect-agent; do
+    copy_if_missing "$PLUGIN_ROOT/agents/${agent}.md" \
+      "$PROJECT_DIR/.opencode/agents/${agent}.md" ".opencode/agents/${agent}.md"
+  done
+  copy_if_missing "$TEMPLATE_DIR/OPENCODE.md" \
+    "$PROJECT_DIR/.opencode/OPENCODE.md" ".opencode/OPENCODE.md"
+}
+
 # --- File 1: Instruction file(s) based on platform ---
 case "$PLATFORM" in
   claude)
@@ -86,13 +119,17 @@ case "$PLATFORM" in
   gemini)
     write_instruction_file "gemini" "GEMINI.md" "$TEMPLATE_DIR/GEMINI-append.md" "$TEMPLATE_DIR/GEMINI.md"
     ;;
+  opencode)
+    write_opencode_files
+    ;;
   all)
     write_instruction_file "claude" "CLAUDE.md" "$TEMPLATE_DIR/CLAUDE-append.md" "$TEMPLATE_DIR/CLAUDE.md"
     write_instruction_file "codex" "AGENTS.md" "$TEMPLATE_DIR/AGENTS-append.md" "$TEMPLATE_DIR/AGENTS.md"
     write_instruction_file "gemini" "GEMINI.md" "$TEMPLATE_DIR/GEMINI-append.md" "$TEMPLATE_DIR/GEMINI.md"
+    write_opencode_files
     ;;
   *)
-    errors+=("Unknown platform: $PLATFORM (expected: claude, codex, gemini, or all)")
+    errors+=("Unknown platform: $PLATFORM (expected: claude, codex, gemini, opencode, or all)")
     ;;
 esac
 

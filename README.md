@@ -1,6 +1,6 @@
 # metaswarm
 
-A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 18 specialized AI agents and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
+A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, Codex CLI, and OpenCode. Coordinate 18 specialized AI agents and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
 
 ## What Is This?
 
@@ -207,10 +207,11 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | Plugin marketplace | `/start-task`, `/setup`, etc. |
 | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Extension (`gemini extensions install`) | `/metaswarm:start-task`, etc. |
 | [Codex CLI](https://github.com/openai/codex) | Plugin marketplace | `$start`, `$setup`, etc. |
+| [OpenCode](https://opencode.ai) | Static config (`.opencode/`) | `opencode run` |
 
 ## Requirements
 
-- One of: Claude Code, Gemini CLI, or Codex CLI
+- One of: Claude Code, Gemini CLI, Codex CLI, or OpenCode
 - Node.js 18+ (for automation scripts)
 - [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+ — for task tracking (recommended)
 - GitHub CLI (`gh`) — for PR automation (recommended)
