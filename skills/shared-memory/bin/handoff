@@ -1,0 +1,151 @@
+#!/usr/bin/env node
+// Structured cross-team handoff.
+// Stores handoff records as episodic entries in shared-memory (scope=global, key=handoff:<id>),
+// so the target team sees them on SessionStart and in the panel.
+//
+// Usage:
+//   handoff send --to team-1|team-2 --title "..." [--phase planning|building|qa|review|done]
+//                [--summary "..."] [--locked "path1,path2"] [--next "step1|step2"]
+//                [--issue <id>] [--project <name>]
+//   handoff inbox [--team team-1|team-2] [--limit 10]
+//   handoff show <handoff-id>
+//   handoff ack  <handoff-id>   (marks as read for receiving team)
+
+const path = require('path');
+const LIB = process.env.SHARED_MEMORY_LIB || path.resolve(process.env.HOME, '.claude/shared-memory/lib');
+const store = require(path.join(LIB, 'store.js'));
+
+function parseArgs(argv) {
+  const a = { _: [] };
+  for (let i = 0; i < argv.length; i++) {
+    const x = argv[i];
+    if (x.startsWith('--')) {
+      const k = x.slice(2); const n = argv[i + 1];
+      if (n === undefined || n.startsWith('--')) a[k] = true;
+      else { a[k] = n; i++; }
+    } else a._.push(x);
+  }
+  return a;
+}
+
+function resolveTeam() {
+  if (process.env.SS_SYNC_TEAM) return process.env.SS_SYNC_TEAM;
+  try {
+    const cfg = require(path.resolve(process.env.HOME, '.skrivstore/lib/config.js'));
+    return cfg.resolveTeamAndProject().team;
+  } catch (_) { return 'team-unknown'; }
+}
+
+function cmd_send(args) {
+  if (!args.to) die('--to required (team-1|team-2)');
+  if (!args.title) die('--title required');
+  const from = resolveTeam();
+  const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+  const key = `handoff:${id}`;
+  const locked = typeof args.locked === 'string'
+    ? args.locked.split(',').map((s) => s.trim()).filter(Boolean) : [];
+  const next = typeof args.next === 'string'
+    ? args.next.split('|').map((s) => s.trim()).filter(Boolean) : [];
+
+  const body = {
+    from,
+    to: args.to,
+    phase: args.phase || 'handoff',
+    issue: args.issue || null,
+    project: args.project || null,
+    summary: args.summary || '',
+    locked_files: locked,
+    next_steps: next,
+    ack: false,
+    created_at: new Date().toISOString(),
+  };
+
+  store.put({
+    scope: 'global',
+    type: 'episodic',
+    key,
+    title: `[handoff ${from}→${args.to}] ${args.title}`,
+    body: JSON.stringify(body, null, 2),
+    tags: ['handoff', from, args.to, ...(args.phase ? [args.phase] : [])],
+    team: from,
+    source: 'handoff',
+  });
+  console.log(`sent ${key} (${from} → ${args.to})`);
+}
+
+function allHandoffs() {
+  return store.search({ query: 'handoff', scopes: ['global'], types: ['episodic'], limit: 200 })
+    .filter((e) => e.key && e.key.startsWith('handoff:'));
+}
+
+function cmd_inbox(args) {
+  const target = args.team || resolveTeam();
+  const limit = args.limit ? Number(args.limit) : 10;
+  const rows = allHandoffs()
+    .map((e) => { try { return { e, b: JSON.parse(e.body) }; } catch { return null; } })
+    .filter((x) => x && x.b.to === target)
+    .slice(0, limit);
+  if (!rows.length) { console.log(`(no handoffs for ${target})`); return; }
+  for (const { e, b } of rows) {
+    const age = Math.round((Date.now() - e.updated_at) / 60000);
+    console.log(`${e.key}  ${b.ack ? '✓' : '○'}  ${b.from}→${b.to}  ${age}m  phase=${b.phase}`);
+    console.log(`  ${e.title.replace(/^\[handoff [^\]]+\]\s*/, '')}`);
+    if (b.summary) console.log(`  summary: ${b.summary.slice(0, 160)}`);
+    if (b.locked_files?.length) console.log(`  locked:  ${b.locked_files.join(', ')}`);
+    if (b.next_steps?.length) console.log(`  next:    ${b.next_steps.map((s) => '• ' + s).join('  ')}`);
+    console.log('');
+  }
+}
+
+function cmd_show(args) {
+  const hid = args._[0];
+  if (!hid) die('show <handoff-id>');
+  const key = hid.startsWith('handoff:') ? hid : `handoff:${hid}`;
+  const e = store.get({ scope: 'global', key });
+  if (!e) die(`not found: ${key}`);
+  console.log(e.title);
+  console.log(e.body);
+}
+
+function cmd_ack(args) {
+  const hid = args._[0];
+  if (!hid) die('ack <handoff-id>');
+  const key = hid.startsWith('handoff:') ? hid : `handoff:${hid}`;
+  const e = store.get({ scope: 'global', key });
+  if (!e) die(`not found: ${key}`);
+  let b; try { b = JSON.parse(e.body); } catch { die('corrupt handoff body'); }
+  b.ack = true; b.acked_at = new Date().toISOString(); b.acked_by = resolveTeam();
+  store.put({
+    scope: 'global', type: 'episodic', key,
+    title: e.title, body: JSON.stringify(b, null, 2),
+    tags: (e.tags || '').split(',').filter(Boolean),
+    team: e.team, source: 'handoff-ack',
+  });
+  console.log(`acked ${key}`);
+}
+
+function die(msg) { process.stderr.write(`handoff: ${msg}\n`); process.exit(1); }
+
+function main() {
+  const [cmd, ...rest] = process.argv.slice(2);
+  const args = parseArgs(rest);
+  switch (cmd) {
+    case 'send':  return cmd_send(args);
+    case 'inbox': return cmd_inbox(args);
+    case 'show':  return cmd_show(args);
+    case 'ack':   return cmd_ack(args);
+    case 'help': case '--help': case '-h': case undefined:
+      return console.log(`handoff - structured cross-team handoff (via shared-memory)
+
+Commands:
+  send --to <team> --title "..." [--phase p] [--summary "..."]
+       [--locked "path,path"] [--next "step1|step2"] [--issue id] [--project p]
+  inbox [--team team-1|team-2] [--limit 10]
+  show  <handoff-id>
+  ack   <handoff-id>
+`);
+    default: die(`unknown command: ${cmd}`);
+  }
+}
+
+try { main(); } catch (e) { die(e.stack || e.message); }

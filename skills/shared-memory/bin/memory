@@ -1,0 +1,158 @@
+#!/usr/bin/env node
+// Shared cross-project memory CLI.
+// Usage:
+//   memory put   --type <semantic|episodic|procedural> --title "..." [--body "..."] [--scope global|project:<name>] [--key <k>] [--tags a,b] [--team team-1|team-2] [--pinned]
+//   memory get   (--id <n> | --scope <s> --key <k>)
+//   memory find  "<query>" [--scope <s>] [--type <t>] [--limit 20] [--json]
+//   memory recent [--scope <s>] [--limit 10] [--json]
+//   memory archive <id>
+//   memory stats [--json]
+
+const path = require('path');
+const LIB = process.env.SHARED_MEMORY_LIB || path.resolve(process.env.HOME, '.claude/shared-memory/lib');
+const store = require(path.join(LIB, 'store.js'));
+
+function parseArgs(argv) {
+  const args = { _: [] };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a.startsWith('--')) {
+      const k = a.slice(2);
+      const next = argv[i + 1];
+      if (next === undefined || next.startsWith('--')) { args[k] = true; }
+      else { args[k] = next; i++; }
+    } else {
+      args._.push(a);
+    }
+  }
+  return args;
+}
+
+function out(obj, json) {
+  if (json) { console.log(JSON.stringify(obj, null, 2)); return; }
+  if (Array.isArray(obj)) { obj.forEach((e) => printEntry(e)); return; }
+  printEntry(obj);
+}
+
+function printEntry(e) {
+  if (!e) { console.log('(none)'); return; }
+  const age = e.updated_at ? Math.round((Date.now() - e.updated_at) / 60000) + 'm ago' : '';
+  console.log(`#${e.id} [${e.type}] ${e.scope} ${e.pinned ? '★ ' : ''}${age}`);
+  if (e.key) console.log(`  key: ${e.key}`);
+  console.log(`  title: ${e.title}`);
+  if (e.body) console.log(`  body:  ${e.body.split('\n').join('\n         ')}`);
+  if (e.tags) console.log(`  tags:  ${e.tags}`);
+  if (e.team) console.log(`  team:  ${e.team}`);
+  console.log('');
+}
+
+function resolveTeam() {
+  if (process.env.SS_SYNC_TEAM) return process.env.SS_SYNC_TEAM;
+  try {
+    const cfg = require(path.resolve(process.env.HOME, '.skrivstore/lib/config.js'));
+    return cfg.resolveTeamAndProject().team;
+  } catch (_) { return null; }
+}
+
+function main() {
+  const [cmd, ...rest] = process.argv.slice(2);
+  const args = parseArgs(rest);
+
+  switch (cmd) {
+    case 'put': {
+      if (!args.type) die('--type required (semantic|episodic|procedural)');
+      if (!args.title) die('--title required');
+      const r = store.put({
+        scope: args.scope || 'global',
+        type: args.type,
+        key: args.key || null,
+        title: args.title,
+        body: args.body || '',
+        tags: typeof args.tags === 'string' ? args.tags.split(',').map((s) => s.trim()).filter(Boolean) : [],
+        team: args.team || resolveTeam(),
+        source: args.source || 'cli',
+        pinned: !!args.pinned,
+      });
+      if (args.json) { console.log(JSON.stringify(r, null, 2)); }
+      else { console.log(`${r.updated ? 'updated' : 'created'} #${r.id}`); }
+      break;
+    }
+    case 'get': {
+      const r = store.get({ id: args.id ? Number(args.id) : null, scope: args.scope || null, key: args.key || null });
+      out(r, !!args.json);
+      break;
+    }
+    case 'find':
+    case 'search': {
+      const query = args._[0] || args.query || '';
+      const scopes = args.scope ? String(args.scope).split(',') : null;
+      const types = args.type ? String(args.type).split(',') : null;
+      const limit = args.limit ? Number(args.limit) : 20;
+      const r = store.search({ query, scopes, types, limit });
+      out(r, !!args.json);
+      break;
+    }
+    case 'recent': {
+      const r = store.recent({ scope: args.scope || null, limit: args.limit ? Number(args.limit) : 10 });
+      out(r, !!args.json);
+      break;
+    }
+    case 'archive': {
+      const id = Number(args._[0]);
+      if (!id) die('archive <id> required');
+      const r = store.archive(id);
+      if (args.json) console.log(JSON.stringify(r));
+      else console.log(r.ok ? `archived #${id}` : `not found: #${id}`);
+      break;
+    }
+    case 'stats': {
+      const s = store.stats();
+      if (args.json) { console.log(JSON.stringify(s, null, 2)); break; }
+      console.log(`db:    ${s.dbPath}`);
+      console.log(`total: ${s.total}`);
+      console.log('by type:');  s.byType.forEach((r) => console.log(`  ${r.type.padEnd(12)} ${r.n}`));
+      console.log('by scope:'); s.byScope.forEach((r) => console.log(`  ${r.scope.padEnd(24)} ${r.n}`));
+      break;
+    }
+    case 'where': {
+      console.log(store.DB_PATH);
+      break;
+    }
+    case 'help':
+    case '--help':
+    case '-h':
+    case undefined:
+      printHelp(); break;
+    default:
+      die(`unknown command: ${cmd}`);
+  }
+}
+
+function die(msg) {
+  process.stderr.write(`memory: ${msg}\n`);
+  process.exit(1);
+}
+
+function printHelp() {
+  console.log(`memory - shared cross-project memory
+
+Commands:
+  put --type <t> --title "..." [--body "..."] [--scope <s>] [--key <k>]
+      [--tags a,b] [--team <t>] [--pinned] [--source <s>]
+  get (--id <n> | --scope <s> --key <k>)
+  find "<query>" [--scope <s>] [--type <t>] [--limit 20] [--json]
+  recent [--scope <s>] [--limit 10] [--json]
+  archive <id>
+  stats [--json]
+  where            # print DB path
+
+Scopes:    global (default), project:<name>
+Types:     semantic | episodic | procedural
+DB:        ~/.claude/shared-memory/learnings.db (FTS5 enabled)
+`);
+}
+
+try { main(); } catch (e) {
+  process.stderr.write(`memory: ${e.stack || e.message}\n`);
+  process.exit(1);
+}
