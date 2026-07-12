@@ -1,14 +1,6 @@
 ---
 name: start
-description: Use when starting work on any task, when the user mentions metaswarm, or when the user wants to begin tracked development work
-auto_activate: true
-triggers:
-  - "work on issue"
-  - "start issue"
-  - "start task"
-  - "use metaswarm"
-  - "@metaswarm"
-  - "agent-ready label"
+description: Begin tracked metaswarm or BEADS work; use when starting work on an issue or task, when the user mentions metaswarm, or when agent-ready or GSD-style development should enter the workflow.
 ---
 
 # BEADS Multi-Agent Orchestration Skill

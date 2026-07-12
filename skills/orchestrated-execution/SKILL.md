@@ -1,11 +1,6 @@
 ---
 name: orchestrated-execution
-description: 4-phase execution loop for work units - IMPLEMENT, VALIDATE, ADVERSARIAL REVIEW, COMMIT
-auto_activate: false
-triggers:
-  - "orchestrated execution"
-  - "4-phase loop"
-  - "adversarial review"
+description: Run the metaswarm 4-phase execution loop for work units; use when asked for orchestrated execution, GSD-style implementation, adversarial review, or explicit implement-validate-review-commit delivery.
 ---
 
 # Orchestrated Execution Skill

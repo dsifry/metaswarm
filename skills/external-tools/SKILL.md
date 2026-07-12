@@ -1,12 +1,6 @@
 ---
 name: external-tools
-description: Delegate implementation and review tasks to external AI CLI tools (Codex, Gemini) with cross-model adversarial review
-auto_activate: false
-triggers:
-  - "use external tools"
-  - "delegate to codex"
-  - "delegate to gemini"
-  - "cross-model review"
+description: Delegate implementation or review work to external AI CLI tools such as Codex or Gemini; use when asked to use external tools, delegate to Codex or Gemini, or run cross-model adversarial review.
 ---
 
 # External Tools Skill

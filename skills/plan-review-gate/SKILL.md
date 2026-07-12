@@ -1,12 +1,6 @@
 ---
 name: plan-review-gate
-description: Automatic adversarial review gate that spawns 3 independent reviewers in parallel after any plan is drafted - all must PASS before presenting to user
-auto_activate: true
-triggers:
-  - "plan drafted"
-  - "implementation plan created"
-  - after:writing-plans
-  - after:orchestrated-execution:plan-validation
+description: Run an adversarial plan review gate with three independent reviewers; use after drafting an implementation plan, before presenting a plan as approved, or when asked for plan-review validation.
 ---
 
 # Plan Review Gate

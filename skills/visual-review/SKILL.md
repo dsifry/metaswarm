@@ -1,15 +1,6 @@
 ---
 name: visual-review
-description: Take screenshots of web pages and UI using Playwright for visual review and iteration
-auto_activate: false
-triggers:
-  - "visual review"
-  - "screenshot"
-  - "take a screenshot"
-  - "review visually"
-  - "check how it looks"
-  - "review the UI"
-  - "review the slides"
+description: Take Playwright screenshots of web pages, slides, or UI for visual review and iteration; use when asked to screenshot, visually inspect, review UI or slides, or check how a local or deployed page looks.
 ---
 
 # Visual Review

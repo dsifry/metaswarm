@@ -1,10 +1,6 @@
 ---
 name: brainstorming-extension
-description: Enforces design review gate after brainstorming — bridges superpowers:brainstorming into the metaswarm quality pipeline
-auto_activate: true
-triggers:
-  - after:superpowers:brainstorming
-  - "design document committed"
+description: Enforce the design review gate after brainstorming or design-document creation; use when brainstorming completes, a design document is committed, or metaswarm needs to bridge brainstorming into the review pipeline.
 ---
 
 # Brainstorming Extension - Mandatory Review Gate Bridge
