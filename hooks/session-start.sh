@@ -11,31 +11,39 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-${extensionPath:-$(cd "$SCRIPT_DIR/.." && pwd)}}"
 
-# --- Phase 1: BEADS dedup check ---
-# If standalone BEADS plugin is installed, skip knowledge priming (let BEADS handle it)
-beads_standalone=false
-beads_plugin_cache="${HOME}/.claude/plugins/cache"
-if [ -d "$beads_plugin_cache" ]; then
-  # Look for a BEADS plugin with name "beads" in plugin.json
-  while IFS= read -r -d '' pjson; do
-    pname=""
-    if command -v jq >/dev/null 2>&1; then
-      pname=$(jq -r '.name // empty' "$pjson" 2>/dev/null || true)
-    elif command -v node >/dev/null 2>&1; then
-      pname=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf-8')).name||'')}catch{console.log('')}" "$pjson" 2>/dev/null || true)
-    fi
-    # Neither jq nor node available — skip dedup check (safe default: allow both to prime)
-    if [ "$pname" = "beads" ]; then
-      beads_standalone=true
-      break
-    fi
-  done < <(find "$beads_plugin_cache" -path "*/.claude-plugin/plugin.json" -print0 2>/dev/null || true)
-fi
-
 # --- Phase 2: New project detection ---
 new_project=false
 if [ ! -f ".metaswarm/project-profile.json" ]; then
   new_project=true
+fi
+
+# --- Phase 1: BEADS dedup check ---
+# If standalone BEADS plugin is installed, skip knowledge priming (let BEADS handle it).
+# PERF: run this only in set-up projects. beads_standalone is read solely by the
+# `bd prime` branch in the context-building phase below, which requires
+# .metaswarm/project-profile.json to exist; in every other cwd this scan
+# (find over the plugin cache + one jq/node spawn per plugin.json) is dead work
+# whose result is never consumed — minutes of SessionStart latency on machines
+# with large plugin caches and no beads plugin installed.
+beads_standalone=false
+if [ "$new_project" = false ]; then
+  beads_plugin_cache="${HOME}/.claude/plugins/cache"
+  if [ -d "$beads_plugin_cache" ]; then
+    # Look for a BEADS plugin with name "beads" in plugin.json
+    while IFS= read -r -d '' pjson; do
+      pname=""
+      if command -v jq >/dev/null 2>&1; then
+        pname=$(jq -r '.name // empty' "$pjson" 2>/dev/null || true)
+      elif command -v node >/dev/null 2>&1; then
+        pname=$(node -e "try{console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf-8')).name||'')}catch{console.log('')}" "$pjson" 2>/dev/null || true)
+      fi
+      # Neither jq nor node available — skip dedup check (safe default: allow both to prime)
+      if [ "$pname" = "beads" ]; then
+        beads_standalone=true
+        break
+      fi
+    done < <(find "$beads_plugin_cache" -path "*/.claude-plugin/plugin.json" -print0 2>/dev/null || true)
+  fi
 fi
 
 # --- Phase 3: Legacy install detection ---
