@@ -1,0 +1,9 @@
+{
+  "name": "handoff",
+  "description": "Create structured handoff document for next agent/session",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "handoff.md",
+  "commands": ["/handoff"],
+  "autoActivate": false
+}

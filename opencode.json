@@ -1,0 +1,288 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [".opencode/OPENCODE.md"],
+  "skills": {
+    "paths": [".opencode/skills"],
+    "urls": []
+  },
+  "mcp": {
+    "servers": {
+      "beads": {
+        "type": "local",
+        "command": ["node", "scripts/beads-mcp-server.ts"],
+        "timeout": {
+          "catalog": 30000
+        }
+      }
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "prune": false,
+    "tail_turns": 10,
+    "preserve_recent_tokens": 8000,
+    "reserved": 2000
+  },
+  "command": {
+    "setup": {
+      "template": "{file:.opencode/commands/setup.md}",
+      "description": "Interactive project setup — detects your project, configures metaswarm, writes project-local files"
+    },
+    "start": {
+      "template": "{file:.opencode/commands/start.md}",
+      "description": "Begin tracked work on a task — primes context, guides scoping, picks right process level"
+    },
+    "start-task": {
+      "template": "{file:.opencode/commands/start-task.md}",
+      "description": "Begin tracked work on a task with complexity assessment"
+    },
+    "prime": {
+      "template": "{file:.opencode/commands/prime.md}",
+      "description": "Load relevant knowledge from the BEADS knowledge base before starting work"
+    },
+    "review-design": {
+      "template": "{file:.opencode/commands/review-design.md}",
+      "description": "Architecture-focused design review (single architect-agent in this POC; full 5-agent gate not yet registered)"
+    },
+    "design-review-gate": {
+      "template": "{file:.opencode/commands/design-review-gate.md}",
+      "description": "Automatic review gate that runs after brainstorming completes - spawns PM, Architect, Designer, Security, and CTO agents in parallel"
+    },
+    "plan-review-gate": {
+      "template": "{file:.opencode/commands/plan-review-gate.md}",
+      "description": "Adversarial plan review with 3 independent reviewers (Feasibility, Completeness, Scope & Alignment)"
+    },
+    "orchestrated-execution": {
+      "template": "{file:.opencode/commands/orchestrated-execution.md}",
+      "description": "4-phase execution loop for work units - IMPLEMENT, VALIDATE, ADVERSARIAL REVIEW, COMMIT"
+    },
+    "self-reflect": {
+      "template": "{file:.opencode/commands/self-reflect.md}",
+      "description": "Semantic summarization and context compaction via BEADS"
+    },
+    "handoff": {
+      "template": "{file:.opencode/commands/handoff.md}",
+      "description": "Create structured handoff document for next agent/session"
+    },
+    "pr-shepherd": {
+      "template": "{file:.opencode/commands/pr-shepherd.md}",
+      "description": "Monitor a PR through to merge - handles reviews, CI, conflicts"
+    },
+    "brainstorm": {
+      "template": "{file:.opencode/commands/brainstorm.md}",
+      "description": "Structured brainstorming with design review gate trigger"
+    },
+    "update": {
+      "template": "{file:.opencode/commands/update.md}",
+      "description": "Update metaswarm to latest version in this project"
+    },
+    "status": {
+      "template": "{file:.opencode/commands/status.md}",
+      "description": "Run diagnostic checks on project health"
+    },
+    "create-issue": {
+      "template": "{file:.opencode/commands/create-issue.md}",
+      "description": "Create a well-structured GitHub Issue with metaswarm context"
+    },
+    "handle-pr-comments": {
+      "template": "{file:.opencode/commands/handle-pr-comments.md}",
+      "description": "Process and respond to PR review comments systematically"
+    },
+    "external-tools-health": {
+      "template": "{file:.opencode/commands/external-tools-health.md}",
+      "description": "Check health and availability of external AI tools (Codex, Gemini)"
+    }
+  },
+  "agent": {
+    "issue-orchestrator": {
+      "description": "Main coordinator per issue — spawns sub-agents, runs 4-phase execution loop",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/issue-orchestrator.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "architect-agent": {
+      "description": "Reviews technical architecture and creates implementation plans",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/architect-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "product-manager-agent": {
+      "description": "Defines product requirements, prioritizes features, owns product vision",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/product-manager-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "researcher-agent": {
+      "description": "Deep research across sources, synthesizes findings into reports",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/researcher-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "cto-agent": {
+      "description": "Strategic technical decisions, architecture approval, risk assessment",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/cto-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "security-design-agent": {
+      "description": "Threat modeling, security architecture review, secure design patterns",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/security-design-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "code-review-agent": {
+      "description": "Adversarial code review focusing on correctness, security, maintainability",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/code-review-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "sre-agent": {
+      "description": "Reliability, observability, incident response, capacity planning",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/sre-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "metrics-agent": {
+      "description": "Defines and tracks SLIs/SLOs, builds dashboards, analyzes system metrics",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/metrics-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "slack-coordinator-agent": {
+      "description": "Manages Slack communications, incident channels, stakeholder updates",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/slack-coordinator-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "coder-agent": {
+      "description": "Implements code changes following TDD, writes tests first",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/coder-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "pr-shepherd-agent": {
+      "description": "Shepherds PRs through review, CI, merge — handles comments, conflicts",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/pr-shepherd-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "release-engineer-agent": {
+      "description": "Manages releases, versioning, changelogs, deployment pipelines",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/release-engineer-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "customer-service-agent": {
+      "description": "Handles user feedback, support tickets, feature requests triage",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/customer-service-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "test-automator-agent": {
+      "description": "Writes and maintains test suites, enforces coverage thresholds",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/test-automator-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "security-auditor-agent": {
+      "description": "Security audits, vulnerability scanning, compliance checks",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/security-auditor-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "swarm-coordinator-agent": {
+      "description": "Orchestrates multi-agent swarms for complex parallel work",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/swarm-coordinator-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "designer-agent": {
+      "description": "UX/UI design, design systems, accessibility, user research",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/designer-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    },
+    "knowledge-curator-agent": {
+      "description": "Maintains BEADS knowledge base — patterns, decisions, gotchas, facts",
+      "mode": "subagent",
+      "prompt": "{file:.opencode/agents/knowledge-curator-agent.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "*": "allow" }
+      }
+    }
+  }
+}

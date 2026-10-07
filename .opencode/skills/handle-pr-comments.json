@@ -1,0 +1,9 @@
+{
+  "name": "handle-pr-comments",
+  "description": "Process and respond to PR review comments systematically",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "handle-pr-comments.md",
+  "commands": ["/handle-pr-comments"],
+  "autoActivate": false
+}

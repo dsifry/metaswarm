@@ -1,0 +1,9 @@
+{
+  "name": "external-tools-health",
+  "description": "Check health and availability of external AI tools (Codex, Gemini)",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "external-tools-health.md",
+  "commands": ["/external-tools-health"],
+  "autoActivate": false
+}

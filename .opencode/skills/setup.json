@@ -1,0 +1,9 @@
+{
+  "name": "setup",
+  "description": "Interactive guided setup for metaswarm in a project",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "setup.md",
+  "commands": ["/setup"],
+  "autoActivate": false
+}

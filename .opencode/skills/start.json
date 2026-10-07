@@ -1,0 +1,9 @@
+{
+  "name": "start",
+  "description": "Begin tracked work on a task — primes context, guides scoping, picks right process level",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "start.md",
+  "commands": ["/start"],
+  "autoActivate": false
+}

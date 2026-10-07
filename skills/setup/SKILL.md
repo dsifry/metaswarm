@@ -34,16 +34,18 @@ Where:
   - jest/npm → `"npx jest --coverage"`
   - go → `"go test -coverprofile=coverage.out ./..."`
   - cargo → `"cargo tarpaulin --fail-under <threshold>"`
-- `<platform>` is `codex`, `claude`, `gemini`, or `all`. Prefer:
+- `<platform>` is `codex`, `claude`, `gemini`, `opencode`, or `all`. Prefer:
   - `codex` when running in Codex (`PLUGIN_ROOT` or `CODEX_HOME` is present, or the user invoked `$setup`)
   - `claude` when running in Claude Code (`CLAUDE_PLUGIN_ROOT` is present, or the setup skill was invoked there)
   - `gemini` when running in Gemini (`extensionPath` is present, or the setup skill was invoked there)
+  - `opencode` when running in OpenCode
   - `all` only when the user explicitly asks to configure every supported CLI
 
 The script handles:
-1. **Instruction file** — `AGENTS.md` for Codex, `CLAUDE.md` for Claude, `GEMINI.md` for Gemini; appends metaswarm section (or writes new), skips if already present
+1. **Instruction file** — `AGENTS.md` for Codex, `CLAUDE.md` for Claude, `GEMINI.md` for Gemini, `.opencode/OPENCODE.md` for OpenCode; appends metaswarm section (or writes new), skips if already present
 2. **`.coverage-thresholds.json`** — writes at project root with correct thresholds and command
 3. **Claude command shims** — for Claude/all only, writes `.claude/commands/start-task.md`, `prime.md`, `review-design.md`, `self-reflect.md`, `pr-shepherd.md`, `brainstorm.md`
+4. **OpenCode files** — for opencode/all only, writes the session plugin `.opencode/plugins/metaswarm-session.js` (OpenCode V2 plugin API) and the BEADS MCP server `scripts/beads-mcp-server.ts`
 
 The script outputs JSON with what was created/skipped/errored. Check that `"status": "ok"`.
 
@@ -280,11 +282,13 @@ Write them to `bin/` in the project. Make executable with `chmod +x`. Skip any t
 #### TypeScript Scripts
 
 Read each file from `./scripts/`:
-- `beads-fetch-pr-comments.ts`, `beads-fetch-conversation-history.ts`
+- `beads-fetch-pr-comments.ts`, `beads-fetch-conversation-history.ts`, `beads-mcp-server.ts`
 
 Write them to `scripts/` in the project. Skip any that already exist.
 
 **Note**: The former `beads-self-reflect.ts` script is no longer bundled — the standalone beads plugin (v0.63.3+) provides `bd compact` for semantic summarization natively.
+
+**Note**: `beads-mcp-server.ts` is the BEADS MCP server referenced by `mcp.servers.beads` in `opencode.json`. It has zero npm dependencies and runs with plain `node` (Node.js >= 22.18) — or `npx tsx` on older Node.js. It is only needed for OpenCode projects.
 
 **Node.js dependency warning**: If Node.js was NOT detected as the project language, print:
 > "Note: scripts/*.ts require Node.js (npx tsx) to run. Some advanced features (PR comment fetching, conversation history) will work once Node.js is available. Core metaswarm functionality does not require Node.js."

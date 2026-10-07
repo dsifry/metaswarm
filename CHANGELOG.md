@@ -2,9 +2,20 @@
 
 ## 0.12.0
 
+### Fixed
+- **OpenCode V2 plugin load failure** ("Plugin must export a default definition with an id and an effect or setup function", `err_861f7744`): the OpenCode session plugin was written against the V1 API (named export). It now exports a V2 default definition (`export default { id, setup }`) using `ctx.session.hook("compaction", ...)`
+- **BEADS MCP server never connected** ("NotFound: FileSystem.access … /${workspace}"): `cwd: "${workspace}"` is not substituted by OpenCode V2. The MCP entry now uses the native `mcp.servers` shape and the default workspace cwd, in `templates/opencode.json`, the repo `opencode.json`, and generated projects
+- **BEADS MCP server unusable in non-Node projects**: `scripts/beads-mcp-server.ts` is now a zero-dependency stdio server (newline-delimited JSON-RPC with `node:child_process`), so it runs without `package.json`/`node_modules` and without `@modelcontextprotocol/sdk` or `tsx`. It also answers `resources/templates/list`, eliminating a warning on every connection
+
 ### Added
-- **`/handoff` command and `handoff` skill**: Analyzes the current session and writes a self-contained handoff document to `docs/handoffs/handoff-<YYYY-MM-DD-HHmm>.md` capturing the objective, current status, working-tree state, required reading (specs/designs/plans/code `file:line`/tests), and key decisions — so a fresh agent with zero prior context can resume the work. Emits a single closing sentence of the form `Read <file>.md and do <concrete next action>.` Wired across all platforms: Claude command (`commands/handoff.md`, `.claude/commands/handoff.md`), Gemini/Codex TOML (`commands/metaswarm/handoff.toml`, generated from `lib/sync-resources.js`), and skill definition (`skills/handoff/SKILL.md`)
-- **First-class Codex CLI plugin support** (#44): Native `.codex-plugin/plugin.json` manifest and marketplace entry, platform-aware setup/status skills, and expanded session-start hook handling so Codex CLI is a first-class target alongside Claude Code and Gemini CLI
+- **OpenCode session plugin shipped by setup** (`templates/metaswarm-session.js`): installed as `.opencode/plugins/metaswarm-session.js` by `metaswarm setup --opencode`, `metaswarm update --opencode`, and `lib/setup-mandatory-files.sh --platform opencode`; warns when mandatory files are missing and carries BEADS state (active plan + context files) across compaction
+- **BEADS MCP server installed with the config**: `scripts/beads-mcp-server.ts` is copied into projects alongside `mcp.servers.beads` (previously the config referenced a file that was never installed)
+- **OpenCode V2 regression suite** (`tests/test-opencode-v2.sh`, wired into CI): MCP config validity, plugin V2 export shape, compaction-hook behavior, MCP stdio handshake (initialize/tools/resources), and shell-setup installation
+
+### Added
+- **First-class OpenCode support** (#41): Static config template (`templates/opencode.json`) and instruction file (`templates/OPENCODE.md`) with 3 commands (start-task, prime, review-design) and 2 agents (issue-orchestrator, architect-agent). Platform detection in `lib/platform-detect.js`, `--opencode` flag in `cli/metaswarm.js`, `opencode` case in `lib/setup-mandatory-files.sh`, and build validation in `lib/sync-resources.js`. Smoke test suite at `tests/test-opencode-smoke.sh` (7 tests)
+- **`/handoff` command and `handoff` skill**: Analyzes the current session and writes a self-contained handoff document to `docs/handoffs/handoff-<YYYY-MM-DD-HHmm>.md` capturing the objective, current status, working-tree state, required reading (specs/designs/plans/code `file:line`/tests), and key decisions — so a fresh agent with zero prior context can resume the work. Emits a single closing sentence of the form `Read <file>.md and do <concrete next action>.` Wired across all platforms: Claude command (`commands/handoff.md`, `.claude/commands/handoff.md`), Gemini/Codex/OpenCode TOML (`commands/metaswarm/handoff.toml`, generated from `lib/sync-resources.js`), and skill definition (`skills/handoff/SKILL.md`)
+- **First-class Codex CLI plugin support** (#44): Native `.codex-plugin/plugin.json` manifest and marketplace entry, platform-aware setup/status skills, and expanded session-start hook handling so Codex CLI is a first-class target alongside Claude Code, Gemini CLI, and OpenCode
 
 ## 0.11.0
 
@@ -32,7 +43,7 @@
 - **YAML frontmatter added** to 3 skills that lacked it: `create-issue`, `handling-pr-comments`, `pr-shepherd`. All 13 skills now have proper frontmatter for Codex discoverability
 - **Cross-platform installer**: `npx metaswarm init` detects installed CLIs (claude, codex, gemini) and installs metaswarm for each. Supports `--claude`, `--codex`, `--gemini` flags for targeted install
 - **Platform detection module** (`lib/platform-detect.js`): Detects installed CLIs, returns config paths and install methods for each platform
-- **Platform adaptation reference** (`skills/start/references/platform-adaptation.md`): Documents tool equivalents, graceful degradation, and command syntax across all three platforms
+- **Platform adaptation reference** (`skills/start/references/platform-adaptation.md`): Documents tool equivalents, graceful degradation, and command syntax across all supported platforms
 - **Instruction file templates**: `templates/AGENTS.md`, `templates/AGENTS-append.md`, `templates/GEMINI.md`, `templates/GEMINI-append.md` for Codex and Gemini project setup
 - **Multi-platform setup**: `lib/setup-mandatory-files.sh` now supports `--platform claude|codex|gemini|all` flag to write platform-appropriate instruction files
 - **Platform-aware session-start hook**: `hooks/session-start.sh` self-locates its plugin root using `$CLAUDE_PLUGIN_ROOT`, `$extensionPath`, or script directory fallback

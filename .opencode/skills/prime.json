@@ -1,0 +1,9 @@
+{
+  "name": "prime",
+  "description": "Load relevant knowledge from the BEADS knowledge base before starting work",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "prime.md",
+  "commands": ["/prime"],
+  "autoActivate": false
+}

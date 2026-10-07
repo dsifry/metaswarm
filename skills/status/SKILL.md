@@ -5,7 +5,7 @@ description: Diagnostic status report — shows metaswarm installation state, pr
 
 # Status Skill
 
-Generate a diagnostic report of the metaswarm installation, project configuration, and potential issues across Claude Code, Codex, and Gemini. Useful for troubleshooting and verifying setup or migration.
+Generate a diagnostic report of the metaswarm installation, project configuration, and potential issues across Claude Code, Codex, Gemini, and OpenCode. Useful for troubleshooting and verifying setup or migration.
 
 ---
 

@@ -35,5 +35,8 @@ jobs:
       - name: Run sync-resources tests
         run: bash tests/lib/test-sync-resources.sh
 
+      - name: Run OpenCode V2 tests (config, plugin, MCP server)
+        run: bash tests/test-opencode-v2.sh
+
       - name: Verify co-located resources are in sync
         run: node lib/sync-resources.js --check

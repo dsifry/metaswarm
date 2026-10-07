@@ -1,0 +1,9 @@
+{
+  "name": "update",
+  "description": "Update metaswarm to latest version in this project",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "update.md",
+  "commands": ["/update"],
+  "autoActivate": false
+}

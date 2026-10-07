@@ -1,0 +1,10 @@
+{
+  "name": "plan-review-gate",
+  "description": "Adversarial plan review with 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) — ALL must PASS before presenting plan to user",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "plan-review-gate.md",
+  "commands": ["/plan-review-gate"],
+  "autoActivate": true,
+  "triggers": ["plan drafted", "implementation plan created"]
+}

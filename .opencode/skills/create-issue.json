@@ -1,0 +1,9 @@
+{
+  "name": "create-issue",
+  "description": "Create a well-structured GitHub Issue with metaswarm context",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "create-issue.md",
+  "commands": ["/create-issue"],
+  "autoActivate": false
+}

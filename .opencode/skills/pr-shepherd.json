@@ -1,0 +1,9 @@
+{
+  "name": "pr-shepherd",
+  "description": "Monitor a PR through to merge - handles reviews, CI, conflicts",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "pr-shepherd.md",
+  "commands": ["/pr-shepherd"],
+  "autoActivate": false
+}

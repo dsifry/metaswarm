@@ -1,0 +1,9 @@
+{
+  "name": "orchestrated-execution",
+  "description": "4-phase execution loop for work units - IMPLEMENT, VALIDATE, ADVERSARIAL REVIEW, COMMIT",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "orchestrated-execution.md",
+  "commands": ["/orchestrated-execution"],
+  "autoActivate": false
+}

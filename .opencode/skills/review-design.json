@@ -1,0 +1,9 @@
+{
+  "name": "review-design",
+  "description": "Architecture-focused design review (single architect-agent in this POC; full 5-agent gate not yet registered)",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "review-design.md",
+  "commands": ["/review-design"],
+  "autoActivate": false
+}

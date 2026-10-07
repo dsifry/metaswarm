@@ -1,0 +1,9 @@
+{
+  "name": "self-reflect",
+  "description": "Semantic summarization and context compaction via BEADS",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "self-reflect.md",
+  "commands": ["/self-reflect"],
+  "autoActivate": false
+}

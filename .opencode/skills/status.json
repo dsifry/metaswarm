@@ -1,0 +1,9 @@
+{
+  "name": "status",
+  "description": "Run diagnostic checks on project health",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "status.md",
+  "commands": ["/status"],
+  "autoActivate": false
+}

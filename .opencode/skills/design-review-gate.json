@@ -1,0 +1,10 @@
+{
+  "name": "design-review-gate",
+  "description": "Automatic review gate that runs after brainstorming completes - spawns PM, Architect, Designer, Security, and CTO agents in parallel",
+  "version": "1.0.0",
+  "author": "metaswarm",
+  "entryPoint": "design-review-gate.md",
+  "commands": ["/design-review-gate"],
+  "autoActivate": true,
+  "triggers": ["design document created", "docs/plans/*-design.md committed"]
+}
