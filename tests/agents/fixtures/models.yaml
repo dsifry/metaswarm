@@ -1,0 +1,20 @@
+# metaswarm models v1 — test fixture (researcher and planner deliberately omitted)
+roles:
+  design-reviewer:
+    claude: opus
+    codex: gpt-5.3-codex
+    gemini: pro
+  plan-reviewer:
+    claude: claude-opus-4-5
+  coder:
+    claude: haiku
+  adversarial-reviewer:
+    claude: opus
+  pr-shepherd-agent:
+    claude: sonnet
+  knowledge-curator-agent:
+    claude: sonnet
+escalation:
+  coder:
+    after_failures: 2
+    claude: opus

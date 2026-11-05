@@ -237,6 +237,41 @@ else
   echo "  FAIL: Output differs between runs"
 fi
 
+# --- Test 7: Stale generated agent files ---
+echo "Test 7: Stale generated agents line"
+PLUGIN_VERSION=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$REPO_ROOT/.claude-plugin/plugin.json" | head -1)
+write_agent() { # dir, version
+  mkdir -p "$1/.claude/agents"
+  printf -- '---\nname: metaswarm-coder\n---\n<!-- generated-by: metaswarm v%s sha256:abc — edit .metaswarm/models.yaml, not this file -->\nbody\n' "$2" > "$1/.claude/agents/metaswarm-coder.md"
+}
+TEST_CWD="$TMPDIR_BASE/test7a"
+mkdir -p "$TEST_CWD/.metaswarm"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+write_agent "$TEST_CWD" "0.0.1"
+output=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "Stale: output is valid JSON" "$output"
+assert_contains "Stale: warns in additionalContext" "$output" 'metaswarm agents are stale — run /update'
+TOTAL=$((TOTAL + 1))
+if echo "$output" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{process.exit(JSON.parse(d).hookSpecificOutput.additionalContext.includes('metaswarm agents are stale — run /update')?0:1)})" 2>/dev/null; then
+  PASS=$((PASS + 1)); echo "  PASS: Stale line is inside additionalContext"
+else
+  FAIL=$((FAIL + 1)); echo "  FAIL: Stale line is not inside additionalContext"
+fi
+
+TEST_CWD="$TMPDIR_BASE/test7b"
+mkdir -p "$TEST_CWD/.metaswarm"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+write_agent "$TEST_CWD" "$PLUGIN_VERSION"
+output=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "Current: output is valid JSON" "$output"
+assert_not_contains "Current: no stale line when versions match" "$output" 'agents are stale'
+
+TEST_CWD="$TMPDIR_BASE/test7c"
+mkdir -p "$TEST_CWD/.metaswarm"
+echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+output=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_not_contains "None: no stale line without generated files" "$output" 'agents are stale'
+
 # --- Summary ---
 echo ""
 echo "Results: $PASS/$TOTAL passed, $FAIL failed"

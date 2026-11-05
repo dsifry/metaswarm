@@ -277,6 +277,21 @@ Read each file from `./bin/`:
 
 Write them to `bin/` in the project. Make executable with `chmod +x`. Skip any that already exist.
 
+Do NOT copy `metaswarm-agents.sh` or `metaswarm-usage` into the project. Skills always run them from the plugin: the plugin `bin/` is on PATH in Claude Code, so resolve with `command -v metaswarm-agents.sh`, falling back to `${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/bin/metaswarm-agents.sh`.
+
+#### Models Config and Phase Agents
+
+1. Note whether `.claude/agents/` already exists (it matters for Phase 6).
+2. If `.metaswarm/models.yaml` is absent, copy `./templates/models.yaml` to `.metaswarm/models.yaml` (create `.metaswarm/` if needed).
+3. Generate the project-scoped phase agents from it:
+
+```bash
+MA="$(command -v metaswarm-agents.sh || echo "${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/bin/metaswarm-agents.sh")" # command -v metaswarm-agents.sh
+"$MA" generate
+```
+
+This writes `.claude/agents/metaswarm-<role>.md`. Exit 1 means a file was hand-edited or is user-authored; report it to the user and do not pass `--force` unless they ask. Exit 2 means `models.yaml` has a syntax error (`models.yaml:<line>: <reason>`); show it and ask the user to fix it.
+
 #### TypeScript Scripts
 
 Read each file from `./scripts/`:
@@ -414,6 +429,8 @@ Other files written:
 
 You're all set! Run the platform's start command to begin working.
 ```
+
+**Restart note**: if `.claude/agents/` did not exist before Phase 3 and `generate` created it, tell the user to restart the session (Claude Code only watches agent directories that existed at session start). Until then the plugin's default phase models apply.
 
 **Command naming**: When recommending metaswarm skills to the user, use `$name` forms (`$start`, `$setup`, `$status`, `$pr-shepherd`) unless the active platform has already created and selected its own command shims.
 

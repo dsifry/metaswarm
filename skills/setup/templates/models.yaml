@@ -1,0 +1,30 @@
+# metaswarm models v1 — one place to set each phase's model
+roles:
+  design-reviewer:
+    claude: opus
+    codex: gpt-5.3-codex
+    gemini: pro
+  plan-reviewer:
+    claude: opus
+    codex: gpt-5.3-codex
+    gemini: pro
+  researcher:
+    claude: sonnet
+  planner:
+    claude: opus
+  coder:
+    claude: sonnet
+    codex: gpt-5.3-codex
+    gemini: flash
+  adversarial-reviewer:
+    claude: opus
+    codex: gpt-5.3-codex
+    gemini: pro
+  pr-shepherd-agent:
+    claude: sonnet
+  knowledge-curator-agent:
+    claude: sonnet
+escalation:
+  coder:
+    after_failures: 2
+    claude: opus

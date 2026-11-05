@@ -38,6 +38,11 @@ Update metaswarm to the latest version, refresh component files, and re-detect p
 - New files (new skills, commands, agents, guides) will be added
 - Existing metaswarm-shipped files will be refreshed to latest versions
 
+### 4b. Regenerate Phase Agents
+
+- Run `MA="$(command -v metaswarm-agents.sh || echo "${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/bin/metaswarm-agents.sh")"; "$MA" generate` (uses `command -v metaswarm-agents.sh`) to refresh `.claude/agents/metaswarm-*.md` from `.metaswarm/models.yaml`
+- Exit 1 means a generated file was hand-edited: report it, and use `--force` only if the user asks
+
 ### 5. Re-detect Project Context
 
 - Re-run project detection from the setup flow:

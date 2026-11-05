@@ -456,7 +456,15 @@ If the user chose YES for git hooks and no hooks were detected:
 **For other languages:**
 1. Suggest appropriate hook tools for their ecosystem
 
-### 4.7 — BEADS Setup
+### 4.7 — Models Config and Phase Agents
+
+1. Note whether `.claude/agents/` already exists (it matters for 6.2).
+2. If `.metaswarm/models.yaml` is absent, copy the plugin's `templates/models.yaml` to `.metaswarm/models.yaml`.
+3. Run `MA="$(command -v metaswarm-agents.sh || echo "${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/bin/metaswarm-agents.sh")"; "$MA" generate` (uses `command -v metaswarm-agents.sh`) to write `.claude/agents/metaswarm-<role>.md`. Exit 1 means a file was hand-edited or is user-authored (report it; use `--force` only if the user asks). Exit 2 means a `models.yaml` syntax error (`models.yaml:<line>: <reason>`); show it to the user.
+
+Do NOT copy `metaswarm-agents.sh` or `metaswarm-usage` into the project; always run them from the plugin's `bin/`.
+
+### 4.8 — BEADS Setup
 
 If the user chose YES for BEADS and `bd` is available:
 
@@ -578,6 +586,8 @@ Files modified:
 
 You're all set! Try `/start-task` on a small task to see metaswarm in action.
 ```
+
+If `.claude/agents/` was newly created in 4.7, tell the user to restart the session so Claude Code picks up the generated agents. Until then the plugin's default phase models apply.
 
 ### 6.3 — Post-Setup Tips
 

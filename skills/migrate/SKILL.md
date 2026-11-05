@@ -222,6 +222,16 @@ Your project files (CLAUDE.md, .coverage-thresholds.json, .beads/, etc.) were no
 
 ---
 
+## Generated agent files
+
+`/setup` and `/update` generate `.claude/agents/metaswarm-<role>.md` from `.metaswarm/models.yaml`. These are separate from the legacy files above, and removing them is also how to uninstall metaswarm's phase agents.
+
+1. List them for the user as removable: `ls .claude/agents/metaswarm-*.md`
+2. Run `MA="$(command -v metaswarm-agents.sh || echo "${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/bin/metaswarm-agents.sh")"; "$MA" clean` (uses `command -v metaswarm-agents.sh`). It removes only files carrying the `generated-by: metaswarm` header, so user-authored agents (including a same-named file without the header) are left alone.
+3. `.metaswarm/models.yaml` is yours to keep or delete. After cleaning, the plugin's own phase agents (`metaswarm:<role>`) still apply with their default models.
+
+---
+
 ## Rollback (Nothing Is Permanent)
 
 All removals use `git rm`, which only stages changes — files are NOT deleted from git history. The migration never auto-commits, so the user always has a chance to review and undo:
