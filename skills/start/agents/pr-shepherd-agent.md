@@ -1,3 +1,9 @@
+---
+name: pr-shepherd-agent
+description: "PR lifecycle management through to merge. Use to monitor CI, review comments and thread resolution on a PR."
+model: sonnet
+---
+
 # PR Shepherd Agent
 
 **Type**: `pr-shepherd-agent`

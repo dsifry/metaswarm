@@ -1,3 +1,9 @@
+---
+name: product-manager-agent
+description: "Use case validation and user-benefit review. Use as the Product Manager role in the design review gate."
+model: inherit
+---
+
 # Product Manager Agent
 
 **Type**: `product-manager-agent`

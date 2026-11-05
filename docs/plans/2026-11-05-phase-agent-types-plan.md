@@ -152,7 +152,7 @@ Spawn sites are identified by their content (description string), not by line nu
     - `INSTALL.md`
     - `skills/start/SKILL.md` (directory tree)
     - `agents/slack-coordinator-agent.md`, `agents/issue-orchestrator.md`, `agents/metrics-agent.md`, `agents/sre-agent.md`, and their `skills/start/agents/` copies
-  - Agent counts: the current docs say 18 or 19 in places; the new count is 28 = 19 + 6 new + 3 stubs, written as "25 agents (+3 deprecated)":
+  - Agent counts: the current docs say 18 or 19 in places; the new count is 25 files = 22 active (16 existing + 6 new) + 3 stubs, written as "22 agents (+3 deprecated)":
     - `README.md`, `USAGE.md`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`
     - `docs/index.html`, `gemini-extension.json`
     - `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`

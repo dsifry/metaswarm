@@ -1,3 +1,9 @@
+---
+name: issue-orchestrator
+description: "Main coordinator for a single GitHub Issue lifecycle. Use to drive one issue from research through PR."
+model: inherit
+---
+
 # Issue Orchestrator Agent
 
 **Type**: `issue-orchestrator`
@@ -686,7 +692,7 @@ The Issue Orchestrator reports progress via GitHub comments:
 
 ### In Progress
 
-- [ ] Implementation (assigned to coder-agent)
+- [ ] Implementation (assigned to coder)
 
 ### Blocked
 

@@ -1,6 +1,6 @@
 {
   "name": "metaswarm",
   "version": "0.13.0",
-  "description": "Multi-agent orchestration framework — 18 agents, 14 skills, quality gates, TDD enforcement",
+  "description": "Multi-agent orchestration framework — 22 agents (+3 deprecated), 14 skills, quality gates, TDD enforcement",
   "contextFileName": "GEMINI.md"
 }

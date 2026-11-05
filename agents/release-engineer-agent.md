@@ -1,3 +1,9 @@
+---
+name: release-engineer-agent
+description: "Safe delivery of approved code from merge through production verification. Use for release and deploy workflows."
+model: inherit
+---
+
 # Release Engineer Agent
 
 **Type**: `release-engineer-agent`

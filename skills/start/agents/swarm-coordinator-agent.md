@@ -1,3 +1,9 @@
+---
+name: swarm-coordinator-agent
+description: "Meta-orchestrator for multiple GitHub Issues and BEADS epics in parallel. Use to coordinate a swarm across worktrees."
+model: inherit
+---
+
 # Swarm Coordinator Agent
 
 ## Role

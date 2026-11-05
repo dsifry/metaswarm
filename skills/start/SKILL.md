@@ -790,14 +790,14 @@ skills/start/                   # This skill (main orchestration)
 ├── SKILL.md                    # This file
 ├── agents/                     # Agent definitions
 │   ├── issue-orchestrator.md   # Main coordinator (runs 4-phase loop)
-│   ├── researcher-agent.md     # Codebase exploration
+│   ├── researcher.md     # Codebase exploration
 │   ├── architect-agent.md      # Implementation planning
 │   ├── product-manager-agent.md # Use case & user benefit review
 │   ├── designer-agent.md       # UX/API design review
 │   ├── security-design-agent.md # Security threat modeling
 │   ├── cto-agent.md            # TDD readiness review
-│   ├── coder-agent.md          # TDD implementation
-│   ├── code-review-agent.md    # Internal code review (collaborative + adversarial modes)
+│   ├── coder.md          # TDD implementation
+│   ├── adversarial-reviewer.md    # Internal code review (collaborative + adversarial modes)
 │   ├── security-auditor-agent.md # Security review (implementation)
 │   ├── release-engineer-agent.md # Merge → deploy → verify → release
 │   └── pr-shepherd-agent.md    # PR lifecycle management

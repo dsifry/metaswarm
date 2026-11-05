@@ -1,3 +1,9 @@
+---
+name: test-automator-agent
+description: "Test writing and coverage analysis. Use to add or improve tests and check coverage."
+model: inherit
+---
+
 # Test Automator Agent
 
 **Type**: `test-writer-agent`

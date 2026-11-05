@@ -1,3 +1,9 @@
+---
+name: metrics-agent
+description: "Collects, aggregates and reports on agent swarm performance. Use for scheduled or manual metrics reports."
+model: inherit
+---
+
 # Metrics Agent
 
 **Type**: `metrics-agent`
@@ -272,8 +278,8 @@ if (trends.blockerTrend === "increasing") {
 
 | Agent             | Tasks | Completed | Success Rate | Avg Duration |
 | ----------------- | ----- | --------- | ------------ | ------------ |
-| coder-agent       | 15    | 14        | 93%          | 45 min       |
-| code-review-agent | 20    | 20        | 100%         | 15 min       |
+| coder       | 15    | 14        | 93%          | 45 min       |
+| adversarial-reviewer | 20    | 20        | 100%         | 15 min       |
 | ...               |       |           |              |              |
 
 ### Throughput
@@ -345,7 +351,7 @@ metrics/
 │   ├── 2026-W02.json
 │   └── ...
 └── agents/
-    ├── coder-agent.jsonl
+    ├── coder.jsonl
     └── ...
 ```
 

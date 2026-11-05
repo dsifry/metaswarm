@@ -1,3 +1,9 @@
+---
+name: slack-coordinator-agent
+description: "Human-agent communication bridge via Slack. Use to route notifications and human responses."
+model: inherit
+---
+
 # Slack Coordinator Agent
 
 **Type**: `swarm-coordinator` (Slack interface specialization)
@@ -178,7 +184,7 @@ await slack.notifyTaskUpdate({
   taskId: "bd-a1b2",
   title: "Implement feature X",
   status: "closed",
-  agentType: "coder-agent",
+  agentType: "coder",
 });
 
 // Send alert
