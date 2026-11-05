@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.0
+
+### Added
+- **Phase-named subagent types with per-phase default models** (#53): _in progress — filled in by WU6._
+
 ## 0.12.0
 
 ### Added
