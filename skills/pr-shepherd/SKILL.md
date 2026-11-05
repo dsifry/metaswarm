@@ -13,10 +13,10 @@ Use when a PR has been created and needs to be monitored through to merge - hand
 
 This skill supports both coordination modes:
 
-- **Task Mode** (default): Runs as a single long-running `Task()` with `run_in_background: true`. Orchestrator checks via `TaskOutput(block: false)`.
-- **Team Mode**: Runs as a persistent `shepherd` teammate in the `issue-{number}` team. Sends async status updates via `SendMessage` (CI failure, review comments, all-green, PR merged). Orchestrator can respond with instructions (e.g., "defer that comment, create an issue instead"). Responds to `shutdown_request` for graceful exit.
+- **Task Mode** (default): Runs as a single long-running `Task()` (role type `roleType("pr-shepherd-agent")`) with `run_in_background: true`. Orchestrator checks via `TaskOutput(block: false)`.
+- **Team Mode**: Runs as a persistent `shepherd` teammate (type `roleType("pr-shepherd-agent")`) in the `issue-{number}` team. Sends async status updates via `SendMessage` (CI failure, review comments, all-green, PR merged). Orchestrator can respond with instructions (e.g., "defer that comment, create an issue instead"). Responds to `shutdown_request` for graceful exit.
 
-All monitoring, fixing, and review handling logic is identical in both modes. See `./guides/agent-coordination.md` for mode detection.
+All monitoring, fixing, and review handling logic is identical in both modes. See `./guides/agent-coordination.md` for mode detection and [Role type resolution](./guides/agent-coordination.md#role-type-resolution).
 
 ---
 
@@ -59,7 +59,7 @@ When you see this output, **immediately invoke the pr-shepherd skill** with the 
 
 ## For Orchestrators: Spawning Agents with PR Shepherding
 
-When spawning an agent to work in a worktree, include PR shepherding in the task prompt:
+When spawning an agent to work in a worktree (role type `roleType("coder")`, see [Role type resolution](./guides/agent-coordination.md#role-type-resolution)), include PR shepherding in the task prompt:
 
 ```text
 Work in worktree at /path/to/worktree on branch feature/xyz.

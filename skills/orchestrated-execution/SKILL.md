@@ -20,8 +20,8 @@ This skill defines a generalized 4-phase execution loop that any orchestrator ca
 
 This skill is mode-agnostic — the 4-phase execution loop works identically in both Task Mode and Team Mode. The differences:
 
-- **Phase 1 (IMPLEMENT)**: In Team Mode, the coding subagent may be a persistent teammate (retains context across work units). In Task Mode, it's a fresh `Task()` per work unit.
-- **Phase 3 (ADVERSARIAL REVIEW)**: ALWAYS a fresh `Task()` instance in BOTH modes. Never a teammate, never resumed.
+- **Phase 1 (IMPLEMENT)**: In Team Mode, the coding subagent may be a persistent teammate (retains context across work units). In Task Mode, it's a fresh `Task()` per work unit. Role type: `roleType("coder")`.
+- **Phase 3 (ADVERSARIAL REVIEW)**: ALWAYS a fresh `Task()` instance (`roleType("adversarial-reviewer")`) in BOTH modes. Never a teammate, never resumed.
 - **All quality gates**: Unchanged regardless of mode.
 
 See `./guides/agent-coordination.md` for full mode detection and coordination details.
@@ -49,7 +49,7 @@ After drafting an implementation plan (Step 1: Plan Validation), submit it to th
 
 Before submitting a plan to the Design Review Gate, the orchestrator MUST verify every item on this checklist. This prevents expensive design review cycles on fundamentally broken plans.
 
-> **Note**: The `Plan` subagent type cannot write files (it has read-only access by design). If you spawn an Architect as a Plan subagent, it will return the plan as text in its response. The orchestrator must write the plan to `PLAN.md` itself.
+> **Note**: the Architect is spawned as `roleType("planner")`, which can write `PLAN.md` itself (it is not read-only, unlike the reviewer types). Role types are resolved per [Role type resolution](./guides/agent-coordination.md#role-type-resolution).
 
 ### Architecture Checklist
 - [ ] Every data access goes through a service layer (no direct DB calls from routes/handlers)
@@ -198,11 +198,11 @@ The coding subagent executes against the work unit spec.
 
 **Orchestrator actions:**
 
-1. Spawn a coding subagent with the work unit spec, DoD items, file scope, and the **Project Context Document**
+1. Spawn a coding subagent (role type `roleType("coder")`) with the work unit spec, DoD items, file scope, and the **Project Context Document**
 2. The subagent implements the change following TDD (test first, then implementation)
 3. The subagent reports completion — **but the orchestrator does NOT trust this report**
 
-**Subagent spawn template:**
+**Subagent spawn template** (role type `roleType("coder")`):
 
 ```text
 You are the CODER AGENT for work unit ${wuId}.
@@ -286,11 +286,11 @@ A **separate review subagent** checks the implementation against the spec contra
 
 **Orchestrator actions:**
 
-1. Spawn a **new** review subagent in adversarial mode
+1. Spawn a **new** review subagent in adversarial mode (role type `roleType("adversarial-reviewer")`)
 2. Pass: the spec, the DoD items, and the diff (NOT the coding subagent's self-assessment)
 3. The reviewer checks each DoD item with evidence (file:line references)
 
-**Reviewer spawn template:**
+**Reviewer spawn template** (role type `roleType("adversarial-reviewer")`):
 
 ```text
 You are the ADVERSARIAL REVIEWER for work unit ${wuId}.
@@ -322,7 +322,7 @@ Run: git diff main..HEAD -- ${fileScope.join(' ')}
 - **PASS** (zero BLOCKING issues) → proceed to Phase 4
 - **FAIL** (any BLOCKING issue) → return to Phase 1 with the failure report
 
-**Fresh reviewer rule:** On re-review after FAIL, the orchestrator MUST spawn a **new** review subagent. Never pass previous findings to the new reviewer. Never reuse the same reviewer instance. This prevents anchoring bias and ensures independent verification.
+**Fresh reviewer rule:** On re-review after FAIL, the orchestrator MUST spawn a **new** review subagent (role type `roleType("adversarial-reviewer")`). Never pass previous findings to the new reviewer. Never reuse the same reviewer instance. This prevents anchoring bias and ensures independent verification.
 
 ### Phase 4: COMMIT
 
@@ -385,14 +385,14 @@ IMPLEMENT ──→ VALIDATE ──→ REVIEW ──→ COMMIT
    - File scope respected
 3. **REVIEW → COMMIT**: ONLY if adversarial review returns PASS
 4. **FAIL → retry**: Fix the issue, then re-run the FAILED gate (not skip it)
-5. **Re-review after fix**: MUST spawn a FRESH reviewer (new instance, no memory)
+5. **Re-review after fix**: MUST spawn a FRESH reviewer (new `roleType("adversarial-reviewer")` instance, no memory)
 6. **Max retries**: 3 attempts per gate, then ESCALATE to human with full failure history
 
 ### On FAIL: Mandatory Re-Review Protocol
 
 1. Fix the issue identified by the reviewer
 2. Re-run Phase 2 (VALIDATE) — ALL quality gates, not just the one that failed
-3. **MANDATORY**: Spawn a NEW adversarial reviewer (fresh instance, no memory of previous review)
+3. **MANDATORY**: Spawn a NEW adversarial reviewer (role type `roleType("adversarial-reviewer")`, fresh instance, no memory of previous review)
 4. Only COMMIT after the fresh reviewer returns PASS
 5. Max 3 retry cycles before ESCALATE to human
 
@@ -435,9 +435,9 @@ Fan-out ──────┼──── WU-002: REVIEW ───────�
 
 **Rules for parallel execution:**
 
-1. **Fan-out implementations**: Spawn coding subagents for independent work units simultaneously
+1. **Fan-out implementations**: Spawn coding subagents (role type `roleType("coder")`) for independent work units simultaneously
 2. **Converge for validation**: Wait for ALL parallel implementations to complete, then validate each
-3. **Fan-out reviews**: Spawn review subagents for each work unit simultaneously
+3. **Fan-out reviews**: Spawn review subagents (role type `roleType("adversarial-reviewer")`) for each work unit simultaneously
 4. **Sequential commits**: Commit work units one at a time to maintain clean git history
 5. **If any FAIL**: Only re-run the failed work unit's loop — don't re-run passed units
 
@@ -837,13 +837,13 @@ Before execution (Plan Validation):
 
 For each work unit:
 
-- [ ] Spawn coding subagent with spec, DoD, file scope, and **Project Context Document**
+- [ ] Spawn coding subagent (role type `roleType("coder")`) with spec, DoD, file scope, and **Project Context Document**
 - [ ] Wait for implementation to complete
 - [ ] **Independently** run: tsc, eslint, vitest, coverage enforcement (do NOT ask subagent)
 - [ ] Verify file scope with `git diff --name-only`
-- [ ] Spawn **fresh** adversarial reviewer with spec and DoD
+- [ ] Spawn **fresh** adversarial reviewer (role type `roleType("adversarial-reviewer")`) with spec and DoD
 - [ ] If PASS: commit with DoD verification in message
-- [ ] If FAIL: fix → re-validate → spawn **new** reviewer (max 3 retries, then ESCALATE)
+- [ ] If FAIL: fix → re-validate → spawn **new** reviewer (`roleType("adversarial-reviewer")`; max 3 retries, then ESCALATE)
 - [ ] If human checkpoint: present report and wait
 - [ ] Update BEADS task status
 - [ ] Update **SERVICE-INVENTORY.md** if services/factories/modules were created

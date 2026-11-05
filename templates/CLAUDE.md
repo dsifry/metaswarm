@@ -129,7 +129,7 @@ When `superpowers:test-driven-development` runs as a standalone skill (outside o
    > "This TDD session modified multiple files. Would you like me to run an adversarial review before committing?"
    > 1. **Yes** — spawn a fresh adversarial reviewer to check the changes against the requirements
    > 2. **No** — commit directly
-2. If the user chooses review, spawn a fresh `Task()` reviewer with the requirements and the diff
+2. If the user chooses review, spawn a fresh `Task()` reviewer with role type `roleType("adversarial-reviewer")` (resolved per the Role type resolution rule in the metaswarm plugin's guides/agent-coordination.md) with the requirements and the diff
 3. Regardless of review choice, verify coverage meets `.coverage-thresholds.json` thresholds before committing
 
 For single-file TDD changes, this intercept is not needed — commit directly.

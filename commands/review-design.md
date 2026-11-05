@@ -24,7 +24,7 @@ Run the design review gate on a design document to get feedback from Product Man
 ## What This Does
 
 1. **Validates the design document exists** and is in the expected format
-2. **Spawns five review agents in parallel**:
+2. **Spawns five review agents in parallel** (each `roleType("design-reviewer")`, role in the prompt):
    - **Product Manager Agent** - Validates use cases and user benefits
    - **Architect Agent** - Reviews technical architecture
    - **Designer Agent** - Reviews UX, API design, developer experience

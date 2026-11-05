@@ -132,7 +132,7 @@ If an external tool is selected as implementer:
 4. **Scope check** -- Verify all file changes are within the declared file scope; revert any out-of-scope changes
 5. **Capture output** -- Facts only: exit code, files changed, diff stats, cost, duration
 
-If Claude is selected (escalation or no external tools), use the existing `Task()` mechanism unchanged.
+If Claude is selected (escalation or no external tools), use the existing `Task()` mechanism with role type `roleType("coder")` (adversarial review uses `roleType("adversarial-reviewer")`). Role types are resolved per [Role type resolution](../start/guides/agent-coordination.md#role-type-resolution).
 
 ### Phase 2: VALIDATE (Always Orchestrator -- Unchanged)
 
@@ -155,6 +155,8 @@ The key advantage of external tools: the writer is always reviewed by a **differ
 | Codex | Gemini (via adapter) | Claude (via Task) |
 | Gemini | Codex (via adapter) | Claude (via Task) |
 | Claude | Codex (via adapter) | Gemini (via adapter) |
+
+Claude (via Task) reviewers are spawned as fresh `roleType("adversarial-reviewer")` instances.
 
 Review is invoked via the adapter's `review` command. The orchestrator reads the reviewer's raw log and evaluates it independently -- the adapter never returns a pass/fail verdict.
 
@@ -221,8 +223,8 @@ Claude implements (with Model A's branch as reference)
 
 ```
 Existing metaswarm behavior unchanged.
-Claude implements via Task() mechanism.
-Standard adversarial review (fresh Task() instance).
+Claude implements via Task() mechanism (role type `roleType("coder")`).
+Standard adversarial review (fresh Task() instance, role type `roleType("adversarial-reviewer")`).
 ```
 
 No change to the current workflow. The skill is a no-op.
