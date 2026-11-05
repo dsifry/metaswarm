@@ -52,3 +52,15 @@ Gemini CLI has limited sub-agent support. When sub-agents are unavailable:
 - Quality of review is maintained through rubric structure
 
 See `skills/start/references/platform-adaptation.md` for the full cross-platform guide.
+
+## Role types on this host
+
+Spawn sites name a phase role through `roleType` (see `guides/agent-coordination.md`). Roster: `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner`, `researcher`, `coder`, `pr-shepherd-agent`, `knowledge-curator-agent`, `issue-orchestrator`, `swarm-coordinator-agent`.
+
+| Role | Host mechanism | Model source |
+|---|---|---|
+| any roster role | Gemini CLI subagent: a Markdown file in `.gemini/agents/<role>.md` (project) or `~/.gemini/agents/` (user) | `model` frontmatter field (for example `gemini-3-preview`); default `inherit` (the main session model). `agents.overrides` in `settings.json` can also override run configuration. |
+
+Source: https://geminicli.com/docs/core/subagents/ (verified from the docs page; the page notes Antigravity CLI replaced Gemini CLI for some tiers). metaswarm does not generate `.gemini/agents/` files (candidate follow-up issue). Gemini CLI is not installed here, so none of this was exercised.
+
+**Fallback:** if no subagent file exists for a role, pass the role name through to the host's generic sub-agent with the role's `agents/<role>.md` as the instructions; the session model applies. `.metaswarm/models.yaml` `roles.<role>.gemini` is used by the external-tools adapters when Claude is the host.

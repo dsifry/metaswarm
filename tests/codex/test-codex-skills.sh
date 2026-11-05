@@ -116,6 +116,36 @@ else
   fail "Symlink dry run: no skills linked"
 fi
 
+# 9. Host reference files document role types (#53)
+ROLES="design-reviewer plan-reviewer adversarial-reviewer planner researcher coder pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent"
+for ref in codex-tools opencode-tools cursor-tools platform-adaptation; do
+  f="$ROOT/skills/start/references/$ref.md"
+  for role in $ROLES; do
+    if grep -q "$role" "$f" 2>/dev/null; then
+      pass "$ref.md mentions role $role"
+    else
+      fail "$ref.md does not mention role $role"
+    fi
+  done
+  for needle in roleType "pass the role name through"; do
+    if grep -q "$needle" "$f" 2>/dev/null; then
+      pass "$ref.md mentions '$needle'"
+    else
+      fail "$ref.md does not mention '$needle'"
+    fi
+  done
+done
+for role in design-reviewer plan-reviewer adversarial-reviewer planner researcher coder pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent; do
+  grep -q -- "\b$role\b" "$ROOT/GEMINI.md" && pass "GEMINI.md mentions $role" || fail "GEMINI.md missing $role"
+done
+grep -q -i "pass the role name through" "$ROOT/GEMINI.md" && pass "GEMINI.md documents pass-through fallback" || fail "GEMINI.md missing pass-through fallback"
+grep -q "CLAUDE_CODE_SUBAGENT_MODEL\` (only a default" "$ROOT/skills/start/references/platform-adaptation.md" && pass "platform-adaptation states env var is only a default" || fail "platform-adaptation misstates CLAUDE_CODE_SUBAGENT_MODEL precedence"
+if grep -q "roleType" "$ROOT/GEMINI.md" && grep -q "Role types on this host" "$ROOT/GEMINI.md"; then
+  pass "GEMINI.md documents role types"
+else
+  fail "GEMINI.md does not document role types"
+fi
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1

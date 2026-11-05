@@ -155,6 +155,21 @@ and a delivery log UI.
 
 See [INSTALL.md](INSTALL.md) for prerequisites, platform-specific details, and migration from older versions.
 
+## Per-phase models
+
+Each phase runs as its own agent type with a default model in its frontmatter, so reviewers get a strong model and mechanical work gets a cheaper one.
+
+| Role | Default model |
+|---|---|
+| `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner` | opus |
+| `researcher`, `coder`, `pr-shepherd-agent`, `knowledge-curator-agent` | sonnet |
+| `issue-orchestrator`, `swarm-coordinator-agent` | inherit (your session model) |
+
+- **Override:** edit `.metaswarm/models.yaml`, then run `/update` to regenerate the `.claude/agents/metaswarm-<role>.md` files. Restart Claude Code after `.claude/agents/` is first created.
+- **Requires** Claude Code v2.1.251 or later.
+- **See what ran on which model:** `bin/metaswarm-usage` reports subagent cost and review-gate rounds from your Claude Code transcripts (`--json` for machine output).
+- Other hosts (Codex, Gemini, OpenCode, Cursor): see `skills/start/references/platform-adaptation.md`.
+
 ## Self-Learning System
 
 metaswarm doesn't just execute — it learns from every session and gets smarter over time.

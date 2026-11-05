@@ -26,14 +26,11 @@ jobs:
       - name: Check session-start.sh is executable
         run: test -x hooks/session-start.sh
 
-      - name: Run session-start.sh tests
-        run: bash tests/hooks/test-session-start.sh
+      - name: Run all test suites
+        run: bash -c 'shopt -s nullglob; for f in tests/*/test-*.sh; do echo "== $f"; bash "$f" || exit 1; done'
 
-      - name: Run CI template security tests
-        run: bash tests/templates/test-ci-template.sh
-
-      - name: Run sync-resources tests
-        run: bash tests/lib/test-sync-resources.sh
+      - name: Run metaswarm-usage tests with coverage
+        run: node --test --experimental-test-coverage tests/lib/metaswarm-usage.test.mjs
 
       - name: Verify co-located resources are in sync
         run: node lib/sync-resources.js --check

@@ -3,7 +3,26 @@
 ## 0.13.0
 
 ### Added
-- **Phase-named subagent types with per-phase default models** (#53): _in progress — filled in by WU6._
+- **Phase-named subagent types with per-phase default models** (#53): every phase now spawns a role type instead of `general-purpose`. Roster: `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner` (opus); `researcher`, `coder`, `pr-shepherd-agent`, `knowledge-curator-agent` (sonnet); `issue-orchestrator`, `swarm-coordinator-agent` (inherit). Every `agents/*.md` and `skills/start/agents/*.md` now has frontmatter with `name`, `description`, `model` (22 agents, +3 deprecated).
+- **`roleType("<role>")` and a resolution rule** (`guides/agent-coordination.md`, "Role type resolution"): spawn sites name a role, resolved as: use `metaswarm-<role>` if `.claude/agents/metaswarm-<role>.md` exists, otherwise `metaswarm:<role>` (the plugin default, which carries the same model), so an unconfigured project still works.
+- **`.metaswarm/models.yaml`** (from `templates/models.yaml`) is the per-project override file. Setup, `/update`, `/status` and migrate generate and check `.claude/agents/metaswarm-<role>.md` from it via `bin/metaswarm-agents.sh`.
+- **Per-call model for coder escalation**: coder retries can escalate to a stronger model by passing `model` on the spawn call, rather than via a different agent type.
+- **`bin/metaswarm-usage`**: report of subagent cost by phase/model and review-gate rounds from Claude Code transcripts, with a baseline for legacy agent types.
+- **Host docs**: "Role types on this host" tables for Codex, Gemini, OpenCode and Cursor in `skills/start/references/` and `GEMINI.md`, with research sources and what is unverified. Hosts without a per-role model get the role name passed through to their generic spawn, and the host default model applies.
+- **README "Per-phase models"** section.
+
+### Changed
+- **No validator type, deliberately**: VALIDATE is always run by the orchestrator itself ("trust nothing, verify everything" — it never delegates quality gates to a subagent and never trusts a subagent's report), so a validator agent would never be spawned. The issue's initial roster listed one; the design refined it out.
+- **Coverage gate**: `.coverage-thresholds.json` `enforcement.command` now runs the bash test suites (`tests/*/test-*.sh`), since the project has no `pnpm test:coverage`. CI also runs `node --test --experimental-test-coverage` for `bin/metaswarm-usage` (currently 100%; reported, not threshold-enforced).
+- **CI** runs every `tests/*/test-*.sh` suite in one step plus the usage tests with coverage.
+
+### Deprecated
+- `coder-agent`, `researcher-agent` and `code-review-agent` are stubs pointing at `coder`, `researcher` and `adversarial-reviewer`. They are removed in 0.14.0.
+- `adapters.*.model` in the external-tools config is deprecated in favour of `roles.<role>.codex|gemini` in `.metaswarm/models.yaml`; the legacy key still works in 0.13.x with a stderr deprecation warning and is removed in 0.14.0.
+
+### Upgrade notes
+- **Restart Claude Code** after `.claude/agents/` is first created; agent types are loaded at session start.
+- **Claude Code v2.1.251 or later is required** for the per-agent model frontmatter behavior.
 
 ## 0.12.0
 
