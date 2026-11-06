@@ -71,6 +71,15 @@ rm -f "$PF"
 if echo "$COUT" | grep -q 'Cost (USD)'; then pass "--pricing adds cost column"; else fail "--pricing cost column missing"; fi
 if echo "$COUT" | grep -Eq '^claude-opus-5-5 .* 0\.0367$'; then pass "opus cost 0.0367"; else fail "opus cost row"; fi
 
+# Coverage gate enforces the 100% thresholds for bin/metaswarm-usage (not just reports them)
+for f in "$ROOT/.coverage-thresholds.json" "$ROOT/.github/workflows/ci.yml"; do
+  if grep -q -- '--test-coverage-lines=100' "$f" && grep -q -- '--test-coverage-branches=100' "$f" && grep -q -- '--test-coverage-functions=100' "$f"; then
+    pass "$(basename "$f") enforces 100% node coverage thresholds"
+  else
+    fail "$(basename "$f") does not enforce node coverage thresholds"
+  fi
+done
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

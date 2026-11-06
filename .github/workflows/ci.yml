@@ -30,7 +30,7 @@ jobs:
         run: bash -c 'shopt -s nullglob; for f in tests/*/test-*.sh; do echo "== $f"; bash "$f" || exit 1; done'
 
       - name: Run metaswarm-usage tests with coverage
-        run: node --test --experimental-test-coverage tests/lib/metaswarm-usage.test.mjs
+        run: node --test --experimental-test-coverage --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100 --test-coverage-include=bin/metaswarm-usage tests/lib/metaswarm-usage.test.mjs
 
       - name: Verify co-located resources are in sync
         run: node lib/sync-resources.js --check

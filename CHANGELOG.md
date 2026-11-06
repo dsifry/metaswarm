@@ -14,7 +14,7 @@
 ### Changed
 - **Codex adapter passes the configured model**: `codex exec` now receives `-m <model>` when a model is configured for the role (`.metaswarm/models.yaml`) or via the legacy `adapters.codex.model`. Previously the configured model was reported but never passed. With nothing configured, no `-m` is passed and your `~/.codex/config.toml` model still applies.
 - **No validator type, deliberately**: VALIDATE is always run by the orchestrator itself ("trust nothing, verify everything" — it never delegates quality gates to a subagent and never trusts a subagent's report), so a validator agent would never be spawned. The issue's initial roster listed one; the design refined it out.
-- **Coverage gate**: `.coverage-thresholds.json` `enforcement.command` now runs the bash test suites (`tests/*/test-*.sh`), since the project has no `pnpm test:coverage`. CI also runs `node --test --experimental-test-coverage` for `bin/metaswarm-usage` (currently 100%; reported, not threshold-enforced).
+- **Coverage gate**: `.coverage-thresholds.json` `enforcement.command` now runs the bash test suites (`tests/*/test-*.sh`), since the project has no `pnpm test:coverage`. The gate (and CI) also runs `node --test --experimental-test-coverage` for `bin/metaswarm-usage` with `--test-coverage-{lines,branches,functions}=100`, so a coverage drop fails it. The bash scripts are covered by behavioural suites; line coverage is not measured for shell (would need kcov/bashcov).
 - **CI** runs every `tests/*/test-*.sh` suite in one step plus the usage tests with coverage.
 
 ### Deprecated
