@@ -197,7 +197,7 @@ function buckets(agents) {
       byModel.set(m.model, t);
     }
     if (byModel.size === 0) byModel.set('unknown', zero());
-    for (const [model, t] of byModel) out.push({ agent: a.id, type: a.type, phase: a.phase, model, ...t });
+    for (const [model, t] of byModel) out.push({ agent: a.id, type: a.type, phase: a.phase, model, typeModel: `${a.type} @ ${model}`, ...t });
   }
   return out;
 }
@@ -318,6 +318,7 @@ function main(argv, io) {
     byType: group(bs, 'type', pricing),
     byModel: group(bs, 'model', pricing),
     byPhase: group(bs, 'phase', pricing),
+    byTypeModel: group(bs, 'typeModel', pricing),
   };
   for (const b of bs) for (const f of Object.keys(report.totals)) report.totals[f] += b[f];
   if (pricing) {
@@ -339,6 +340,7 @@ function main(argv, io) {
   out(usageTable('By agent type', 'Type', report.byType, priced));
   out(usageTable('By model', 'Model', report.byModel, priced));
   out(usageTable('By phase', 'Phase', report.byPhase, priced));
+  out(usageTable('By agent type x model (which type actually ran on which model)', 'Type @ Model', report.byTypeModel, priced));
   const t = report.totals;
   out(`Total: input ${t.input}, cache write ${t.cacheWrite}, cache read ${t.cacheRead}, output ${t.output}` + (priced ? `, cost $${t.cost.toFixed(4)}` : ''));
   if (report.unpricedModels) out(`Unpriced models: ${report.unpricedModels.join(', ')}`);

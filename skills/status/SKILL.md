@@ -123,7 +123,7 @@ MA="$(command -v metaswarm-agents.sh || echo "${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT
 "$MA" check
 ```
 
-- Exit 0: `generated agents are up to date` (or `no models.yaml -- plugin defaults apply`)
+- Exit 0: `generated agents are up to date` (or `no models.yaml — using plugin defaults; run /setup to customize`)
 - Exit 1: list each drifted file (`hand-edited`, `stale`, `orphan`, `missing`) and recommend `/update` (or `generate --force` for hand-edited files)
 - Exit 2: report the `models.yaml:<line>: <reason>` error
 - Also run `claude --version`; if it is older than 2.1.251, warn: `Claude Code is older than 2.1.251 -- CLAUDE_CODE_SUBAGENT_MODEL can override agent models; upgrade`. If `claude` is not found, skip the version check.

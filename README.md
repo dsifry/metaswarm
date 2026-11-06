@@ -165,7 +165,7 @@ Each phase runs as its own agent type with a default model in its frontmatter, s
 | `researcher`, `coder`, `pr-shepherd-agent`, `knowledge-curator-agent` | sonnet |
 | `issue-orchestrator`, `swarm-coordinator-agent` | inherit (your session model) |
 
-- **Override:** edit `.metaswarm/models.yaml`, then run `/update` to regenerate the `.claude/agents/metaswarm-<role>.md` files. Restart Claude Code after `.claude/agents/` is first created.
+- **Override:** edit `.metaswarm/models.yaml`, then run `/update` to regenerate the `.claude/agents/metaswarm-<role>.md` files. Restart Claude Code after `.claude/agents/` is first created. `issue-orchestrator` and `swarm-coordinator-agent` are plugin-only (they inherit the session model) and are not configurable in `models.yaml`.
 - **Requires** Claude Code v2.1.251 or later.
 - **See what ran on which model:** `bin/metaswarm-usage` reports subagent cost and review-gate rounds from your Claude Code transcripts (`--json` for machine output).
 - Other hosts (Codex, Gemini, OpenCode, Cursor): see `skills/start/references/platform-adaptation.md`.

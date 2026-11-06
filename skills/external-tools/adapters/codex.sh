@@ -79,8 +79,12 @@ cmd_health() {
 # ===========================================================================
 cmd_implement() {
   parse_args "$@"
-  local model
-  model="$(resolve_model "$TOOL_NAME" "$XT_ROLE")" || return 1
+  local model cfg_model
+  cfg_model="$(configured_model "$TOOL_NAME" "$XT_ROLE")" || return 1
+  model="${cfg_model:-$DEFAULT_MODEL}"
+  # Only pass -m when a model is configured; otherwise the user's ~/.codex config applies
+  local model_args=()
+  [[ -n "$cfg_model" ]] && model_args=(-m "$cfg_model")
 
   # Validate required arguments
   if [[ -z "$XT_WORKTREE" ]]; then
@@ -122,7 +126,7 @@ cmd_implement() {
       PATH="$PATH" \
       OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
       CODEX_API_KEY="${CODEX_API_KEY:-}" \
-    "$TOOL_CMD" exec --full-auto --json -m "$model" -C "$XT_WORKTREE" "$prompt_content" \
+    "$TOOL_CMD" exec --full-auto --json ${model_args[@]+"${model_args[@]}"} -C "$XT_WORKTREE" "$prompt_content" \
     || exit_code=$?
 
   # Calculate duration
@@ -234,8 +238,12 @@ cmd_implement() {
 # ===========================================================================
 cmd_review() {
   parse_args "$@"
-  local model
-  model="$(resolve_model "$TOOL_NAME" "$XT_ROLE")" || return 1
+  local model cfg_model
+  cfg_model="$(configured_model "$TOOL_NAME" "$XT_ROLE")" || return 1
+  model="${cfg_model:-$DEFAULT_MODEL}"
+  # Only pass -m when a model is configured; otherwise the user's ~/.codex config applies
+  local model_args=()
+  [[ -n "$cfg_model" ]] && model_args=(-m "$cfg_model")
 
   # Validate required arguments
   if [[ -z "$XT_WORKTREE" ]]; then
@@ -321,7 +329,7 @@ PROMPT_FOOTER
       PATH="$PATH" \
       OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
       CODEX_API_KEY="${CODEX_API_KEY:-}" \
-    "$TOOL_CMD" exec --sandbox read-only --json -m "$model" -C "$XT_WORKTREE" "$review_prompt" \
+    "$TOOL_CMD" exec --sandbox read-only --json ${model_args[@]+"${model_args[@]}"} -C "$XT_WORKTREE" "$review_prompt" \
     || exit_code=$?
 
   # Calculate duration

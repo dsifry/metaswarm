@@ -301,3 +301,18 @@ test('executed directly as a script (shebang entrypoint)', () => {
   const bad = spawnSync(process.execPath, [bin, '--bogus'], { encoding: 'utf8' });
   assert.equal(bad.status, 2);
 });
+
+test('by type x model: shows which agent type ran on which model, and sums to per-type totals', () => {
+  const r = json(['--root', FX]);
+  assert.ok(Array.isArray(r.byTypeModel) && r.byTypeModel.length > 0, 'byTypeModel present');
+  const types = rows(r.byType);
+  const sums = {};
+  for (const row of r.byTypeModel) {
+    const [type, model] = row.key.split(' @ ');
+    assert.ok(type in types, `type ${type} known`);
+    assert.ok(model && model.length > 0, 'model named');
+    const s = (sums[type] ||= [0, 0, 0, 0]);
+    s[0] += row.input; s[1] += row.cacheWrite; s[2] += row.cacheRead; s[3] += row.output;
+  }
+  for (const [type, t] of Object.entries(types)) assert.deepEqual(sums[type], tok(t).slice(0, 4), `sums for ${type}`);
+});

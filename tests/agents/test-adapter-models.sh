@@ -95,6 +95,13 @@ for t in codex gemini; do
   echo "$argv" | grep -q -E -- "(-m|--model) $want_rev( |\$)" && pass "$t review invocation passes model $want_rev" || fail "$t review invocation lacks model $want_rev: $argv"
 done
 
+echo "Test: codex with nothing configured passes no -m (user's ~/.codex/config.toml model applies)"
+new_proj none none
+printf 'do it\n' > "$P/prompt.md"
+rm -f "$TMP_BASE/codex.argv"
+(cd "$P" && PATH="$FAKE:$PATH" OPENAI_API_KEY=x bash "$ADAPTERS/codex.sh" implement --worktree "$P" --prompt-file "$P/prompt.md" >/dev/null 2>&1) || true
+grep -E '^exec ' "$TMP_BASE/codex.argv" | grep -q -E -- '(^| )-m ' && fail "codex passed -m with nothing configured: $(grep -E '^exec ' "$TMP_BASE/codex.argv")" || pass "codex omits -m when no model is configured"
+
 echo "Test: symlinked install layout (npm/Codex installer symlinks skills/<dir>) still finds the resolver"
 LINKROOT="$TMP_BASE/agents-home/skills"; mkdir -p "$LINKROOT"
 ln -s "$REPO_ROOT/skills/external-tools" "$LINKROOT/metaswarm-external-tools"

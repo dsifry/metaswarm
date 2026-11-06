@@ -7,11 +7,12 @@
 - **`roleType("<role>")` and a resolution rule** (`guides/agent-coordination.md`, "Role type resolution"): spawn sites name a role, resolved as: use `metaswarm-<role>` if `.claude/agents/metaswarm-<role>.md` exists, otherwise `metaswarm:<role>` (the plugin default, which carries the same model), so an unconfigured project still works.
 - **`.metaswarm/models.yaml`** (from `templates/models.yaml`) is the per-project override file. Setup, `/update`, `/status` and migrate generate and check `.claude/agents/metaswarm-<role>.md` from it via `bin/metaswarm-agents.sh`.
 - **Per-call model for coder escalation**: coder retries can escalate to a stronger model by passing `model` on the spawn call, rather than via a different agent type.
-- **`bin/metaswarm-usage`**: report of subagent cost by phase/model and review-gate rounds from Claude Code transcripts, with a baseline for legacy agent types.
+- **`bin/metaswarm-usage`**: report of subagent cost by agent type, model, phase and type × model (which type actually ran on which model), plus review-gate rounds, from Claude Code transcripts; maps legacy agent types for a pre-rollout baseline.
 - **Host docs**: "Role types on this host" tables for Codex, Gemini, OpenCode and Cursor in `skills/start/references/` and `GEMINI.md`, with research sources and what is unverified. Hosts without a per-role model get the role name passed through to their generic spawn, and the host default model applies.
 - **README "Per-phase models"** section.
 
 ### Changed
+- **Codex adapter passes the configured model**: `codex exec` now receives `-m <model>` when a model is configured for the role (`.metaswarm/models.yaml`) or via the legacy `adapters.codex.model`. Previously the configured model was reported but never passed. With nothing configured, no `-m` is passed and your `~/.codex/config.toml` model still applies.
 - **No validator type, deliberately**: VALIDATE is always run by the orchestrator itself ("trust nothing, verify everything" — it never delegates quality gates to a subagent and never trusts a subagent's report), so a validator agent would never be spawned. The issue's initial roster listed one; the design refined it out.
 - **Coverage gate**: `.coverage-thresholds.json` `enforcement.command` now runs the bash test suites (`tests/*/test-*.sh`), since the project has no `pnpm test:coverage`. CI also runs `node --test --experimental-test-coverage` for `bin/metaswarm-usage` (currently 100%; reported, not threshold-enforced).
 - **CI** runs every `tests/*/test-*.sh` suite in one step plus the usage tests with coverage.

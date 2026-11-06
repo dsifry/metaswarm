@@ -75,18 +75,18 @@ parse_args() {
 }
 
 # ---------------------------------------------------------------------------
-# resolve_model()
-#   Resolves the model an adapter should use. Order:
+# configured_model()
+#   Prints the explicitly configured model for an adapter, or "" if none. Order:
 #     1. .metaswarm/models.yaml roles.<role>.<tool> (via the metaswarm-agents.sh
 #        resolve process; only when a role is given)
 #     2. legacy .metaswarm/external-tools.yaml adapters.<tool>.model (deprecated,
 #        warns on stderr)
-#     3. the adapter's built-in DEFAULT_MODEL
-#   Usage: resolve_model <tool> [role]
+#   resolve_model() wraps this and falls back to the adapter's DEFAULT_MODEL.
+#   Usage: configured_model <tool> [role]   (prints "" when nothing is configured)
 #   Prints the model. Returns 2 (message on stderr) for an unknown role.
 # ---------------------------------------------------------------------------
-resolve_model() {
-  local tool="${1:?resolve_model: tool required}"
+configured_model() {
+  local tool="${1:?configured_model: tool required}"
   local role="${2:-}"
   local model="" resolver="" err_file rc=0
 
@@ -132,13 +132,20 @@ resolve_model() {
           print; exit
         }' "$legacy_file")"
       if [[ -n "$model" ]]; then
-        printf 'Warning: adapters.%s.model in .metaswarm/external-tools.yaml is deprecated; set roles.<role>.%s in .metaswarm/models.yaml instead\n' \
+        printf 'Warning: adapters.%s.model in .metaswarm/external-tools.yaml is deprecated and will be removed in 0.14.0; set roles.<role>.%s in .metaswarm/models.yaml instead\n' \
           "$tool" "$tool" >&2
       fi
     fi
   fi
 
-  printf '%s' "${model:-$DEFAULT_MODEL}"
+  printf '%s' "$model"
+}
+
+# resolve_model <tool> [role]: configured model, else the adapter's built-in DEFAULT_MODEL
+resolve_model() {
+  local m
+  m="$(configured_model "$@")" || return $?
+  printf '%s' "${m:-$DEFAULT_MODEL}"
 }
 
 # ---------------------------------------------------------------------------
