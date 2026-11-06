@@ -67,6 +67,11 @@ parse_models() {
     prev=$level
     body="${body# }"; body="${body# }"; body="${body# }"; body="${body# }"
     key="${body%%:*}"; val="${body#*:}"; val="${val# }"
+    # Decode a quoted YAML scalar ("x" or 'x')
+    case "$val" in
+      \"*\") val="${val#\"}"; val="${val%\"}" ;;
+      \'*\') val="${val#\'}"; val="${val%\'}" ;;
+    esac
     printf '%s' "$body" | grep -Eq '^[A-Za-z0-9_-]+:( .*)?$' || parse_error "$n" "expected 'key: value'"
     case $level in
       0)
@@ -185,6 +190,14 @@ cmd_generate() {
 cmd_check() {
   local role f drift=0 tmp
   if [ ! -f "$MS_CONFIG" ]; then
+    for f in "$MS_AGENTS"/metaswarm-*.md; do
+      [ -f "$f" ] && has_header "$f" || continue
+      echo "leftover generated agent (no models.yaml; it still overrides the plugin default): $f"; drift=1
+    done
+    if [ "$drift" -ne 0 ]; then
+      echo "restore .metaswarm/models.yaml and run generate, or run: metaswarm-agents.sh clean"
+      return 1
+    fi
     echo "no models.yaml — using plugin defaults; run /setup to customize"
     return 0
   fi

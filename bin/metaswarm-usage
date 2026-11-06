@@ -106,12 +106,18 @@ function globToRegExp(glob) {
   return new RegExp(`^${body}$`);
 }
 
-function listDirs(dir) {
+// Missing directories are normal (empty); any other read failure is recorded in `unreadable`.
+function readDir(dir, unreadable) {
   try {
-    return fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+    return fs.readdirSync(dir, { withFileTypes: true });
   } catch (e) {
+    if (e.code !== 'ENOENT') unreadable.push({ path: dir, code: e.code });
     return [];
   }
+}
+
+function listDirs(dir, unreadable) {
+  return readDir(dir, unreadable).filter((e) => e.isDirectory()).map((e) => e.name);
 }
 
 function readMeta(file) {
@@ -151,16 +157,12 @@ function collect(root, projectGlob) {
   const re = projectGlob ? globToRegExp(projectGlob) : null;
   const agents = [];
   let skipped = 0;
-  for (const proj of listDirs(root)) {
+  const unreadable = [];
+  for (const proj of listDirs(root, unreadable)) {
     if (re && !re.test(proj)) continue;
-    for (const sess of listDirs(path.join(root, proj))) {
+    for (const sess of listDirs(path.join(root, proj), unreadable)) {
       const dir = path.join(root, proj, sess, 'subagents');
-      let files = [];
-      try {
-        files = fs.readdirSync(dir).filter((f) => f.endsWith('.jsonl'));
-      } catch (e) {
-        continue;
-      }
+      const files = readDir(dir, unreadable).map((e) => e.name).filter((f) => f.endsWith('.jsonl'));
       for (const f of files) {
         const base = f.slice(0, -'.jsonl'.length);
         const meta = readMeta(path.join(dir, `${base}.meta.json`));
@@ -178,7 +180,7 @@ function collect(root, projectGlob) {
       }
     }
   }
-  return { agents, skipped };
+  return { agents, skipped, unreadable };
 }
 
 const zero = () => ({ input: 0, cacheWrite: 0, cacheRead: 0, output: 0 });
@@ -304,7 +306,8 @@ function main(argv, io) {
     return 2;
   }
   const root = opts.root || defaultRoot(io && io.home);
-  const { agents, skipped } = collect(root, opts.project);
+  const { agents, skipped, unreadable } = collect(root, opts.project);
+  for (const u of unreadable) err(`cannot read ${u.path}: ${u.code}`);
   if (agents.length === 0 && !opts.json) {
     out(`No transcripts found under ${root}`);
     return 0;
@@ -314,6 +317,7 @@ function main(argv, io) {
     root,
     agents: agents.length,
     skippedLines: skipped,
+    unreadable,
     totals: { ...zero() },
     byType: group(bs, 'type', pricing),
     byModel: group(bs, 'model', pricing),

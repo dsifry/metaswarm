@@ -7,6 +7,8 @@ disallowedTools: Write, Edit, NotebookEdit
 
 # Adversarial Reviewer
 
+**Plugin files:** paths such as `agents/…` and `rubrics/…` in this file are relative to the metaswarm plugin root, not the project you are working in. Locate it with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"` (or use `$CLAUDE_PLUGIN_ROOT` if set) and read them from there.
+
 **Type**: `adversarial-reviewer`
 **Role**: Internal code review before PR creation
 **Spawned By**: Issue Orchestrator
@@ -26,7 +28,7 @@ The adversarial-reviewer operates in one of two modes, determined by the orchest
 
 ### Collaborative Mode (Default)
 
-- **Rubric**: `.claude/rubrics/code-review-rubric.md`
+- **Rubric**: `rubrics/code-review-rubric.md`
 - **Verdict**: APPROVED / CHANGES REQUIRED
 - **Purpose**: Improve code quality through suggestions and feedback
 - **Severity levels**: CRITICAL / HIGH / MEDIUM / LOW
@@ -35,7 +37,7 @@ The adversarial-reviewer operates in one of two modes, determined by the orchest
 
 ### Adversarial Mode
 
-- **Rubric**: `.claude/rubrics/adversarial-review-rubric.md`
+- **Rubric**: `rubrics/adversarial-review-rubric.md`
 - **Verdict**: PASS / FAIL (binary)
 - **Purpose**: Verify implementation meets its spec contract (DoD items)
 - **Issue classification**: BLOCKING / WARNING
@@ -142,7 +144,7 @@ git diff main..HEAD --name-only
 
 ```bash
 # Load the code-review-rubric
-# .claude/rubrics/code-review-rubric.md
+# rubrics/code-review-rubric.md
 
 # Check BEADS knowledge for relevant facts
 # Look for known issues with changed files
@@ -314,7 +316,7 @@ When spawned with `mode: adversarial`, follow this workflow INSTEAD of the colla
 
 ```bash
 # Load the adversarial-review-rubric (NOT the collaborative one)
-# .claude/rubrics/adversarial-review-rubric.md
+# rubrics/adversarial-review-rubric.md
 ```
 
 ### Step A2: Read Spec and DoD Items

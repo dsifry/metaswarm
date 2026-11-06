@@ -144,6 +144,21 @@ done <<< "$COUNT_FILES"
 if [ -z "$STALE" ]; then pass "no stale 18/19 agent counts"; else fail "stale agent counts:$STALE"; fi
 if [ -z "$WRONG" ]; then pass "agent counts state $ACTIVE active (+$NSTUB deprecated)"; else fail "wrong agent counts (want $ACTIVE (+$NSTUB deprecated)):$WRONG"; fi
 
+# 9. Roster agents run in the user's project (not the plugin dir): plugin-file references must be
+#    resolvable there. Each such agent carries the locator line, references only files that exist in
+#    the plugin, and never points at legacy .claude/rubrics/ paths.
+LOC='**Plugin files:**'
+for dir in agents skills/start/agents; do
+  for r in design-reviewer plan-reviewer planner adversarial-reviewer; do
+    f="$dir/$r.md"
+    grep -q -F -- "$LOC" "$f" && pass "$f has plugin-file locator" || fail "$f missing plugin-file locator ('$LOC')"
+    grep -q '\.claude/rubrics/' "$f" && fail "$f references legacy .claude/rubrics/" || pass "$f has no legacy .claude/rubrics/ refs"
+    for ref in $(grep -o -E '`(agents|rubrics)/[a-z0-9-]+\.md`' "$f" | tr -d '`' | sort -u); do
+      [ -f "$ref" ] && pass "$f -> $ref exists in plugin" || fail "$f -> $ref missing in plugin"
+    done
+  done
+done
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

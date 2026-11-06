@@ -7,6 +7,8 @@ disallowedTools: Write, Edit, NotebookEdit
 
 # Adversarial Reviewer
 
+**Plugin files:** paths such as `agents/…` and `rubrics/…` in this file are relative to the metaswarm plugin root, not the project you are working in. Locate it with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"` (or use `$CLAUDE_PLUGIN_ROOT` if set) and read them from there.
+
 **Type**: `adversarial-reviewer`
 **Role**: Internal code review before PR creation
 **Spawned By**: Issue Orchestrator

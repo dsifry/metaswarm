@@ -204,6 +204,27 @@ for f in skills/status/SKILL.md skills/migrate/SKILL.md skills/setup/SKILL.md co
 done
 [ -z "$BAD" ] && pass "every call site resolves metaswarm-agents.sh via PATH with plugin-root fallback" || fail "unresolved \${PLUGIN_ROOT} call sites:$BAD"
 
+echo "Test 15: quoted YAML scalars are decoded (migration from quoted external-tools.yaml values)"
+new_proj none
+printf 'roles:\n  coder:\n    claude: "haiku"\n    codex: "gpt-5.3-codex"\n    gemini: \x27flash\x27\n' > "$P/.metaswarm/models.yaml"
+run generate
+check "generate accepts quoted claude model" "$RC"
+grep -q '^model: haiku$' "$P/.claude/agents/metaswarm-coder.md" && pass "quoted claude value written unquoted" || fail "quoted claude value: $(grep '^model:' "$P/.claude/agents/metaswarm-coder.md")"
+run resolve coder codex
+[ "$OUT" = "gpt-5.3-codex" ] && pass "double-quoted codex value decoded" || fail "double-quoted codex: '$OUT'"
+run resolve coder gemini
+[ "$OUT" = "flash" ] && pass "single-quoted gemini value decoded" || fail "single-quoted gemini: '$OUT'"
+
+echo "Test 16: check without models.yaml but with leftover generated agents reports them"
+new_proj
+run generate
+rm "$P/.metaswarm/models.yaml"
+run check
+[ "$RC" = "1" ] && has "metaswarm-agents.sh clean" && pass "check flags leftover generated agents (exit 1, suggests clean)" || fail "leftover generated agents not flagged: rc=$RC $OUT"
+new_proj none
+run check
+[ "$RC" = "0" ] && pass "check with no models.yaml and no generated agents exits 0" || fail "clean project check rc=$RC"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

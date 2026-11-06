@@ -7,6 +7,8 @@ disallowedTools: Write, Edit, NotebookEdit
 
 # Plan Reviewer
 
+**Plugin files:** paths such as `agents/…` and `rubrics/…` in this file are relative to the metaswarm plugin root, not the project you are working in. Locate it with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"` (or use `$CLAUDE_PLUGIN_ROOT` if set) and read them from there.
+
 **Type**: `plan-reviewer`
 **Role**: One adversarial reviewer in the parallel Plan Review Gate
 **Spawned By**: Plan Review Gate (`metaswarm:plan-review-gate`)

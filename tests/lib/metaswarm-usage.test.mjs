@@ -316,3 +316,26 @@ test('by type x model: shows which agent type ran on which model, and sums to pe
   }
   for (const [type, t] of Object.entries(types)) assert.deepEqual(sums[type], tok(t).slice(0, 4), `sums for ${type}`);
 });
+
+test('unreadable directories are reported, not silently treated as empty', () => {
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'mu-unread-'));
+  const locked = path.join(d, 'proj-locked');
+  fs.mkdirSync(path.join(locked, 'sess', 'subagents'), { recursive: true });
+  const okSub = path.join(d, 'proj-ok', 'sess', 'subagents');
+  fs.mkdirSync(okSub, { recursive: true });
+  const lockedSub = path.join(d, 'proj-ok', 'sess2', 'subagents');
+  fs.mkdirSync(lockedSub, { recursive: true });
+  fs.chmodSync(locked, 0o000);
+  fs.chmodSync(lockedSub, 0o000);
+  try {
+    const r = run(['--root', d]);
+    assert.match(r.err, /cannot read .*proj-locked/);
+    assert.match(r.err, /cannot read .*sess2.subagents/);
+    const j = JSON.parse(run(['--root', d, '--json']).out);
+    assert.equal(j.unreadable.length, 2);
+  } finally {
+    fs.chmodSync(locked, 0o755);
+    fs.chmodSync(lockedSub, 0o755);
+    fs.rmSync(d, { recursive: true, force: true });
+  }
+});
