@@ -318,24 +318,21 @@ test('by type x model: shows which agent type ran on which model, and sums to pe
 });
 
 test('unreadable directories are reported, not silently treated as empty', () => {
+  // Use non-directory paths (ENOTDIR) rather than chmod 000, which root ignores.
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'mu-unread-'));
-  const locked = path.join(d, 'proj-locked');
-  fs.mkdirSync(path.join(locked, 'sess', 'subagents'), { recursive: true });
-  const okSub = path.join(d, 'proj-ok', 'sess', 'subagents');
-  fs.mkdirSync(okSub, { recursive: true });
-  const lockedSub = path.join(d, 'proj-ok', 'sess2', 'subagents');
-  fs.mkdirSync(lockedSub, { recursive: true });
-  fs.chmodSync(locked, 0o000);
-  fs.chmodSync(lockedSub, 0o000);
   try {
+    fs.mkdirSync(path.join(d, 'proj', 'sess-ok', 'subagents'), { recursive: true });
+    fs.mkdirSync(path.join(d, 'proj', 'sess-missing'), { recursive: true }); // no subagents/: normal, not reported
+    fs.mkdirSync(path.join(d, 'proj', 'sess-bad'), { recursive: true });
+    fs.writeFileSync(path.join(d, 'proj', 'sess-bad', 'subagents'), 'not a directory');
     const r = run(['--root', d]);
-    assert.match(r.err, /cannot read .*proj-locked/);
-    assert.match(r.err, /cannot read .*sess2.subagents/);
+    assert.match(r.err, /cannot read .*sess-bad.subagents: ENOTDIR/);
     const j = JSON.parse(run(['--root', d, '--json']).out);
-    assert.equal(j.unreadable.length, 2);
+    assert.equal(j.unreadable.length, 1);
+    const asFile = path.join(d, 'root-is-a-file');
+    fs.writeFileSync(asFile, 'x');
+    assert.match(run(['--root', asFile]).err, /cannot read .*root-is-a-file: ENOTDIR/);
   } finally {
-    fs.chmodSync(locked, 0o755);
-    fs.chmodSync(lockedSub, 0o755);
     fs.rmSync(d, { recursive: true, force: true });
   }
 });

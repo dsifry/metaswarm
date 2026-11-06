@@ -72,13 +72,20 @@ if echo "$COUT" | grep -q 'Cost (USD)'; then pass "--pricing adds cost column"; 
 if echo "$COUT" | grep -Eq '^claude-opus-5-5 .* 0\.0367$'; then pass "opus cost 0.0367"; else fail "opus cost row"; fi
 
 # Coverage gate enforces the 100% thresholds for bin/metaswarm-usage (not just reports them)
+GATE="$ROOT/tests/lib/coverage-gate.sh"
+if grep -q -- '--test-coverage-lines=100' "$GATE" 2>/dev/null && grep -q -- '--test-coverage-branches=100' "$GATE" && grep -q -- '--test-coverage-functions=100' "$GATE"; then
+  pass "coverage-gate.sh enforces 100% node coverage thresholds"
+else
+  fail "coverage-gate.sh missing or does not enforce thresholds"
+fi
 for f in "$ROOT/.coverage-thresholds.json" "$ROOT/.github/workflows/ci.yml"; do
-  if grep -q -- '--test-coverage-lines=100' "$f" && grep -q -- '--test-coverage-branches=100' "$f" && grep -q -- '--test-coverage-functions=100' "$f"; then
-    pass "$(basename "$f") enforces 100% node coverage thresholds"
-  else
-    fail "$(basename "$f") does not enforce node coverage thresholds"
-  fi
+  grep -q 'tests/lib/coverage-gate.sh' "$f" && pass "$(basename "$f") runs coverage-gate.sh" || fail "$(basename "$f") does not run coverage-gate.sh"
 done
+# Old Node: clear failure message instead of an unknown-option crash
+FAKEN="$(mktemp -d)"; printf '#!/bin/sh\necho 20.11.0\n' > "$FAKEN/node"; chmod +x "$FAKEN/node"
+RC=0; MSG="$(PATH="$FAKEN:$PATH" bash "$GATE" 2>&1)" || RC=$?
+rm -rf "$FAKEN"
+if [ "$RC" != 0 ] && printf '%s' "$MSG" | grep -q 'requires Node.js >= 22.8'; then pass "coverage gate fails clearly on Node < 22.8"; else fail "coverage gate on old Node: rc=$RC $MSG"; fi
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
