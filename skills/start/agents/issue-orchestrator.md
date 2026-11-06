@@ -221,7 +221,7 @@ For each work unit (respecting dependency graph):
   ├── Pass: spec, DoD items, diff (NOT coding subagent's self-assessment)
   ├── Reviewer checks each DoD item with file:line evidence
   ├── If PASS → Phase 3.4
-  └── If FAIL → back to Phase 3.1, then FRESH reviewer (max 3 retries → escalate)
+  └── If FAIL → back to Phase 3.1, then FRESH reviewer (severity-gated iteration, cap 10 rounds → escalate)
 
   Phase 3.4: COMMIT
   ├── git add <file-scope-files>
@@ -278,18 +278,25 @@ ${dodItems.map((item, i) => `${i+1}. ${item}`).join('\n')}
 ## What to Review
 Run: git diff main..HEAD -- ${fileScope.join(' ')}
 
+## Findings
+Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
+- severity: critical | major | minor | nit
+- protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
+- evidence: <file:line or expected-vs-found>
+- blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+
 ## Rules
 - Check EACH DoD item. Cite file:line evidence for PASS or expected-vs-found for FAIL.
-- Any single BLOCKING issue means overall FAIL.
+- Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
-- Do NOT suggest improvements. Only report PASS or FAIL with evidence.
+- Report every finding with the 4 fields; minor/nit findings are recorded as follow-ups, not suggestions.
 ```
 
 **Critical orchestrator rules during Phase 3:**
 
 1. **Never trust self-reports**: Run tsc, eslint, vitest YOURSELF — do not ask the coder
 2. **Fresh reviewer on re-review**: Spawn a NEW adversarial reviewer (role type roleType("adversarial-reviewer")) after each FAIL
-3. **Max 3 retries per work unit**: After 3 FAILs, escalate (see Recovery Protocol)
+3. **Severity-gated iteration on review FAIL**: After each review round, apply the severity rule (cap 10 rounds; see `./guides/delivery-scope.md` and the `orchestrated-execution` skill's On FAIL protocol). It decides whether to iterate, advance or escalate. Minor/nit findings become follow-ups
 4. **Respect file scope**: Verify with `git diff --name-only` after each implementation
 5. **Parallel where possible**: Independent work units can run Phase 3.1 simultaneously
 6. **Maintain project context**: After each work unit COMMIT, update the project context document with:
@@ -511,7 +518,7 @@ Plan Complete
     └── CTO Agent (approve/reject)
     │
     ALL APPROVED? → Proceed to implementation
-    ANY REJECTED? → Iterate (max 3x) → Escalate to human
+    ANY REJECTED? → Severity-gated iteration (cap 10 rounds) → Escalate to human
 ```
 
 **UX Reviewer responsibilities** (Issue #12):
@@ -608,8 +615,8 @@ During the 4-phase execution loop, follow the structured recovery protocol defin
 
 1. **DIAGNOSE**: Identify which phase failed and gather evidence
 2. **CLASSIFY**: Fixable (clear error) / Ambiguous (unclear cause) / External (dependency issue)
-3. **RETRY**: Max 3 attempts per work unit, with escalating approaches
-4. **ESCALATE**: After 3 failures, escalate to human with full failure history
+3. **RETRY**: VALIDATE failures (tests, coverage, lint, typecheck) get up to 3 attempts per work unit, with escalating approaches. Review FAILs follow severity-gated iteration instead (cap 10 rounds; see `./guides/delivery-scope.md`)
+4. **ESCALATE**: After 3 VALIDATE failures, or when the severity rule escalates, escalate to human with full failure history
 
 Track retries with labels:
 

@@ -220,7 +220,7 @@ See Section 6. ALWAYS a fresh `Task()` instance on every single review pass. Nev
 | **Quality gates**               | Coverage, lint, typecheck, tests -- all blocking state transitions             |
 | **Pipeline pattern**            | Push + PR + shepherd immediately after each agent completes, don't batch       |
 | **Phase gate rule**             | Next phase starts only after ALL previous phase PRs are squash-merged          |
-| **Max retry + escalation**      | 3 retries per gate, then escalate to human with full failure history           |
+| **Max retry + escalation**      | VALIDATE: 3 attempts; review: severity-gated iteration, cap 10 rounds; then escalate to human with full failure history |
 | **File scope verification**     | `git diff --name-only` check after every implementation                        |
 
 ### Invariant Rationale

@@ -53,7 +53,7 @@ superpowers:brainstorming
     └─────────────────────────────────────────┘
           │
           ▼
-    ALL APPROVED? ────No────► Iterate on design (max 3)
+    ALL APPROVED? ────No────► Iterate on design (severity-gated, cap 10)
           │
          Yes
           │
@@ -154,14 +154,14 @@ Some reviewers found issues that need to be addressed.
 ---
 
 Please revise the design document and I'll re-run the review gate.
-(Iteration 1 of 3)
+(Round 1; severity-gated iteration, cap 10 rounds)
 ```
 
 ### Step 4: Iterate or Proceed
 
-- If NEEDS_REVISION: Help user address issues, re-run gate (max 3 iterations)
+- If NEEDS_REVISION (at least one `blocker: yes` finding): Help user address the blockers, re-run gate. Iteration is severity-gated (cap 10 rounds; see the metaswarm plugin's `guides/delivery-scope.md`)
 - If ALL APPROVED: Proceed to planning phase
-- After 3 failed iterations: Escalate to human decision (Override / Defer / Cancel)
+- When the severity rule escalates (cap hit, or a recurring or disputed blocker): Escalate to human decision (Override / Defer / Cancel)
 
 ---
 

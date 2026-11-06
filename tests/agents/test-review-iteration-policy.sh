@@ -363,7 +363,7 @@ for g in "${GATES[@]}"; do
 done
 
 # DoD 3.5: no fixed review-iteration count in files that drive behaviour.
-# WU4 adds agents/issue-orchestrator.md and its mirror to this list once it edits them.
+# WU4 added agents/issue-orchestrator.md and its mirror to this list.
 FIXED_COUNT_PHRASES=(
   'max 3 iterations' 'Max 3 iterations' 'max 3x' 'max 3 →' '(max 3)' 'max 3 retries' 'Max 3 retry cycles'
   'of 3)' 'of 3.' 'N of 3' '1 of 3' 'Re-review attempt 1/3' '3/3 iterations'
@@ -375,7 +375,7 @@ FIXED_COUNT_PHRASES=(
 PHRASE_FILES=("${GATES[@]}")
 for f in "$REPO_ROOT"/rubrics/*.md "$REPO_ROOT"/skills/*/rubrics/*.md; do PHRASE_FILES+=("${f#"$REPO_ROOT"/}"); done
 for dir in agents skills/start/agents; do
-  for ag in adversarial-reviewer plan-reviewer design-reviewer cto-agent; do PHRASE_FILES+=("$dir/$ag.md"); done
+  for ag in adversarial-reviewer plan-reviewer design-reviewer cto-agent issue-orchestrator; do PHRASE_FILES+=("$dir/$ag.md"); done
 done
 for f in "${PHRASE_FILES[@]}"; do
   [ -f "$REPO_ROOT/$f" ] || { fail "$f exists"; continue; }
@@ -522,6 +522,20 @@ for f in "$REPO_ROOT"/agents/*.md "$REPO_ROOT"/rubrics/*.md "$REPO_ROOT"/skills/
   assert_not_in "${f#"$REPO_ROOT"/}: no old-shape reviewer output" "$(cat "$f")" "${OLD_SHAPE_ALL[@]}"
 done
 shopt -u nullglob
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "Cycle 5: issue-orchestrator runs the severity rule (WU4)"
+# ---------------------------------------------------------------------------
+
+for f in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  [ -f "$REPO_ROOT/$f" ] || { fail "$f exists"; continue; }
+  T="$(readf "$f")"
+  assert_in "$f: references the severity rule and blocker: yes" "$T" \
+    'severity-gated iteration' 'cap 10' 'delivery-scope.md' 'Any `blocker: yes` finding means overall FAIL' \
+    "${CONTRACT[@]}"
+  assert_not_in "$f: no old fixed-count / BLOCKING rules" "$T" 'Any single BLOCKING issue' 'After 3 FAILs'
+done
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"

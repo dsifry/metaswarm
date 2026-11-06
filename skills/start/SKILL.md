@@ -80,7 +80,7 @@ Design Document Created
 │  ALL must approve to proceed                    │
 └─────────────────────────────────────────────────┘
         │
-        ├── Any NEEDS_REVISION? → Iterate on design (max 3x)
+        ├── Any NEEDS_REVISION? → Iterate on design (severity-gated, cap 10 rounds)
         │
        ALL APPROVED
         │
@@ -108,7 +108,7 @@ The gate is automatically triggered when:
 
 ### Iteration Protocol
 
-- **Max 3 iterations** before human escalation
+- **Severity-gated iteration** (cap 10 rounds; see `./guides/delivery-scope.md`): only `blocker: yes` findings keep the loop going; minor/nit findings become follow-ups
 - Each iteration: revise design → re-run all reviewers
 - Escalation options: Override / Defer / Cancel
 
@@ -159,7 +159,7 @@ For each work unit (a discrete, spec-driven change with DoD items):
 3. **ADVERSARIAL REVIEW** — Fresh review subagent checks against spec contract. Binary PASS/FAIL with file:line evidence. Uses `adversarial-review-rubric.md`. When external tools are configured, cross-model review ensures the writer is always reviewed by a different AI model (see External Tools section below).
 4. **COMMIT** — Only after adversarial PASS. Updates `SERVICE-INVENTORY.md` and Project Context Document.
 
-On FAIL: fix → re-validate → spawn **fresh** reviewer (role type `roleType("adversarial-reviewer")`; max 3 retries → escalate to human). There is NO path from FAIL to COMMIT without passing through the retry loop.
+On FAIL: fix → re-validate → spawn **fresh** reviewer (role type `roleType("adversarial-reviewer")`; severity-gated iteration, cap 10 rounds; see `./guides/delivery-scope.md` → escalate to human when the rule says so). There is NO path from FAIL to COMMIT without passing through the retry loop.
 
 ### When to Use Orchestrated Execution
 
@@ -310,7 +310,7 @@ GitHub Issue #123 (agent-ready label)
 │  │(users)  │ │  (tech)  │ │ (UX/API) │ │ (threats)│ │(flows) │ │ (TDD) │ │
 │  └─────────┘ └──────────┘ └──────────┘ └──────────┘ └────────┘ └───────┘ │
 │                                                                           │
-│  ALL SIX must approve (max 3 iterations)                                  │
+│  ALL SIX must approve (severity-gated iteration, cap 10 rounds)           │
 └──────────────────────────────────────────────────────────────────────────┘
         │
         ▼
@@ -531,7 +531,7 @@ Follow the workflow phases exactly as specified.`,
 2. **Conflicting Constraints**: Can't satisfy all requirements
 3. **Risk Decision**: Security or data concerns
 4. **Blocked > 1 Hour**: External dependency needed
-5. **3 Failed Iterations**: Agent can't resolve issue
+5. **Severity Rule Escalates**: Review cap of 10 rounds hit, or a blocker recurs or is disputed (see `./guides/delivery-scope.md`)
 
 ### How to Escalate
 

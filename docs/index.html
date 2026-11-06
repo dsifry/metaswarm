@@ -560,7 +560,7 @@ When all work units pass, create a PR.</code></pre>
       </div>
     </div>
 
-    <p>The Design Review Gate is the part that surprised me. Six agents review the plan simultaneously, each from a different perspective &mdash; including a UX Reviewer that verifies user flows and integration work units. All six have to approve before implementation starts. If they do not agree after three rounds, the system escalates to a human. This catches real problems. Not theoretical ones.</p>
+    <p>The Design Review Gate is the part that surprised me. Six agents review the plan simultaneously, each from a different perspective &mdash; including a UX Reviewer that verifies user flows and integration work units. All six have to approve before implementation starts. Iteration is severity-gated: only justified critical or major findings (<code>blocker: yes</code>) trigger another round, minor ones become follow-ups, and the system escalates to a human when a blocker persists, reviewers disagree on its severity, or the 10-round cap is hit. This catches real problems. Not theoretical ones.</p>
   </section>
 
   <!-- SELF-LEARNING -->
@@ -601,7 +601,7 @@ When all work units pass, create a PR.</code></pre>
       </div>
     </div>
 
-    <p>On failure: fix, re-validate, spawn a <strong>fresh</strong> reviewer (never the same one), and retry up to three times before escalating to a human with the full failure history. The fresh reviewer rule matters: without it, the reviewer checks "did they fix what I found?" instead of independently verifying the contract. Anchoring bias is real, even for AI agents.</p>
+    <p>On failure: fix, re-validate, spawn a <strong>fresh</strong> reviewer (never the same one), and let the severity rule decide the next step: another round only while justified critical or major findings (<code>blocker: yes</code>) remain, minor findings filed as follow-ups, and escalation to a human (with findings grouped by severity) when a blocker persists or the 10-round cap is hit. The fresh reviewer rule matters: without it, the reviewer checks "did they fix what I found?" instead of independently verifying the contract. Anchoring bias is real, even for AI agents.</p>
     <p>This is not needed for every task. A typo fix or a small bug does not need a 4-phase loop. But for multi-unit features with a spec, risky schema changes, or anything where "it works, trust me" is not good enough, orchestrated execution is the difference between shipping and hoping.</p>
   </section>
 
@@ -830,7 +830,7 @@ When all work units pass, create a PR.</code></pre>
     <p>When an agent starts work, <code>bd prime</code> loads knowledge filtered by the files being touched and the type of work being done. A coder working on auth routes gets auth-related gotchas. A security reviewer gets the OWASP-related patterns. The knowledge base can grow to thousands of entries without any agent needing to read all of them.</p>
 
     <h3>Human checkpoints are proactive, not reactive</h3>
-    <p>The design review gate gives agents three iterations to converge. If they cannot agree, or if requirements are ambiguous, the system stops and asks a human. But orchestrated execution goes further: you define <strong>planned checkpoints</strong> in the spec (after schema changes, after security-sensitive code, at natural boundaries). The orchestrator pauses at those points and presents a report. It waits for you. This is not a notification. It is a gate. The system does not guess when it should ask, and it does not continue without your explicit approval.</p>
+    <p>The design review gate iterates only while reviewers report real blockers (findings that name the user scenario or requirement they protect), with a safety cap of 10 rounds. If they cannot agree, or if requirements are ambiguous, the system stops and asks a human. But orchestrated execution goes further: you define <strong>planned checkpoints</strong> in the spec (after schema changes, after security-sensitive code, at natural boundaries). The orchestrator pauses at those points and presents a report. It waits for you. This is not a notification. It is a gate. The system does not guess when it should ask, and it does not continue without your explicit approval.</p>
   </section>
 
   <!-- CODE REVIEW INTEGRATION -->
