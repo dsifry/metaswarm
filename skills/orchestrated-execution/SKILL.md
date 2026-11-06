@@ -188,7 +188,7 @@ For each work unit, execute these four phases in sequence. **Do not skip phases.
 │        │              FAIL               │                      │
 │        └─────────────────────────────────┘                      │
 │                                                                 │
-│   On FAIL: fix → re-validate → FRESH review → max 3 → escalate │
+│ FAIL: fix → re-validate → FRESH review → severity rule (cap 10) │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -310,17 +310,24 @@ ${dodItems.map((item, i) => `${i+1}. ${item}`).join('\n')}
 ## What to Review
 Run: git diff main..HEAD -- ${fileScope.join(' ')}
 
+## Findings
+Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
+- severity: critical | major | minor | nit
+- protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
+- evidence: <file:line or expected-vs-found>
+- blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+
 ## Rules
 - Check EACH DoD item. Cite file:line evidence for PASS or expected-vs-found for FAIL.
-- Any single BLOCKING issue means overall FAIL.
+- Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
-- Do NOT suggest improvements. Only report PASS or FAIL with evidence.
+- Report every finding with the 4 fields; minor/nit findings are recorded as follow-ups, not suggestions.
 ```
 
 **Phase 3 outcomes:**
 
-- **PASS** (zero BLOCKING issues) → proceed to Phase 4
-- **FAIL** (any BLOCKING issue) → return to Phase 1 with the failure report
+- **PASS** (no `blocker: yes` finding) → proceed to Phase 4; file any minor/nit findings as follow-ups
+- **FAIL** (at least one `blocker: yes` finding) → apply the severity rule in [On FAIL](#on-fail-mandatory-re-review-protocol): iterate (return to Phase 1 with the failure report) or escalate
 
 **Fresh reviewer rule:** On re-review after FAIL, the orchestrator MUST spawn a **new** review subagent (role type `roleType("adversarial-reviewer")`). Never pass previous findings to the new reviewer. Never reuse the same reviewer instance. This prevents anchoring bias and ensures independent verification.
 
@@ -363,15 +370,15 @@ Quality gates are BLOCKING STATE TRANSITIONS, not advisory recommendations. The 
 IMPLEMENT ──→ VALIDATE ──→ REVIEW ──→ COMMIT
                  │            │
                  ↓            ↓
-              FAIL:         FAIL:
+              FAIL:         FAIL: severity rule (cap 10):
            fix + re-run   fix + re-validate
                           + FRESH re-review
                  │            │
-              (max 3)      (max 3)
+        (max 3 VALIDATE)      │
                  │            │
                  ↓            ↓
-              ESCALATE     ESCALATE
-             (to human)   (to human)
+              ESCALATE     ESCALATE when the rule says so
+             (to human)   (to human, with a recommendation)
 ```
 
 ### Transition Rules (MUST, not SHOULD)
@@ -383,26 +390,73 @@ IMPLEMENT ──→ VALIDATE ──→ REVIEW ──→ COMMIT
    - Type checking passes
    - Lint passes
    - File scope respected
-3. **REVIEW → COMMIT**: ONLY if adversarial review returns PASS
+3. **REVIEW → COMMIT**: ONLY if adversarial review returns PASS, or rule line 5 downgraded every remaining blocker to a follow-up
 4. **FAIL → retry**: Fix the issue, then re-run the FAILED gate (not skip it)
 5. **Re-review after fix**: MUST spawn a FRESH reviewer (new `roleType("adversarial-reviewer")` instance, no memory)
-6. **Max retries**: 3 attempts per gate, then ESCALATE to human with full failure history
+6. **Max retries**: VALIDATE gets 3 attempts, then ESCALATE to human with full failure history (see [Recovery Protocol](#9-recovery-protocol)). REVIEW follows the severity rule (see On FAIL below; cap 10 rounds).
 
 ### On FAIL: Mandatory Re-Review Protocol
 
-1. Fix the issue identified by the reviewer
+A review FAIL (at least one `blocker: yes` finding) is not retried on a fixed count. After each review round the orchestrator applies the severity rule from [`./guides/delivery-scope.md`](./guides/delivery-scope.md): `SAFETY_CAP` = 10 rounds per work unit, and the first line that matches wins. "Re-validate" means running Phase 2 (VALIDATE) again.
+
+```text
+after each review round (round = 1, 2, ...):
+  file every minor/nit finding as a follow-up (see Follow-ups)
+  1. no blocker: yes findings            → PASS, advance
+  2. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal
+  3. the same critical/major finding recurs after a fix attempt for it,
+     or two reviewers rate the same finding blocker vs. non-blocker   → escalate
+  4. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers
+                                         → fix blockers, re-validate, FRESH review
+  5. an overengineering signal is present → restate the DoD and re-classify each blocker against the policy;
+                                           any still names a credible scenario → escalate with a recommendation;
+                                           otherwise downgrade them to follow-ups and advance
+  6. otherwise                           → fix blockers, re-validate, FRESH review
+```
+
+- **Single reviewer.** Phase 3 has one reviewer per work unit, so "≥2 independent reviewers" is false. Reviewers of other work units running in parallel don't count.
+- **Overengineering check (line 5).** Signals include repeated review/fix cycles without a new user-visible risk, tests for states the real storage or API cannot produce, and validation growing faster than the feature. Restate the work unit's DoD, re-classify each open blocker, and escalate only if one still names a credible scenario; otherwise downgrade them to follow-ups and commit.
+- **Malformed output.** A FAIL whose findings lack the 4 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as PASS.
+- **Follow-ups.** Minor/nit findings never block. When `bd` is available, file each as a BEADS task (`bd create --type task`) linked to the work unit. Otherwise, or if `bd create` fails, list them under a `### Follow-ups` heading in the work unit's report; the PR body carries them (see 8.5).
+
+When the rule says iterate:
+
+1. Fix every `blocker: yes` finding identified by the reviewer
 2. Re-run Phase 2 (VALIDATE) — ALL quality gates, not just the one that failed
 3. **MANDATORY**: Spawn a NEW adversarial reviewer (role type `roleType("adversarial-reviewer")`, fresh instance, no memory of previous review)
-4. Only COMMIT after the fresh reviewer returns PASS
-5. Max 3 retry cycles before ESCALATE to human
+4. Only COMMIT after the fresh reviewer returns PASS, or rule line 5 downgraded every remaining blocker to a follow-up
+5. Apply the severity rule after every round; ESCALATE to human when it says escalate (at most 10 rounds)
 6. **Coder model escalation**: after `escalation.coder.after_failures` failed VALIDATE attempts (default 2, read from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default (the `coder` role's `sonnet`).
 
-Track each attempt visibly: "Re-review attempt 1/3", "Re-review attempt 2/3", etc.
+Track each round visibly: "Review round 1/10", "Review round 2/10", etc.
+
+When the rule says escalate, report:
+
+```markdown
+## Review Escalation: Phase 3 ADVERSARIAL REVIEW — WU-<id>
+
+**Rule line**: <2 cap hit | 3 recurring/disputed | 5 overengineering signal>
+
+### Remaining findings
+- **Critical**: <finding> — protects: <...> — evidence: <...>
+- **Major**: <finding> — protects: <...> — evidence: <...>
+- **Minor**: <finding> (follow-up filed)
+- **Nit**: <finding> (follow-up filed)
+
+### Round history
+| Round | Verdict | Blockers (critical/major) | Fixed this round | Rule decision |
+|-------|---------|---------------------------|------------------|---------------|
+| 1     | FAIL    | 0 / 2                     | —                | 6: iterate    |
+| 2     | FAIL    | 0 / 1                     | 0 / 2            | 4: iterate    |
+| 3     | FAIL    | 0 / 1                     | 0 / 0            | 3: escalate   |
+
+**Recommendation**: <commit|another pass|human decision> — <reason from the rule>
+```
 
 ### What the Orchestrator MUST NOT Do
 
 - "Coverage is close enough at 92%, proceeding to commit"
-- "Adversarial review found issues but they're minor, committing anyway"
+- "Adversarial review FAILed, committing with an unresolved `blocker: yes` finding anyway"
 - "Fix applied, skipping re-review since the fix is straightforward"
 - "5 FAILs encountered, moving to next work unit without resolution"
 - "Tests pass but coverage command failed — proceeding anyway"
@@ -410,8 +464,9 @@ Track each attempt visibly: "Re-review attempt 1/3", "Re-review attempt 2/3", et
 ### What the Orchestrator MUST Do
 
 - "VALIDATION FAIL: coverage at 87%, threshold is 100%. Returning to IMPLEMENT."
-- "ADVERSARIAL REVIEW FAIL. Spawning fresh reviewer for re-review. Attempt 2 of 3."
-- "Max retries (3) exceeded for WU-004. Escalating to human with failure history."
+- "ADVERSARIAL REVIEW FAIL: 2 `blocker: yes` findings. Severity rule line 6: fixing, re-validating, spawning fresh reviewer. Review round 2/10."
+- "Severity rule line 3: the same major finding recurred after a fix attempt for WU-004. Escalating to human with round history and a recommendation."
+- "Review PASS: no `blocker: yes` findings. 1 minor finding filed as a follow-up. Committing."
 - "Fix applied. Re-running validation. Re-running adversarial review with FRESH reviewer."
 
 ---
@@ -543,7 +598,8 @@ cat > .beads/context/execution-state.md << 'STATE_EOF'
 ## Current Position
 - Active work unit: <wu-id>
 - Current phase: <IMPLEMENT|VALIDATE|REVIEW|COMMIT>
-- Retry count: <0-3>
+- VALIDATE retry count: <0-3>
+- Review round: <1-10>
 
 ## Work Unit Status
 | WU | Status | Phase | Retries |
@@ -710,6 +766,9 @@ git log main..HEAD --oneline
 ### Remaining Issues
 <any issues found during final review>
 
+### Follow-ups
+<minor/nit findings from every gate and work unit: BEADS task IDs, or the items themselves>
+
 ### Ready for PR: YES / NO
 ```
 
@@ -733,13 +792,15 @@ Proceeding to PR creation.
 
 **Why before PR, not after merge?** By the time a PR is merged, the implementing agent's context may be gone (session ended, context compacted). The richest insights — why a certain approach was chosen, what debugging dead-ends were hit, which patterns emerged — exist NOW, immediately after implementation. Capture them now.
 
+**Follow-ups go in the PR body.** Collect every follow-up recorded by the gates and work units (BEADS task IDs, or the `### Follow-ups` lists kept when `bd` was unavailable) and include them in the PR body under a `### Follow-ups` heading, so non-blocking findings are not lost.
+
 **Knowledge base changes are part of the PR.** After self-reflect updates the knowledge base files, commit them alongside the implementation. This ensures learnings are reviewed as part of the PR and land atomically with the code that generated them. Do NOT defer knowledge base commits to a separate PR or post-merge step.
 
 ---
 
 ## 9. Recovery Protocol
 
-When things go wrong during the 4-phase loop, follow this structured recovery.
+When IMPLEMENT or VALIDATE goes wrong during the 4-phase loop, follow this structured recovery. Its 3-attempt cap applies to VALIDATE failures (tests, coverage, lint, typecheck, file scope). REVIEW failures don't use it: they follow the severity rule in [On FAIL](#on-fail-mandatory-re-review-protocol) (cap 10 rounds).
 
 ### Step 1: DIAGNOSE
 
@@ -747,7 +808,7 @@ Identify what failed and gather evidence:
 
 ```bash
 # Capture the failure
-# - Which phase failed? (IMPLEMENT, VALIDATE, REVIEW)
+# - Which phase failed? (IMPLEMENT or VALIDATE; a REVIEW failure follows the severity rule in On FAIL instead)
 # - What was the error message or FAIL reason?
 # - Which DoD items are affected?
 ```
@@ -762,9 +823,9 @@ Categorize the failure:
 | **Ambiguous** | Unclear root cause | Investigate before retrying |
 | **External** | Dependency, access, or environment issue | Escalate immediately |
 
-### Step 3: RETRY (max 3 attempts)
+### Step 3: RETRY (VALIDATE: up to 3 attempts)
 
-For fixable and ambiguous failures:
+For fixable and ambiguous VALIDATE failures:
 
 1. **Attempt 1**: Fix the specific issue, re-run from Phase 1
 2. **Attempt 2**: If same failure, try alternative approach
@@ -780,16 +841,16 @@ bd label add <task-id> retry:1  # or retry:2, retry:3
 
 ### Step 4: ESCALATE
 
-After 3 failed attempts, escalate to human with full context:
+After 3 failed VALIDATE attempts, escalate to human with full context:
 
 ```markdown
-## Escalation: Work Unit <wu-id> Failed After 3 Attempts
+## Escalation: Work Unit <wu-id> Failed VALIDATE After 3 Attempts
 
 ### Failure History
 | Attempt | Phase | Error | Fix Tried |
 | --- | --- | --- | --- |
 | 1 | VALIDATE | Tests fail: auth.test.ts:34 | Fixed mock setup |
-| 2 | REVIEW | DoD #3 not met: missing edge case | Added edge case test |
+| 2 | VALIDATE | Coverage 94%, threshold 100% | Added edge case test |
 | 3 | VALIDATE | Type error in cross-module import | Restructured imports |
 
 ### Root Cause Assessment
@@ -823,7 +884,7 @@ These are explicit DON'Ts. Violating any of these undermines the entire orchestr
 | 9 | **Skipping coverage enforcement** — "tests pass, coverage doesn't matter" | Coverage thresholds exist for a reason; low coverage means untested paths | Read .coverage-thresholds.json and run the enforcement command. Block on failure. |
 | 10 | **Building UI components in isolation** — all components tested but never wired into the app | Users can't interact with components that aren't rendered | Plan must include integration WUs that wire components into the app shell |
 | 11 | **Proceeding without external credentials** — building features that require API keys without verifying the user has them | Features will fail at runtime; user discovers this after 10+ commits | Checkpoint before external-service WUs to verify credentials are configured |
-| 12 | **Advisory quality gates** — treating FAIL as a suggestion rather than a blocking transition | Undermines the entire trust model; equivalent to skipping the gate | Quality gates are state transitions. FAIL means retry or escalate, never skip. |
+| 12 | **Advisory quality gates** — treating a `blocker: yes` FAIL as advisory, or a failed VALIDATE check as a suggestion | Undermines the entire trust model; equivalent to skipping the gate | Quality gates are state transitions. FAIL means retry, iterate under the severity rule, or escalate, never skip. |
 | 13 | **Using `--no-verify`** — bypassing pre-commit hooks on git commits | Pre-commit hooks catch lint errors, type errors, and formatting issues before they enter history | Never use `--no-verify`. Fix the underlying issue instead. |
 | 14 | **Skipping design review gate after brainstorming** — going directly from brainstorming to writing-plans | Expensive implementation work begins on unreviewed designs | Always run the 5-agent design review gate between brainstorming and planning |
 | 15 | **Skipping plan review gate** — presenting a plan to the user without adversarial review | Plans with feasibility gaps, missing requirements, or scope creep reach implementation | Always run the 3-reviewer plan review gate before presenting any plan |
@@ -846,7 +907,8 @@ For each work unit:
 - [ ] Verify file scope with `git diff --name-only`
 - [ ] Spawn **fresh** adversarial reviewer (role type `roleType("adversarial-reviewer")`) with spec and DoD
 - [ ] If PASS: commit with DoD verification in message
-- [ ] If FAIL: fix → re-validate → spawn **new** reviewer (`roleType("adversarial-reviewer")`; max 3 retries, then ESCALATE)
+- [ ] If FAIL: apply the severity rule → fix → re-validate → spawn **new** reviewer (`roleType("adversarial-reviewer")`; escalate when the rule says so, at most 10 rounds)
+- [ ] File minor/nit findings as follow-ups (BEADS, else `### Follow-ups`)
 - [ ] If human checkpoint: present report and wait
 - [ ] Update BEADS task status
 - [ ] Update **SERVICE-INVENTORY.md** if services/factories/modules were created
@@ -855,8 +917,8 @@ For each work unit:
 Quality Gate Rules:
 
 - [ ] VALIDATE → REVIEW: ONLY if ALL checks pass (tests, coverage, types, lint, file scope)
-- [ ] REVIEW → COMMIT: ONLY if adversarial review returns PASS
-- [ ] FAIL at any gate: retry (max 3), then ESCALATE — never skip
+- [ ] REVIEW → COMMIT: ONLY if adversarial review returns PASS, or rule line 5 downgraded every remaining blocker to a follow-up
+- [ ] FAIL at VALIDATE: retry (max 3 VALIDATE attempts), then ESCALATE; FAIL at REVIEW: severity rule (cap 10) — never skip
 - [ ] Re-review after fix: MUST use FRESH reviewer (new instance, no memory)
 
 After all work units:
