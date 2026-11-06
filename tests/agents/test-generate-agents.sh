@@ -225,6 +225,17 @@ new_proj none
 run check
 [ "$RC" = "0" ] && pass "check with no models.yaml and no generated agents exits 0" || fail "clean project check rc=$RC"
 
+echo "Test 17: aligned values (multiple spaces after the colon) are trimmed"
+new_proj none
+printf 'roles:\n  coder:\n    claude:  haiku\n    codex:   gpt-5.3-codex\n    gemini:  "flash"\n' > "$P/.metaswarm/models.yaml"
+run generate
+check "generate accepts aligned claude value" "$RC"
+grep -q '^model: haiku$' "$P/.claude/agents/metaswarm-coder.md" && pass "aligned claude value trimmed" || fail "aligned claude value"
+run resolve coder codex
+[ "$OUT" = "gpt-5.3-codex" ] && pass "aligned codex value trimmed" || fail "aligned codex: '$OUT'"
+run resolve coder gemini
+[ "$OUT" = "flash" ] && pass "aligned + quoted gemini value" || fail "aligned quoted gemini: '$OUT'"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

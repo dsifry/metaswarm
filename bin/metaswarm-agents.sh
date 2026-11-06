@@ -66,7 +66,8 @@ parse_models() {
     [ "$level" -le "$prev" ] || [ "$level" -eq $((prev + 1)) ] || parse_error "$n" "unexpected indentation"
     prev=$level
     body="${body# }"; body="${body# }"; body="${body# }"; body="${body# }"
-    key="${body%%:*}"; val="${body#*:}"; val="${val# }"
+    key="${body%%:*}"; val="${body#*:}"
+    val="${val#"${val%%[![:space:]]*}"}"  # trim all leading separator whitespace
     # Decode a quoted YAML scalar ("x" or 'x')
     case "$val" in
       \"*\") val="${val#\"}"; val="${val%\"}" ;;
