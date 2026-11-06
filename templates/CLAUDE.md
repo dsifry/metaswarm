@@ -155,6 +155,19 @@ All subagents (coding agents, review agents, background tasks) MUST follow these
 - **NEVER** self-certify — the orchestrator validates independently
 - **STAY** within declared file scope — do not modify files outside your assigned scope
 
+### Delivery Scope & Review Iteration
+
+Block delivery only for a credible normal-usage failure, a missing or contradictory requirement, a broken key happy path, or an important error or recovery-path failure. Every review finding carries a `severity` (critical/major/minor/nit); to block, a critical/major finding must also name what it `protects` (a user scenario, requirement or DoD item). Findings without `protects` are advisory, not blockers. After each review round the orchestrator decides whether to iterate, advance or escalate:
+
+- **No `blocker: yes` findings** → PASS, advance. Minor/nit findings become follow-ups (a BEADS task, or a GitHub issue if over a day).
+- **Iterate** (fix, re-validate, fresh review) → this round fixed a critical/major finding, or ≥2 independent reviewers reported blockers.
+- **Stop and advance** → an overengineering signal is present and no remaining blocker names a credible scenario; downgrade them to follow-ups.
+- **Escalate to the human** → a critical/major finding recurs after a fix, reviewers disagree on severity, or the safety cap of 10 rounds is hit.
+
+These rules apply in order, and the cap is checked first. A round that still has a blocker and matches none of them also iterates. If `bd` is unavailable, list follow-ups in a `### Follow-ups` section.
+
+Full policy, finding contract and ordered rule: `guides/delivery-scope.md` in the metaswarm plugin.
+
 ### Pre-PR Knowledge Capture
 
 After all work units pass final review but BEFORE creating the PR, run `/self-reflect` to extract learnings into the knowledge base. Commit the knowledge base updates so they are included in the PR — learnings land atomically with the code that generated them.
