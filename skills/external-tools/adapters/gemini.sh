@@ -303,13 +303,16 @@ ${diff_content}
 
 ## Instructions
 1. Evaluate the diff against the specification and rubric.
-2. For each issue found, provide:
-   - file:line citation
-   - Classification: BLOCKING or WARNING
+2. For each issue found, provide these fields:
+   - severity: critical | major | minor | nit
+   - protects: the credible user scenario, explicit requirement or DoD item the issue protects (required for critical/major)
+   - evidence: file:line citation, or expected-vs-found
+   - blocker: yes | no (yes only if severity is critical or major AND protects is non-empty)
    - Description of the issue
+   A critical or major issue without protects is advisory: report it with blocker: no.
 3. Provide a final verdict: PASS or FAIL
-   - FAIL if any BLOCKING issues exist
-   - PASS if only WARNING issues or no issues
+   - FAIL only if at least one finding has blocker: yes
+   - Otherwise PASS, including when there are minor, nit or advisory issues
 
 Respond in JSON format:
 {
@@ -318,7 +321,10 @@ Respond in JSON format:
     {
       "file": "path/to/file",
       "line": 42,
-      "classification": "BLOCKING|WARNING",
+      "severity": "critical|major|minor|nit",
+      "protects": "credible user scenario, explicit requirement or DoD item (required for critical/major)",
+      "evidence": "file:line or expected-vs-found",
+      "blocker": "yes|no",
       "description": "Description of the issue"
     }
   ],

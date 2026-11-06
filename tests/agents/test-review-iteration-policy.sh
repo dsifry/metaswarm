@@ -178,6 +178,137 @@ for m in "${MIRRORS[@]}"; do
 done
 assert_not_in "instruction-file sections: no general-purpose / roleType( / Task({" "$SECTIONS" "${FORBIDDEN[@]}"
 
+# ---------------------------------------------------------------------------
+echo ""
+echo "Cycle 2: reviewer contract in rubrics, adapters and reviewer agents (WU2)"
+# ---------------------------------------------------------------------------
+
+readf() { [ -f "$REPO_ROOT/$1" ] && cat "$REPO_ROOT/$1" || true; }
+
+CONTRACT=(
+  'severity: critical | major | minor | nit'
+  'protects: <credible user scenario | explicit requirement | DoD item>'
+  'evidence: <file:line or expected-vs-found>'
+  'blocker: yes | no'
+)
+RUBRIC_GUIDE_REF='`guides/delivery-scope.md` (plugin root; `../guides/delivery-scope.md` from a skill'"'"'s `rubrics/` dir)'
+
+# DoD 2.1: the 3 adversarial/external rubrics carry the contract, mapping, advisory clause and guide ref
+CONTRACT_RUBRICS=(
+  rubrics/adversarial-review-rubric.md
+  rubrics/plan-review-rubric-adversarial.md
+  rubrics/external-tool-review-rubric.md
+)
+for r in "${CONTRACT_RUBRICS[@]}"; do
+  R="$(readf "$r")"
+  assert_in "$r: 4-level severity scale and contract fields" "$R" "${CONTRACT[@]}"
+  assert_in "$r: protects required for critical/major" "$R" \
+    '`protects:` is required for critical and major findings'
+  assert_in "$r: blocker definition" "$R" \
+    'yes only if severity ∈ {critical, major} AND protects is non-empty'
+  assert_in "$r: mapping from check tables" "$R" \
+    '"BLOCKING if …" checks produce critical or major findings' \
+    'They block only with `protects`' \
+    '"WARNING" checks produce minor findings'
+  assert_in "$r: unjustified findings are advisory" "$R" 'advisory'
+  assert_in "$r: references the guide (plugin root and skill-relative path)" "$R" "$RUBRIC_GUIDE_REF"
+  V="$(section "$REPO_ROOT/$r" '^## Verdict')"
+  assert_in "$r: Verdict section is FAIL iff at least one blocker: yes" "$V" 'at least one `blocker: yes`'
+  O="$(section "$REPO_ROOT/$r" '^## Output Format')"
+  assert_in "$r: Output Format template shows the 4 fields" "$O" \
+    'severity:' 'protects:' 'evidence:' 'blocker:' 'blocker: yes'
+done
+
+# DoD 2.1a: adapter footers ask for the 4 fields and FAIL only on blocker: yes
+for a in skills/external-tools/adapters/codex.sh skills/external-tools/adapters/gemini.sh; do
+  A="$(readf "$a")"
+  assert_in "$a: footer asks for severity/protects/evidence/blocker" "$A" \
+    'severity: critical | major | minor | nit' 'protects:' 'evidence:' 'blocker: yes | no'
+  assert_in "$a: FAIL only on blocker: yes" "$A" 'FAIL only if at least one finding has blocker: yes'
+  assert_not_in "$a: no legacy BLOCKING verdict / classification" "$A" \
+    'FAIL if any BLOCKING' '"classification": "BLOCKING|WARNING"' 'Classification: BLOCKING or WARNING'
+done
+assert_in "gemini.sh: JSON schema carries the 4 fields" "$(readf skills/external-tools/adapters/gemini.sh)" \
+  '"severity": "critical|major|minor|nit"' '"protects":' '"evidence":' '"blocker": "yes|no"'
+
+# DoD 2.2: the "err on FAIL" bias is gone from both adversarial rubrics and their mirrors
+for r in rubrics/adversarial-review-rubric.md \
+         skills/orchestrated-execution/rubrics/adversarial-review-rubric.md \
+         skills/start/rubrics/adversarial-review-rubric.md \
+         rubrics/plan-review-rubric-adversarial.md \
+         skills/plan-review-gate/rubrics/plan-review-rubric-adversarial.md \
+         skills/start/rubrics/plan-review-rubric-adversarial.md; do
+  [ -f "$REPO_ROOT/$r" ] && pass "$r exists" || fail "$r exists"
+  assert_not_in "$r: no 'when in doubt' FAIL bias" "$(readf "$r")" \
+    "When in doubt, it's BLOCKING" 'Err on the side of FAIL'
+done
+if grep -qF "'skills/start/rubrics/plan-review-rubric-adversarial.md'" "$REPO_ROOT/lib/sync-resources.js"; then
+  pass "sync-resources.js syncs plan-review-rubric-adversarial.md into skills/start/rubrics/"
+else
+  fail "sync-resources.js syncs plan-review-rubric-adversarial.md into skills/start/rubrics/"
+fi
+
+# DoD 2.3: the collaborative code-review rubric defers to the severity rule
+CR="$(readf rubrics/code-review-rubric.md)"
+assert_not_in "code-review-rubric.md: no fixed 3-round cap" "$CR" 'Maximum Iterations: 3' 'After 3 rounds'
+assert_in "code-review-rubric.md: references the severity rule" "$CR" 'severity rule' 'delivery-scope.md'
+
+# DoD 2.4: reviewer agents carry the contract in both copies (clauses checked, not byte-compared)
+for dir in agents skills/start/agents; do
+  if [ "$dir" = agents ]; then P=''; else P='./'; fi
+  for ag in adversarial-reviewer plan-reviewer design-reviewer; do
+    f="$dir/$ag.md"; T="$(readf "$f")"
+    assert_in "$f: states the finding contract" "$T" "${CONTRACT[@]}" \
+      'yes only if severity ∈ {critical, major} AND protects is non-empty'
+    assert_in "$f: references the guide (${P:-plugin-root} path)" "$T" "\`${P}guides/delivery-scope.md\`"
+  done
+  T="$(readf "$dir/adversarial-reviewer.md")"
+  assert_in "$dir/adversarial-reviewer.md: FAIL only on blocker: yes" "$T" 'at least one `blocker: yes`'
+  assert_in "$dir/adversarial-reviewer.md: iteration defers to the orchestrator's severity rule" "$T" \
+    "orchestrator's severity rule" '10-round cap'
+  assert_not_in "$dir/adversarial-reviewer.md: no fixed 3-iteration cap" "$T" \
+    'Maximum Iterations: 3' 'max 3 iterations' 'persist after 3 iterations'
+  T="$(readf "$dir/plan-reviewer.md")"
+  assert_in "$dir/plan-reviewer.md: points at the adversarial plan rubric" "$T" \
+    "\`${P}rubrics/plan-review-rubric-adversarial.md\`"
+  assert_not_in "$dir/plan-reviewer.md: no longer points at the collaborative plan rubric" "$T" 'plan-review-rubric.md`'
+  assert_in "$dir/plan-reviewer.md: FAIL only on blocker: yes" "$T" 'at least one `blocker: yes`'
+  T="$(readf "$dir/design-reviewer.md")"
+  assert_in "$dir/design-reviewer.md: NEEDS_REVISION requires a blocker" "$T" \
+    'NEEDS_REVISION requires at least one `blocker: yes` finding'
+  assert_in "$dir/design-reviewer.md: contract overrides persona output format" "$T" \
+    "Use the persona file for its checklist and criteria only; the finding contract and blocker-based verdict REPLACE the persona file's output format and NEEDS_REVISION criteria."
+  assert_not_in "$dir/design-reviewer.md: no longer follows the persona output format" "$T" \
+    'criteria and output format'
+  T="$(readf "$dir/cto-agent.md")"
+  assert_not_in "$dir/cto-agent.md: no fixed 3-iteration cap" "$T" \
+    'Maximum Iterations: 3' "doesn't pass after 3 iterations"
+  assert_in "$dir/cto-agent.md: iteration defers to the severity rule" "$T" \
+    "orchestrator's severity rule" '10-round cap'
+done
+
+# DoD 2.5: no old-shape template or classification statement survives in WU2's files
+OLD_SHAPE=('### BLOCKING Issues' '### WARNINGS' 'FAIL (BLOCKING)' 'BLOCKING or WARNING' 'BLOCKING / WARNING' 'classified as BLOCKING')
+WU2_FILES=(
+  "${CONTRACT_RUBRICS[@]}"
+  skills/orchestrated-execution/rubrics/adversarial-review-rubric.md
+  skills/start/rubrics/adversarial-review-rubric.md
+  skills/plan-review-gate/rubrics/plan-review-rubric-adversarial.md
+  skills/start/rubrics/plan-review-rubric-adversarial.md
+  skills/external-tools/rubrics/external-tool-review-rubric.md
+  skills/external-tools/adapters/codex.sh
+  skills/external-tools/adapters/gemini.sh
+)
+for dir in agents skills/start/agents; do
+  for ag in adversarial-reviewer plan-reviewer design-reviewer cto-agent; do WU2_FILES+=("$dir/$ag.md"); done
+done
+for f in "${WU2_FILES[@]}"; do
+  assert_not_in "$f: no old-shape BLOCKING/WARNING template or statement" "$(readf "$f")" "${OLD_SHAPE[@]}"
+  case "$f" in
+    *agents/*) assert_not_in "$f: no 'Maximum Iterations: 3'" "$(readf "$f")" 'Maximum Iterations: 3' ;;
+  esac
+done
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

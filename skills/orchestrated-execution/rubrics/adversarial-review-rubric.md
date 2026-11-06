@@ -22,23 +22,33 @@ Every adversarial review produces exactly one verdict:
 
 | Verdict | Meaning | Criteria |
 | --- | --- | --- |
-| **PASS** | Implementation meets its contract | Zero BLOCKING issues |
-| **FAIL** | Implementation violates its contract | One or more BLOCKING issues |
+| **PASS** | Implementation meets its contract | Zero `blocker: yes` findings |
+| **FAIL** | Implementation violates its contract | At least one `blocker: yes` finding |
+
+FAIL if and only if there is at least one `blocker: yes` finding. Findings with `blocker: no` (minor, nit, or advisory critical/major) are reported but never cause FAIL.
 
 There is no "APPROVED WITH COMMENTS." There is no "CHANGES SUGGESTED." PASS or FAIL.
 
 ---
 
-## Issue Classification
+## Finding Contract
 
-Every issue found is classified as BLOCKING or WARNING:
+The policy, the finding contract and the iteration rule live in `guides/delivery-scope.md` (plugin root; `../guides/delivery-scope.md` from a skill's `rubrics/` dir). Every finding carries four fields:
 
-| Classification | Meaning | Impact on Verdict |
-| --- | --- | --- |
-| **BLOCKING** | Contract violation — spec says X, code does not do X | Causes FAIL |
-| **WARNING** | Quality concern — not a spec violation but worth noting | Does NOT cause FAIL |
+```text
+- severity: critical | major | minor | nit
+- protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
+- evidence: <file:line or expected-vs-found>
+- blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+```
 
-**When in doubt, it's BLOCKING.** The threshold for PASS should be high. Err on the side of FAIL.
+- **`protects:` is required for critical and major findings.** It names the credible user scenario, explicit requirement or DoD item the finding protects.
+- **Blocker definition.** A finding is a blocker (`blocker: yes`) only if its severity is critical or major AND `protects` is non-empty. Minor and nit findings are never blockers.
+- **Unjustified findings are advisory.** A critical or major finding that cannot name what it protects is advisory, not a blocker. It becomes a follow-up and does not cause FAIL.
+- **Mapping from the check tables below.** The tables keep their wording and are read as:
+  - "BLOCKING if …" checks produce critical or major findings. They block only with `protects`. A bare "BLOCKING" entry reads the same way.
+  - "WARNING" checks produce minor findings.
+- **The reviewer reports; the orchestrator decides.** Whether a FAIL leads to another round, an advance or an escalation is decided by the orchestrator using the iteration rule in the guide, not by the reviewer.
 
 ---
 
@@ -60,10 +70,11 @@ Every finding — whether PASS or FAIL — requires **cited evidence**. Assertio
 
 ```markdown
 **DoD #3**: "Rate limiting returns 429 after 10 requests per minute"
-**Verdict**: FAIL (BLOCKING)
-**Expected**: Rate limiter triggers at 10 requests/minute and returns HTTP 429
-**Found**: Rate limiter exists at `src/middleware/rate-limit.ts:12` but threshold is hardcoded to 100, not 10. No test verifies the 10-request threshold.
-**Evidence**: `src/middleware/rate-limit.ts:12` — `const MAX_REQUESTS = 100`
+**Verdict**: FAIL
+- severity: major
+- protects: DoD #3 "Rate limiting returns 429 after 10 requests per minute"
+- evidence: `src/middleware/rate-limit.ts:12` — expected a 10 requests/minute threshold, found `const MAX_REQUESTS = 100`; no test verifies the 10-request threshold
+- blocker: yes
 ```
 
 ### Invalid Evidence (will be rejected)
@@ -77,7 +88,7 @@ Every finding — whether PASS or FAIL — requires **cited evidence**. Assertio
 
 ## Review Categories
 
-### 1. Spec Compliance (BLOCKING threshold)
+### 1. Spec Compliance (blocker threshold)
 
 The primary check. For each DoD item:
 
@@ -93,9 +104,9 @@ The primary check. For each DoD item:
 2. Search the diff for the implementation
 3. Search the diff for tests that verify the behavior
 4. Cite file:line for both implementation and test
-5. If either is missing → BLOCKING FAIL
+5. If either is missing → a major finding that protects the DoD item (`blocker: yes`)
 
-### 2. Test Quality (BLOCKING / WARNING threshold)
+### 2. Test Quality (blocker threshold)
 
 | Check | Classification | Criteria |
 | --- | --- | --- |
@@ -104,7 +115,7 @@ The primary check. For each DoD item:
 | Tests don't test mock behavior | BLOCKING | Tests must exercise real logic, not just verify mocks were called |
 | Tests are deterministic | WARNING | No timing-dependent, order-dependent, or flaky patterns |
 
-### 3. Type Safety (BLOCKING / WARNING threshold)
+### 3. Type Safety (blocker threshold)
 
 | Check | Classification | Criteria |
 | --- | --- | --- |
@@ -112,7 +123,7 @@ The primary check. For each DoD item:
 | No unsafe type assertions | WARNING | `as` casts without type guards noted but not blocking |
 | Types match runtime behavior | BLOCKING | Type says X but runtime can produce Y |
 
-### 4. File Scope (BLOCKING threshold)
+### 4. File Scope (blocker threshold)
 
 | Check | Classification | Criteria |
 | --- | --- | --- |
@@ -129,7 +140,7 @@ git diff main..HEAD --name-only
 # Every changed file must be in the work unit's declared file scope
 ```
 
-### 5. Security (BLOCKING threshold)
+### 5. Security (blocker threshold)
 
 | Check | Classification | Criteria |
 | --- | --- | --- |
@@ -150,22 +161,33 @@ The adversarial review MUST produce output in this exact format:
 
 ### Verdict: PASS | FAIL
 
+FAIL only if at least one finding below has `blocker: yes`.
+
 ### DoD Verification
 
 | # | DoD Item | Verdict | Evidence |
 | --- | --- | --- | --- |
 | 1 | <item text> | PASS | impl: `file:line`, test: `file:line` |
-| 2 | <item text> | FAIL (BLOCKING) | Expected: <X>, Found: <Y> at `file:line` |
+| 2 | <item text> | FAIL | Expected: <X>, Found: <Y> at `file:line` |
 | 3 | <item text> | PASS | impl: `file:line`, test: `file:line` |
 
-### BLOCKING Issues
+### Findings
 
-1. **DoD #2 not met**: <description with evidence>
-2. **`any` type introduced**: `src/services/foo.ts:45` — `const data: any = ...`
-
-### WARNINGS
-
-1. <warning with evidence>
+1. **DoD #2 not met**: <description>
+   - severity: major
+   - protects: DoD #2 "<item text>"
+   - evidence: `file:line` — expected <X>, found <Y>
+   - blocker: yes
+2. **`any` type introduced**: <description>
+   - severity: major
+   - protects: <explicit requirement, e.g. "TypeScript strict mode, no `any` types">
+   - evidence: `src/services/foo.ts:45` — `const data: any = ...`
+   - blocker: yes
+3. **<minor concern>**: <description>
+   - severity: minor
+   - protects: —
+   - evidence: `file:line`
+   - blocker: no
 
 ### Files Reviewed
 
@@ -191,7 +213,7 @@ The adversarial review MUST produce output in this exact format:
 | --- | --- | --- |
 | **Goal** | Improve code quality | Verify contract compliance |
 | **Verdict** | APPROVED / CHANGES REQUIRED | PASS / FAIL |
-| **Issue severity** | CRITICAL / HIGH / MEDIUM / LOW | BLOCKING / WARNING |
+| **Issue severity** | CRITICAL / HIGH / MEDIUM / LOW | critical / major / minor / nit, plus `protects` and `blocker` |
 | **Contract** | General coding standards | Specific DoD items from spec |
 | **Evidence** | Helpful but optional | Mandatory (file:line) |
 | **Suggestions** | Encouraged | Prohibited |

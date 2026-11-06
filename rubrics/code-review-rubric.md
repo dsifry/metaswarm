@@ -316,8 +316,8 @@ const users = await prisma.user.findMany({ where: { name: userName } });
 - Verify fixes don't introduce new issues
 - Quick scan for regression
 
-### Maximum Iterations: 3
-After 3 rounds, escalate to human if issues persist.
+### When to Stop Iterating
+There is no fixed round count. Whether another round runs, the work advances, or it escalates to a human is decided by the severity rule in `guides/delivery-scope.md` (plugin root; `../guides/delivery-scope.md` from a skill's `rubrics/` dir): only critical or major findings that name what they protect keep the loop going, minor and nit findings become follow-ups, and the 10-round safety cap escalates.
 
 ---
 

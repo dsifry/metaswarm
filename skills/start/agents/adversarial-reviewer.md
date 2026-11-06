@@ -40,7 +40,7 @@ The adversarial-reviewer operates in one of two modes, determined by the orchest
 - **Rubric**: `./rubrics/adversarial-review-rubric.md`
 - **Verdict**: PASS / FAIL (binary)
 - **Purpose**: Verify implementation meets its spec contract (DoD items)
-- **Issue classification**: BLOCKING / WARNING
+- **Finding fields**: severity / protects / evidence / blocker (see Finding Contract below)
 - **Re-review**: Fresh reviewer instance REQUIRED (no memory of previous review)
 - **When used**: Phase 3 of the orchestrated execution loop (`orchestrated-execution` skill)
 
@@ -57,6 +57,23 @@ dod_items:
 
 If no mode is specified, default to **Collaborative**.
 
+### Finding Contract (Adversarial Mode Output)
+
+In adversarial mode, findings use the finding contract. The policy and the contract live in `./guides/delivery-scope.md`. Every finding carries four fields:
+
+```text
+- severity: critical | major | minor | nit
+- protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
+- evidence: <file:line or expected-vs-found>
+- blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+```
+
+- `protects:` is required for critical and major findings.
+- A critical or major finding without `protects` is advisory (`blocker: no`); it becomes a follow-up, not a blocker.
+- Rubric checks marked "BLOCKING if …" produce critical or major findings; "WARNING" checks produce minor findings.
+- **Verdict**: FAIL only if there is at least one `blocker: yes` finding; otherwise PASS.
+- You report findings. The orchestrator, not you, decides whether another round runs, using its severity rule.
+
 ---
 
 ## Responsibilities
@@ -66,7 +83,7 @@ If no mode is specified, default to **Collaborative**.
 1. **Security Scanning**: Identify security vulnerabilities
 2. **Pattern Enforcement**: Verify codebase conventions are followed
 3. **Test Verification**: Confirm tests exist and are meaningful
-4. **Iteration**: Work through issues until resolved (max 3 iterations)
+4. **Iteration**: Report findings each round; how many rounds run is set by the orchestrator's severity rule (10-round cap), not by the reviewer
 
 ### Collaborative Mode Only
 
@@ -342,7 +359,7 @@ git diff main..HEAD --name-only
 # Compare each file against the work unit's declared file scope
 ```
 
-Any file outside scope → BLOCKING issue.
+Any file outside scope → a major finding that protects the declared file scope (`blocker: yes`).
 
 ### Step A5: Produce Adversarial Output
 
@@ -353,20 +370,27 @@ Use this exact format:
 
 ### Verdict: PASS | FAIL
 
+FAIL only if at least one finding below has `blocker: yes`.
+
 ### DoD Verification
 
 | # | DoD Item | Verdict | Evidence |
 | --- | --- | --- | --- |
 | 1 | <item text> | PASS | impl: `file:line`, test: `file:line` |
-| 2 | <item text> | FAIL (BLOCKING) | Expected: <X>, Found: <Y> at `file:line` |
+| 2 | <item text> | FAIL | Expected: <X>, Found: <Y> at `file:line` |
 
-### BLOCKING Issues
+### Findings
 
-1. **DoD #2 not met**: <description with evidence>
-
-### WARNINGS
-
-1. <warning with evidence>
+1. **DoD #2 not met**: <description>
+   - severity: major
+   - protects: DoD #2 "<item text>"
+   - evidence: `file:line` — expected <X>, found <Y>
+   - blocker: yes
+2. **<minor concern>**: <description>
+   - severity: minor
+   - protects: —
+   - evidence: `file:line`
+   - blocker: no
 
 ### Files Reviewed
 
@@ -461,7 +485,9 @@ This prevents anchoring bias where a reviewer checks "did they fix what I found?
 
 ## Iteration Protocol
 
-### Maximum Iterations: 3
+### Round Limit
+
+There is no fixed iteration count. The orchestrator's severity rule (`./guides/delivery-scope.md`, 10-round cap) decides after each round whether another round runs, the work advances, or it escalates. Only critical or major findings that name what they protect keep the loop going.
 
 Track iteration count:
 
@@ -478,7 +504,7 @@ bd label add <task-id> review:iteration-1
 
 ### Escalation
 
-If issues persist after 3 iterations:
+When the orchestrator's severity rule says escalate:
 
 ```bash
 bd update <task-id> --status blocked
