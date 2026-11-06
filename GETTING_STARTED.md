@@ -351,7 +351,7 @@ Description of expected deliverables.
 
 ### Choosing Models Per Phase
 
-Each phase (researcher, planner, coder, design/plan/adversarial reviewers, and so on) runs as its own agent type with a default model. To change one, edit `.metaswarm/models.yaml` and run `/update` to regenerate `.claude/agents/metaswarm-<role>.md`; restart Claude Code the first time `.claude/agents/` is created. Run `bin/metaswarm-usage` to see which subagents ran on which model and what they cost. See [README.md § Per-phase models](README.md#per-phase-models) for the defaults.
+Each phase (researcher, planner, coder, design/plan/adversarial reviewers, and so on) runs as its own agent type with a default model. To change one, edit `.metaswarm/models.yaml` and run `/update` to regenerate `.claude/agents/metaswarm-<role>.md`; restart Claude Code the first time `.claude/agents/` is created. Run `metaswarm-usage` (it ships in the plugin's `bin/`, which Claude Code puts on PATH; from the prompt type `! metaswarm-usage`) to see which subagents ran on which model and what they cost. See [README.md § Per-phase models](README.md#per-phase-models) for the defaults.
 
 ### Adding Rubrics
 
