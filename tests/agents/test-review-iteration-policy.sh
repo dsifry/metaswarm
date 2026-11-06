@@ -118,6 +118,13 @@ assert_in "guide: 'this round fixed', round counting, re-validate notes" "$G" \
   'Team Mode' \
   '"Re-validate"' \
   'running VALIDATE again'
+# Rule line 3 deliberately narrows issue #54's "reviewers disagree on severity" to
+# disagreement that changes blocker; the guide must say why.
+assert_in "guide: severity-disagreement note (only a blocker split escalates)" "$G" \
+  '**Severity disagreement.**' \
+  'Only disagreement that changes `blocker` escalates' \
+  'critical-vs-major or minor-vs-nit split changes no outcome' \
+  'only one names `protects`'
 assert_in "guide: follow-up rule" "$G" \
   'bd create --type task' \
   '### Follow-ups' \

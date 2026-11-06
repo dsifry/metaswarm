@@ -79,6 +79,7 @@ after each review round (round = 1, 2, ...):
 **Notes**
 
 - **Single-reviewer gates** (Phase 3 adversarial review): the condition "≥2 independent reviewers" is simply false; there is no substitute. It is counted per work unit, so reviewers of other work units running in parallel don't count.
+- **Severity disagreement.** Only disagreement that changes `blocker` escalates (rule line 3). A critical-vs-major or minor-vs-nit split changes no outcome, so it is not a trigger. Both reviewers rating a finding major when only one names `protects` does count, because `blocker` differs.
 - **"This round fixed"** means fixes made since the previous review that this round's reviewers reviewed. The first round has none.
 - **What counts as a round.** Every re-review is one round. In Task Mode a re-review spawns fresh reviewer instances and all of the gate's reviewers re-run. In Team Mode (design gate) the persistent reviewers re-review; that still counts as a round.
 - **"Re-validate"** means running VALIDATE again in orchestrated execution. In the plan and design gates it means revising the plan or design.
