@@ -26,7 +26,7 @@ section() {
 assert_in() { # <label> <text> <fixed-string>...
   local label="$1" text="$2" s; shift 2
   for s in "$@"; do
-    if ! printf '%s' "$text" | grep -qF -- "$s"; then fail "$label: missing '$s'"; return; fi
+    if ! grep -qF -- "$s" <<<"$text"; then fail "$label: missing '$s'"; return; fi
   done
   pass "$label"
 }
@@ -34,7 +34,7 @@ assert_in() { # <label> <text> <fixed-string>...
 assert_not_in() { # <label> <text> <fixed-string>...
   local label="$1" text="$2" s; shift 2
   for s in "$@"; do
-    if printf '%s' "$text" | grep -qF -- "$s"; then fail "$label: contains '$s'"; return; fi
+    if grep -qF -- "$s" <<<"$text"; then fail "$label: contains '$s'"; return; fi
   done
   pass "$label"
 }
