@@ -161,19 +161,22 @@ cp /path/to/metaswarm/templates/external-tools.yaml .metaswarm/external-tools.ya
 
 ### Key settings
 
+Models are set per role in `.metaswarm/models.yaml` (`roles.<role>.codex` or
+`roles.<role>.gemini`), not in this file. A `model:` under `adapters.<tool>` still
+works but is deprecated and prints a warning. Pass `--role <role>` to an adapter to
+use that role's model.
+
 Edit `.metaswarm/external-tools.yaml` to customize:
 
 ```yaml
 adapters:
   codex:
     enabled: true                # Set to false to disable Codex
-    model: "gpt-5.3-codex"      # Model for Codex CLI invocations
     timeout_seconds: 300         # Max seconds per invocation (5 min default)
     sandbox: none                # docker | platform | none
     auth_env_var: "OPENAI_API_KEY"
   gemini:
     enabled: true                # Set to false to disable Gemini
-    model: "pro"                 # Model alias: pro | flash | flash-lite
     timeout_seconds: 300
     sandbox: none
     auth_env_var: "GEMINI_API_KEY"

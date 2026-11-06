@@ -1,3 +1,9 @@
+---
+name: issue-orchestrator
+description: "Main coordinator for a single GitHub Issue lifecycle. Use to drive one issue from research through PR."
+model: inherit
+---
+
 # Issue Orchestrator Agent
 
 **Type**: `issue-orchestrator`
@@ -61,14 +67,14 @@ When Team tools are available:
 
 1. **Create team**: `TeamCreate("issue-{issue-number}")` (e.g., `issue-123`)
 2. **Spawn specialists as named teammates**:
-   - `researcher` — persistent across research phase
-   - `architect` — persistent across planning phase
-   - `coder` — **persistent across work units** (retains context from WU-001 → WU-002, no cold start)
-   - `shepherd` — persistent through PR lifecycle, sends async status updates via `SendMessage`
+   - `researcher` (type `roleType("researcher")`) — persistent across research phase
+   - `architect` (type `roleType("planner")`) — persistent across planning phase
+   - `coder` (type `roleType("coder")`) — **persistent across work units** (retains context from WU-001 → WU-002, no cold start)
+   - `shepherd` (type `roleType("pr-shepherd-agent")`) — persistent through PR lifecycle, sends async status updates via `SendMessage`
 3. **Direct handoffs**: Researcher sends findings directly to architect via `SendMessage` (no orchestrator bottleneck)
 4. **Async updates**: Teammates report progress via `SendMessage`; orchestrator receives and coordinates
 
-**MANDATORY**: Adversarial reviewers are ALWAYS fresh `Task()` instances — never teammates, never resumed, never given prior context. This applies in BOTH modes without exception. See `guides/agent-coordination.md` for details.
+**MANDATORY**: Adversarial reviewers are ALWAYS fresh `Task()` instances (role type `roleType("adversarial-reviewer")`, resolved per [Role type resolution](../guides/agent-coordination.md#role-type-resolution)) — never teammates, never resumed, never given prior context. This applies in BOTH modes without exception. See `guides/agent-coordination.md` for details.
 
 ### BEADS + Team TaskList Bridging (Team Mode Only)
 
@@ -113,21 +119,21 @@ gh issue comment <number> --body "Agent claiming this issue. Epic: <epic-id>"
 bd create "Research: <issue-title>" --type task --parent <epic-id> \
   --description "Investigate codebase, prior art, and constraints"
 
-# 5. Spawn Researcher Agent (Task tool with subagent)
+# 5. Spawn Researcher Agent (Task tool, role type roleType("researcher"))
 # Wait for research output
 
 # 6. Create planning task (blocked by research)
 bd create "Create implementation plan" --type task --parent <epic-id>
 bd dep add <plan-task> <research-task>
 
-# 7. Spawn Architect Agent for planning
+# 7. Spawn Architect Agent for planning (role type roleType("planner"))
 # Wait for plan output
 
 # 8. Create CTO review task (blocked by planning)
 bd create "CTO review of implementation plan" --type task --parent <epic-id>
 bd dep add <review-task> <plan-task>
 
-# 9. Spawn CTO Agent for review
+# 9. Spawn CTO Agent for review (role type roleType("design-reviewer"), CTO role in the prompt)
 # May iterate multiple times until approved
 ```
 
@@ -199,7 +205,7 @@ For each work unit (respecting dependency order), run the 4-phase execution loop
 For each work unit (respecting dependency graph):
 
   Phase 3.1: IMPLEMENT
-  ├── Spawn Coder Agent with spec, DoD items, and file scope
+  ├── Spawn Coder Agent (role type roleType("coder")) with spec, DoD items, and file scope
   ├── Coder implements using TDD
   └── Coder reports completion (DO NOT TRUST THIS)
 
@@ -211,7 +217,7 @@ For each work unit (respecting dependency graph):
   └── If ANY fails → back to Phase 3.1
 
   Phase 3.3: ADVERSARIAL REVIEW
-  ├── Spawn FRESH Code Review Agent in adversarial mode
+  ├── Spawn FRESH Code Review Agent (role type roleType("adversarial-reviewer")) in adversarial mode
   ├── Pass: spec, DoD items, diff (NOT coding subagent's self-assessment)
   ├── Reviewer checks each DoD item with file:line evidence
   ├── If PASS → Phase 3.4
@@ -224,7 +230,7 @@ For each work unit (respecting dependency graph):
   └── If human checkpoint → present report and WAIT
 ```
 
-**Coder Agent spawn template:**
+**Coder Agent spawn template** (role type `roleType("coder")`):
 
 ```
 You are the CODER AGENT for work unit ${wuId}.
@@ -252,7 +258,7 @@ Check SERVICE-INVENTORY.md for existing services, factories, and modules.
 Do NOT recreate services that already exist — extend or import them.
 ```
 
-**Adversarial Reviewer spawn template:**
+**Adversarial Reviewer spawn template** (role type `roleType("adversarial-reviewer")`):
 
 ```
 You are the ADVERSARIAL REVIEWER for work unit ${wuId}.
@@ -282,7 +288,7 @@ Run: git diff main..HEAD -- ${fileScope.join(' ')}
 **Critical orchestrator rules during Phase 3:**
 
 1. **Never trust self-reports**: Run tsc, eslint, vitest YOURSELF — do not ask the coder
-2. **Fresh reviewer on re-review**: Spawn a NEW adversarial reviewer after each FAIL
+2. **Fresh reviewer on re-review**: Spawn a NEW adversarial reviewer (role type roleType("adversarial-reviewer")) after each FAIL
 3. **Max 3 retries per work unit**: After 3 FAILs, escalate (see Recovery Protocol)
 4. **Respect file scope**: Verify with `git diff --name-only` after each implementation
 5. **Parallel where possible**: Independent work units can run Phase 3.1 simultaneously
@@ -378,7 +384,7 @@ bd label add <pr-task> waiting:human
 # 18. After merge, close epic
 bd close <epic-id> --reason "PR #<number> merged"
 
-# 19. Spawn Knowledge Curator to extract learnings
+# 19. Spawn Knowledge Curator (role type roleType("knowledge-curator-agent")) to extract learnings
 bd create "Extract learnings from <epic-id>" --type task
 
 # 20. Update GitHub Issue
@@ -434,9 +440,9 @@ Each Work Unit runs the 4-Phase Execution Loop:
 Use the Task tool to spawn specialist agents:
 
 ```typescript
-// Example: Spawn Researcher Agent
+// Example: Spawn Researcher Agent (role type resolved per the guide's Role type resolution rule)
 Task({
-  subagent_type: "general-purpose",
+  subagent_type: roleType("researcher"),
   description: "Research for issue #123",
   prompt: `You are acting as the RESEARCHER AGENT for BEADS epic ${epicId}.
 
@@ -686,7 +692,7 @@ The Issue Orchestrator reports progress via GitHub comments:
 
 ### In Progress
 
-- [ ] Implementation (assigned to coder-agent)
+- [ ] Implementation (assigned to coder)
 
 ### Blocked
 

@@ -19,6 +19,7 @@ Invokes the `metaswarm:status` skill, which reports:
 - BEADS plugin status
 - External tools configuration
 - Coverage threshold configuration
+- Phase agent drift (`metaswarm-agents.sh check`) and a warning when Claude Code is older than 2.1.251
 - Node.js availability
 
 Use this to troubleshoot installation or configuration issues.

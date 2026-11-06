@@ -1,0 +1,9 @@
+adapters:
+  codex:
+    enabled: true
+    model: "codex-legacy-test"      # legacy per-adapter model
+    timeout_seconds: 300
+  gemini:
+    enabled: true
+    model: "gemini-legacy-test"     # legacy per-adapter model
+    timeout_seconds: 300

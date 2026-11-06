@@ -1,0 +1,2 @@
+{"type":"user","timestamp":"2026-01-01T12:06:00.000Z","message":{"role":"user","content":"synthetic prompt"}}
+{"type":"assistant","timestamp":"2026-01-01T12:06:00.000Z","message":{"id":"m_b7","model":"claude-opus-5-5","role":"assistant","content":[{"type":"text","text":"synthetic"}],"usage":{"input_tokens":1,"cache_creation_input_tokens":1,"cache_read_input_tokens":1,"output_tokens":1}}}

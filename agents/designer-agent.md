@@ -1,3 +1,9 @@
+---
+name: designer-agent
+description: "UX, API design and developer-experience review. Use as the Designer role in the design review gate."
+model: inherit
+---
+
 # Designer Agent
 
 **Type**: `designer-agent`

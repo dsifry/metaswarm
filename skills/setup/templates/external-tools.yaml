@@ -2,16 +2,17 @@
 # Copy to .metaswarm/external-tools.yaml in your project root to enable.
 # If this file is absent, external tools are not used (pure metaswarm behavior).
 
+# Models are no longer set here. Set them per role in .metaswarm/models.yaml
+# (roles.<role>.codex / roles.<role>.gemini) and pass --role <role> to the adapters.
+
 adapters:
   codex:
     enabled: true
-    model: "gpt-5.3-codex"          # Model to use for Codex CLI invocations
     timeout_seconds: 300             # Max seconds per invocation before kill
     sandbox: none                    # docker | platform | none
     auth_env_var: "OPENAI_API_KEY"   # Environment variable holding the API key
   gemini:
     enabled: true
-    model: "pro"                     # Model alias: pro | flash | flash-lite
     timeout_seconds: 300
     sandbox: none
     auth_env_var: "GEMINI_API_KEY"   # Or use Google login (no key needed)

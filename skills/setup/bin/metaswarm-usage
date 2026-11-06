@@ -1,0 +1,369 @@
+#!/usr/bin/env node
+'use strict';
+// metaswarm-usage: report subagent spawns and tokens by agent type, model and phase,
+// from Claude Code transcripts (~/.claude/projects/<project>/<session>/subagents/).
+// No dependencies. See --help.
+
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const ROLE_PHASES = {
+  'design-reviewer': 'design-review',
+  'plan-reviewer': 'plan-review',
+  researcher: 'research',
+  planner: 'plan/decompose',
+  coder: 'implement',
+  'adversarial-reviewer': 'adversarial-review',
+  'pr-shepherd-agent': 'pr-shepherd',
+  'knowledge-curator-agent': 'knowledge-curator',
+  // Legacy persona names (deprecated)
+  'coder-agent': 'implement',
+  'code-review-agent': 'adversarial-review',
+  'researcher-agent': 'research',
+};
+
+const KEYWORD_PHASES = [
+  [/plan[- ]review|review (of )?(the )?plan/, 'plan-review'],
+  [/design[- ]review|review (of )?(the )?design/, 'design-review'],
+  [/adversarial|code review|re-?review/, 'adversarial-review'],
+  [/decompos|\bplans?\b/, 'plan/decompose'],
+  [/research|explor|investigat/, 'research'],
+  [/implement|\bbuild|\bfix|\bwrite|\badd\b|\bcode\b/, 'implement'],
+];
+
+const GATES = ['plan-review', 'design-review', 'adversarial-review'];
+const PRICE_FIELDS = [
+  ['input', 'input'],
+  ['cacheWrite', 'cache_write'],
+  ['cacheRead', 'cache_read'],
+  ['output', 'output'],
+];
+
+const HELP = `Usage: metaswarm-usage [options]
+
+Report subagent spawns and tokens (input / cache write / cache read / output)
+by agent type, model and phase from Claude Code transcripts.
+
+Options:
+  --root <dir>          Transcript root (default: ~/.claude/projects)
+  --project <glob>      Only project dirs whose encoded name matches (* and ?)
+  --pricing <file|json> Per-model USD per million tokens; adds cost columns.
+                        {"<model>": {"input":n,"cacheWrite":n,"cacheRead":n,"output":n}}
+  --gates               Add gate rounds-to-pass (reviewer spawn batches per session)
+  --gap-minutes <n>     Gap that separates gate batches (default: 5)
+  --json                Machine-readable output
+  -h, --help            Show this help`;
+
+function defaultRoot(home) {
+  return path.join(home || os.homedir(), '.claude', 'projects');
+}
+
+function classifyPhase(agentType, description) {
+  const type = String(agentType || '').replace(/^metaswarm[:-]/, '');
+  if (Object.prototype.hasOwnProperty.call(ROLE_PHASES, type)) return ROLE_PHASES[type];
+  const desc = String(description || '').toLowerCase();
+  const hit = KEYWORD_PHASES.find(([re]) => re.test(desc));
+  return hit ? hit[1] : 'unclassified';
+}
+
+function parseArgs(argv) {
+  const opts = { gates: false, json: false, gapMinutes: 5 };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    const value = () => {
+      if (i + 1 >= argv.length) throw new Error(`Missing value for ${a}`);
+      return argv[++i];
+    };
+    if (a === '--root') opts.root = value();
+    else if (a === '--project') opts.project = value();
+    else if (a === '--pricing') opts.pricing = value();
+    else if (a === '--gap-minutes') {
+      opts.gapMinutes = Number(value());
+      if (!(opts.gapMinutes > 0)) throw new Error('--gap-minutes must be a positive number');
+    } else if (a === '--gates') opts.gates = true;
+    else if (a === '--json') opts.json = true;
+    else if (a === '-h' || a === '--help') opts.help = true;
+    else throw new Error(`Unknown argument: ${a}`);
+  }
+  return opts;
+}
+
+function loadPricing(spec) {
+  let text = spec;
+  if (!spec.trim().startsWith('{')) text = fs.readFileSync(spec, 'utf8');
+  let table;
+  try {
+    table = JSON.parse(text);
+  } catch (e) {
+    throw new Error(`Invalid --pricing JSON: ${e.message}`);
+  }
+  return table;
+}
+
+function globToRegExp(glob) {
+  const body = glob.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.');
+  return new RegExp(`^${body}$`);
+}
+
+// Missing directories are normal (empty); any other read failure is recorded in `unreadable`.
+function readDir(dir, unreadable) {
+  try {
+    return fs.readdirSync(dir, { withFileTypes: true });
+  } catch (e) {
+    if (e.code !== 'ENOENT') unreadable.push({ path: dir, code: e.code });
+    return [];
+  }
+}
+
+function listDirs(dir, unreadable) {
+  return readDir(dir, unreadable).filter((e) => e.isDirectory()).map((e) => e.name);
+}
+
+function readMeta(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch (e) {
+    return null;
+  }
+}
+
+// Returns { messages: Map(id -> {model, usage}), firstTs, skipped }.
+// Streaming repeats a message id with growing output; the last record per id wins.
+function readTranscript(file) {
+  const messages = new Map();
+  let firstTs = null;
+  let skipped = 0;
+  const lines = fs.readFileSync(file, 'utf8').split('\n');
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    let rec;
+    try {
+      rec = JSON.parse(line);
+    } catch (e) {
+      skipped++;
+      continue;
+    }
+    if (firstTs === null && rec.timestamp) firstTs = Date.parse(rec.timestamp);
+    const msg = rec.message;
+    if (rec.type === 'assistant' && msg && msg.usage && msg.id) {
+      messages.set(msg.id, { model: msg.model || 'unknown', usage: msg.usage });
+    }
+  }
+  return { messages, firstTs: Number.isNaN(firstTs) ? null : firstTs, skipped };
+}
+
+function collect(root, projectGlob) {
+  const re = projectGlob ? globToRegExp(projectGlob) : null;
+  const agents = [];
+  let skipped = 0;
+  const unreadable = [];
+  for (const proj of listDirs(root, unreadable)) {
+    if (re && !re.test(proj)) continue;
+    for (const sess of listDirs(path.join(root, proj), unreadable)) {
+      const dir = path.join(root, proj, sess, 'subagents');
+      const files = readDir(dir, unreadable).map((e) => e.name).filter((f) => f.endsWith('.jsonl'));
+      for (const f of files) {
+        const base = f.slice(0, -'.jsonl'.length);
+        const meta = readMeta(path.join(dir, `${base}.meta.json`));
+        const tr = readTranscript(path.join(dir, f));
+        skipped += tr.skipped;
+        const type = meta && meta.agentType ? meta.agentType : 'unknown';
+        agents.push({
+          id: `${proj}/${sess}/${base}`,
+          session: `${proj}/${sess}`,
+          type,
+          phase: classifyPhase(meta && meta.agentType, meta && meta.description),
+          ts: tr.firstTs,
+          messages: [...tr.messages.values()],
+        });
+      }
+    }
+  }
+  return { agents, skipped, unreadable };
+}
+
+const zero = () => ({ input: 0, cacheWrite: 0, cacheRead: 0, output: 0 });
+
+// One bucket per (agent, model) so costs can be priced per model in any grouping.
+function buckets(agents) {
+  const out = [];
+  for (const a of agents) {
+    const byModel = new Map();
+    for (const m of a.messages) {
+      const t = byModel.get(m.model) || zero();
+      t.input += m.usage.input_tokens || 0;
+      t.cacheWrite += m.usage.cache_creation_input_tokens || 0;
+      t.cacheRead += m.usage.cache_read_input_tokens || 0;
+      t.output += m.usage.output_tokens || 0;
+      byModel.set(m.model, t);
+    }
+    if (byModel.size === 0) byModel.set('unknown', zero());
+    for (const [model, t] of byModel) out.push({ agent: a.id, type: a.type, phase: a.phase, model, typeModel: `${a.type} @ ${model}`, ...t });
+  }
+  return out;
+}
+
+function priceOf(pricing, model, t) {
+  const p = pricing[model];
+  if (!p) return 0;
+  let cost = 0;
+  for (const [camel, snake] of PRICE_FIELDS) {
+    const rate = p[camel] !== undefined ? p[camel] : p[snake];
+    cost += (t[camel] * (rate || 0)) / 1e6;
+  }
+  return cost;
+}
+
+function group(bs, dim, pricing) {
+  const map = new Map();
+  for (const b of bs) {
+    const key = b[dim];
+    const row = map.get(key) || { key, ...zero(), agents: new Set(), cost: 0 };
+    for (const f of ['input', 'cacheWrite', 'cacheRead', 'output']) row[f] += b[f];
+    row.agents.add(b.agent);
+    if (pricing) row.cost += priceOf(pricing, b.model, b);
+    map.set(key, row);
+  }
+  return [...map.values()]
+    .sort((x, y) => y.output + y.input - (x.output + x.input) || (x.key < y.key ? -1 : 1))
+    .map((r) => {
+      const row = { key: r.key, spawns: r.agents.size, input: r.input, cacheWrite: r.cacheWrite, cacheRead: r.cacheRead, output: r.output };
+      if (pricing) row.cost = round6(r.cost);
+      return row;
+    });
+}
+
+const round6 = (n) => Math.round(n * 1e6) / 1e6;
+const round2 = (n) => Math.round(n * 100) / 100;
+
+function gateReport(agents, gapMinutes) {
+  const gap = gapMinutes * 60 * 1000;
+  const bySession = new Map();
+  for (const a of agents) {
+    if (!GATES.includes(a.phase) || a.ts === null) continue;
+    const key = `${a.session}\0${a.phase}`;
+    bySession.set(key, (bySession.get(key) || []).concat(a.ts));
+  }
+  const occurrences = [];
+  for (const [key, times] of bySession) {
+    const [session, gate] = key.split('\0');
+    times.sort((x, y) => x - y);
+    let rounds = 1;
+    for (let i = 1; i < times.length; i++) if (times[i] - times[i - 1] >= gap) rounds++;
+    occurrences.push({ gate, session, spawns: times.length, rounds });
+  }
+  occurrences.sort((x, y) => (x.gate + x.session < y.gate + y.session ? -1 : 1));
+  const summary = GATES.filter((g) => occurrences.some((o) => o.gate === g)).map((gate) => {
+    const os_ = occurrences.filter((o) => o.gate === gate);
+    const total = os_.reduce((s, o) => s + o.rounds, 0);
+    return {
+      key: gate,
+      occurrences: os_.length,
+      totalRounds: total,
+      avgRounds: round2(total / os_.length),
+      firstRoundPass: os_.filter((o) => o.rounds === 1).length,
+      twoRounds: os_.filter((o) => o.rounds === 2).length,
+      threePlusRounds: os_.filter((o) => o.rounds >= 3).length,
+      maxRounds: Math.max(...os_.map((o) => o.rounds)),
+    };
+  });
+  return { summary, occurrences };
+}
+
+function table(title, headers, data) {
+  const cells = [headers, ...data];
+  const widths = headers.map((_, c) => Math.max(...cells.map((r) => String(r[c]).length)));
+  const fmt = (r) => r.map((v, c) => (c === 0 ? String(v).padEnd(widths[c]) : String(v).padStart(widths[c]))).join('  ');
+  return [title, fmt(headers), ...data.map(fmt), ''].join('\n');
+}
+
+function usageTable(title, label, rows, priced) {
+  const headers = [label, 'Spawns', 'Input', 'CacheWrite', 'CacheRead', 'Output'];
+  if (priced) headers.push('Cost (USD)');
+  const data = rows.map((r) => {
+    const line = [r.key, r.spawns, r.input, r.cacheWrite, r.cacheRead, r.output];
+    if (priced) line.push(r.cost.toFixed(4));
+    return line;
+  });
+  return table(title, headers, data);
+}
+
+function main(argv, io) {
+  const out = (io && io.out) || console.log;
+  const err = (io && io.err) || console.error;
+  let opts;
+  let pricing = null;
+  try {
+    opts = parseArgs(argv);
+    if (opts.help) {
+      out(HELP);
+      return 0;
+    }
+    if (opts.pricing) pricing = loadPricing(opts.pricing);
+  } catch (e) {
+    err(e.message);
+    return 2;
+  }
+  const root = opts.root || defaultRoot(io && io.home);
+  const { agents, skipped, unreadable } = collect(root, opts.project);
+  for (const u of unreadable) err(`cannot read ${u.path}: ${u.code}`);
+  if (agents.length === 0 && !opts.json) {
+    out(`No transcripts found under ${root}`);
+    return 0;
+  }
+  const bs = buckets(agents);
+  const report = {
+    root,
+    agents: agents.length,
+    skippedLines: skipped,
+    unreadable,
+    totals: { ...zero() },
+    byType: group(bs, 'type', pricing),
+    byModel: group(bs, 'model', pricing),
+    byPhase: group(bs, 'phase', pricing),
+    byTypeModel: group(bs, 'typeModel', pricing),
+  };
+  for (const b of bs) for (const f of Object.keys(report.totals)) report.totals[f] += b[f];
+  if (pricing) {
+    report.totals.cost = round6(report.byModel.reduce((s, r) => s + r.cost, 0));
+    const unpriced = report.byModel
+      .filter((r) => !pricing[r.key] && r.input + r.cacheWrite + r.cacheRead + r.output > 0)
+      .map((r) => r.key)
+      .sort();
+    if (unpriced.length) report.unpricedModels = unpriced;
+  }
+  if (opts.gates) report.gates = gateReport(agents, opts.gapMinutes);
+
+  if (opts.json) {
+    out(JSON.stringify(report, null, 2));
+    return 0;
+  }
+  const priced = Boolean(pricing);
+  out(`metaswarm-usage: ${agents.length} subagent transcripts under ${root}\n`);
+  out(usageTable('By agent type', 'Type', report.byType, priced));
+  out(usageTable('By model', 'Model', report.byModel, priced));
+  out(usageTable('By phase', 'Phase', report.byPhase, priced));
+  out(usageTable('By agent type x model (which type actually ran on which model)', 'Type @ Model', report.byTypeModel, priced));
+  const t = report.totals;
+  out(`Total: input ${t.input}, cache write ${t.cacheWrite}, cache read ${t.cacheRead}, output ${t.output}` + (priced ? `, cost $${t.cost.toFixed(4)}` : ''));
+  if (report.unpricedModels) out(`Unpriced models: ${report.unpricedModels.join(', ')}`);
+  if (skipped) out(`Skipped ${skipped} malformed line(s)`);
+  if (opts.gates) {
+    out('');
+    out(table(
+      `Gate rounds-to-pass (a round is a reviewer spawn batch; batches split by a gap of ${opts.gapMinutes}+ minutes)`,
+      ['Gate', 'Occurrences', '1 round', '2 rounds', '3+ rounds', 'Avg rounds'],
+      report.gates.summary.map((g) => [g.key, g.occurrences, g.firstRoundPass, g.twoRounds, g.threePlusRounds, g.avgRounds.toFixed(2)]),
+    ));
+  }
+  return 0;
+}
+
+function cli() {
+  process.exit(main(process.argv.slice(2)));
+}
+
+module.exports = { main, cli, classifyPhase, defaultRoot };
+
+if (require.main === module) cli();

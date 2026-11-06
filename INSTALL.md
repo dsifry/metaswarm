@@ -209,7 +209,7 @@ npx metaswarm detect        # Show which CLIs are available
 
 After installation, the `/setup` command handles most customization automatically. For manual customization:
 
-### Agent Commands (in `agents/coder-agent.md`)
+### Agent Commands (in `agents/coder.md`)
 
 | Placeholder | Example: TypeScript | Example: Python | Example: Rust |
 |---|---|---|---|

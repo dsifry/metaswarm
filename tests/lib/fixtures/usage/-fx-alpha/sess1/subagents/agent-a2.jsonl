@@ -1,0 +1,6 @@
+{"type":"user","timestamp":"2026-01-01T10:01:00.000Z","message":{"role":"user","content":"synthetic prompt"}}
+{"type":"assistant","timestamp":"2026-01-01T10:01:00.000Z","message":{"id":"m_a2","model":"claude-opus-5-5","role":"assistant","content":[{"type":"text","text":"synthetic"}],"usage":{"input_tokens":20,"cache_creation_input_tokens":200,"cache_read_input_tokens":2000,"output_tokens":10}}}
+{this is not json
+{"type":"assistant","timestamp":"2026-01-01T10:01:00.000Z","message":{"id":"m_a2","model":"claude-opus-5-5","role":"assistant","content":[{"type":"text","text":"synthetic"}],"usage":{"input_tokens":20,"cache_creation_input_tokens":200,"cache_read_input_tokens":2000,"output_tokens":100}}}
+{"type":"user","message":{"role":"user","content":"x"}}
+{"type":"assistant","message":{"id":"m_nousage","model":"claude-opus-5-5"}}

@@ -246,10 +246,11 @@ Worktree: feat-orders (Spoke / Worker Agent)
 Instead of manually navigating to worktrees, orchestrate agents directly:
 
 ```typescript
-// From main repository, spawn a background agent
+// From main repository, spawn a background agent.
+// subagent_type is a role type; see "Role type resolution" in agent-coordination.md
 Task({
   description: "Implement feature X in worktree",
-  subagent_type: "general-purpose",
+  subagent_type: roleType("coder"),
   run_in_background: true,
   prompt: `
 You are working in a git worktree at /path/to/<project>-worktrees/feat-x
@@ -359,12 +360,12 @@ Anti-pattern (wasteful):
 
 1. **Identify layers**: Group stories by dependency. Independent stories = Layer 1.
 2. **Create worktrees from current main**: `git worktree add <path> -b feat/<story> main`
-3. **Launch agents in parallel** with explicit context about what services exist on main.
+3. **Launch agents in parallel** (`roleType("coder")`) with explicit context about what services exist on main.
 4. **As each agent completes**: Push, create PR, begin shepherding immediately.
 5. **Shepherd agents handle CI and reviews** autonomously.
 6. **Layer N+1 worktree creation can overlap**: While layer N shepherds are running, create N+1 worktrees for stories that have no dependency on unmerged layer N code. Implementation agents for N+1 still wait for the phase gate.
 7. **PHASE GATE**: Do NOT start layer N+1 implementation until ALL layer N PRs are squash-merged to main. No exceptions.
-8. **After all layer N PRs merge**: Pull main, clean up worktrees/branches, launch layer N+1 agents.
+8. **After all layer N PRs merge**: Pull main, clean up worktrees/branches, launch layer N+1 agents (`roleType("coder")`).
 9. **Inform layer N+1 agents**: Enumerate every new service/utility now on main. Agents must `import` and use them, NOT recreate stubs.
 
 ### Phase Gate Checklist

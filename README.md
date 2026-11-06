@@ -1,12 +1,12 @@
 # metaswarm
 
-A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 18 specialized AI agents and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
+A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 22 AI agents (+3 deprecated) and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
 
 ## What Is This?
 
 metaswarm is an extraction of a production-tested agentic orchestration system. It has been proven in the field writing production-level code with 100% test coverage, mandatory TDD, multi-reviewed spec-driven development, and SDLC best practices across hundreds of PRs. It provides:
 
-- **18 specialized agent personas** (Researcher, Architect, Coder, Security Auditor, PR Shepherd, etc.)
+- **22 agents (+3 deprecated): phase agents and specialized personas** (Researcher, Architect, Coder, Security Auditor, PR Shepherd, etc.)
 - **A structured 9-phase workflow**: Research → Plan → Design Review Gate → Work Unit Decomposition → Orchestrated Execution → Final Review → PR Creation → PR Shepherd → Closure & Learning
 - **4-Phase Orchestrated Execution Loop**: Each work unit runs through IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT. The orchestrator validates independently (never trusts subagent self-reports), and adversarial reviewers check DoD compliance with file:line evidence
 - **Parallel Design Review Gate**: 5 specialist agents (PM, Architect, Designer, Security, CTO) review in parallel with a 3-iteration cap before human escalation
@@ -75,7 +75,7 @@ metaswarm/
 │   ├── hooks.json            # SessionStart + PreCompact hook definitions
 │   └── session-start.sh      # Context priming (platform-aware)
 ├── skills/                   # Orchestration skills (Agent Skills standard — portable)
-│   ├── start/                # Main entry point — workflow guide + 18 agent personas
+│   ├── start/                # Main entry point — workflow guide + 22 agent personas (+3 deprecated)
 │   ├── orchestrated-execution/ # 4-phase execution loop (IMPLEMENT→VALIDATE→REVIEW→COMMIT)
 │   ├── design-review-gate/   # Parallel 5-agent review
 │   ├── plan-review-gate/     # 3-reviewer adversarial plan review
@@ -91,7 +91,7 @@ metaswarm/
 ├── commands/                  # Slash commands
 │   ├── *.md                  # Claude Code commands (15 files)
 │   └── metaswarm/*.toml      # Gemini CLI commands (12 files)
-├── agents/                    # 18 agent persona definitions
+├── agents/                    # 22 agent definitions (+3 deprecated)
 ├── rubrics/                   # Quality review standards
 ├── guides/                    # Development patterns
 ├── knowledge/                 # Knowledge base schema + templates
@@ -155,6 +155,21 @@ and a delivery log UI.
 
 See [INSTALL.md](INSTALL.md) for prerequisites, platform-specific details, and migration from older versions.
 
+## Per-phase models
+
+Each phase runs as its own agent type with a default model in its frontmatter, so reviewers get a strong model and mechanical work gets a cheaper one.
+
+| Role | Default model |
+|---|---|
+| `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner` | opus |
+| `researcher`, `coder`, `pr-shepherd-agent`, `knowledge-curator-agent` | sonnet |
+| `issue-orchestrator`, `swarm-coordinator-agent` | inherit (your session model) |
+
+- **Override:** edit `.metaswarm/models.yaml`, then run `/update` to regenerate the `.claude/agents/metaswarm-<role>.md` files. Restart Claude Code after `.claude/agents/` is first created. `issue-orchestrator` and `swarm-coordinator-agent` are plugin-only (they inherit the session model) and are not configurable in `models.yaml`.
+- **Requires** Claude Code v2.1.251 or later.
+- **See what ran on which model:** `metaswarm-usage` (in the plugin's `bin/`, on PATH inside Claude Code — type `! metaswarm-usage` at the prompt) reports subagent cost and review-gate rounds from your Claude Code transcripts (`--json` for machine output).
+- Other hosts (Codex, Gemini, OpenCode, Cursor): see `skills/start/references/platform-adaptation.md`.
+
 ## Self-Learning System
 
 metaswarm doesn't just execute — it learns from every session and gets smarter over time.
@@ -211,7 +226,7 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 ## Requirements
 
 - One of: Claude Code, Gemini CLI, or Codex CLI
-- Node.js 18+ (for automation scripts)
+- Node.js 18+ (for automation scripts; contributing to metaswarm itself needs Node.js 22.8+ for the coverage gate)
 - [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+ — for task tracking (recommended)
 - GitHub CLI (`gh`) — for PR automation (recommended)
 - Playwright — for visual review skill (optional, `npx playwright install chromium`)

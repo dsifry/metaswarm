@@ -1,3 +1,9 @@
+---
+name: knowledge-curator-agent
+description: "Knowledge extraction and curation into the BEADS knowledge base. Use after a PR merge or to reflect on completed work."
+model: sonnet
+---
+
 # Knowledge Curator Agent
 
 **Type**: `learning-curator-agent`

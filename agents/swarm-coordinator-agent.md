@@ -1,3 +1,9 @@
+---
+name: swarm-coordinator-agent
+description: "Meta-orchestrator for multiple GitHub Issues and BEADS epics in parallel. Use to coordinate a swarm across worktrees."
+model: inherit
+---
+
 # Swarm Coordinator Agent
 
 ## Role
@@ -60,20 +66,20 @@ ELSE → Task Mode (default, current behavior)
 
 ### Task Mode (Default)
 
-Fire-and-forget `Task()` subagents per worktree orchestrator. Each gets full context in its prompt. No cross-agent communication. This is the existing behavior.
+Fire-and-forget `Task()` subagents per worktree orchestrator, each with role type `roleType("issue-orchestrator")` (resolved per [Role type resolution](../guides/agent-coordination.md#role-type-resolution)). Each gets full context in its prompt. No cross-agent communication. This is the existing behavior.
 
 ### Team Mode
 
 When Team tools are available:
 
 1. **Create initiative team**: `TeamCreate("swarm-{initiative-id}")` (e.g., `swarm-auth-overhaul`)
-2. **Spawn Issue Orchestrators as named teammates**: `orch-123`, `orch-456`, etc.
+2. **Spawn Issue Orchestrators as named teammates** (type `roleType("issue-orchestrator")`): `orch-123`, `orch-456`, etc.
 3. **Broadcast conflicts**: Use `SendMessage(type: "broadcast")` to alert all orchestrators of file/schema conflicts
 4. **Receive async updates**: Orchestrators send "PR merged", "blocked", "escalation" messages
 5. **Enforce phase gates**: Via messaging (next phase starts only after all previous layer PRs merged)
 6. **Graceful shutdown**: Send `shutdown_request` to each teammate, then `TeamDelete`
 
-**MANDATORY**: Adversarial reviewers are ALWAYS fresh `Task()` instances — never teammates, never resumed. See `guides/agent-coordination.md`.
+**MANDATORY**: Adversarial reviewers are ALWAYS fresh `Task()` instances (role type `roleType("adversarial-reviewer")`) — never teammates, never resumed. See `guides/agent-coordination.md`.
 
 ---
 
@@ -127,7 +133,7 @@ Review the output for patterns about multi-agent coordination and conflict resol
 2. Swarm Coordinator receives event
 3. Check priority and existing workload
 4. Select available worktree OR queue if all busy
-5. Spawn Issue Orchestrator in selected worktree
+5. Spawn Issue Orchestrator (role type `roleType("issue-orchestrator")`) in selected worktree
 6. Record assignment in active-assignments.jsonl
 7. Post GitHub comment: "🤖 Agent claiming this work"
 ```

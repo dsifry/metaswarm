@@ -8,7 +8,7 @@
     "statements": 100
   },
   "enforcement": {
-    "command": "pnpm test:coverage",
+    "command": "bash -c 'shopt -s nullglob; for f in tests/*/test-*.sh; do echo \"== $f\"; bash \"$f\" || exit 1; done' && bash tests/lib/coverage-gate.sh && node lib/sync-resources.js --check",
     "blockPRCreation": true,
     "blockTaskCompletion": true,
     "description": "Orchestrator agents MUST check coverage against these thresholds before marking any task complete or creating a PR. If coverage drops below any threshold, the task fails."

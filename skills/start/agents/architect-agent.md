@@ -1,3 +1,9 @@
+---
+name: architect-agent
+description: "Implementation planning and architecture design. Use when a plan must be drafted from research findings."
+model: inherit
+---
+
 # Architect Agent
 
 **Type**: `architect-agent`

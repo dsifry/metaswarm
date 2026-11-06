@@ -92,13 +92,13 @@ These rules are **mandatory**. Violating any of them invalidates the review.
 
 ```text
 1. Plan drafted by planner/explorer/orchestrator
-2. Spawn 3 adversarial reviewers in PARALLEL (fresh Task() instances)
+2. Spawn 3 adversarial reviewers in PARALLEL (fresh Task() instances, role type `roleType("plan-reviewer")`)
 3. Collect all 3 verdicts
 4. IF all PASS --> present plan to user with gate approval summary
 5. IF any FAIL -->
    a. Planner reads ALL feedback from all reviewers
    b. Planner incorporates changes OR documents why feedback doesn't apply
-   c. Spawn 3 NEW reviewer instances (never reuse -- prevents anchoring)
+   c. Spawn 3 NEW reviewer instances (role type `roleType("plan-reviewer")`; never reuse -- prevents anchoring)
    d. Repeat from step 3
 6. Max 3 iterations --> present plan with remaining issues noted for user decision
 ```
@@ -106,20 +106,22 @@ These rules are **mandatory**. Violating any of them invalidates the review.
 ### Phase 1: Spawn Reviewers (Parallel)
 
 ```typescript
-// Spawn all three reviewers in parallel for efficiency
+// Spawn all three reviewers in parallel for efficiency.
+// Every reviewer uses the plan-reviewer role type; the role lives in the prompt.
+// Role types are resolved per ../start/guides/agent-coordination.md#role-type-resolution
 const [feasibilityResult, completenessResult, scopeResult] = await Promise.all([
   Task({
-    subagent_type: "general-purpose",
+    subagent_type: roleType("plan-reviewer"),
     description: "Feasibility review",
     prompt: feasibilityReviewPrompt(planText, userRequest),
   }),
   Task({
-    subagent_type: "general-purpose",
+    subagent_type: roleType("plan-reviewer"),
     description: "Completeness review",
     prompt: completenessReviewPrompt(planText, userRequest),
   }),
   Task({
-    subagent_type: "general-purpose",
+    subagent_type: roleType("plan-reviewer"),
     description: "Scope & Alignment review",
     prompt: scopeAlignmentReviewPrompt(planText, userRequest),
   }),
@@ -139,7 +141,7 @@ ELSE:
   --> Pass to planner for revision.
   --> Increment iteration counter.
   --> IF iterations >= 3: present plan with remaining issues to user.
-  --> ELSE: spawn fresh reviewers on revised plan.
+  --> ELSE: spawn fresh roleType("plan-reviewer") reviewers on revised plan.
 ```
 
 ### Phase 3: Iteration (on FAIL)
@@ -149,7 +151,7 @@ ELSE:
 3. For each finding, planner either:
    - **Fixes it** — modifies the plan to resolve the issue
    - **Rebuts it** — documents why the finding is incorrect or not applicable (with evidence)
-4. Spawn 3 entirely new `Task()` instances for re-review
+4. Spawn 3 entirely new `Task()` instances (role type `roleType("plan-reviewer")`) for re-review
 5. New reviewers see ONLY the revised plan and original request — NOT previous findings
 
 ### Phase 4: Escalation (after 3 iterations)

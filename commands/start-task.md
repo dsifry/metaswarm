@@ -175,13 +175,7 @@ See the `orchestrated-execution` skill for the full pattern. Key principles:
 
 For complex tasks requiring multiple phases, consider spawning sub-agents:
 
-**Model specialization guidance:**
-
-| Model  | Best For                                                  |
-| ------ | --------------------------------------------------------- |
-| Opus   | Orchestration, architecture, security analysis, synthesis |
-| Sonnet | Code analysis, implementation, code review, feature work  |
-| Haiku  | Metrics collection, simple analysis, data processing      |
+**Model selection:** don't pass `model:` per spawn. Spawn the phase's role type (see the Role type resolution rule and roster in the metaswarm plugin's `guides/agent-coordination.md`): reviewers default to Opus, coders and researchers to Sonnet. Per-project overrides live in `.metaswarm/models.yaml`.
 
 **Pattern**: Spawn parallel sub-agents for independent work (e.g., code review + security audit), sequential agents for dependent phases (research -> planning -> implementation).
 

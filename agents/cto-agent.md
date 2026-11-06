@@ -1,3 +1,9 @@
+---
+name: cto-agent
+description: "Plan review and architectural guidance. Use to review plans against codebase standards and the plan-review rubric."
+model: inherit
+---
+
 # CTO Agent
 
 **Type**: `cto-agent`

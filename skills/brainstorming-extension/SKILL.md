@@ -97,7 +97,7 @@ When `superpowers:brainstorming` commits a design document:
 Your design document has been committed. Before proceeding to implementation,
 I'll run it through our 5-agent review panel.
 
-Spawning reviews:
+Spawning reviews (each `roleType("design-reviewer")`, role in the prompt):
 - Product Manager Agent (use case/requirements validation)
 - Architect Agent (technical architecture)
 - Designer Agent (UX/API design)

@@ -134,6 +134,20 @@ if [ "$legacy_install" = true ]; then
   context_parts+=("This project has metaswarm installed via the old npm method. The marketplace plugin is now active and provides all the same skills and commands. Run \`${migrate_cmd}\` to clean up the redundant copies — this is a safe, reversible operation that only removes duplicate framework files (your project files are never touched).")
 fi
 
+# Generated agent files carry the plugin version in their header; flag any that differ
+# (e.g. after a marketplace auto-update). Version comparison only, no hashing.
+plugin_version=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "${PLUGIN_ROOT}/.claude-plugin/plugin.json" 2>/dev/null | head -1 || true)
+if [ -n "$plugin_version" ]; then
+  for agent_file in .claude/agents/metaswarm-*.md; do
+    [ -f "$agent_file" ] || continue
+    agent_version=$(sed -n 's/^<!-- generated-by: metaswarm v\([^ ]*\) sha256:.*/\1/p' "$agent_file" | head -1 || true)
+    if [ -n "$agent_version" ] && [ "$agent_version" != "$plugin_version" ]; then
+      context_parts+=("metaswarm agents are stale — run /update")
+      break
+    fi
+  done
+fi
+
 # Knowledge priming (only if project is set up and BEADS isn't separately priming)
 if [ "$new_project" = false ] && [ "$beads_standalone" = false ]; then
   if command -v bd >/dev/null 2>&1; then

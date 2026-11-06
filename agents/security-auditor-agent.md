@@ -1,3 +1,9 @@
+---
+name: security-auditor-agent
+description: "Security vulnerability detection and OWASP compliance review of implemented code. Use for security audits."
+model: inherit
+---
+
 # Security Auditor Agent
 
 **Type**: `security-auditor-agent`

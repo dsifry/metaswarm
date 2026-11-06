@@ -159,7 +159,7 @@ For each work unit (a discrete, spec-driven change with DoD items):
 3. **ADVERSARIAL REVIEW** — Fresh review subagent checks against spec contract. Binary PASS/FAIL with file:line evidence. Uses `adversarial-review-rubric.md`. When external tools are configured, cross-model review ensures the writer is always reviewed by a different AI model (see External Tools section below).
 4. **COMMIT** — Only after adversarial PASS. Updates `SERVICE-INVENTORY.md` and Project Context Document.
 
-On FAIL: fix → re-validate → spawn **fresh** reviewer (max 3 retries → escalate to human). There is NO path from FAIL to COMMIT without passing through the retry loop.
+On FAIL: fix → re-validate → spawn **fresh** reviewer (role type `roleType("adversarial-reviewer")`; max 3 retries → escalate to human). There is NO path from FAIL to COMMIT without passing through the retry loop.
 
 ### When to Use Orchestrated Execution
 
@@ -190,7 +190,7 @@ For simple tasks, the standard linear flow (implement → code review → PR) wo
 
 **Adversarial Review**: Fundamentally different from collaborative code review. The reviewer is an independent auditor checking spec compliance, not a helpful colleague suggesting improvements. Binary PASS/FAIL verdict. Evidence required (file:line references).
 
-**Fresh Reviewer Rule**: On re-review after FAIL, a NEW reviewer instance is spawned with no memory of the previous review. This prevents anchoring bias.
+**Fresh Reviewer Rule**: On re-review after FAIL, a NEW reviewer instance (role type `roleType("adversarial-reviewer")`) is spawned with no memory of the previous review. This prevents anchoring bias.
 
 **Human Checkpoints**: Planned pauses at critical boundaries (schema changes, security code, first use of new patterns). The orchestrator waits for explicit human approval before continuing.
 
@@ -505,7 +505,7 @@ Use the Task tool to spawn the Issue Orchestrator agent:
 
 ```typescript
 Task({
-  subagent_type: "general-purpose",
+  subagent_type: roleType("issue-orchestrator"),
   description: "Issue Orchestrator for #123",
   prompt: `You are the ISSUE ORCHESTRATOR agent.
 
@@ -580,19 +580,21 @@ EOF
 
 ## Agent Spawning Patterns
 
+Every `subagent_type` below is a role type resolved per [Role type resolution](./guides/agent-coordination.md#role-type-resolution).
+
 ### Sequential Spawning
 
 ```typescript
 // Spawn Researcher first
 const researchResult = await Task({
-  subagent_type: "general-purpose",
+  subagent_type: roleType("researcher"),
   description: "Research for issue #123",
   prompt: researcherPrompt,
 });
 
 // Then spawn Architect with research output
 const planResult = await Task({
-  subagent_type: "general-purpose",
+  subagent_type: roleType("planner"),
   description: "Planning for issue #123",
   prompt: architectPrompt + researchResult,
 });
@@ -604,14 +606,14 @@ const planResult = await Task({
 // Spawn Code Review and Security Audit in parallel
 const [reviewResult, securityResult] = await Promise.all([
   Task({
-    subagent_type: "general-purpose",
+    subagent_type: roleType("adversarial-reviewer"),
     description: "Code review for #123",
-    prompt: codeReviewPrompt,
+    prompt: codeReviewPrompt, // role: code reviewer, stated in the prompt
   }),
   Task({
-    subagent_type: "general-purpose",
+    subagent_type: roleType("adversarial-reviewer"),
     description: "Security audit for #123",
-    prompt: securityAuditPrompt,
+    prompt: securityAuditPrompt, // role: security auditor, stated in the prompt
   }),
 ]);
 ```
@@ -670,7 +672,7 @@ Or spawn Knowledge Curator agent:
 
 ```typescript
 Task({
-  subagent_type: "general-purpose",
+  subagent_type: roleType("knowledge-curator-agent"),
   description: "Extract learnings from epic",
   prompt: `Review completed epic <epic-id> and extract learnings.
 
@@ -790,14 +792,14 @@ skills/start/                   # This skill (main orchestration)
 ├── SKILL.md                    # This file
 ├── agents/                     # Agent definitions
 │   ├── issue-orchestrator.md   # Main coordinator (runs 4-phase loop)
-│   ├── researcher-agent.md     # Codebase exploration
+│   ├── researcher.md     # Codebase exploration
 │   ├── architect-agent.md      # Implementation planning
 │   ├── product-manager-agent.md # Use case & user benefit review
 │   ├── designer-agent.md       # UX/API design review
 │   ├── security-design-agent.md # Security threat modeling
 │   ├── cto-agent.md            # TDD readiness review
-│   ├── coder-agent.md          # TDD implementation
-│   ├── code-review-agent.md    # Internal code review (collaborative + adversarial modes)
+│   ├── coder.md          # TDD implementation
+│   ├── adversarial-reviewer.md    # Internal code review (collaborative + adversarial modes)
 │   ├── security-auditor-agent.md # Security review (implementation)
 │   ├── release-engineer-agent.md # Merge → deploy → verify → release
 │   └── pr-shepherd-agent.md    # PR lifecycle management

@@ -2,7 +2,7 @@
 
 ## Agents
 
-metaswarm provides 18 specialized agents, each with a defined role in the software development lifecycle.
+metaswarm provides 22 agents (+3 deprecated), each with a defined role in the software development lifecycle.
 
 ### Orchestration Agents
 
@@ -15,7 +15,10 @@ metaswarm provides 18 specialized agents, each with a defined role in the softwa
 
 | Agent | File | Role |
 |---|---|---|
-| **Researcher** | `agents/researcher-agent.md` | Codebase exploration, pattern discovery, dependency analysis. |
+| **Researcher** | `agents/researcher.md` | Codebase exploration, pattern discovery, dependency analysis. Read-only; Sonnet by default. |
+| **Planner** | `agents/planner.md` | Plan and decompose into work units. Opus by default; can write plan files. |
+| **Design Reviewer** | `agents/design-reviewer.md` | Design review gate reviewer; role (PM, Architect, Designer, Security, CTO) passed in the prompt. Opus, read-only. |
+| **Plan Reviewer** | `agents/plan-reviewer.md` | Plan review gate reviewer (Feasibility, Completeness, Scope & Alignment). Opus, read-only. |
 | **Architect** | `agents/architect-agent.md` | Implementation planning, service structure design, pattern selection. |
 | **Product Manager** | `agents/product-manager-agent.md` | Use case validation, user benefit review, scope verification. |
 | **Designer** | `agents/designer-agent.md` | UX/API design review, developer experience, consistency. |
@@ -26,14 +29,14 @@ metaswarm provides 18 specialized agents, each with a defined role in the softwa
 
 | Agent | File | Role |
 |---|---|---|
-| **Coder** | `agents/coder-agent.md` | TDD implementation (RED-GREEN-REFACTOR). 100% coverage required. |
+| **Coder** | `agents/coder.md` | TDD implementation (RED-GREEN-REFACTOR). 100% coverage required. |
 | **Test Automator** | `agents/test-automator-agent.md` | Test generation and coverage enforcement. |
 
 ### Review Agents
 
 | Agent | File | Role |
 |---|---|---|
-| **Code Reviewer** | `agents/code-review-agent.md` | Internal pre-PR review, pattern enforcement, test verification. |
+| **Adversarial Reviewer** | `agents/adversarial-reviewer.md` | Internal pre-PR review, pattern enforcement, test verification. Opus, read-only. |
 | **Security Auditor** | `agents/security-auditor-agent.md` | Security code review, vulnerability scanning. |
 
 ### PR & Delivery Agents
@@ -412,3 +415,5 @@ The full orchestration lifecycle:
 | 9. Closure | Knowledge Curator | Knowledge base updates |
 
 **Note**: For simple tasks without DoD items, phases 4-6 collapse into a linear implementation + code review flow. The orchestrated execution loop is only activated when the task has a written spec with enumerable DoD items.
+
+> **Deprecated names** (removed in 0.14.0): the old `-agent` variants of Coder, Researcher and Code Review are now short stubs that point to `coder`, `researcher` and `adversarial-reviewer`.

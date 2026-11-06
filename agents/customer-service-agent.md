@@ -1,3 +1,9 @@
+---
+name: customer-service-agent
+description: "User issue investigation and support. Use to investigate customer-reported problems with read-only access to billing, analytics and data."
+model: inherit
+---
+
 # Customer Service Agent
 
 **Type**: `customer-service-agent`

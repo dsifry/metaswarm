@@ -28,8 +28,8 @@ All five must approve before proceeding to implementation.
 
 This skill supports both coordination modes:
 
-- **Task Mode** (default): Spawn 5 parallel `Task()` subagents for each review round. Fresh instances per round.
-- **Team Mode**: `TeamCreate("review-{design-doc-name}")`, spawn 5 reviewers as named teammates (`pm`, `architect`, `designer`, `security`, `cto`). Reviewers retain context through revision cycles — saves 5 cold starts per re-review round. After approval, send `shutdown_request` to all, then `TeamDelete`.
+- **Task Mode** (default): Spawn 5 parallel `Task()` subagents for each review round, each with role type `roleType("design-reviewer")`. Fresh instances per round. Role types are resolved per [Role type resolution](./guides/agent-coordination.md#role-type-resolution).
+- **Team Mode**: `TeamCreate("review-{design-doc-name}")`, spawn 5 reviewers as named teammates (`pm`, `architect`, `designer`, `security`, `cto`), each using the `roleType("design-reviewer")` type with the role in its prompt. Reviewers retain context through revision cycles — saves 5 cold starts per re-review round. After approval, send `shutdown_request` to all, then `TeamDelete`.
 
 In either mode, the review criteria, iteration protocol, and escalation rules are identical. See `./guides/agent-coordination.md` for mode detection.
 
@@ -50,30 +50,31 @@ This skill auto-activates when:
 ### Phase 1: Spawn Review Agents (Parallel)
 
 ```typescript
-// Spawn all five agents in parallel for efficiency
+// Spawn all five agents in parallel for efficiency.
+// Every reviewer uses the design-reviewer role type; the role (PM, Architect, ...) lives in the prompt.
 const [pmResult, architectResult, designerResult, securityResult, ctoResult] = await Promise.all([
   Task({
-    subagent_type: "general-purpose",
+    subagent_type: roleType("design-reviewer"),
     description: "PM review",
     prompt: pmReviewPrompt(designDocPath),
   }),
   Task({
-    subagent_type: "general-purpose",
+    subagent_type: roleType("design-reviewer"),
     description: "Architect review",
     prompt: architectReviewPrompt(designDocPath),
   }),
   Task({
-    subagent_type: "general-purpose",
+    subagent_type: roleType("design-reviewer"),
     description: "Designer review",
     prompt: designerReviewPrompt(designDocPath),
   }),
   Task({
-    subagent_type: "general-purpose",
+    subagent_type: roleType("design-reviewer"),
     description: "Security design review",
     prompt: securityDesignReviewPrompt(designDocPath),
   }),
   Task({
-    subagent_type: "general-purpose",
+    subagent_type: roleType("design-reviewer"),
     description: "CTO review",
     prompt: ctoReviewPrompt(designDocPath),
   }),
@@ -428,7 +429,7 @@ Return JSON:
 
 ### Round 1: Initial Review
 
-1. Spawn all five agents in parallel
+1. Spawn all five agents in parallel (role type `roleType("design-reviewer")`)
 2. Wait for all results
 3. If all APPROVED → proceed
 4. If any NEEDS_REVISION → consolidate and present

@@ -1,3 +1,9 @@
+---
+name: security-design-agent
+description: "Security review of designs before implementation. Use as the Security role in the design review gate."
+model: inherit
+---
+
 # Security Design Agent
 
 **Type**: `security-design-agent`

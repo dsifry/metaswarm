@@ -115,7 +115,20 @@ Report per-tool: enabled (yes/no), status (available/not installed).
 - Read `.coverage-thresholds.json` -- if absent: `not configured`
 - If present, report threshold values (lines, branches, functions, statements) and enforcement command
 
-### 11. Node.js
+### 11. Phase Agents (Claude Code)
+
+```bash
+# The plugin bin/ is on PATH in Claude Code; fall back to the plugin root elsewhere
+MA="$(command -v metaswarm-agents.sh || echo "${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/bin/metaswarm-agents.sh")" # command -v metaswarm-agents.sh
+"$MA" check
+```
+
+- Exit 0: `generated agents are up to date` (or `no models.yaml — using plugin defaults; run /setup to customize`)
+- Exit 1: list each drifted file (`hand-edited`, `stale`, `orphan`, `missing`) and recommend `/update` (or `generate --force` for hand-edited files)
+- Exit 2: report the `models.yaml:<line>: <reason>` error
+- Also run `claude --version`; if it is older than 2.1.251, warn: `Claude Code is older than 2.1.251 -- CLAUDE_CODE_SUBAGENT_MODEL can override agent models; upgrade`. If `claude` is not found, skip the version check.
+
+### 12. Node.js
 
 ```bash
 node --version 2>/dev/null
@@ -144,6 +157,7 @@ node --version 2>/dev/null
 | gtg CLI | Available |
 | External tools | Codex: available, Gemini: not installed |
 | Coverage thresholds | 100% (all categories) |
+| Phase agents | Up to date |
 | Node.js | Available (v22.4.0) |
 
 ### Issues Found

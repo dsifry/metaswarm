@@ -15,7 +15,8 @@ Check for and apply metaswarm updates.
 3. If an update is available, guide the user through applying it:
    - For marketplace installs: the plugin auto-updates via the marketplace system
    - For npm installs: suggest migrating to the plugin (`/metaswarm:migrate`)
-4. After update, verify all skills load correctly
+4. After update, regenerate the project's phase agents: `MA="$(command -v metaswarm-agents.sh || echo "${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/bin/metaswarm-agents.sh")"; "$MA" generate` (uses `command -v metaswarm-agents.sh` — the plugin `bin/` is on PATH) (skip if the project has no `.metaswarm/models.yaml`). Exit 1 means a generated file was hand-edited; report it and use `--force` only if the user asks.
+5. Verify all skills load correctly
 
 ## Notes
 
