@@ -36,12 +36,10 @@ Per-project config at `.metaswarm/external-tools.yaml` (optional -- if absent, e
 adapters:
   codex:
     enabled: true
-    model: "gpt-5.3-codex"
     timeout_seconds: 300
     sandbox: docker          # docker | platform | none
   gemini:
     enabled: true
-    model: "pro"
     timeout_seconds: 300
     sandbox: docker
 
@@ -53,6 +51,8 @@ budget:
   per_task_usd: 2.00        # circuit breaker per task
   per_session_usd: 20.00    # circuit breaker per session
 ```
+
+Models are not set here. Set them per role in `.metaswarm/models.yaml` under `roles.<role>.codex` or `roles.<role>.gemini`, and pass `--role <role>` to the adapter. The model resolves in this order: `.metaswarm/models.yaml`, then a legacy `adapters.<tool>.model` in this file (deprecated, warns on stderr), then the adapter's built-in default (`gpt-5.3-codex` for Codex, `pro` for Gemini).
 
 ### Fallback Behavior
 
@@ -70,11 +70,11 @@ budget:
 # Check if Codex is installed, authenticated, and reachable
 adapters/codex.sh health
 
-# Check Gemini
-adapters/gemini.sh health
+# Check Gemini, reporting the model for the coder role
+adapters/gemini.sh health --role coder
 ```
 
-Returns JSON with `status: "ready|degraded|unavailable"`.
+Returns JSON with `status: "ready|degraded|unavailable"`. `--role <role>` (also accepted by `implement` and `review`) selects the model from `.metaswarm/models.yaml` `roles.<role>.<tool>`; an unknown role exits non-zero. Without `--role`, the output keys are unchanged and `model` is the legacy `adapters.<tool>.model` if one is still set (with a deprecation warning), otherwise the built-in default. The resolved model is passed to the CLI (`codex exec -m`, `gemini --model`). If `metaswarm-agents.sh` cannot be found, `--role` is ignored with a warning.
 
 ### Implement
 
@@ -82,6 +82,7 @@ Returns JSON with `status: "ready|degraded|unavailable"`.
 adapters/codex.sh implement \
   --worktree "/tmp/ext-codex-task-42" \
   --prompt-file "/private/tmp/xt-abc123/prompt.md" \
+  --role coder \
   --attempt 1 \
   --timeout 300
 ```
@@ -93,6 +94,7 @@ adapters/gemini.sh review \
   --worktree "/tmp/ext-codex-task-42" \
   --rubric-file "./rubrics/external-tool-review-rubric.md" \
   --spec-file "/private/tmp/xt-abc123/spec.md" \
+  --role adversarial-reviewer \
   --timeout 300
 ```
 

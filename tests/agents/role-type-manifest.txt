@@ -27,7 +27,7 @@ skills/design-review-gate/guides/agent-coordination.md|researcher|2
 skills/external-tools/SKILL.md|adversarial-reviewer|3
 skills/external-tools/SKILL.md|coder|2
 skills/orchestrated-execution/SKILL.md|adversarial-reviewer|9
-skills/orchestrated-execution/SKILL.md|coder|5
+skills/orchestrated-execution/SKILL.md|coder|7
 skills/orchestrated-execution/SKILL.md|planner|1
 skills/orchestrated-execution/guides/agent-coordination.md|coder|2
 skills/orchestrated-execution/guides/agent-coordination.md|design-reviewer|1

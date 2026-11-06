@@ -395,6 +395,7 @@ IMPLEMENT ──→ VALIDATE ──→ REVIEW ──→ COMMIT
 3. **MANDATORY**: Spawn a NEW adversarial reviewer (role type `roleType("adversarial-reviewer")`, fresh instance, no memory of previous review)
 4. Only COMMIT after the fresh reviewer returns PASS
 5. Max 3 retry cycles before ESCALATE to human
+6. **Coder model escalation**: after `escalation.coder.after_failures` failed VALIDATE attempts (default 2, read from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default (the `coder` role's `sonnet`).
 
 Track each attempt visibly: "Re-review attempt 1/3", "Re-review attempt 2/3", etc.
 
@@ -768,6 +769,8 @@ For fixable and ambiguous failures:
 1. **Attempt 1**: Fix the specific issue, re-run from Phase 1
 2. **Attempt 2**: If same failure, try alternative approach
 3. **Attempt 3**: If still failing, gather all evidence for escalation
+
+**Model escalation (coder).** Retrying alone never changes the model. After `escalation.coder.after_failures` failed VALIDATE attempts (default 2, from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default, so the escalated attempt runs on `opus` while earlier attempts ran on the coder's configured model.
 
 Track retry count:
 

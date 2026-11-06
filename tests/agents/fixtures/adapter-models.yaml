@@ -1,0 +1,12 @@
+# metaswarm models v1 — adapter test fixture
+roles:
+  coder:
+    claude: sonnet
+    codex: codex-coder-test
+    gemini: gemini-coder-test
+  planner:
+    claude: opus
+  adversarial-reviewer:
+    claude: opus
+    codex: codex-adv-test
+    gemini: gemini-adv-test

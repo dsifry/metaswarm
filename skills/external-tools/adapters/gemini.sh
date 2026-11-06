@@ -5,9 +5,9 @@
 # Requires:  gemini CLI (https://github.com/google-gemini/gemini-cli)
 #
 # Usage:
-#   gemini.sh health
-#   gemini.sh implement --worktree <path> --prompt-file <path> [--context-dir <dir>] [--timeout <secs>] [--attempt <n>]
-#   gemini.sh review   --worktree <path> --rubric-file <path> --spec-file <path> [--timeout <secs>] [--attempt <n>]
+#   gemini.sh health [--role <role>]
+#   gemini.sh implement --worktree <path> --prompt-file <path> [--context-dir <dir>] [--timeout <secs>] [--attempt <n>] [--role <role>]
+#   gemini.sh review   --worktree <path> --rubric-file <path> --spec-file <path> [--timeout <secs>] [--attempt <n>] [--role <role>]
 
 set -euo pipefail
 
@@ -27,6 +27,9 @@ DEFAULT_MODEL="pro"
 # health — Preflight check
 # =========================================================================
 cmd_health() {
+  parse_args "$@"
+  local model
+  model="$(resolve_model "$TOOL_NAME" "$XT_ROLE")" || return 1
   local status="ready"
   local version="unknown"
   local auth_valid=false
@@ -34,7 +37,7 @@ cmd_health() {
   # Check if gemini binary exists
   if ! command -v "$TOOL_CMD" >/dev/null 2>&1; then
     printf '{"tool":"%s","status":"unavailable","version":"not_installed","auth_valid":false,"model":"%s"}\n' \
-      "$TOOL_NAME" "$DEFAULT_MODEL"
+      "$TOOL_NAME" "$model"
     return 0
   fi
 
@@ -71,11 +74,11 @@ cmd_health() {
       --arg status "$status" \
       --arg version "$version" \
       --argjson auth_valid "$auth_valid" \
-      --arg model "$DEFAULT_MODEL" \
+      --arg model "$model" \
       '{tool: $tool, status: $status, version: $version, auth_valid: $auth_valid, model: $model}'
   else
     printf '{"tool":"%s","status":"%s","version":"%s","auth_valid":%s,"model":"%s"}\n' \
-      "$TOOL_NAME" "$status" "$version" "$auth_valid" "$DEFAULT_MODEL"
+      "$TOOL_NAME" "$status" "$version" "$auth_valid" "$model"
   fi
 }
 
@@ -84,6 +87,8 @@ cmd_health() {
 # =========================================================================
 cmd_implement() {
   parse_args "$@"
+  local model
+  model="$(resolve_model "$TOOL_NAME" "$XT_ROLE")" || return 1
 
   # Validate required arguments
   if [[ -z "$XT_WORKTREE" ]]; then
@@ -128,7 +133,7 @@ cmd_implement() {
     "$TOOL_CMD" \
       --yolo \
       --output-format json \
-      --model "$DEFAULT_MODEL" \
+      --model "$model" \
       --include-directories "$XT_WORKTREE" \
       "$prompt_content" \
     || exit_code=$?
@@ -156,7 +161,7 @@ cmd_implement() {
     result="$(emit_error \
       "$TOOL_NAME" \
       "implement" \
-      "$DEFAULT_MODEL" \
+      "$model" \
       "$XT_ATTEMPT" \
       "$exit_code" \
       "$stderr_file" \
@@ -208,7 +213,7 @@ cmd_implement() {
   result="$(emit_json \
     "$TOOL_NAME" \
     "implement" \
-    "$DEFAULT_MODEL" \
+    "$model" \
     "$XT_ATTEMPT" \
     "$exit_code" \
     "$branch" \
@@ -231,6 +236,8 @@ cmd_implement() {
 # =========================================================================
 cmd_review() {
   parse_args "$@"
+  local model
+  model="$(resolve_model "$TOOL_NAME" "$XT_ROLE")" || return 1
 
   # Validate required arguments
   if [[ -z "$XT_WORKTREE" ]]; then
@@ -335,7 +342,7 @@ PROMPT_EOF
     "$TOOL_CMD" \
       --sandbox \
       --output-format json \
-      --model "$DEFAULT_MODEL" \
+      --model "$model" \
       "$review_prompt" \
     || exit_code=$?
 
@@ -359,7 +366,7 @@ PROMPT_EOF
     result="$(emit_error \
       "$TOOL_NAME" \
       "review" \
-      "$DEFAULT_MODEL" \
+      "$model" \
       "$XT_ATTEMPT" \
       "$exit_code" \
       "$stderr_file" \
@@ -389,7 +396,7 @@ PROMPT_EOF
   result="$(emit_json \
     "$TOOL_NAME" \
     "review" \
-    "$DEFAULT_MODEL" \
+    "$model" \
     "$XT_ATTEMPT" \
     "$exit_code" \
     "$branch" \
@@ -415,7 +422,7 @@ shift || true
 
 case "$command" in
   health)
-    cmd_health
+    cmd_health "$@"
     ;;
   implement)
     cmd_implement "$@"
@@ -436,8 +443,12 @@ Options (implement):
   --worktree <path>       Path to the git worktree (required)
   --prompt-file <path>    Path to the prompt file (required)
   --context-dir <dir>     Restrict changes to this directory
+  --role <role>           metaswarm role; model from .metaswarm/models.yaml
   --timeout <seconds>     Command timeout (default: 300)
   --attempt <n>           Attempt number (default: 1)
+
+Options (health):
+  --role <role>           metaswarm role; model from .metaswarm/models.yaml
 
 Options (review):
   --worktree <path>       Path to the git worktree (required)
@@ -445,6 +456,7 @@ Options (review):
   --spec-file <path>      Path to the task specification (required)
   --timeout <seconds>     Command timeout (default: 300)
   --attempt <n>           Attempt number (default: 1)
+  --role <role>           metaswarm role; model from .metaswarm/models.yaml
 USAGE
     exit 1
     ;;

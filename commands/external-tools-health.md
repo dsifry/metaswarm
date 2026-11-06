@@ -16,7 +16,7 @@ Check the status of external AI tools (Codex CLI, Gemini CLI) and their configur
    command -v gemini >/dev/null 2>&1 && echo "gemini: available" || echo "gemini: not found"
    ```
 
-2. **Check configuration**: Read `.metaswarm/external-tools.yaml` if it exists. Report which adapters are enabled/disabled.
+2. **Check configuration**: Read `.metaswarm/external-tools.yaml` if it exists. Report which adapters are enabled/disabled. Models come from `.metaswarm/models.yaml` (`roles.<role>.codex|gemini`); to see a role's model, run `skills/external-tools/adapters/codex.sh health --role <role>` (or `gemini.sh`). Report a legacy `adapters.<tool>.model` in `external-tools.yaml` as deprecated.
 
 3. **Run verification scripts** (if available):
    ```bash
@@ -29,4 +29,5 @@ Check the status of external AI tools (Codex CLI, Gemini CLI) and their configur
 
 - `skills/external-tools/SKILL.md` — the external tools delegation skill
 - `.metaswarm/external-tools.yaml` — configuration file
+- `.metaswarm/models.yaml` — per-role models (`roles.<role>.codex|gemini`)
 - `bin/external-tools-verify.sh` — verification script
