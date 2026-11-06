@@ -167,6 +167,11 @@ for f in "${INSTRUCTION_FILES[@]}"; do
   case "$f" in
     templates/*) assert_in "$f: says the guide lives in the metaswarm plugin" "$S" 'metaswarm plugin' ;;
   esac
+  # The inline bullets are read in order, so they must follow the guide's rule order:
+  # PASS (1), escalate (2-3), iterate (4), stop and advance (5).
+  order="$(grep -nE '^- \*\*(No `blocker: yes` findings|Escalate to the human|Iterate|Stop and advance)\*\*' <<<"$S" | sed -E 's/^[0-9]+:- \*\*([A-Za-z]+).*/\1/' | tr '\n' ' ')"
+  [ "$order" = "No Escalate Iterate Stop " ] && pass "$f: inline bullets follow the guide's rule order" \
+    || fail "$f: inline bullets follow the guide's rule order (got: $order)"
   SECTIONS+="$S"$'\n'
 done
 
