@@ -31,7 +31,7 @@ The adversarial-reviewer operates in one of two modes, determined by the orchest
 - **Rubric**: `rubrics/code-review-rubric.md`
 - **Verdict**: APPROVED / CHANGES REQUIRED
 - **Purpose**: Improve code quality through suggestions and feedback
-- **Severity levels**: CRITICAL / HIGH / MEDIUM / LOW
+- **Severity levels**: CRITICAL / HIGH / MEDIUM / LOW (for the iteration decision these map onto the finding contract per `rubrics/code-review-rubric.md`, "When to Stop Iterating")
 - **Re-review**: Same reviewer instance may re-review
 - **When used**: Standard pre-PR review, no orchestrated execution loop
 

@@ -542,6 +542,29 @@ for f in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md;
   assert_not_in "$f: no old fixed-count / BLOCKING rules" "$T" 'Any single BLOCKING issue' 'After 3 FAILs'
 done
 
+# ---------------------------------------------------------------------------
+echo "PR #57 review fixes"
+
+# Rule line 3 needs finding history across compaction: execution state keeps open
+# findings and fix attempts for the orchestrator only.
+OE="$REPO_ROOT/skills/orchestrated-execution/SKILL.md"
+STATE="$(awk '/cat > .beads\/context\/execution-state.md/{on=1} on{print} on&&/^STATE_EOF$/{exit}' "$OE")"
+assert_in "orchestrated-execution: execution state records open findings and fix attempts" "$STATE" \
+  '## Open Findings' 'Severity' 'Protects' 'Fix attempts' 'never passed to reviewers'
+RECOVERY="$(section "$OE" '^### Context Recovery Protocol')"
+assert_in "orchestrated-execution: recovery reloads open findings for the orchestrator only" "$RECOVERY" \
+  'Open Findings' 'rule line 3' 'never pass them to a fresh reviewer'
+
+# Collaborative CRITICAL/HIGH/MEDIUM/LOW findings map onto the contract.
+for r in rubrics/code-review-rubric.md skills/start/rubrics/code-review-rubric.md; do
+  assert_in "$r: maps collaborative severities onto the contract" "$(cat "$REPO_ROOT/$r")" \
+    'CRITICAL → critical' 'HIGH → major' 'MEDIUM → minor' 'LOW → nit'
+done
+for a in agents/adversarial-reviewer.md skills/start/agents/adversarial-reviewer.md; do
+  assert_in "$a: collaborative severities point to the mapping" "$(cat "$REPO_ROOT/$a")" \
+    'code-review-rubric.md' 'When to Stop Iterating'
+done
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

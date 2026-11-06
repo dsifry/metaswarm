@@ -608,6 +608,11 @@ cat > .beads/context/execution-state.md << 'STATE_EOF'
 | WU-002 | IN-PROGRESS | VALIDATE | 1 |
 | WU-003 | PENDING | — | 0 |
 
+## Open Findings (orchestrator only, never passed to reviewers)
+| Finding | Severity | Protects | First round | Fix attempts | Status |
+|---------|----------|----------|-------------|--------------|--------|
+| WU-002-F1 | major | <scenario/requirement> | 1 | 1 | open |
+
 ## Blocked / Escalated
 <any blocked or escalated work units with context>
 STATE_EOF
@@ -625,7 +630,7 @@ When the orchestrator detects it has lost context (after compaction or in a new 
 2. Recovery steps:
    a. Read `.beads/plans/active-plan.md` — reload the approved plan
    b. Read `.beads/context/project-context.md` — reload completed work and patterns
-   c. Read `.beads/context/execution-state.md` — find where execution stopped
+   c. Read `.beads/context/execution-state.md` — find where execution stopped, and reload its Open Findings table (severity, protects, fix attempts) so rule line 3 can still detect a recurring blocker; this history is for the orchestrator only — never pass them to a fresh reviewer
    d. Run `bd prime --work-type recovery` — reload relevant knowledge base facts
    e. Resume from the current work unit and phase
 
