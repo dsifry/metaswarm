@@ -618,7 +618,7 @@ During the 4-phase execution loop, follow the structured recovery protocol defin
 3. **RETRY**: VALIDATE failures (tests, coverage, lint, typecheck) get up to 3 attempts per work unit, with escalating approaches. Review FAILs follow severity-gated iteration instead (cap 10 rounds; see `guides/delivery-scope.md`)
 4. **ESCALATE**: After 3 VALIDATE failures, or when the severity rule escalates, escalate to human with full failure history
 
-Track retries with labels:
+Track VALIDATE attempts with labels (review rounds are tracked in `.beads/context/execution-state.md`, not labels):
 
 ```bash
 bd label add <task-id> retry:1  # or retry:2, retry:3

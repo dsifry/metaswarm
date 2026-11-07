@@ -49,7 +49,7 @@ If this project uses metaswarm's context persistence, read and fold in whatever 
 ```bash
 ls .beads/plans/active-plan.md            # the approved plan (if mid-execution)
 ls .beads/context/project-context.md      # completed work units, patterns, tooling
-ls .beads/context/execution-state.md      # current work unit, phase, retry count
+ls .beads/context/execution-state.md      # current work unit, phase, VALIDATE attempts, review round
 bd prime --work-type recovery 2>/dev/null # reload plan + state + knowledge, if beads present
 ```
 

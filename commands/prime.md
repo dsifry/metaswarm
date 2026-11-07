@@ -200,7 +200,7 @@ When `--work-type recovery` is used (or when an orchestrator detects it lost con
 
 1. **Active Plan** — reads `.beads/plans/active-plan.md` if it exists with `status: in-progress`
 2. **Project Context** — reads `.beads/context/project-context.md` (completed work units, established patterns, tooling)
-3. **Execution State** — reads `.beads/context/execution-state.md` (current work unit, phase, retry count)
+3. **Execution State** — reads `.beads/context/execution-state.md` (current work unit, phase, VALIDATE attempts, review round)
 4. **Standard Knowledge** — all the usual MUST FOLLOW, GOTCHAS, PATTERNS, DECISIONS facts
 
 ### Recovery Flow

@@ -565,7 +565,7 @@ Approved plans and execution state are persisted to `.beads/` so agents can reco
 |------|----------|-------------|
 | `.beads/plans/active-plan.md` | The adversarially-reviewed, user-approved implementation plan | After plan review gate PASS + user approval |
 | `.beads/context/project-context.md` | Project Context Document (tooling, completed WUs, patterns) | After each Phase 4 COMMIT |
-| `.beads/context/execution-state.md` | Current work unit, phase, retry count | After each phase transition |
+| `.beads/context/execution-state.md` | Current work unit, phase, VALIDATE attempts, review round | After each phase transition |
 
 ### Writing the Approved Plan
 
@@ -598,15 +598,15 @@ cat > .beads/context/execution-state.md << 'STATE_EOF'
 ## Current Position
 - Active work unit: <wu-id>
 - Current phase: <IMPLEMENT|VALIDATE|REVIEW|COMMIT>
-- VALIDATE retry count: <0-3>
+- VALIDATE attempts: <0-3>
 - Review round: <1-10>
 
 ## Work Unit Status
-| WU | Status | Phase | Retries |
-|----|--------|-------|---------|
-| WU-001 | COMPLETE | COMMITTED | 0 |
-| WU-002 | IN-PROGRESS | VALIDATE | 1 |
-| WU-003 | PENDING | — | 0 |
+| WU | Status | Phase | VALIDATE attempts (0-3) | Review rounds (0-10) |
+|----|--------|-------|-------------------------|----------------------|
+| WU-001 | COMPLETE | COMMITTED | 0 | 1 |
+| WU-002 | IN-PROGRESS | VALIDATE | 1 | 0 |
+| WU-003 | PENDING | — | 0 | 0 |
 
 ## Open Findings (orchestrator only, never passed to reviewers)
 | Finding | Description | Evidence | Severity | Protects | First round | Fix attempts | Status |
@@ -630,7 +630,7 @@ When the orchestrator detects it has lost context (after compaction or in a new 
 2. Recovery steps:
    a. Read `.beads/plans/active-plan.md` — reload the approved plan
    b. Read `.beads/context/project-context.md` — reload completed work and patterns
-   c. Read `.beads/context/execution-state.md` — find where execution stopped, and reload its Open Findings table (description, evidence, severity, protects, fix attempts) so rule line 3 can still detect a recurring blocker — match each fresh finding by its description and protects, and use evidence only as a secondary signal, because a fix can move file:line references; this history is for the orchestrator only — never pass them to a fresh reviewer
+   c. Read `.beads/context/execution-state.md` — find where execution stopped, and reload its Open Findings table (description, evidence, severity, protects, fix attempts) so rule line 3 can still detect a recurring blocker — match each fresh finding by its description and protects, and use evidence only as a secondary signal, because a fix can move file:line references; this history is for the orchestrator only — never pass them to a fresh reviewer. A state file written before the column split has a single legacy `Retries` column: read that value as VALIDATE attempts, and take the review round from the Current Position `Review round` line
    d. Run `bd prime --work-type recovery` — reload relevant knowledge base facts
    e. Resume from the current work unit and phase
 
@@ -838,7 +838,7 @@ For fixable and ambiguous VALIDATE failures:
 
 **Model escalation (coder).** Retrying alone never changes the model. After `escalation.coder.after_failures` failed VALIDATE attempts (default 2, from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default, so the escalated attempt runs on `opus` while earlier attempts ran on the coder's configured model.
 
-Track retry count:
+Track VALIDATE attempts with labels (review rounds are tracked in `.beads/context/execution-state.md`, not labels):
 
 ```bash
 bd label add <task-id> retry:1  # or retry:2, retry:3
