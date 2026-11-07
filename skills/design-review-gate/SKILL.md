@@ -83,10 +83,12 @@ const [pmResult, architectResult, designerResult, securityResult, ctoResult] = a
 
 ### Phase 2: Aggregate Results
 
-Each agent returns a structured review. Every finding uses the 4-field contract from [`./guides/delivery-scope.md`](./guides/delivery-scope.md):
+Each agent returns a structured review. Every finding uses the 6-field contract from [`./guides/delivery-scope.md`](./guides/delivery-scope.md):
 
 ```typescript
 interface Finding {
+  title: string; // short label, ≤ ~80 chars
+  description: string; // 1-3 sentences: what is wrong and why it matters
   severity: "critical" | "major" | "minor" | "nit";
   protects: string; // credible user scenario | explicit requirement | DoD item; required for critical/major
   evidence: string; // design doc section, file:line, or expected-vs-found
@@ -115,7 +117,7 @@ interface ReviewResult {
 }
 ```
 
-A NEEDS_REVISION without any `blocker: yes` finding is read as APPROVED, and its findings become follow-ups. A NEEDS_REVISION whose findings lack the 4 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as APPROVED.
+A NEEDS_REVISION without any `blocker: yes` finding is read as APPROVED, and its findings become follow-ups. A NEEDS_REVISION whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as APPROVED.
 
 ### Phase 3: Check Gate
 
@@ -158,8 +160,10 @@ Every persona prompt below contains `${sharedFindingRules}`, which the orchestra
 ````markdown
 ## Findings
 
-Use your persona checklist for criteria only. Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
+Use your persona checklist for criteria only. Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
 
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
@@ -232,7 +236,7 @@ Return JSON:
     "missing_scenarios": ["list of gaps"]
   },
   "findings": [
-    { "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
   ],
   "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
@@ -280,7 +284,7 @@ Return JSON:
   "agent": "architect",
   "verdict": "APPROVED" | "NEEDS_REVISION",
   "findings": [
-    { "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
   ],
   "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
@@ -334,7 +338,7 @@ Return JSON:
   "agent": "designer",
   "verdict": "APPROVED" | "NEEDS_REVISION",
   "findings": [
-    { "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
   ],
   "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
@@ -407,7 +411,7 @@ Return JSON:
     "mitigations_required": ["security controls needed"]
   },
   "findings": [
-    { "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
   ],
   "suggestions": ["security notes that are not findings"],
   "questions": ["security clarifications needed"]
@@ -468,7 +472,7 @@ Return JSON:
   "agent": "cto",
   "verdict": "APPROVED" | "NEEDS_REVISION",
   "findings": [
-    { "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
   ],
   "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
@@ -504,11 +508,11 @@ When the severity rule says escalate (cap hit, a recurring or disputed blocker, 
 **Rule line**: <2 cap hit | 3 recurring/disputed | 5 overengineering signal>
 
 ### Remaining findings
-- **Critical**: [Security Design] <finding> — protects: <...> — evidence: <...>
-- **Major**: [Architect] <finding> — protects: <...> — evidence: <...>
-- **Major**: [CTO] <finding> — protects: <...> — evidence: <...>
-- **Minor**: [Designer] <finding> (follow-up filed)
-- **Nit**: [CTO] <finding> (follow-up filed)
+- **Critical**: [Security Design] <title>: <description> — protects: <...> — evidence: <...>
+- **Major**: [Architect] <title>: <description> — protects: <...> — evidence: <...>
+- **Major**: [CTO] <title>: <description> — protects: <...> — evidence: <...>
+- **Minor**: [Designer] <title> (follow-up filed)
+- **Nit**: [CTO] <title> (follow-up filed)
 
 ### Round history
 | Round | Verdicts (APPROVED / NEEDS_REVISION) | Blockers (critical/major) | Fixed this round | Rule decision |
@@ -581,8 +585,8 @@ All five reviewers have approved the design.
 
 ### Follow-ups
 
-- [Architect] minor: <finding> (bd-123)
-- [Security Design] minor: <finding> (bd-124)
+- [Architect] minor: <title> (bd-123)
+- [Security Design] minor: <title> (bd-124)
 
 ### Next Steps
 
@@ -623,9 +627,9 @@ One or more reviewers reported a `blocker: yes` finding.
 
 ### Follow-ups
 
-- [Architect] minor: <finding> (bd-125)
-- [Designer] nit: <finding> (bd-126)
-- [Security Design] minor: <finding> (bd-127)
+- [Architect] minor: <title> (bd-125)
+- [Designer] nit: <title> (bd-126)
+- [Security Design] minor: <title> (bd-127)
 - [CTO] minor: **Missing mock infrastructure** - No beforeEach/afterEach setup specified (bd-128)
 
 ### Threat Model (Security Agent)

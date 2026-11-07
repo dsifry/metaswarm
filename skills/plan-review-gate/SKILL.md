@@ -34,7 +34,7 @@ This skill auto-activates when:
 
 ## The 3 Adversarial Reviewers
 
-Each reviewer is a fresh `Task()` instance with read-only access to the codebase. Reviewers report every finding in the 4-field contract (`severity`, `protects`, `evidence`, `blocker`) from `./guides/delivery-scope.md`, and return PASS/FAIL: FAIL only if at least one finding has `blocker: yes`.
+Each reviewer is a fresh `Task()` instance with read-only access to the codebase. Reviewers report every finding in the 6-field contract (`title`, `description`, `severity`, `protects`, `evidence`, `blocker`) from `./guides/delivery-scope.md`, and return PASS/FAIL: FAIL only if at least one finding has `blocker: yes`.
 
 **Reading the check tables.** The tables below keep their wording and map onto the contract:
 
@@ -155,7 +155,7 @@ after each review round (round = 1, 2, ...):
 
 - **PASS, advance** means GATE APPROVED: present the plan to the user. Line 5's downgrade-and-advance counts the same, with the downgraded items listed as follow-ups.
 - **Overengineering check (line 5).** Signals include repeated review/fix cycles without a new user-visible risk, and blockers that protect only theoretical states. Restate the user's request and DoD, re-classify each open blocker, and escalate only if one still names a credible scenario.
-- **Malformed output.** A FAIL whose findings lack the 4 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as PASS.
+- **Malformed output.** A FAIL whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as PASS.
 
 **Follow-ups.** Minor/nit findings never block. When `bd` is available, file each as a BEADS task (`bd create --type task`), linked to the epic if one exists. Otherwise, or if `bd create` fails, list them under a `### Follow-ups` heading in the gate output, so the plan and later the PR body carry them.
 
@@ -179,10 +179,10 @@ When the severity rule says escalate (line 2, 3 or 5):
 **Rule line**: <2 cap hit | 3 recurring/disputed | 5 overengineering signal>
 
 ### Remaining findings
-- **Critical**: [Feasibility] <finding> — protects: <...> — evidence: <...>
-- **Major**: [Completeness] <finding> — protects: <...> — evidence: <...>
-- **Minor**: [Scope & Alignment] <finding> (follow-up filed)
-- **Nit**: [Feasibility] <finding> (follow-up filed)
+- **Critical**: [Feasibility] <title>: <description> — protects: <...> — evidence: <...>
+- **Major**: [Completeness] <title>: <description> — protects: <...> — evidence: <...>
+- **Minor**: [Scope & Alignment] <title> (follow-up filed)
+- **Nit**: [Feasibility] <title> (follow-up filed)
 
 ### Round history
 | Round | Feasibility | Completeness | Scope & Alignment | Blockers (critical/major) | Fixed this round | Rule decision |
@@ -233,7 +233,9 @@ Determine whether this plan can actually be executed against the real codebase. 
 4. **Unstated assumptions** — Does the plan silently depend on services, configurations, or infrastructure that doesn't exist? Missing critical dependency = blocker (major; protects: the plan must be executable against the real codebase).
 
 ## Findings
-Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
+Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
@@ -243,7 +245,7 @@ Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
 - Check EACH criterion. Cite file:line or glob results as evidence for PASS, or specific gaps for FAIL.
 - Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
-- Report every finding with the 4 fields; minor/nit findings are recorded as follow-ups, not suggestions.
+- Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.
 - Do NOT consider other reviewers. You are independent.
 
 ## Output Format
@@ -277,7 +279,9 @@ Determine whether this plan fully addresses every aspect of the user's request. 
 5. **Cross-file integration** — Are files that import or depend on changed files accounted for? Missing integration point = blocker (major; protects: <the dependent behaviour that would break>).
 
 ## Findings
-Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
+Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
@@ -287,7 +291,7 @@ Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
 - Check EACH criterion. Cite specific user requirements and plan items as evidence.
 - Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
-- Report every finding with the 4 fields; minor/nit findings are recorded as follow-ups, not suggestions.
+- Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.
 - Do NOT consider other reviewers. You are independent.
 
 ## Output Format
@@ -321,7 +325,9 @@ Determine whether this plan is right-sized for what the user actually asked. Che
 5. **Simpler alternative** — Is there a significantly simpler approach that achieves the same outcome?
 
 ## Findings
-Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
+Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
@@ -331,7 +337,7 @@ Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
 - Check EACH criterion. Cite the user's request and plan scope as evidence.
 - Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
-- Report every finding with the 4 fields; minor/nit findings are recorded as follow-ups, not suggestions.
+- Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.
 - Do NOT consider other reviewers. You are independent.
 
 ## Output Format
@@ -350,7 +356,8 @@ Each reviewer produces output in this exact format:
 ## [Reviewer Name] — [PASS/FAIL]
 
 ### Findings
-1. <title>
+1. - title: <short label, ≤ ~80 chars>
+   - description: <1-3 sentences: what is wrong and why it matters>
    - severity: critical | major | minor | nit
    - protects: <credible user scenario | explicit requirement | DoD item>   (required for critical/major)
    - evidence: <file:line reference, glob result, or expected-vs-found>
@@ -374,7 +381,7 @@ OR
 | Scope & Alignment | PASS | Plan matches user request, no scope creep |
 
 ### Follow-ups
-- [Scope & Alignment] minor: <finding> (bd-123)
+- [Scope & Alignment] minor: <title> (bd-123)
 
 Plan is ready for user review.
 ```
@@ -401,8 +408,8 @@ Plan is ready for user review.
 3. [Scope & Alignment] **Scope creep**: WU-005 adds caching layer not requested by user — protects: the user's request — evidence: WU-005
 
 ### Follow-ups
-- [Feasibility] minor: <finding> (bd-124)
-- [Scope & Alignment] nit: <finding> (bd-125)
+- [Feasibility] minor: <title> (bd-124)
+- [Scope & Alignment] nit: <title> (bd-125)
 
 ---
 
