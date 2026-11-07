@@ -249,6 +249,8 @@ None found.
 #### 1. Missing Error Handling in API Route
 
 **File**: `src/api/routes/auth.ts:34`
+**Severity**: HIGH
+**Protects**: login with bad credentials returns 401 instead of crashing the request
 **Issue**: The `authenticateUser` call can throw but isn't wrapped in try-catch.
 **Impact**: Unhandled errors will crash the request with a 500 error.
 **Fix**:

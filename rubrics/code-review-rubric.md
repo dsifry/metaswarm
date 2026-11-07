@@ -211,6 +211,7 @@ const users = await prisma.user.findMany({
 
 **File**: `src/lib/services/user.service.ts:45`
 **Severity**: CRITICAL
+**Protects**: user lookup must not let a crafted name read or alter other users' data
 **Issue**: Raw user input in query string
 **Fix**: Use parameterized query
 
@@ -231,6 +232,7 @@ const users = await prisma.user.findMany({ where: { name: userName } });
 
 **File**: `src/api/routes/webhooks/clerk.ts:23`
 **Severity**: HIGH
+**Protects**: Clerk webhook deliveries get a clean error response instead of an unhandled crash
 **Issue**: API call can throw but isn't caught
 **Fix**: Add try-catch with proper error response
 
@@ -294,14 +296,18 @@ const users = await prisma.user.findMany({ where: { name: userName } });
 
 ## Approval Criteria
 
+A CRITICAL or HIGH finding is a blocker when it names what it protects (see "When to Stop Iterating").
+
 **APPROVED** when:
-- Zero CRITICAL issues
-- Zero HIGH issues (or explicitly accepted with justification)
+- Zero CRITICAL blockers
+- Zero HIGH blockers (or explicitly accepted with justification)
 - MEDIUM issues documented (fix now or create follow-up task)
 
 **CHANGES REQUIRED** when:
-- Any CRITICAL issues exist
-- Any HIGH issues without justification
+- Any CRITICAL blocker exists
+- Any HIGH blocker without justification
+
+CRITICAL or HIGH findings that name nothing they protect are advisory: list them as follow-ups, not as a reason for CHANGES REQUIRED.
 
 ---
 

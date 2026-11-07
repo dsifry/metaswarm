@@ -124,7 +124,8 @@ assert_in "guide: severity-disagreement note (only a blocker split escalates)" "
   '**Severity disagreement.**' \
   'Only disagreement that changes `blocker` escalates' \
   'critical-vs-major or minor-vs-nit split changes no outcome' \
-  'only one names `protects`'
+  'only one names `protects`' \
+  'only if their `blocker` fields differ'
 assert_in "guide: follow-up rule" "$G" \
   'bd create --type task' \
   '### Follow-ups' \
@@ -563,15 +564,29 @@ echo "PR #57 review fixes"
 OE="$REPO_ROOT/skills/orchestrated-execution/SKILL.md"
 STATE="$(awk '/cat > .beads\/context\/execution-state.md/{on=1} on{print} on&&/^STATE_EOF$/{exit}' "$OE")"
 assert_in "orchestrated-execution: execution state records open findings and fix attempts" "$STATE" \
-  '## Open Findings' 'Severity' 'Protects' 'Fix attempts' 'never passed to reviewers'
+  '## Open Findings' 'Description' 'Evidence' 'Severity' 'Protects' 'Fix attempts' 'never passed to reviewers'
 RECOVERY="$(section "$OE" '^### Context Recovery Protocol')"
 assert_in "orchestrated-execution: recovery reloads open findings for the orchestrator only" "$RECOVERY" \
-  'Open Findings' 'rule line 3' 'never pass them to a fresh reviewer'
+  'Open Findings' 'rule line 3' 'never pass them to a fresh reviewer' \
+  'match each fresh finding by its description and evidence'
 
 # Collaborative CRITICAL/HIGH/MEDIUM/LOW findings map onto the contract.
 for r in rubrics/code-review-rubric.md skills/start/rubrics/code-review-rubric.md; do
   assert_in "$r: maps collaborative severities onto the contract" "$(cat "$REPO_ROOT/$r")" \
     'CRITICAL → critical' 'HIGH → major' 'MEDIUM → minor' 'LOW → nit'
+  # The collaborative verdict follows the blocker rule: an unprotected CRITICAL is advisory.
+  CRITERIA="$(section "$REPO_ROOT/$r" '^## Approval Criteria')"
+  assert_in "$r: collaborative verdict keys on blockers, not raw severity" "$CRITERIA" \
+    'Any CRITICAL blocker' 'Any HIGH blocker without justification' \
+    'name nothing they protect are advisory'
+  assert_not_in "$r: no raw-severity CHANGES REQUIRED rule" "$CRITERIA" 'Any CRITICAL issues exist'
+  # Output examples show the Protects line, so collaborative reviewers can produce blockers.
+  assert_in "$r: collaborative output example carries Protects" "$(cat "$REPO_ROOT/$r")" \
+    '**Protects**:'
+done
+for a in agents/adversarial-reviewer.md skills/start/agents/adversarial-reviewer.md; do
+  STEP6="$(section "$REPO_ROOT/$a" '^### Step 6: Provide Feedback')"
+  assert_in "$a: collaborative feedback example carries Protects" "$STEP6" '**Protects**:'
 done
 for a in agents/adversarial-reviewer.md skills/start/agents/adversarial-reviewer.md; do
   assert_in "$a: collaborative severities point to the mapping" "$(cat "$REPO_ROOT/$a")" \
