@@ -153,7 +153,7 @@ node --version 2>/dev/null
 | Command shims | Not applicable (Codex uses $skill-name) |
 | Legacy embedded plugin | Not detected |
 | BEADS plugin | Not separately installed |
-| bd CLI | Available (v0.5.2) |
+| bd CLI | Available (v1.3.4) |
 | gtg CLI | Available |
 | External tools | Codex: available, Gemini: not installed |
 | Coverage thresholds | 100% (all categories) |

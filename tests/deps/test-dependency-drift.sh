@@ -459,6 +459,32 @@ assert_contains_fixed "WU3: skills/start/SKILL.md uses bd dolt push" skills/star
 assert_contains_fixed "WU3: skills/start/SKILL.md uses bd dolt pull" skills/start/SKILL.md 'bd dolt pull'
 
 # ===========================================================================
+# WU4: version claims
+# ===========================================================================
+echo ""
+echo "WU4: version claims"
+
+WU4_FILES=(
+  INSTALL.md README.md docs/index.html skills/status/SKILL.md
+  templates/beads-developer-setup.md
+  # generated mirror
+  skills/setup/templates/beads-developer-setup.md
+)
+assert_tracked "WU4 owned files and mirrors are tracked" "${WU4_FILES[@]}"
+# 4.1 P5 repo-wide (in-scope tracked files; no pathspecs = whole tree).
+assert_no_hits "WU4 4.1: no stale bd/beads version claims repo-wide (P5)" P5
+assert_no_hits "WU4 4.1: no stale bd/BEADS priming claims (P2)" P2 "${WU4_FILES[@]}"
+# 4.2 R4 verbatim in INSTALL.md and README.md.
+R4_TEXT='bd ≥ 1.0.4 (tested with 1.3.4); the beads plugin version matching your bd; Dolt ≥ 2.4.0 only for server mode (`bd init --server`)'
+for f in INSTALL.md README.md; do
+  assert_contains_fixed "WU4 4.2: $f states R4 verbatim" "$f" "$R4_TEXT"
+done
+# The pinned phrase survives the version rewrite.
+for f in templates/beads-developer-setup.md skills/setup/templates/beads-developer-setup.md; do
+  assert_contains_fixed "WU4: $f keeps 'standalone beads plugin'" "$f" "standalone beads plugin"
+done
+
+# ===========================================================================
 # Results
 # ===========================================================================
 echo ""

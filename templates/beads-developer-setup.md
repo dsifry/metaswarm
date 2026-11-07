@@ -29,7 +29,7 @@ bd doctor
 bd list
 ```
 
-The standalone beads plugin (v0.63.3+) automatically runs `bd prime` (bd workflow context and `bd remember` memories) via built-in SessionStart and PreCompact hooks. Knowledge-base facts come from metaswarm's `/prime` command, which reads `.beads/knowledge/` directly — no priming scripts needed.
+The standalone beads plugin (matching your bd version, bd ≥ 1.0.4) automatically runs `bd prime` (bd workflow context and `bd remember` memories) via built-in SessionStart and PreCompact hooks. Knowledge-base facts come from metaswarm's `/prime` command, which reads `.beads/knowledge/` directly — no priming scripts needed.
 
 ---
 
@@ -163,7 +163,7 @@ Add this line (runs every Monday at 9am):
 
 ### Automatic bd Context
 
-The standalone beads plugin (v0.63.3+) automatically runs `bd prime` on SessionStart and PreCompact via built-in hooks. That restores the bd workflow reference and any `bd remember` memories; no manual configuration is needed.
+The standalone beads plugin (matching your bd version, bd ≥ 1.0.4) automatically runs `bd prime` on SessionStart and PreCompact via built-in hooks. That restores the bd workflow reference and any `bd remember` memories; no manual configuration is needed.
 
 If the beads plugin is installed, metaswarm's session hook detects it and skips its own `bd prime` call to avoid duplicate context.
 

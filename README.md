@@ -228,7 +228,7 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 
 - One of: Claude Code, Gemini CLI, or Codex CLI
 - Node.js 18+ (for automation scripts; contributing to metaswarm itself needs Node.js 22.8+ for the coverage gate)
-- [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+ — for task tracking (recommended)
+- [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) — for task tracking (recommended). Minimum versions: bd ≥ 1.0.4 (tested with 1.3.4); the beads plugin version matching your bd; Dolt ≥ 2.4.0 only for server mode (`bd init --server`)
 - GitHub CLI (`gh`) — for PR automation (recommended)
 - Playwright — for visual review skill (optional, `npx playwright install chromium`)
 

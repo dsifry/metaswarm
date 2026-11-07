@@ -79,6 +79,7 @@ npx metaswarm setup
 
 1. **One of**: Claude Code, Gemini CLI, or Codex CLI
 2. **BEADS CLI** (`bd`) — Git-native issue tracking (recommended)
+   Minimum versions: bd ≥ 1.0.4 (tested with 1.3.4); the beads plugin version matching your bd; Dolt ≥ 2.4.0 only for server mode (`bd init --server`).
    ```bash
    curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
    ```
