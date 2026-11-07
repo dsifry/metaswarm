@@ -1,6 +1,6 @@
 ---
 name: design-review-gate
-description: Automatic review gate that runs after brainstorming completes - spawns PM, Architect, Designer, Security, and CTO agents in parallel, iterates until all approve
+description: Automatic review gate that runs after brainstorming completes - spawns PM, Architect, Designer, Security, and CTO agents in parallel, iterates under the severity rule until all approve or it escalates
 auto_activate: true
 triggers:
   - "design document created"
@@ -31,7 +31,7 @@ This skill supports both coordination modes:
 - **Task Mode** (default): Spawn 5 parallel `Task()` subagents for each review round, each with role type `roleType("design-reviewer")`. Fresh instances per round. Role types are resolved per [Role type resolution](./guides/agent-coordination.md#role-type-resolution).
 - **Team Mode**: `TeamCreate("review-{design-doc-name}")`, spawn 5 reviewers as named teammates (`pm`, `architect`, `designer`, `security`, `cto`), each using the `roleType("design-reviewer")` type with the role in its prompt. Reviewers retain context through revision cycles — saves 5 cold starts per re-review round. After approval, send `shutdown_request` to all, then `TeamDelete`.
 
-In either mode, the review criteria, iteration protocol, and escalation rules are identical. See `./guides/agent-coordination.md` for mode detection.
+In either mode, the review criteria, the severity rule (see Phase 3), and escalation rules are identical. See `./guides/agent-coordination.md` for mode detection.
 
 ---
 
@@ -83,14 +83,21 @@ const [pmResult, architectResult, designerResult, securityResult, ctoResult] = a
 
 ### Phase 2: Aggregate Results
 
-Each agent returns a structured review:
+Each agent returns a structured review. Every finding uses the 4-field contract from [`./guides/delivery-scope.md`](./guides/delivery-scope.md):
 
 ```typescript
+interface Finding {
+  severity: "critical" | "major" | "minor" | "nit";
+  protects: string; // credible user scenario | explicit requirement | DoD item; required for critical/major
+  evidence: string; // design doc section, file:line, or expected-vs-found
+  blocker: "yes" | "no"; // yes only if severity ∈ {critical, major} AND protects is non-empty
+}
+
 interface ReviewResult {
   agent: "product-manager" | "architect" | "designer" | "security-design" | "cto";
-  verdict: "APPROVED" | "NEEDS_REVISION";
-  blockers: string[]; // MUST fix before implementation
-  suggestions: string[]; // Nice to have
+  verdict: "APPROVED" | "NEEDS_REVISION"; // NEEDS_REVISION only with at least one blocker: "yes" finding
+  findings: Finding[]; // every finding, any severity
+  suggestions: string[]; // Non-finding notes
   questions: string[]; // Clarifications needed
   use_case_analysis?: {
     // PM agent only
@@ -108,30 +115,62 @@ interface ReviewResult {
 }
 ```
 
+A NEEDS_REVISION without any `blocker: yes` finding is read as APPROVED, and its findings become follow-ups. A NEEDS_REVISION whose findings lack the 4 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as APPROVED.
+
 ### Phase 3: Check Gate
 
-```
-IF all five agents return APPROVED:
-  → Proceed to implementation
-  → Create epic with approved design
+The orchestrator, not the reviewers, decides what happens after each round. It applies the severity rule from [`./guides/delivery-scope.md`](./guides/delivery-scope.md): `SAFETY_CAP` = 10 rounds per gate occurrence, and the first line that matches wins. "Re-validate" here means revising the design document; "FRESH review" means re-running all five reviewers.
 
-ELSE:
-  → Consolidate feedback
-  → Present to user
-  → Iterate on design
-  → Re-run gate (max 3 iterations)
+```text
+after each review round (round = 1, 2, ...):
+  file every minor/nit finding as a follow-up (see Follow-ups)
+  1. no blocker: yes findings            → PASS, advance
+  2. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal
+  3. the same critical/major finding recurs after a fix attempt for it,
+     or two reviewers rate the same finding blocker vs. non-blocker   → escalate
+  4. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers
+                                         → fix blockers, re-validate, FRESH review
+  5. an overengineering signal is present → restate the DoD and re-classify each blocker against the policy;
+                                           any still names a credible scenario → escalate with a recommendation;
+                                           otherwise downgrade them to follow-ups and advance
+  6. otherwise                           → fix blockers, re-validate, FRESH review
 ```
+
+- **PASS, advance**: all five agents are APPROVED (no `blocker: yes` finding). Proceed to implementation and create the epic with the approved design. Line 5's downgrade-and-advance counts the same, with the downgraded items listed as follow-ups.
+- **Iterate**: consolidate the blockers, present them to the user, revise the design, and re-run the gate.
+- **Overengineering check (line 5).** Signals include repeated review/fix cycles without a new user-visible risk, and blockers that protect only theoretical states. Restate the design's goals and DoD, re-classify each open blocker, and escalate only if one still names a credible scenario.
+- **Rounds.** Every re-review is one round. In Team Mode the persistent reviewers re-review, and that still counts as a round.
+
+**Follow-ups.** Minor/nit findings never block. When `bd` is available, file each as a BEADS task (`bd create --type task`), linked to the epic if one exists. Otherwise, or if `bd create` fails, list them under a `### Follow-ups` heading in the gate output.
 
 ### Phase 4: Human Escalation
 
-After 3 failed iterations:
-
-1. Create summary of remaining blockers
-2. Ask human to decide: override, defer, or cancel
+When the severity rule says escalate (line 2, 3 or 5), present the escalation report in [Escalation](#escalation) and ask the human to decide: override, defer, revise or cancel.
 
 ---
 
 ## Agent Prompts
+
+### Shared Finding Rules (inserted into every prompt)
+
+Every persona prompt below contains `${sharedFindingRules}`, which the orchestrator replaces with this block:
+
+````markdown
+## Findings
+
+Use your persona checklist for criteria only. Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
+
+- severity: critical | major | minor | nit
+- protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
+- evidence: <file:line or expected-vs-found>
+- blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+
+Rules:
+
+- `protects:` is required for critical and major findings. A critical or major finding without `protects` is advisory (`blocker: no`).
+- Verdict: NEEDS_REVISION only if at least one finding has `blocker: yes`; otherwise APPROVED.
+- Minor/nit findings are recorded as follow-ups, not blockers. Put notes that are not findings in `suggestions` and `questions`.
+````
 
 ### Product Manager Agent Prompt
 
@@ -176,6 +215,8 @@ Review this design for use case clarity and user benefit validation.
 - [ ] Evaluation timeline defined
 - [ ] Failure criteria also defined
 
+${sharedFindingRules}
+
 ## Output Format
 
 Return JSON:
@@ -190,18 +231,18 @@ Return JSON:
     "needs_work": <number>,
     "missing_scenarios": ["list of gaps"]
   },
-  "blockers": ["list of MUST fix issues"],
-  "suggestions": ["nice to have improvements"],
+  "findings": [
+    { "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+  ],
+  "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
 }
 ```
 ````
 
-````
-
 ### Architect Agent Prompt
 
-```markdown
+````markdown
 You are the ARCHITECT AGENT reviewing a design document.
 
 ## Your Task
@@ -229,6 +270,8 @@ Review this design for technical architecture soundness.
 - [ ] No duplicate functionality (check docs/SERVICE_INVENTORY.md)
 - [ ] Proper abstraction boundaries
 
+${sharedFindingRules}
+
 ## Output Format
 
 Return JSON:
@@ -236,17 +279,18 @@ Return JSON:
 {
   "agent": "architect",
   "verdict": "APPROVED" | "NEEDS_REVISION",
-  "blockers": ["list of MUST fix issues"],
-  "suggestions": ["nice to have improvements"],
+  "findings": [
+    { "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+  ],
+  "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
 }
-````
-
+```
 ````
 
 ### Designer Agent Prompt
 
-```markdown
+````markdown
 You are the DESIGNER AGENT reviewing a design document.
 
 ## Your Task
@@ -280,6 +324,8 @@ Review this design for UX, API design, and developer experience.
 - [ ] Similar to how other features work
 - [ ] Naming is consistent with codebase
 
+${sharedFindingRules}
+
 ## Output Format
 
 Return JSON:
@@ -287,17 +333,18 @@ Return JSON:
 {
   "agent": "designer",
   "verdict": "APPROVED" | "NEEDS_REVISION",
-  "blockers": ["list of MUST fix issues"],
-  "suggestions": ["nice to have improvements"],
+  "findings": [
+    { "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+  ],
+  "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
 }
-````
-
+```
 ````
 
 ### Security Design Agent Prompt
 
-```markdown
+````markdown
 You are the SECURITY DESIGN AGENT reviewing a design document.
 
 ## Your Task
@@ -345,6 +392,8 @@ BEFORE reviewing, consider:
 - Existing auth flows in codebase
 - OWASP guidelines
 
+${sharedFindingRules}
+
 ## Output Format
 
 Return JSON:
@@ -357,17 +406,18 @@ Return JSON:
     "medium_risk": ["components with moderate risk"],
     "mitigations_required": ["security controls needed"]
   },
-  "blockers": ["MUST fix security issues"],
-  "suggestions": ["nice to have security improvements"],
+  "findings": [
+    { "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+  ],
+  "suggestions": ["security notes that are not findings"],
   "questions": ["security clarifications needed"]
 }
-````
-
+```
 ````
 
 ### CTO Agent Prompt
 
-```markdown
+````markdown
 You are the CTO AGENT reviewing a design document.
 
 ## Your Task
@@ -408,6 +458,8 @@ BEFORE reviewing, read:
 - docs/TESTING_GUIDE.md
 - templates/task-completion-checklist.md
 
+${sharedFindingRules}
+
 ## Output Format
 
 Return JSON:
@@ -415,12 +467,13 @@ Return JSON:
 {
   "agent": "cto",
   "verdict": "APPROVED" | "NEEDS_REVISION",
-  "blockers": ["list of MUST fix issues"],
-  "suggestions": ["nice to have improvements"],
+  "findings": [
+    { "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+  ],
+  "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
 }
-````
-
+```
 ````
 
 ---
@@ -431,44 +484,50 @@ Return JSON:
 
 1. Spawn all five agents in parallel (role type `roleType("design-reviewer")`)
 2. Wait for all results
-3. If all APPROVED → proceed
-4. If any NEEDS_REVISION → consolidate and present
+3. Apply the severity rule (Phase 3): if no agent reports a `blocker: yes` finding → proceed
+4. If any `blocker: yes` finding → consolidate (see [Needs Revision](#needs-revision)) and present
 
-### Rounds 2-3: Revision Cycles
+### Later Rounds: Revision Cycles
 
-1. Present consolidated feedback to human
-2. Human revises design document
-3. Re-run all five agents on updated doc
-4. Repeat until all approve
+1. Present consolidated blockers to the human
+2. Human revises the design document
+3. Re-run all five agents on the updated doc (a new round)
+4. Apply the severity rule again: advance, iterate, or escalate
 
-### Round 4: Escalation
+### Escalation
 
-If still not approved after 3 iterations:
+When the severity rule says escalate (cap hit, a recurring or disputed blocker, or a blocker that survives the overengineering check):
 
 ```markdown
-## Design Review Gate: Escalation Required
+## Review Escalation: Design Review Gate — <design doc>
 
-After 3 review cycles, the following blockers remain unresolved:
+**Rule line**: <2 cap hit | 3 recurring/disputed | 5 overengineering signal>
 
-### Architect Agent
-- [blocker 1]
-- [blocker 2]
+### Remaining findings
+- **Critical**: [Security Design] <finding> — protects: <...> — evidence: <...>
+- **Major**: [Architect] <finding> — protects: <...> — evidence: <...>
+- **Major**: [CTO] <finding> — protects: <...> — evidence: <...>
+- **Minor**: [Designer] <finding> (follow-up filed)
+- **Nit**: [CTO] <finding> (follow-up filed)
 
-### Designer Agent
-- [blocker 1]
+### Round history
+| Round | Verdicts (APPROVED / NEEDS_REVISION) | Blockers (critical/major) | Fixed this round | Rule decision |
+|-------|--------------------------------------|---------------------------|------------------|---------------|
+| 1     | 2 / 3                                | 1 / 4                     | —                | 4: iterate    |
+| 2     | 4 / 1                                | 0 / 2                     | 1 / 2            | 4: iterate    |
+| 3     | 4 / 1                                | 0 / 2                     | 0 / 0            | 3: escalate   |
 
-### CTO Agent
-- [blocker 1]
-- [blocker 2]
+### Follow-ups
+- <minor/nit findings, or the BEADS task IDs filed for them>
 
 ### Options
-1. **Override** - Proceed anyway (document technical debt)
+1. **Override** - Proceed anyway (document remaining blockers as technical debt)
 2. **Defer** - Shelve this feature for later
 3. **Revise** - Continue iterating on design
 4. **Cancel** - Abandon this feature
 
-Please choose an option or provide additional context.
-````
+**Recommendation**: <commit|another pass|human decision> — <reason from the rule>
+```
 
 ---
 
@@ -498,13 +557,13 @@ When design is approved:
 
 All five reviewers have approved the design.
 
-| Agent           | Verdict  | Blockers | Suggestions |
-| --------------- | -------- | -------- | ----------- |
-| Product Manager | APPROVED | 0        | 1           |
-| Architect       | APPROVED | 0        | 2           |
-| Designer        | APPROVED | 0        | 1           |
-| Security Design | APPROVED | 0        | 2           |
-| CTO             | APPROVED | 0        | 3           |
+| Agent           | Verdict  | Blockers | Minor/Nit | Suggestions |
+| --------------- | -------- | -------- | --------- | ----------- |
+| Product Manager | APPROVED | 0        | 0         | 1           |
+| Architect       | APPROVED | 0        | 1         | 2           |
+| Designer        | APPROVED | 0        | 0         | 1           |
+| Security Design | APPROVED | 0        | 1         | 2           |
+| CTO             | APPROVED | 0        | 0         | 3           |
 
 ### Threat Model Summary (Security Agent)
 
@@ -520,6 +579,11 @@ All five reviewers have approved the design.
 4. [Security] Consider anomaly detection for unusual query patterns
 5. [CTO] Document rate limit headers in API response
 
+### Follow-ups
+
+- [Architect] minor: <finding> (bd-123)
+- [Security Design] minor: <finding> (bd-124)
+
 ### Next Steps
 
 1. Create epic for implementation
@@ -532,34 +596,37 @@ Ready to proceed with implementation? [Yes/No]
 ### Needs Revision
 
 ```markdown
-## Design Review Gate: NEEDS REVISION
+## Design Review Gate: NEEDS REVISION (round 1)
 
-One or more reviewers found blocking issues.
+One or more reviewers reported a `blocker: yes` finding.
 
-| Agent           | Verdict        | Blockers | Suggestions |
-| --------------- | -------------- | -------- | ----------- |
-| Architect       | APPROVED       | 0        | 2           |
-| Designer        | NEEDS_REVISION | 2        | 1           |
-| Security Design | NEEDS_REVISION | 2        | 1           |
-| CTO             | NEEDS_REVISION | 3        | 0           |
+| Agent           | Verdict        | Blockers (critical/major) | Minor/Nit |
+| --------------- | -------------- | ------------------------- | --------- |
+| Architect       | APPROVED       | 0 / 0                     | 2         |
+| Designer        | NEEDS_REVISION | 0 / 2                     | 1         |
+| Security Design | NEEDS_REVISION | 1 / 1                     | 1         |
+| CTO             | NEEDS_REVISION | 0 / 2                     | 1         |
 
-### Blocking Issues (MUST FIX)
+### Blockers (MUST FIX)
 
-#### Designer Agent
+#### Critical
 
-1. **Missing error states** - The design doesn't specify what happens when search returns 0 results
-2. **Inconsistent API naming** - `get_contact_details` uses underscore but existing APIs use camelCase
+1. [Security Design] **userId trust boundary** - Design shows userId passed to tools, but userId MUST come from server session only. Model could be jailbroken to output arbitrary userIds. — protects: no user can access other users' data — evidence: design §Tools passes `userId` from model output
 
-#### Security Design Agent
+#### Major
 
-1. **CRITICAL: userId trust boundary** - Design shows userId passed to tools, but userId MUST come from server session only. Model could be jailbroken to output arbitrary userIds.
-2. **Missing rate limits** - AI endpoints are expensive and must have rate limiting to prevent abuse
+1. [Designer] **Missing error states** - The design doesn't specify what happens when search returns 0 results — protects: the search happy path's empty result — evidence: §Search has no empty state
+2. [Designer] **Inconsistent API naming** - `get_contact_details` uses underscore but existing APIs use camelCase — protects: requirement "match existing API conventions" — evidence: §API vs. existing `getContact`
+3. [Security Design] **Missing rate limits** - AI endpoints are expensive and must have rate limiting to prevent abuse — protects: credible abuse of a paid endpoint in normal use — evidence: §API has no rate limit
+4. [CTO] **Missing TDD specs** - No RED-GREEN-REFACTOR cycles documented — protects: DoD "TDD specs present" — evidence: no Test Plan section
+5. [CTO] **Missing edge cases** - Need systematic enumeration per method — protects: DoD "edge cases enumerated" — evidence: §Methods
 
-#### CTO Agent
+### Follow-ups
 
-1. **Missing TDD specs** - No RED-GREEN-REFACTOR cycles documented
-2. **Missing mock infrastructure** - No beforeEach/afterEach setup specified
-3. **Missing edge cases** - Need systematic enumeration per method
+- [Architect] minor: <finding> (bd-125)
+- [Designer] nit: <finding> (bd-126)
+- [Security Design] minor: <finding> (bd-127)
+- [CTO] minor: **Missing mock infrastructure** - No beforeEach/afterEach setup specified (bd-128)
 
 ### Threat Model (Security Agent)
 
@@ -571,12 +638,13 @@ One or more reviewers found blocking issues.
 
 1. [CTO] What's the max conversation history size?
 2. [Designer] What happens when user clicks "View More"?
-3. [Security] How will location data be protected? Is it PII?
+3. [Security Design] How will location data be protected? Is it PII?
 
 ---
 
-**Iteration**: 1 of 3
-**Action Required**: Please revise the design document to address the blocking issues above.
+**Round**: 1 (cap 10)
+**Rule decision**: 4: iterate — ≥2 independent reviewers reported blockers
+**Action Required**: Please revise the design document to address every blocker above.
 ```
 
 ---
@@ -585,8 +653,8 @@ One or more reviewers found blocking issues.
 
 The design review gate succeeds when:
 
-- [ ] All five agents return APPROVED verdict
-- [ ] All blocking issues are resolved
+- [ ] All five agents return APPROVED verdict (or rule line 5 downgraded every remaining blocker to a follow-up)
+- [ ] Every `blocker: yes` finding is resolved; minor/nit findings are filed as follow-ups
 - [ ] All clarifying questions are answered
 - [ ] Design document is updated with revisions
 - [ ] Security threat model reviewed and mitigations in place

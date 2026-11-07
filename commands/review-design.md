@@ -58,11 +58,11 @@ One or more agents found blocking issues. Output includes:
 
 - List of blocking issues by agent
 - Questions requiring clarification
-- Iteration count (max 3 before escalation)
+- Round count (severity-gated iteration, cap 10 rounds; see the metaswarm plugin's `guides/delivery-scope.md`)
 
 ### ESCALATED
 
-After 3 iterations without approval:
+Reached via the severity rule: an escalate condition (a recurring or disputed blocker, or a blocker that survives the overengineering check) or the 10-round cap:
 
 - Summary of remaining blockers
 - Options: Override / Defer / Cancel
@@ -165,7 +165,7 @@ Individual agents have 3-minute timeout. If timeout occurs:
 
 ### "Stuck in review loop"
 
-After 3 iterations, use `--force-override` to proceed anyway (documents technical debt).
+On any escalation (including the 10-round cap), use `--force-override` to proceed anyway (documents technical debt).
 
 ## Related Commands
 

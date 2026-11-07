@@ -197,9 +197,11 @@ bd label add <task-id> needs:revision
 
 ## Iteration Protocol
 
-### Maximum Iterations: 3
+### Round Limit
 
-If plan doesn't pass after 3 iterations:
+There is no fixed iteration count. The orchestrator's severity rule (`guides/delivery-scope.md`, 10-round cap) decides after each round whether another round runs, the plan advances, or it escalates. Only critical or major findings that name what they protect keep the loop going.
+
+When the orchestrator's severity rule says escalate:
 
 1. Escalate to human with summary of issues
 2. Mark task as waiting:human

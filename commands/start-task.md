@@ -168,7 +168,7 @@ See the `orchestrated-execution` skill for the full pattern. Key principles:
 - **Trust nothing, verify everything**: Run quality gates independently, never trust subagent self-reports
 - **Adversarial review**: Fresh reviewer checks each DoD item with file:line evidence
 - **Human checkpoints**: Pause at planned review points before continuing
-- **Recovery**: Max 3 retries per work unit, then escalate with failure history
+- **Recovery**: VALIDATE failures get up to 3 attempts per work unit, then escalate with failure history. Review rounds follow severity-gated iteration (cap 10 rounds; see the metaswarm plugin's `guides/delivery-scope.md`)
 - **No shortcuts**: NEVER use `--no-verify` on commits, NEVER skip coverage gates, NEVER self-certify
 
 #### Multi-Agent Orchestration (for large features)

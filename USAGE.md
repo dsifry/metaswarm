@@ -118,7 +118,7 @@ The 4-phase execution loop for rigorous, spec-driven implementation. Decomposes 
 - **Project context document**: Maintained by orchestrator, passed to each coder subagent to prevent context loss
 - **Service inventory tracking**: `SERVICE-INVENTORY.md` updated after each commit to track services, factories, and shared modules
 - **Final comprehensive review**: Cross-unit integration check after all units pass
-- **Recovery protocol**: DIAGNOSE → CLASSIFY → RETRY (max 3) → ESCALATE with failure history
+- **Recovery protocol**: DIAGNOSE → CLASSIFY → RETRY (VALIDATE: up to 3 attempts; review: severity-gated, cap 10 rounds) → ESCALATE with failure history
 
 Uses the `adversarial-review-rubric.md` for reviews (distinct from the collaborative `code-review-rubric.md`).
 
@@ -134,7 +134,7 @@ Spawns 6 agents in parallel to review a design document:
 
 - PM, Architect, Designer, Security, UX Reviewer, CTO review simultaneously
 - All 6 must APPROVE
-- Max 3 iterations before human escalation
+- Severity-gated iteration: only `blocker: yes` findings re-run the gate, cap 10 rounds before human escalation
 - Catches architectural issues before implementation begins
 
 ### PR Shepherd

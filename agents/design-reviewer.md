@@ -22,7 +22,7 @@ You review a drafted design document from one perspective. The orchestrator pass
 
 ## Role briefs
 
-Read the persona file matching your role and follow its checklist, criteria and output format:
+Read the persona file matching your role. Use the persona file for its checklist and criteria only; the finding contract and blocker-based verdict REPLACE the persona file's output format and NEEDS_REVISION criteria.
 
 | Role in prompt | Role brief |
 |---|---|
@@ -36,5 +36,21 @@ Read the persona file matching your role and follow its checklist, criteria and 
 
 1. Review only from your assigned role's perspective.
 2. You are read-only. Do not modify files; report findings in your reply.
-3. Return a clear verdict: **APPROVED** or **NEEDS_REVISION**, with specific, actionable issues for each blocker.
+3. Return a clear verdict: **APPROVED** or **NEEDS_REVISION**. NEEDS_REVISION requires at least one `blocker: yes` finding; otherwise the verdict is APPROVED. Report every finding in the finding contract below.
 4. Reviews are independent. Do not rely on other reviewers' output.
+
+## Finding Contract
+
+Report every finding in this contract, whatever the persona file says about output format. The policy and the contract live in `guides/delivery-scope.md`. Every finding carries four fields:
+
+```text
+- severity: critical | major | minor | nit
+- protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
+- evidence: <file:line or expected-vs-found>
+- blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+```
+
+- `protects:` is required for critical and major findings.
+- A critical or major finding without `protects` is advisory (`blocker: no`); it becomes a follow-up, not a blocker.
+- Rubric checks marked "BLOCKING if …" produce critical or major findings; "WARNING" checks produce minor findings.
+- You report findings. The orchestrator, not you, decides whether another round runs, using its severity rule.

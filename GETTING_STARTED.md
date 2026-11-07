@@ -247,7 +247,7 @@ Six agents review in parallel:
 - **UX Reviewer**: Verifies user flows, integration work units, and component wiring
 - **CTO**: TDD readiness and alignment
 
-Each produces an APPROVE/REVISE verdict. All six must approve, or the plan iterates (max 3 rounds before human escalation).
+Each produces an APPROVE/REVISE verdict. All six must approve, or the plan iterates under the severity rule: only `blocker: yes` findings trigger another round, with a cap of 10 rounds before human escalation.
 
 ## Step 4.5: Orchestrated Execution (for Complex Tasks)
 
