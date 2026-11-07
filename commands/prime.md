@@ -209,8 +209,10 @@ cat .beads/plans/active-plan.md           # The approved plan
 cat .beads/context/project-context.md     # Completed work, patterns
 cat .beads/context/execution-state.md     # Where we left off
 
-# 3. Load knowledge base facts for the resumed work (filter as above)
-grep -hv '^#' .beads/knowledge/*.jsonl | jq -r '"[\(.type)] \(.fact)"'
+# 3. Load knowledge base facts for the resumed work: set T to the resumed
+#    work type's fact types (see the work-type table above); recommendations included
+T="pattern|gotcha|api_behavior|dependency|performance|security"   # e.g. resuming implementation
+grep -hv '^#' .beads/knowledge/*.jsonl | jq -r --arg t "$T" 'select(.type | test("^(" + $t + ")$")) | "[\(.type)] " + .fact + (if .recommendation then "\n  -> " + .recommendation else "" end)'
 ```
 
 ### When Recovery Triggers

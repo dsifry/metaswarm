@@ -535,6 +535,19 @@ fi
 # ===========================================================================
 # Results
 # ===========================================================================
+# PR #71 review: /prime's file filter is a substring match, so R2 "touching" arguments
+# must be path fragments, not globs; recovery loads facts through a filter.
+hits="$(cd "$DRIFT_ROOT" && git grep -nE 'knowledge priming\) for .* touching [^ ]*[*]' -- agents skills/start/agents || true)"
+if [ -z "$hits" ]; then pass "PR #71: R2 touching arguments are path fragments, not globs"; else fail "PR #71: R2 touching argument uses a glob"; printf '      %s\n' "$hits"; fi
+UNFILTERED_DUMP="jq -r '\"[\\(.type)] \\(.fact)\"'"
+for f in commands/prime.md .claude/commands/prime.md; do
+  if grep -qF -e "$UNFILTERED_DUMP" "$DRIFT_ROOT/$f"; then
+    fail "PR #71: $f recovery dumps every fact unfiltered"
+  else
+    pass "PR #71: $f recovery loads facts through a filter"
+  fi
+done
+
 # PR #71 review: cross-actor reassignment differs between bd 1.0.4 and 1.3.4.
 for f in agents/swarm-coordinator-agent.md skills/start/agents/swarm-coordinator-agent.md; do
   assert_contains_fixed "PR #71: $f guards reassignment with --if-assignee" "$f" '--if-assignee <old-worktree>'

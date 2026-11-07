@@ -94,7 +94,7 @@ Prime with implementation-specific context for files you'll modify:
 `/prime` (metaswarm knowledge priming) for implementation work on "<feature-keywords>" touching <affected-files>
 
 Example:
-`/prime` (metaswarm knowledge priming) for implementation work on "testing" "service" touching src/lib/services/*.ts
+`/prime` (metaswarm knowledge priming) for implementation work on "testing" "service" touching src/lib/services/
 ```
 
 Review the output and note:

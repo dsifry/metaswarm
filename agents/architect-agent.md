@@ -50,7 +50,7 @@ Prime with planning-specific context and file patterns:
 `/prime` (metaswarm knowledge priming) for planning work on "<feature-keywords>"
 
 If you know which files will be affected:
-`/prime` (metaswarm knowledge priming) for planning work on "<keywords>" touching src/lib/services/*.ts
+`/prime` (metaswarm knowledge priming) for planning work on "<keywords>" touching src/lib/services/
 ```
 
 Review the output and note:
