@@ -624,6 +624,19 @@ for f in skills/orchestrated-execution/SKILL.md agents/issue-orchestrator.md ski
   assert_not_in "$f: no ambiguous retry tracking heading" "$T" 'Track retries with labels' 'Track retry count:'
 done
 
+# The VALIDATE attempt counter is defined: failed runs per work unit, never reset (PR #65 review).
+COUNTER_DEF='VALIDATE attempts count failed VALIDATE runs for the work unit; passing runs do not count, and the count never resets within the work unit (including when VALIDATE re-runs after a review fix)'
+assert_in "orchestrated-execution: Max retries rule defines the VALIDATE counter" \
+  "$(grep -F '**Max retries**' "$OE")" "$COUNTER_DEF"
+assert_in "orchestrated-execution: Step 3 RETRY defines the VALIDATE counter" \
+  "$(section "$OE" '^### Step 3: RETRY')" "$COUNTER_DEF"
+assert_in "orchestrated-execution: execution state annotates the VALIDATE counter" "$STATE" \
+  '- VALIDATE attempts: <0-3> (failed VALIDATE runs for this work unit; never resets)'
+for a in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  assert_in "$a: Recovery Protocol defines the VALIDATE counter" \
+    "$(section "$REPO_ROOT/$a" '^### Recovery Protocol')" "$COUNTER_DEF"
+done
+
 # Pin the VALIDATE 3-attempt limit and the separate review cap in the issue orchestrator (PR #57 follow-up).
 for a in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
   RP="$(section "$REPO_ROOT/$a" '^### Recovery Protocol')"
