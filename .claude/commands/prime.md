@@ -47,7 +47,7 @@ When working on a specific topic (`K` is a case-insensitive regex):
 
 ```bash
 K="auth"
-grep -hv '^#' "$KB"/*.jsonl | jq -r --arg k "$K" 'select((.fact | test($k; "i")) or ((.tags // []) | any(test($k; "i")))) | .fact'
+grep -hv '^#' "$KB"/*.jsonl | jq -r --arg k "$K" 'select((.fact | test($k; "i")) or ((.tags // []) | any(test($k; "i")))) | .fact + (if .recommendation then "\n  -> " + .recommendation else "" end)'
 ```
 
 ### Prime for Files
@@ -56,7 +56,7 @@ When working on specific files (`F` is a path or path fragment):
 
 ```bash
 F="src/api/auth/"
-grep -hv '^#' "$KB"/*.jsonl | jq -r --arg f "$F" 'select((.affectedFiles // []) | any(contains($f))) | .fact'
+grep -hv '^#' "$KB"/*.jsonl | jq -r --arg f "$F" 'select((.affectedFiles // []) | any(contains($f))) | .fact + (if .recommendation then "\n  -> " + .recommendation else "" end)'
 ```
 
 ### Prime for Work Type
@@ -65,14 +65,15 @@ Pick the fact types that matter for the work you are doing:
 
 | Work type | Fact types to load |
 |---|---|
-| planning | `decision`, `pattern`, `gotcha` |
-| implementation | `pattern`, `gotcha`, `api_behavior` |
-| review | `pattern`, `gotcha`, `decision` |
-| debugging | `gotcha`, `api_behavior`, `code_quirk` |
+| planning | `decision`, `pattern`, `gotcha`, `dependency`, `security` |
+| implementation | `pattern`, `gotcha`, `api_behavior`, `dependency`, `performance`, `security` |
+| review | `pattern`, `gotcha`, `decision`, `security`, `performance` |
+| debugging | `gotcha`, `api_behavior`, `code_quirk`, `dependency`, `performance` |
+| research | `decision`, `pattern`, `gotcha`, `api_behavior`, `code_quirk`, `dependency`, `performance`, `security` (all types) |
 
 ```bash
-T="gotcha|pattern|api_behavior"   # implementation
-grep -hv '^#' "$KB"/*.jsonl | jq -r --arg t "$T" 'select(.type | test("^(" + $t + ")$")) | "[\(.type)] \(.fact)"'
+T="pattern|gotcha|api_behavior|dependency|performance|security"   # implementation
+grep -hv '^#' "$KB"/*.jsonl | jq -r --arg t "$T" 'select(.type | test("^(" + $t + ")$")) | "[\(.type)] " + .fact + (if .recommendation then "\n  -> " + .recommendation else "" end)'
 ```
 
 ### Combined

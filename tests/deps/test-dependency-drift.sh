@@ -258,6 +258,13 @@ R3='if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-
 # knowledge stores. Expects $KB (store dir) and $K (keyword).
 PRIME_PIPELINE='grep -hv '"'"'^#'"'"' "$KB"/*.jsonl | jq -r --arg k "$K" '"'"'select((.fact | test($k; "i")) or ((.tags // []) | any(test($k; "i")))) | .fact'"'"''
 
+# PR #71 review: filters must output each fact's recommendation; a fixed fixture
+# gives the pipeline tests a known match (not whatever the real stores contain).
+PRIME_FIXTURE=tests/deps/fixtures/knowledge
+PRIME_OUT='.fact + (if .recommendation then "\n  -> " + .recommendation else "" end)'
+PRIME_KEYWORD_PIPELINE='grep -hv '"'"'^#'"'"' "$KB"/*.jsonl | jq -r --arg k "$K" '"'"'select((.fact | test($k; "i")) or ((.tags // []) | any(test($k; "i")))) | '"$PRIME_OUT"''"'"''
+PRIME_TYPE_PIPELINE='grep -hv '"'"'^#'"'"' "$KB"/*.jsonl | jq -r --arg t "$T" '"'"'select(.type | test("^(" + $t + ")$")) | "[\(.type)] " + '"$PRIME_OUT"''"'"''
+
 # ===========================================================================
 # WU1 (owned files): bd prime flags (P1) and stale priming claims (P2)
 # ===========================================================================
@@ -297,17 +304,38 @@ for f in skills/orchestrated-execution/SKILL.md skills/handoff/SKILL.md \
 done
 
 # 1.3 commands/prime.md documents the working pipeline, and it runs on both stores.
-assert_contains_fixed "WU1 1.3: commands/prime.md documents the keyword pipeline" \
-  commands/prime.md "$PRIME_PIPELINE"
 assert_not_matches "WU1 1.3: commands/prime.md has no broken cat|jq form" \
   commands/prime.md 'cat [^|]*\.jsonl *[|] *jq'
 for kb in .beads/knowledge knowledge; do
   out=""
-  if out="$(cd "$DRIFT_ROOT" && KB="$kb" K="test" bash -o pipefail -c "$PRIME_PIPELINE" 2>&1)" && [ -n "$out" ]; then
-    pass "WU1 1.3: prime pipeline exits 0 with output on $kb"
+  if out="$(cd "$DRIFT_ROOT" && KB="$kb" K="test" bash -o pipefail -c "$PRIME_KEYWORD_PIPELINE" 2>&1)"; then
+    pass "WU1 1.3: prime keyword pipeline exits 0 on $kb"
   else
-    fail "WU1 1.3: prime pipeline on $kb (exit/empty): ${out:0:200}"
+    fail "WU1 1.3: prime keyword pipeline on $kb: ${out:0:200}"
   fi
+done
+# Known match on a fixed fixture (with a '#' comment line): the fact AND its recommendation.
+assert_contains_fixed "PR #71: commands/prime.md documents the keyword pipeline with recommendations" \
+  commands/prime.md "$PRIME_KEYWORD_PIPELINE"
+assert_contains_fixed "PR #71: commands/prime.md documents the work-type pipeline with recommendations" \
+  commands/prime.md "$PRIME_TYPE_PIPELINE"
+out="$(cd "$DRIFT_ROOT" && KB="$PRIME_FIXTURE" K="fixturewidget" bash -o pipefail -c "$PRIME_KEYWORD_PIPELINE" 2>&1 || true)"
+if grep -qF -e 'Fixturewidget tokens must never be logged.' <<<"$out" && grep -qF -e 'Redact fixturewidget tokens before logging.' <<<"$out"; then
+  pass "PR #71: keyword pipeline returns the fixture fact and its recommendation"
+else
+  fail "PR #71: keyword pipeline on fixture: ${out:0:300}"
+fi
+REVIEW_TYPES="$(grep -E '^[|] *review *[|]' "$DRIFT_ROOT/commands/prime.md" | head -1 | sed -E 's/^[|] *review *[|] *//; s/ *[|] *$//; s/`//g; s/, */|/g')"
+out="$(cd "$DRIFT_ROOT" && KB="$PRIME_FIXTURE" T="$REVIEW_TYPES" bash -o pipefail -c "$PRIME_TYPE_PIPELINE" 2>&1 || true)"
+if grep -qF -e '[security] Fixturewidget tokens must never be logged.' <<<"$out"; then
+  pass "PR #71: the review work type includes security facts"
+else
+  fail "PR #71: review work type ($REVIEW_TYPES) misses the security fixture: ${out:0:300}"
+fi
+# Every fact type in the knowledge schema is loaded by at least one work type.
+TABLE="$(grep -E '^[|] *(planning|implementation|review|debugging|research) *[|]' "$DRIFT_ROOT/commands/prime.md" || true)"
+for t in api_behavior code_quirk pattern gotcha decision dependency performance security; do
+  if grep -qF -e "\`$t\`" <<<"$TABLE"; then pass "PR #71: work-type table loads $t"; else fail "PR #71: no work type loads $t"; fi
 done
 
 # 1.4 TOML prompts describe /prime filtering in plain words, without flags.
@@ -507,6 +535,13 @@ fi
 # ===========================================================================
 # Results
 # ===========================================================================
+# PR #71 review: cross-actor reassignment differs between bd 1.0.4 and 1.3.4.
+for f in agents/swarm-coordinator-agent.md skills/start/agents/swarm-coordinator-agent.md; do
+  assert_contains_fixed "PR #71: $f guards reassignment with --if-assignee" "$f" '--if-assignee <old-worktree>'
+  assert_contains_fixed "PR #71: $f limits --force to abandoned claims" "$f" '`--force` only for an abandoned claim'
+  assert_contains_fixed "PR #71: $f keeps a bd 1.0.4 path" "$f" 'On bd 1.0.4'
+done
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed, $TOTAL total"
 [ "$FAIL" -eq 0 ]
