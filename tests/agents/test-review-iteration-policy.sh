@@ -967,7 +967,7 @@ done
 
 # Severity-rule escalations must not go through the free-form "@beads approve" request template (#68 review).
 SEV_ESC='**Severity-rule escalations never use this template.**'
-SEV_ESC_REST=('Escalation template' '**Revise**' '**Narrow scope**' '**Defer**' '**Cancel**' 'There is no `@beads approve` for an escalated review gate')
+SEV_ESC_REST=('Escalation template' '**Revise**' '**Narrow scope**' '**Defer**' '**Cancel**' 'There is no `@beads approve` for an escalated review gate' 'still mark the task waiting' 'waiting:human')
 assert_in "skills/start/SKILL.md: How to Escalate routes severity-rule escalations to the standard report" \
   "$(section "$REPO_ROOT/skills/start/SKILL.md" '^### How to Escalate')" "$SEV_ESC" "${SEV_ESC_REST[@]}"
 assert_in "skills/start/SKILL.md: @beads approve is never for an escalated review gate" \
