@@ -206,19 +206,21 @@ bd update <task-id> --status in_progress --remove-label swarm:paused
 # List paused work (e.g. before a rebalance)
 bd list --label swarm:paused --json
 
-# Reassign to a different worktree (guarded: applies only if <old-worktree> still holds it)
-bd update <task-id> --assignee <worktree> --if-assignee <old-worktree> \
-  --remove-label "worktree:<old-worktree>" --add-label "worktree:<worktree>"
+# Hand a task to a different worktree (works on bd 1.0.4 and 1.3.x)
+# 1. The holding worktree releases it:
+bd update <task-id> --status open --assignee "" --remove-label "worktree:<old-worktree>"
+# 2. The target worktree claims it atomically:
+bd update <task-id> --claim --add-label "worktree:<worktree>"
 bd show <task-id> --json
 ```
 
-Reassignment differs by bd version:
+Never reassign by overwriting `--assignee` from the coordinator. `--claim` is atomic in every supported bd version, so two worktrees can't both take a released task, while a direct `--assignee` overwrite can clobber a worker's live claim.
 
-- On bd 1.3.x, `--assignee` refuses to overwrite another actor's live `in_progress` claim. Ask the holding worktree to release the task first (it sets `--status open` or `--status deferred`), then reassign. `--if-assignee <old-worktree>` turns the transfer into a no-op (exit 13) if someone else took the task meanwhile. Use `--force` only for an abandoned claim, such as a crashed worktree whose lease has gone stale (`bd reclaim` returns those to ready).
-- On bd 1.0.4, neither `--if-assignee` nor `--force` exists. Check the current assignee with `bd show <task-id> --json`, then run the same `bd update` without `--if-assignee`.
+- On bd 1.3.x, a direct overwrite of another actor's live `in_progress` claim is refused anyway. If the holding worktree has crashed, `bd reclaim` returns its stale lease to ready, and the target worktree then claims it. Use `--force` only for an abandoned claim that `bd reclaim` can't recover.
+- On bd 1.0.4 there is no lease or overwrite guard. If the holding worktree has crashed, confirm with the human before releasing its task on its behalf, then let the target worktree `--claim` it.
 
 Rebalancing has no bd command: list idle worktrees and ready work (`bd ready --json`),
-then reassign with `bd update` as above.
+then hand tasks over with the release-and-claim steps above.
 
 ## Slack Integration
 

@@ -537,22 +537,42 @@ fi
 # ===========================================================================
 # PR #71 review: /prime's file filter is a substring match, so R2 "touching" arguments
 # must be path fragments, not globs; recovery loads facts through a filter.
-hits="$(cd "$DRIFT_ROOT" && git grep -nE 'knowledge priming\) for .* touching [^ ]*[*]' -- agents skills/start/agents || true)"
+hits="$(cd "$DRIFT_ROOT" && { git grep -nE 'knowledge priming\) for .* touching [^ ]*[*]' -- agents skills/start/agents; git grep -nE '(^|`)/prime [^`]*[*]' -- commands/prime.md .claude/commands/prime.md; } || true)"
 if [ -z "$hits" ]; then pass "PR #71: R2 touching arguments are path fragments, not globs"; else fail "PR #71: R2 touching argument uses a glob"; printf '      %s\n' "$hits"; fi
-UNFILTERED_DUMP="jq -r '\"[\\(.type)] \\(.fact)\"'"
 for f in commands/prime.md .claude/commands/prime.md; do
-  if grep -qF -e "$UNFILTERED_DUMP" "$DRIFT_ROOT/$f"; then
-    fail "PR #71: $f recovery dumps every fact unfiltered"
-  else
-    pass "PR #71: $f recovery loads facts through a filter"
+  rec="$(awk '/^### Context Recovery|^## Context Recovery/{on=1} on' "$DRIFT_ROOT/$f")"
+  tline="$(grep -E '^T="[^"]+" *# e\.g\. resuming implementation' <<<"$rec" | head -1 || true)"
+  pline="$(grep -F -e "grep -hv '^#' .beads/knowledge/*.jsonl | jq -r --arg t" <<<"$rec" | head -1 || true)"
+  if [ -z "$tline" ] || [ -z "$pline" ]; then
+    fail "PR #71: $f recovery step loads facts through the work-type filter (step missing)"
+    continue
   fi
+  out="$(cd "$DRIFT_ROOT" && bash -o pipefail -c "${tline%%#*}; ${pline//.beads\/knowledge/$PRIME_FIXTURE}" 2>&1 || true)"
+  if grep -qF -e '[security] Fixturewidget tokens must never be logged.' <<<"$out" \
+     && grep -qF -e 'Redact fixturewidget tokens before logging.' <<<"$out" \
+     && ! grep -qF -e 'Fixturewidget decisions live in ADRs.' <<<"$out"; then
+    pass "PR #71: $f recovery pipeline returns matching types with recommendations and filters others out"
+  else
+    fail "PR #71: $f recovery pipeline on fixture: ${out:0:300}"
+  fi
+done
+
+USED_TYPES="$(cd "$DRIFT_ROOT" && git grep -hoE 'knowledge priming\) for [a-z]+ work' -- agents skills/start/agents | sed -E 's/.* for ([a-z]+) work/\1/' | sort -u || true)"
+for t in $USED_TYPES; do
+  if grep -qE "^[|] *$t *[|]" "$DRIFT_ROOT/commands/prime.md"; then pass "PR #71: work type '$t' used by agents is documented"; else fail "PR #71: work type '$t' used by agents is not in the prime.md table"; fi
+done
+# 4. bd admin compact needs server mode
+for f in templates/beads-readme.md skills/setup/templates/beads-readme.md templates/beads-developer-setup.md skills/setup/templates/beads-developer-setup.md; do
+  assert_contains_fixed "PR #71: $f says bd admin needs server mode" "$f" 'requires server mode (`bd init --server`)'
 done
 
 # PR #71 review: cross-actor reassignment differs between bd 1.0.4 and 1.3.4.
 for f in agents/swarm-coordinator-agent.md skills/start/agents/swarm-coordinator-agent.md; do
-  assert_contains_fixed "PR #71: $f guards reassignment with --if-assignee" "$f" '--if-assignee <old-worktree>'
-  assert_contains_fixed "PR #71: $f limits --force to abandoned claims" "$f" '`--force` only for an abandoned claim'
-  assert_contains_fixed "PR #71: $f keeps a bd 1.0.4 path" "$f" 'On bd 1.0.4'
+  assert_contains_fixed "PR #71: $f hands off by release then atomic claim" "$f" 'bd update <task-id> --claim'
+  assert_contains_fixed "PR #71: $f holder releases with an empty assignee" "$f" '--status open --assignee ""'
+  assert_contains_fixed "PR #71: $f forbids overwriting --assignee" "$f" 'Never reassign by overwriting `--assignee`'
+  assert_contains_fixed "PR #71: $f covers bd 1.0.4" "$f" 'On bd 1.0.4'
+  assert_not_matches "PR #71: $f has no check-then-update transfer" "$f" 'then run the same `bd update` without'
 done
 
 echo ""

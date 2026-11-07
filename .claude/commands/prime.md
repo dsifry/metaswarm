@@ -23,13 +23,13 @@ description: Load relevant knowledge base facts into context before starting wor
 3. Make decisions aligned with architectural choices
 4. Don't repeat mistakes that have been learned from
 
-`/prime` filters on three things, any combination of which can be given as arguments (e.g. `/prime auth src/api/auth/** implementation`):
+`/prime` filters on three things, any combination of which can be given as arguments (e.g. `/prime auth src/api/auth/ implementation`):
 
 | Filter | Matches against |
 |---|---|
 | **Keyword** (topic, e.g. `auth`) | `.fact` and `.tags` (case-insensitive) |
 | **File** (path or path fragment you will touch) | `.affectedFiles` |
-| **Work type** (planning, implementation, review, debugging, research) | `.type` (e.g. `gotcha`, `pattern`, `decision`, `api_behavior`) |
+| **Work type** (planning, implementation, review, debugging, research, release) | `.type` (e.g. `gotcha`, `pattern`, `decision`, `api_behavior`) |
 
 The bd workflow reference is separate: if bd is installed, plain `bd prime` prints bd's own workflow reference and any `bd remember` memories. It has no filters and never reads `.beads/knowledge/`, so use `/prime` for the knowledge base.
 
@@ -70,6 +70,7 @@ Pick the fact types that matter for the work you are doing:
 | review | `pattern`, `gotcha`, `decision`, `security`, `performance` |
 | debugging | `gotcha`, `api_behavior`, `code_quirk`, `dependency`, `performance` |
 | research | `decision`, `pattern`, `gotcha`, `api_behavior`, `code_quirk`, `dependency`, `performance`, `security` (all types) |
+| release | `decision`, `gotcha`, `dependency`, `security` |
 
 ```bash
 T="pattern|gotcha|api_behavior|dependency|performance|security"   # implementation

@@ -233,7 +233,7 @@ bd admin compact --analyze --json
 bd admin compact --apply --id <id> --summary <file>
 ```
 
-Only `bd admin compact --auto` needs an API key. Neither command touches `.beads/knowledge`.
+Only `bd admin compact --auto` needs an API key. Neither command touches `.beads/knowledge`. Every `bd admin` command requires server mode (`bd init --server`); it isn't available in bd's default embedded mode.
 
 ---
 
