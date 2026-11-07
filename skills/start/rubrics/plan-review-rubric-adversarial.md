@@ -161,7 +161,8 @@ Each reviewer MUST produce output in this exact format:
 ## [Reviewer Name] — [PASS/FAIL]
 
 ### Findings
-1. **[finding title]**: [description]
+1. - title: <short label, ≤ ~80 chars>
+   - description: <1-3 sentences: what is wrong and why it matters>
    - severity: critical | major | minor | nit
    - protects: [credible user scenario, explicit requirement or DoD item; required for critical/major]
    - evidence: [file:line, glob result, or expected-vs-found]

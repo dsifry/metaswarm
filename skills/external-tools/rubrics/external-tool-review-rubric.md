@@ -99,7 +99,8 @@ The reviewer should produce output in this format:
 FAIL only if at least one finding below has `blocker: yes`.
 
 ### Findings
-1. **[issue-title]**: [description]
+1. - title: <short label, ≤ ~80 chars>
+   - description: <1-3 sentences: what is wrong and why it matters>
    - severity: critical | major | minor | nit
    - protects: "[quoted criterion]" (required for critical/major)
    - evidence: `file:line` — expected [X], found [Y]

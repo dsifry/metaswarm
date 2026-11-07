@@ -907,6 +907,34 @@ for gf in "${GUARD_FILES[@]}"; do
     '4 fields' 'four fields' '4-field' '<finding>'
 done
 
+# ---------------------------------------------------------------------------
+echo "Issue #58 PR #66 review: exact-format output templates use explicit title/description fields"
+# Reviewers told to "use this exact format" must not copy a bold-heading title,
+# or their findings lack the named title/description fields the malformed rule checks.
+EXACT=(
+  "agents/adversarial-reviewer.md|^### Step A5"
+  "skills/start/agents/adversarial-reviewer.md|^### Step A5"
+  "rubrics/adversarial-review-rubric.md|^## Output Format"
+  "skills/orchestrated-execution/rubrics/adversarial-review-rubric.md|^## Output Format"
+  "skills/start/rubrics/adversarial-review-rubric.md|^## Output Format"
+  "rubrics/plan-review-rubric-adversarial.md|^## Output Format"
+  "skills/plan-review-gate/rubrics/plan-review-rubric-adversarial.md|^## Output Format"
+  "skills/start/rubrics/plan-review-rubric-adversarial.md|^## Output Format"
+  "rubrics/external-tool-review-rubric.md|^## Output Format"
+  "skills/external-tools/rubrics/external-tool-review-rubric.md|^## Output Format"
+)
+for entry in "${EXACT[@]}"; do
+  f="${entry%%|*}"; re="${entry#*|}"
+  X="$(section "$REPO_ROOT/$f" "$re")"
+  assert_in "$f: exact-format findings carry explicit title and description fields" "$X" \
+    '1. - title:' '   - description:'
+  if grep -qE '^[0-9]+\. \*\*' <<<"$X"; then
+    fail "$f: exact-format findings still use a bold-heading title"
+  else
+    pass "$f: exact-format findings use no bold-heading title"
+  fi
+done
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

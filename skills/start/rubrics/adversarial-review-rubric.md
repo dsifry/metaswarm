@@ -177,17 +177,20 @@ FAIL only if at least one finding below has `blocker: yes`.
 
 ### Findings
 
-1. **DoD #2 not met**: <description>
+1. - title: DoD #2 not met
+   - description: <1-3 sentences: what is wrong and why it matters>
    - severity: major
    - protects: DoD #2 "<item text>"
    - evidence: `file:line` — expected <X>, found <Y>
    - blocker: yes
-2. **`any` type introduced**: <description>
+2. - title: `any` type introduced
+   - description: <1-3 sentences: what is wrong and why it matters>
    - severity: major
    - protects: <explicit requirement, e.g. "TypeScript strict mode, no `any` types">
    - evidence: `src/services/foo.ts:45` — `const data: any = ...`
    - blocker: yes
-3. **<minor concern>**: <description>
+3. - title: <minor concern, ≤ ~80 chars>
+   - description: <1-3 sentences: what is wrong and why it matters>
    - severity: minor
    - protects: —
    - evidence: `file:line`
