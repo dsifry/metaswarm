@@ -45,12 +45,12 @@ Triggered when:
 
 **BEFORE any other work**, prime your context with relevant knowledge:
 
-```bash
-# Prime with planning-specific context and file patterns
-bd prime --work-type planning --keywords "<feature-keywords>"
+```text
+Prime with planning-specific context and file patterns:
+`/prime` (metaswarm knowledge priming) for planning work on "<feature-keywords>"
 
-# If you know which files will be affected:
-bd prime --work-type planning --files "src/lib/services/*.ts" --keywords "<keywords>"
+If you know which files will be affected:
+`/prime` (metaswarm knowledge priming) for planning work on "<keywords>" touching src/lib/services/*.ts
 ```
 
 Review the output and note:

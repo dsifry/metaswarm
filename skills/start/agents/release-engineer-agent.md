@@ -53,8 +53,8 @@ Triggered when:
 
 **BEFORE any other work**, prime your context with relevant knowledge:
 
-```bash
-bd prime --work-type release --keywords "deploy" "rollback" "merge" "production"
+```text
+`/prime` (metaswarm knowledge priming) for release work on "deploy" "rollback" "merge" "production"
 ```
 
 Review the output and note:

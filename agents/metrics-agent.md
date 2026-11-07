@@ -47,8 +47,8 @@ Triggered when:
 
 **BEFORE any other work**, prime your context:
 
-```bash
-bd prime --work-type research --keywords "metrics" "reporting"
+```text
+`/prime` (metaswarm knowledge priming) for research work on "metrics" "reporting"
 ```
 
 ### Step 1: Collect Agent Metrics

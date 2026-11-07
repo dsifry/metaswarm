@@ -53,8 +53,8 @@ Triggered when:
 
 **BEFORE any other work**, prime your context:
 
-```bash
-bd prime --work-type review --keywords "pr" "review" "ci"
+```text
+`/prime` (metaswarm knowledge priming) for review work on "pr" "review" "ci"
 ```
 
 Review the output for PR handling patterns and gotchas.

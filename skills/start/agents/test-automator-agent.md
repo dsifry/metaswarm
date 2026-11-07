@@ -51,8 +51,8 @@ Triggered when:
 
 **BEFORE any other work**, prime your context:
 
-```bash
-bd prime --work-type implementation --keywords "testing" "mock" "tdd"
+```text
+`/prime` (metaswarm knowledge priming) for implementation work on "testing" "mock" "tdd"
 ```
 
 Review the output for testing patterns, mock factory usage, and TDD requirements.

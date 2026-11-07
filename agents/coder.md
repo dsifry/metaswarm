@@ -89,12 +89,12 @@ When the linter or type checker fails, FIX THE ROOT CAUSE. Never suppress with `
 
 **BEFORE any other work**, prime your context with relevant knowledge:
 
-```bash
-# Prime with implementation-specific context for files you'll modify
-bd prime --work-type implementation --files "<affected-files>" --keywords "<feature-keywords>"
+```text
+Prime with implementation-specific context for files you'll modify:
+`/prime` (metaswarm knowledge priming) for implementation work on "<feature-keywords>" touching <affected-files>
 
-# Example:
-bd prime --work-type implementation --files "src/lib/services/*.ts" --keywords "testing" "service"
+Example:
+`/prime` (metaswarm knowledge priming) for implementation work on "testing" "service" touching src/lib/services/*.ts
 ```
 
 Review the output and note:

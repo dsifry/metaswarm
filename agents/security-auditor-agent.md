@@ -45,8 +45,8 @@ Triggered when:
 
 **BEFORE any other work**, prime your context:
 
-```bash
-bd prime --work-type review --keywords "security" "authentication" "validation"
+```text
+`/prime` (metaswarm knowledge priming) for review work on "security" "authentication" "validation"
 ```
 
 Review the output for security patterns and known vulnerabilities in this codebase.

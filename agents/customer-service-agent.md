@@ -66,8 +66,8 @@ Triggered by:
 
 **BEFORE any other work**, prime your context:
 
-```bash
-bd prime --work-type research --keywords "customer" "support" "stripe" "posthog"
+```text
+`/prime` (metaswarm knowledge priming) for research work on "customer" "support" "stripe" "posthog"
 ```
 
 Review the output for relevant patterns and gotchas about user data handling.

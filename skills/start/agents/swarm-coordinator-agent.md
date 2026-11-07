@@ -116,8 +116,8 @@ When Team tools are available:
 
 **BEFORE coordinating work**, prime your context:
 
-```bash
-bd prime --work-type planning --keywords "orchestration" "coordination" "worktree"
+```text
+`/prime` (metaswarm knowledge priming) for planning work on "orchestration" "coordination" "worktree"
 ```
 
 Review the output for patterns about multi-agent coordination and conflict resolution.

@@ -44,8 +44,8 @@ Triggered when:
 
 **BEFORE any other work**, prime your context:
 
-```bash
-bd prime --work-type review --keywords "<feature-keywords>"
+```text
+`/prime` (metaswarm knowledge priming) for review work on "<feature-keywords>"
 ```
 
 ### Step 1: Gather Context

@@ -117,9 +117,9 @@ Triggered when:
 
 **BEFORE any other work**, prime your context with relevant knowledge:
 
-```bash
-# Prime with review-specific context and the files being reviewed
-bd prime --work-type review --files "<changed-files>" --keywords "testing" "quality"
+```text
+Prime with review-specific context and the files being reviewed:
+`/prime` (metaswarm knowledge priming) for review work on "testing" "quality" touching <changed-files>
 ```
 
 Review the output and note:

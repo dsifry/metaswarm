@@ -92,9 +92,9 @@ When Team tools are available:
 
 **BEFORE starting work**, prime your context:
 
-```bash
-# Prime with general context - will be refined by specialist agents
-bd prime --work-type planning --keywords "<issue-keywords>"
+```text
+Prime with general context - will be refined by specialist agents:
+`/prime` (metaswarm knowledge priming) for planning work on "<issue-keywords>"
 ```
 
 Review the output for critical rules and patterns that affect orchestration.

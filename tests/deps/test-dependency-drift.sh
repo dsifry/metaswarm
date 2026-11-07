@@ -318,6 +318,66 @@ assert_contains_fixed "WU1 1.4: prime.toml describes keyword filtering" commands
 assert_contains_fixed "WU1 1.4: prime.toml describes work-type filtering" commands/metaswarm/prime.toml "work type" -i
 
 # ===========================================================================
+# WU2 (owned files): bd prime flags (P1) and priming claims (P2) in agents
+# ===========================================================================
+echo ""
+echo "WU2: bd prime flags and priming claims (agents + skills/start/agents twins)"
+
+WU2_FILES=()
+while IFS= read -r f; do
+  [ -n "$f" ] && WU2_FILES+=("$f")
+done < <(git -C "$DRIFT_ROOT" ls-files -- 'agents/*.md' 'skills/start/agents/*.md')
+
+if [ "${#WU2_FILES[@]}" -gt 0 ]; then
+  pass "WU2: agent file list is non-empty (${#WU2_FILES[@]} files)"
+  assert_no_hits "WU2 2.1: no bd prime flag usage in agents (P1)" P1 "${WU2_FILES[@]}"
+  assert_no_hits "WU2 2.1: no stale bd/BEADS priming claims in agents (P2)" P2 "${WU2_FILES[@]}"
+else
+  fail "WU2: no tracked agents/*.md or skills/start/agents/*.md files"
+fi
+
+# 2.2 Twins differ only in ./ and .claude/ prefixes. coder.md and
+# pr-shepherd-agent.md carry known pre-existing 2-line content differences;
+# their normalised diff must equal that baseline exactly.
+normalise_twin() { sed 's#\./##g;s#\.claude/##g'; }
+WU2_CODER_BASELINE='323c323
+< See `guides/typescript-patterns.md` for full guidance.
+---
+> Follow TypeScript strict mode conventions as defined in the project'"'"'s tsconfig.json and ESLint configuration.'
+WU2_SHEPHERD_BASELINE='26c26
+< **See**: `plugins/your-project/skills/pr-shepherd/SKILL.md` for detailed PR monitoring behavior.
+---
+> **See**: the `metaswarm:pr-shepherd` skill for detailed PR monitoring behavior.'
+
+twin_diff() {
+  # Strip the line-number header so the baseline survives line shifts above it.
+  diff <(normalise_twin <"$DRIFT_ROOT/agents/$1") \
+       <(normalise_twin <"$DRIFT_ROOT/skills/start/agents/$1") | sed '/^[0-9][0-9,]*[acd][0-9][0-9,]*$/d' || true
+}
+strip_hdr() { sed '/^[0-9][0-9,]*[acd][0-9][0-9,]*$/d'; }
+
+while IFS= read -r a; do
+  [ -n "$a" ] || continue
+  b="${a#agents/}"
+  if [ ! -f "$DRIFT_ROOT/skills/start/agents/$b" ]; then
+    fail "WU2 2.2: $b has no twin in skills/start/agents/"
+    continue
+  fi
+  got="$(twin_diff "$b")"
+  case "$b" in
+    coder.md) want="$(printf '%s\n' "$WU2_CODER_BASELINE" | strip_hdr)" ;;
+    pr-shepherd-agent.md) want="$(printf '%s\n' "$WU2_SHEPHERD_BASELINE" | strip_hdr)" ;;
+    *) want="" ;;
+  esac
+  if [ "$got" = "$want" ]; then
+    pass "WU2 2.2: twin $b matches (prefix-normalised)"
+  else
+    fail "WU2 2.2: twin $b drifted (prefix-normalised diff differs from baseline)"
+    while IFS= read -r line; do echo "      $line"; done <<<"$got"
+  fi
+done < <(git -C "$DRIFT_ROOT" ls-files -- 'agents/*.md')
+
+# ===========================================================================
 # Results
 # ===========================================================================
 echo ""
