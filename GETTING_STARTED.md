@@ -280,10 +280,10 @@ Before any task, prime your agent with relevant context:
 > /prime
 ```
 
-Or with specific filters:
+Or with specific filters (keyword, file, work type):
 
-```bash
-bd prime --files "src/api/**/*.ts" --keywords "authentication" --work-type implementation
+```text
+> /prime authentication src/api/ implementation
 ```
 
 This outputs prioritized knowledge:

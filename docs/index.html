@@ -573,7 +573,7 @@ When all work units pass, create a PR.</code></pre>
       <li><strong>You disagreed.</strong> When you override Claude's recommendation, the system captures your preferred approach so agents align with your intent in future sessions.</li>
       <li><strong>You did something manually that should be automated.</strong> Repeated manual steps get flagged as workflow candidates.</li>
     </ul>
-    <p>The knowledge base can grow to hundreds or thousands of entries without filling your context window, because agents do not load all of it. <code>bd prime</code> uses selective retrieval, filtered by the files you are touching, the keywords that matter, and the type of work you are doing. You get the five gotchas relevant to the auth middleware you are about to change, not the entire institutional memory of the project.</p>
+    <p>The knowledge base can grow to hundreds or thousands of entries without filling your context window, because agents do not load all of it. metaswarm's <code>/prime</code> command filters it with <code>jq</code> by the files you are touching, the keywords that matter, and the type of work you are doing. You get the five gotchas relevant to the auth middleware you are about to change, not the entire institutional memory of the project.</p>
   </section>
 
   <!-- ORCHESTRATED EXECUTION -->
@@ -703,7 +703,7 @@ When all work units pass, create a PR.</code></pre>
       </div>
       <div class="feature">
         <h4>Context Recovery</h4>
-        <p>Approved plans and execution state persist to <code>.beads/</code> on disk. After context compaction or session interruption, <code>bd prime --work-type recovery</code> reloads everything: the plan, completed work, current position. No re-running expensive review gates.</p>
+        <p>Approved plans and execution state persist to <code>.beads/</code> on disk. After context compaction or session interruption, the orchestrator reads them back from disk (the plan, completed work, current position) and runs <code>/prime</code> for the relevant knowledge. No re-running expensive review gates.</p>
       </div>
     </div>
   </section>
@@ -775,7 +775,7 @@ When all work units pass, create a PR.</code></pre>
     <h3>Prerequisites</h3>
     <ul>
       <li><a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a></li>
-      <li><a href="https://github.com/steveyegge/beads">BEADS CLI</a> (<code>bd</code>) v0.40+ (optional &mdash; for knowledge base)</li>
+      <li><a href="https://github.com/steveyegge/beads">BEADS CLI</a> (<code>bd</code>) v0.40+ (optional &mdash; for task tracking)</li>
       <li><a href="https://github.com/obra/superpowers">Superpowers</a> plugin (optional but recommended)</li>
       <li>GitHub CLI (<code>gh</code>)</li>
       <li>Node.js 18+</li>
@@ -827,7 +827,7 @@ When all work units pass, create a PR.</code></pre>
     <p>Every feature starts as a BEADS epic with subtasks. Dependencies between tasks enforce ordering. The orchestrator checks <code>bd ready</code> to find unblocked work, updates task status as agents complete phases, and closes the epic when the PR merges. All of this is stored in a SQLite database inside your repo, synced through git.</p>
 
     <h3>Knowledge base is selective, not exhaustive</h3>
-    <p>When an agent starts work, <code>bd prime</code> loads knowledge filtered by the files being touched and the type of work being done. A coder working on auth routes gets auth-related gotchas. A security reviewer gets the OWASP-related patterns. The knowledge base can grow to thousands of entries without any agent needing to read all of them.</p>
+    <p>When an agent starts work, metaswarm's <code>/prime</code> command loads knowledge filtered by the files being touched and the type of work being done. A coder working on auth routes gets auth-related gotchas. A security reviewer gets the OWASP-related patterns. The knowledge base can grow to thousands of entries without any agent needing to read all of them.</p>
 
     <h3>Human checkpoints are proactive, not reactive</h3>
     <p>The design review gate iterates only while reviewers report real blockers (findings that name the user scenario or requirement they protect), with a safety cap of 10 rounds. If they cannot agree, or if requirements are ambiguous, the system stops and asks a human. But orchestrated execution goes further: you define <strong>planned checkpoints</strong> in the spec (after schema changes, after security-sensitive code, at natural boundaries). The orchestrator pauses at those points and presents a report. It waits for you. This is not a notification. It is a gate. The system does not guess when it should ask, and it does not continue without your explicit approval.</p>
@@ -867,7 +867,7 @@ When all work units pass, create a PR.</code></pre>
   <section>
     <h2>Built On</h2>
     <div class="callout">
-      <p><strong><a href="https://github.com/steveyegge/beads">BEADS</a></strong> by Steve Yegge. Git-native, AI-first issue tracking. The coordination backbone for all task management, dependency tracking, and knowledge priming. BEADS made it possible to treat issue tracking as part of the codebase instead of an external service.</p>
+      <p><strong><a href="https://github.com/steveyegge/beads">BEADS</a></strong> by Steve Yegge. Git-native, AI-first issue tracking. The coordination backbone for all task management and dependency tracking. BEADS made it possible to treat issue tracking as part of the codebase instead of an external service.</p>
     </div>
     <div class="callout">
       <p><strong><a href="https://github.com/obra/superpowers">Superpowers</a></strong> by Jesse Vincent and contributors. The agentic skills framework that provides foundational workflows for brainstorming, test-driven development, systematic debugging, and plan writing. Superpowers proved that disciplined agent workflows are not overhead. They are what make autonomous development reliable.</p>

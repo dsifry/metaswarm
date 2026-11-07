@@ -23,7 +23,7 @@ Optionally pass focus hints:
 Invokes the metaswarm `handoff` skill, which:
 
 1. **Reconstructs the objective** — what the user is trying to accomplish, the Definition of Done, and why.
-2. **Loads persisted state** — folds in `.beads/plans/active-plan.md`, `.beads/context/*`, and `bd prime --work-type recovery` if present.
+2. **Loads persisted state** — if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge.
 3. **Establishes current status** — done/verified vs. in-progress vs. not-started, plus the real working-tree state (`git status`, recent commits, unpushed/uncommitted changes).
 4. **Identifies required reading** — every spec, design, plan, code `file:line`, and test the next agent must read, with *why* and *what to look for*.
 5. **Writes the document** to `docs/handoffs/handoff-<YYYY-MM-DD-HHmm>.md`.

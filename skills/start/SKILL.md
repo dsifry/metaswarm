@@ -626,32 +626,26 @@ const [reviewResult, securityResult] = await Promise.all([
 
 **ALL agents MUST prime their context before starting ANY work.** This prevents bad assumptions and ensures alignment with established patterns.
 
-```bash
-# General prime (loads critical rules + gotchas)
-bd prime
+Use `/prime` (metaswarm knowledge priming). It filters the knowledge base (`.beads/knowledge/*.jsonl`) with `jq`, by keyword (over each fact and its tags), by file (over its affected files) and by work type (over its fact type):
 
-# Prime for specific files you'll modify
-bd prime --files "src/lib/services/*.ts" "src/api/routes/*.ts"
-
-# Prime for specific topic
-bd prime --keywords "authentication" "jwt"
-
-# Prime for work type
-bd prime --work-type planning     # Before planning
-bd prime --work-type implementation  # Before coding
-bd prime --work-type review       # Before reviewing
-bd prime --work-type research     # Before exploring
-
-# Combined (most thorough)
-bd prime --files "<files>" --keywords "<topic>" --work-type <type>
+```text
+/prime                                         # MUST FOLLOW rules + gotchas
+/prime src/lib/services/ src/api/routes/       # files you'll modify
+/prime authentication jwt                      # a topic
+/prime planning                                # work type: planning, implementation, review, research
+/prime <topic> <files> <work-type>             # combined (most thorough)
 ```
 
-The prime command outputs relevant facts categorized as:
+See `commands/prime.md` for the exact `jq` filters. `/prime` reports the relevant facts categorized as:
 
 - **MUST FOLLOW**: Critical rules (NEVER/ALWAYS/MUST statements)
 - **GOTCHAS**: Common pitfalls to avoid
 - **PATTERNS**: Best practices for this codebase
 - **DECISIONS**: Architectural choices
+
+### Context Recovery
+
+After compaction or in a new session with an active plan: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge.
 
 ### After Completing Work
 
@@ -676,7 +670,7 @@ Task({
   description: "Extract learnings from epic",
   prompt: `Review completed epic <epic-id> and extract learnings.
 
-FIRST: Run \`bd prime --work-type review\` to load context.
+FIRST: Run \`/prime\` (metaswarm knowledge priming) for review work on this epic.
 
 Then analyze:
 - What patterns were used?

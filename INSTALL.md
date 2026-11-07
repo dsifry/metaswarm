@@ -112,7 +112,7 @@ claude plugin add obra/superpowers
 
 **Without superpowers**: metaswarm still works — the core orchestration (agents, BEADS, review gates, rubrics) is self-contained. The superpowers references are in skill trigger chains and can be removed or replaced with your own equivalents.
 
-**BEADS and GTG**: metaswarm does not auto-install runtime CLIs. Install `bd` for BEADS issue tracking and knowledge priming, and install `gtg` for consolidated PR readiness checks. The standalone Beads plugin is optional; metaswarm detects it and defers priming when present.
+**BEADS and GTG**: metaswarm does not auto-install runtime CLIs. Install `bd` for BEADS issue tracking, and install `gtg` for consolidated PR readiness checks. The standalone Beads plugin is optional; when present, it runs `bd prime` (bd workflow context) itself and metaswarm's session hook skips its own `bd prime` call. Knowledge priming is metaswarm's own `/prime` command, which reads `.beads/knowledge/` directly.
 
 ## Optional: External AI Tools
 
@@ -245,10 +245,10 @@ Set `enforcement.command` to your project's coverage command (e.g., `pytest --co
 # Check BEADS is working
 bd status
 
-# Check knowledge base
+# Check bd workflow context
 bd prime
 
-# In Claude Code, verify commands are available
+# In Claude Code, verify commands are available (run /prime to check the knowledge base)
 # Type / and you should see start-task, review-design, etc.
 ```
 

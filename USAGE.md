@@ -247,10 +247,8 @@ bd dep add <task> <blocks>    # task blocks other work
 bd ready                       # Show unblocked tasks
 bd blocked                     # Show blocked tasks
 
-# Knowledge
-bd prime                       # Load all relevant knowledge
-bd prime --keywords "auth"     # Filter by keyword
-bd prime --work-type impl      # Filter by work type
+# bd workflow context (use metaswarm's /prime for the fact store)
+bd prime                       # Print bd workflow context and bd memories
 
 # Sync
 bd sync                        # Sync with git

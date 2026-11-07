@@ -50,8 +50,9 @@ If this project uses metaswarm's context persistence, read and fold in whatever 
 ls .beads/plans/active-plan.md            # the approved plan (if mid-execution)
 ls .beads/context/project-context.md      # completed work units, patterns, tooling
 ls .beads/context/execution-state.md      # current work unit, phase, VALIDATE attempts, review round
-bd prime --work-type recovery 2>/dev/null # reload plan + state + knowledge, if beads present
 ```
+
+Recovery order for the next agent: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge.
 
 If an active plan exists, the handoff must point to it explicitly and state which work unit/phase is in progress.
 
@@ -199,5 +200,5 @@ Expected: <what green looks like>.
 ## Relationship to Other Metaswarm Pieces
 
 - Complements `/prime` (which loads knowledge **into** a session) by serializing context **out of** a session for the next one.
-- For mid-execution work, this skill should reference `.beads/plans/active-plan.md` and `.beads/context/execution-state.md` rather than restating them, so the next agent can `bd prime --work-type recovery` and then read the handoff for the human-readable narrative.
+- For mid-execution work, this skill should reference `.beads/plans/active-plan.md` and `.beads/context/execution-state.md` rather than restating them, so the next agent can follow the recovery order (if bd is installed, `bd prime` for bd context; then read those files; then `/prime` for knowledge) and then read the handoff for the human-readable narrative.
 - Run `/self-reflect` separately to capture durable *learnings* into the knowledge base; `/handoff` captures *this task's* transient state to resume it.

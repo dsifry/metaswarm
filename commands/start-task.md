@@ -18,12 +18,12 @@ Before starting any new task:
 
 - [ ] Check if `.beads/plans/active-plan.md` exists with `status: in-progress`
 - [ ] If YES: An interrupted execution exists. Ask user: "There's an active plan from a previous session. Resume it or start fresh?"
-  - Resume → run `bd prime --work-type recovery` and pick up where execution stopped
+  - Resume → if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge; then pick up where execution stopped
   - Start fresh → mark the old plan as `status: abandoned` and proceed normally
 
 **Knowledge Priming (CRITICAL)**:
 
-- [ ] Run BEADS prime: `bd prime --keywords "<task-keywords>" --work-type planning`
+- [ ] Run `/prime` (metaswarm knowledge priming) for planning work on "<task-keywords>"
 - [ ] Review MUST FOLLOW rules and GOTCHAS before proceeding
 - [ ] Note any relevant patterns or decisions that constrain the approach
 

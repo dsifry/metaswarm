@@ -25,7 +25,8 @@ if [ -z "$METASWARM_PLATFORM" ]; then
 fi
 
 # --- Phase 1: BEADS dedup check ---
-# If standalone BEADS plugin is installed, skip knowledge priming (let BEADS handle it)
+# If the standalone beads plugin is installed, it already runs `bd prime` (bd workflow
+# context) on SessionStart/PreCompact, so this hook skips its own `bd prime` call below.
 beads_standalone=false
 beads_plugin_caches=("${HOME}/.claude/plugins/cache" "${CODEX_HOME:-${HOME}/.codex}/plugins/cache")
 for beads_plugin_cache in "${beads_plugin_caches[@]}"; do
@@ -148,7 +149,8 @@ if [ -n "$plugin_version" ]; then
   done
 fi
 
-# Knowledge priming (only if project is set up and BEADS isn't separately priming)
+# bd workflow context: run `bd prime` only if the project is set up and the beads plugin
+# isn't already running it. This hook does not run metaswarm's /prime (knowledge-base facts).
 if [ "$new_project" = false ] && [ "$beads_standalone" = false ]; then
   if command -v bd >/dev/null 2>&1; then
     bd_output=$(bd prime 2>/dev/null || true)
