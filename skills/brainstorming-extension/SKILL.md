@@ -161,7 +161,7 @@ Please revise the design document and I'll re-run the review gate.
 
 - If NEEDS_REVISION (at least one `blocker: yes` finding): Help user address the blockers, re-run gate. Iteration is severity-gated (cap 10 rounds; see the metaswarm plugin's `guides/delivery-scope.md`)
 - If ALL APPROVED: Proceed to planning phase
-- When the severity rule escalates (cap hit, or a recurring or disputed blocker): Escalate to human decision (Override / Defer / Cancel)
+- When the severity rule escalates (cap hit, or a recurring or disputed blocker): Escalate to human decision (Revise / Narrow scope / Defer / Cancel). Escalation never approves: a revised design gets a fresh review round
 
 ---
 

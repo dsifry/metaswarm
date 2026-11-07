@@ -147,7 +147,7 @@ after each review round (round = 1, 2, ...):
 
 ### Phase 4: Human Escalation
 
-When the severity rule says escalate (line 2, 3 or 5), present the escalation report in [Escalation](#escalation) and ask the human to decide: override, defer, revise or cancel.
+When the severity rule says escalate (line 2, 3 or 5), present the escalation report in [Escalation](#escalation) and ask the human to decide: revise, narrow scope, defer or cancel. Escalation never approves (see `./guides/delivery-scope.md`): a revised or narrowed design gets a fresh review round and passes only by that round.
 
 ---
 
@@ -525,12 +525,12 @@ When the severity rule says escalate (cap hit, a recurring or disputed blocker, 
 - <minor/nit findings, or the BEADS task IDs filed for them>
 
 ### Options
-1. **Override** - Proceed anyway (document remaining blockers as technical debt)
-2. **Defer** - Shelve this feature for later
-3. **Revise** - Continue iterating on design
-4. **Cancel** - Abandon this feature
+1. **Revise** — fix the remaining blockers (or the requirement they protect), then run a fresh review round
+2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
+3. **Defer** — shelve this work for later; nothing advances
+4. **Cancel** — abandon this work
 
-**Recommendation**: <commit|another pass|human decision> — <reason from the rule>
+**Recommendation**: <revise|narrow scope|defer|cancel> — <reason from the rule>
 ```
 
 ---

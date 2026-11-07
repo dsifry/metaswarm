@@ -195,12 +195,12 @@ When the severity rule says escalate (line 2, 3 or 5):
 - <minor/nit findings, or the BEADS task IDs filed for them>
 
 ### Options
-1. **Override** — Proceed with plan as-is (remaining blockers become known risks)
-2. **Revise** — Continue iterating on the plan manually
-3. **Simplify** — Reduce scope to eliminate contentious items
-4. **Cancel** — Abandon this plan and start fresh
+1. **Revise** — fix the remaining blockers (or the requirement they protect), then run a fresh review round
+2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
+3. **Defer** — shelve this work for later; nothing advances
+4. **Cancel** — abandon this work
 
-**Recommendation**: <commit|another pass|human decision> — <reason from the rule>
+**Recommendation**: <revise|narrow scope|defer|cancel> — <reason from the rule>
 ```
 
 ---

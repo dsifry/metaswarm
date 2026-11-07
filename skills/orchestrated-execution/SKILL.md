@@ -452,7 +452,13 @@ When the rule says escalate, report:
 | 2     | FAIL    | 0 / 1                     | 0 / 2            | 4: iterate    |
 | 3     | FAIL    | 0 / 1                     | 0 / 0            | 3: escalate   |
 
-**Recommendation**: <commit|another pass|human decision> — <reason from the rule>
+### Options
+1. **Revise** — fix the remaining blockers (or the requirement they protect), then run a fresh review round
+2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
+3. **Defer** — shelve this work for later; nothing advances
+4. **Cancel** — abandon this work
+
+**Recommendation**: <revise|narrow scope|defer|cancel> — <reason from the rule>
 ```
 
 ### What the Orchestrator MUST NOT Do
