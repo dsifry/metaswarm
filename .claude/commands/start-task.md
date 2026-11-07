@@ -168,20 +168,14 @@ See the `orchestrated-execution` skill for the full pattern. Key principles:
 - **Trust nothing, verify everything**: Run quality gates independently, never trust subagent self-reports
 - **Adversarial review**: Fresh reviewer checks each DoD item with file:line evidence
 - **Human checkpoints**: Pause at planned review points before continuing
-- **Recovery**: Max 3 retries per work unit, then escalate with failure history
+- **Recovery**: VALIDATE failures get up to 3 attempts per work unit, then escalate with failure history. Review rounds follow severity-gated iteration (cap 10 rounds; see the metaswarm plugin's `guides/delivery-scope.md`)
 - **No shortcuts**: NEVER use `--no-verify` on commits, NEVER skip coverage gates, NEVER self-certify
 
 #### Multi-Agent Orchestration (for large features)
 
 For complex tasks requiring multiple phases, consider spawning sub-agents:
 
-**Model specialization guidance:**
-
-| Model  | Best For                                                  |
-| ------ | --------------------------------------------------------- |
-| Opus   | Orchestration, architecture, security analysis, synthesis |
-| Sonnet | Code analysis, implementation, code review, feature work  |
-| Haiku  | Metrics collection, simple analysis, data processing      |
+**Model selection:** don't pass `model:` per spawn. Spawn the phase's role type (see the Role type resolution rule and roster in the metaswarm plugin's `guides/agent-coordination.md`): reviewers default to Opus, coders and researchers to Sonnet. Per-project overrides live in `.metaswarm/models.yaml`.
 
 **Pattern**: Spawn parallel sub-agents for independent work (e.g., code review + security audit), sequential agents for dependent phases (research -> planning -> implementation).
 

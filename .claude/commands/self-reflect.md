@@ -59,61 +59,9 @@ For each potential learning, ask:
 5. **Can an agent act on this?** If not actionable, skip it.
 6. **Would this confuse a naive agent?** If a future agent without context wouldn't benefit, skip it.
 
-## Phase B: Conversation History Mining
+## Phase B: Conversation & Session Mining (Optional)
 
-Extract learnings from Claude Code session history stored in `~/.claude/projects/`.
-
-### Step 1: Fetch Conversation History
-
-```bash
-npx tsx scripts/beads-fetch-conversation-history.ts --days 7
-```
-
-This parses session JSONL files and outputs learning triggers to `.beads/temp/conversation-history.json`.
-
-### Step 2: Review Learning Triggers
-
-The script automatically detects these trigger types:
-
-| Trigger Type    | What It Captures                         | Example Patterns                           |
-| --------------- | ---------------------------------------- | ------------------------------------------ |
-| `correction`    | User correcting Claude's understanding   | "No, actually...", "That's wrong"          |
-| `disagreement`  | User pushing back on suggestions         | "I disagree", "I'd prefer", "But what about" |
-| `clarification` | User clarifying their intent             | "What I meant is...", "To clarify..."      |
-| `discovery`     | Debugging insights and realizations      | "It turns out...", "The problem was..."    |
-| `decision`      | Architectural/design choices made        | "Let's go with...", "We'll use..."         |
-| `misconception` | Claude had wrong mental model            | Corrections after Claude's confident answer |
-
-### Step 3: Analyze Triggers
-
-```bash
-cat .beads/temp/conversation-history.json | jq -r '.triggers[] | "\(.type): \(.userMessage | .[0:100])..."' | head -20
-```
-
-For each trigger, evaluate:
-
-1. **Is this a pattern?** Same correction across multiple sessions → High value
-2. **Is this codebase-specific?** Generic advice vs. this project's quirks
-3. **Would future Claude benefit?** Add to knowledge base if yes
-4. **Is there a root cause?** Why did Claude get it wrong? Document that
-
-### High-Value Trigger Patterns
-
-**ACCEPT these triggers:**
-- User corrections about project architecture ("No, we use X not Y")
-- Clarifications about domain terminology
-- Corrections about API behavior or library quirks
-- Design decisions with rationale ("We chose X because Y")
-
-**REJECT these triggers:**
-- Typo corrections or simple misunderstandings
-- One-off preferences that won't generalize
-- Corrections about information outside the codebase
-- Clarifications that were just poor phrasing
-
-### Current Context Analysis
-
-Also analyze the current context window for implicit insights:
+Analyze current context window and optionally historical sessions for implicit insights:
 
 **Strategic patterns to look for:**
 
@@ -213,7 +161,6 @@ For each validated learning, add it to the appropriate knowledge base JSONL file
 | `decision`     | Team/architectural decisions | "Prefer Strategy over Template Method for AI providers" |
 | `api_behavior` | External API quirks          | "Prisma findMany returns [] not null"                   |
 | `code_quirk`   | Codebase-specific oddities   | "Thread model is for drafts only, not email threads"    |
-| `correction`   | User-corrected misconception | "Services dir is for business logic, not API handlers"  |
 
 ### Canonicalization Rules
 
@@ -236,7 +183,17 @@ For each validated learning, add it to the appropriate knowledge base JSONL file
 
 Before adding, check for semantic duplicates in existing knowledge files.
 
-## Step 7: Generate Report
+## Step 7: Semantic Summarization via bd compact
+
+The standalone beads plugin (v0.63.3+) provides `bd compact` for semantic summarization of closed issues. After capturing learnings, run:
+
+```bash
+bd compact
+```
+
+This replaces the former `beads-self-reflect.ts` script — `bd compact` handles knowledge base statistics, summarization, and cleanup natively.
+
+## Step 8: Generate Report
 
 ```markdown
 ## Self-Reflection Results
@@ -249,11 +206,7 @@ Before adding, check for semantic duplicates in existing knowledge files.
   - Accepted: A
   - Rejected (low value): B
   - Transformed: C
-- Conversation History Triggers: T
-  - Corrections: C1
-  - Disagreements: C2
-  - Discoveries: C3
-  - Decisions: C4
+- Conversation/Session Learnings: W
 - Total New Facts Added: N
 
 ### Learnings Added

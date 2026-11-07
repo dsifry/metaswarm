@@ -26,6 +26,35 @@ assert_eq() {
 
 echo "Testing sync-resources.js..."
 
+# Test 0: .claude/commands/ mirrors every commands/*.md (issue #61).
+# In this repo, project commands are the only copies Claude Code loads, so drift
+# silently serves stale workflow rules. Runs before --sync so drift is caught.
+echo "Test 0: .claude/commands mirrors commands/*.md"
+for src in "$REPO_ROOT"/commands/*.md; do
+  name="$(basename "$src")"
+  if cmp -s "$src" "$REPO_ROOT/.claude/commands/$name"; then
+    result="SAME"
+  else
+    result="DIFF"
+  fi
+  assert_eq ".claude/commands/$name matches commands/$name" "SAME" "$result"
+done
+
+# Test 0b: --check detects drift in a mirrored command
+echo "Test 0b: --check fails when a mirrored command drifts"
+probe="$REPO_ROOT/.claude/commands/prime.md"
+backup="$(mktemp)"
+cp "$probe" "$backup"
+trap 'cp "$backup" "$probe"; rm -f "$backup"' EXIT
+printf '\ndrift\n' >> "$probe"
+if (cd "$REPO_ROOT" && node lib/sync-resources.js --check >/dev/null 2>&1); then
+  result="PASS"
+else
+  result="FAIL"
+fi
+cp "$backup" "$probe"
+assert_eq "Check fails on drifted .claude/commands copy" "FAIL" "$result"
+
 # Test 1: Check mode should pass when files are in sync
 echo "Test 1: Check mode passes when synced"
 if (cd "$REPO_ROOT" && node lib/sync-resources.js --check >/dev/null 2>&1); then
