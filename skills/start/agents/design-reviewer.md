@@ -41,9 +41,11 @@ Read the persona file matching your role. Use the persona file for its checklist
 
 ## Finding Contract
 
-Report every finding in this contract, whatever the persona file says about output format. The policy and the contract live in `./guides/delivery-scope.md`. Every finding carries four fields:
+Report every finding in this contract, whatever the persona file says about output format. The policy and the contract live in `./guides/delivery-scope.md`. Every finding carries six fields:
 
 ```text
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>

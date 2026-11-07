@@ -40,7 +40,7 @@ The adversarial-reviewer operates in one of two modes, determined by the orchest
 - **Rubric**: `rubrics/adversarial-review-rubric.md`
 - **Verdict**: PASS / FAIL (binary)
 - **Purpose**: Verify implementation meets its spec contract (DoD items)
-- **Finding fields**: severity / protects / evidence / blocker (see Finding Contract below)
+- **Finding fields**: title / description / severity / protects / evidence / blocker (see Finding Contract below)
 - **Re-review**: Fresh reviewer instance REQUIRED (no memory of previous review)
 - **When used**: Phase 3 of the orchestrated execution loop (`orchestrated-execution` skill)
 
@@ -59,9 +59,11 @@ If no mode is specified, default to **Collaborative**.
 
 ### Finding Contract (Adversarial Mode Output)
 
-In adversarial mode, findings use the finding contract. The policy and the contract live in `guides/delivery-scope.md`. Every finding carries four fields:
+In adversarial mode, findings use the finding contract. The policy and the contract live in `guides/delivery-scope.md`. Every finding carries six fields:
 
 ```text
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>

@@ -41,9 +41,11 @@ Follow the adversarial plan review rubric: `./rubrics/plan-review-rubric-adversa
 
 ## Finding Contract
 
-Report every finding in this contract. The policy and the contract live in `./guides/delivery-scope.md`. Every finding carries four fields:
+Report every finding in this contract. The policy and the contract live in `./guides/delivery-scope.md`. Every finding carries six fields:
 
 ```text
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>

@@ -709,5 +709,37 @@ for f in rubrics/code-review-rubric.md skills/start/rubrics/code-review-rubric.m
 done
 
 echo ""
+echo "Issue #58 WU3: reviewer agents carry title and description"
+
+for dir in agents skills/start/agents; do
+  for ag in adversarial-reviewer plan-reviewer design-reviewer; do
+    f="$dir/$ag.md"
+    [ -f "$REPO_ROOT/$f" ] || { fail "$f exists"; continue; }
+    FC="$(section "$REPO_ROOT/$f" '^#+ Finding Contract')"
+    assert_in "$f: Finding Contract lists title and description" "$FC" "${TITLE_DESC[@]}"
+    assert_in "$f: Finding Contract says six fields" "$FC" 'Every finding carries six fields'
+    assert_not_in "$f: no four-field wording" "$(readf "$f")" 'four fields' '4 fields' '4-field'
+  done
+  f="$dir/issue-orchestrator.md"
+  [ -f "$REPO_ROOT/$f" ] || { fail "$f exists"; continue; }
+  FS="$(between "$f" '## Findings' '## Rules')"
+  assert_in "$f: reviewer prompt Findings list carries title and description" "$FS" "${TITLE_DESC[@]}"
+  assert_in "$f: reviewer prompt asks for 6 fields" "$(readf "$f")" \
+    'Report every finding with the 6 fields defined in `' 'guides/delivery-scope.md`:' \
+    'Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.'
+  assert_not_in "$f: no four-field wording" "$(readf "$f")" 'four fields' '4 fields' '4-field'
+done
+
+# Twins differ from their agents/ source only in ./ and .claude/ path prefixes
+for ag in adversarial-reviewer plan-reviewer design-reviewer issue-orchestrator cto-agent; do
+  if diff -q <(sed 's#\./##g;s#\.claude/##g' "$REPO_ROOT/agents/$ag.md") \
+    <(sed 's#\./##g;s#\.claude/##g' "$REPO_ROOT/skills/start/agents/$ag.md") >/dev/null 2>&1; then
+    pass "$ag: twin differs only in path prefixes"
+  else
+    fail "$ag: twin differs only in path prefixes"
+  fi
+done
+
+echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
