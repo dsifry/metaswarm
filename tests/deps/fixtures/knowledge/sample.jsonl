@@ -1,0 +1,4 @@
+# Fixture knowledge store for tests/deps/test-dependency-drift.sh (comment lines like the shipped knowledge/*.jsonl)
+{"id":"fixture-security","type":"security","fact":"Fixturewidget tokens must never be logged.","recommendation":"Redact fixturewidget tokens before logging.","tags":["fixturewidget"],"affectedFiles":["src/widgets/**/*.ts"]}
+{"id":"fixture-pattern","type":"pattern","fact":"Use the fixturewidget factory in tests.","tags":["testing"],"affectedFiles":["tests/widgets/"]}
+{"id":"fixture-decision","type":"decision","fact":"Fixturewidget decisions live in ADRs.","tags":["fixturewidget"],"affectedFiles":["docs/adr/"]}

@@ -29,7 +29,7 @@ bd doctor
 bd list
 ```
 
-The standalone beads plugin (v0.63.3+) automatically handles context priming via built-in SessionStart and PreCompact hooks — no manual priming scripts needed.
+The standalone beads plugin (matching your bd version, bd ≥ 1.0.4) automatically runs `bd prime` (bd workflow context and `bd remember` memories) via built-in SessionStart and PreCompact hooks. Knowledge-base facts come from metaswarm's `/prime` command, which reads `.beads/knowledge/` directly — no priming scripts needed.
 
 ---
 
@@ -161,29 +161,23 @@ Add this line (runs every Monday at 9am):
 
 ## Using BEADS with Claude Code
 
-### Automatic Knowledge Priming
+### Automatic bd Context
 
-The standalone beads plugin (v0.63.3+) automatically runs `bd prime` on SessionStart and PreCompact via built-in hooks. No manual configuration is needed — the plugin handles context priming out of the box.
+The standalone beads plugin (matching your bd version, bd ≥ 1.0.4) automatically runs `bd prime` on SessionStart and PreCompact via built-in hooks. That restores the bd workflow reference and any `bd remember` memories; no manual configuration is needed.
 
-If the beads plugin is installed, metaswarm's session hook detects it and skips its own priming to avoid duplicate context.
+If the beads plugin is installed, metaswarm's session hook detects it and skips its own `bd prime` call to avoid duplicate context.
 
-### Manual Knowledge Priming
+### Knowledge Priming with `/prime`
 
-For explicit priming outside the automatic hooks:
+metaswarm's `/prime` command loads knowledge-base facts from `.beads/knowledge/*.jsonl`, filtered with `jq` by keyword (over each fact and its tags), file (over its affected files) and work type (over its fact type):
 
-```bash
-# General priming
-bd prime
-
-# For recovery after context loss
-bd prime --work-type recovery
-
-# For implementation work
-bd prime --work-type implementation
-
-# For debugging
-bd prime --work-type debugging
+```text
+/prime                                   # critical rules and gotchas
+/prime implementation src/api/auth/      # implementation work touching these files
+/prime debugging webhook                 # debugging work on a topic
 ```
+
+For recovery after context loss: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge.
 
 ### Common Workflows
 
@@ -195,10 +189,9 @@ bd ready
 
 # Claim a task
 bd update <task-id> --status in_progress
-
-# Prime your context
-npx tsx scripts/beads-prime.ts --work-type implementation --keywords "relevant" "keywords"
 ```
+
+Then prime your context: `/prime` (metaswarm knowledge priming) for implementation work on "relevant keywords".
 
 #### 2. Create tasks from a GitHub issue
 
@@ -218,12 +211,29 @@ bd create --title "Write tests" --type task --parent <epic-id>
 # Close completed tasks
 bd close <task-id> --reason "Implementation complete"
 
-# Compact closed issues (semantic summarization)
-bd compact
-
 # Record architectural decisions
-bd decision "Chose X over Y because Z"
+bd create "Chose X over Y" --type decision -d "Because Z"
 ```
+
+#### 4. Housekeeping (occasional)
+
+Squash old Dolt history (recent commits are kept; preview first):
+
+```bash
+bd compact --dry-run
+bd compact --force
+```
+
+Plain `bd compact` only rewrites Dolt history.
+
+To summarize old **closed** bd issues locally (agent-driven, no API key needed):
+
+```bash
+bd admin compact --analyze --json
+bd admin compact --apply --id <id> --summary <file>
+```
+
+Only `bd admin compact --auto` needs an API key. Neither command touches `.beads/knowledge`. Every `bd admin` command requires server mode (`bd init --server`); it isn't available in bd's default embedded mode.
 
 ---
 

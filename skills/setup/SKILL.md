@@ -299,7 +299,7 @@ Read each file from `./scripts/`:
 
 Write them to `scripts/` in the project. Skip any that already exist.
 
-**Note**: The former `beads-self-reflect.ts` script is no longer bundled — the standalone beads plugin (v0.63.3+) provides `bd compact` for semantic summarization natively.
+**Note**: The former `beads-self-reflect.ts` script is no longer bundled. `/self-reflect` captures session learnings on its own and needs no extra script.
 
 **Node.js dependency warning**: If Node.js was NOT detected as the project language, print:
 > "Note: scripts/*.ts require Node.js (npx tsx) to run. Some advanced features (PR comment fetching, conversation history) will work once Node.js is available. Core metaswarm functionality does not require Node.js."

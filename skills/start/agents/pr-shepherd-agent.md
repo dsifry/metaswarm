@@ -53,8 +53,8 @@ Triggered when:
 
 **BEFORE any other work**, prime your context:
 
-```bash
-bd prime --work-type review --keywords "pr" "review" "ci"
+```text
+`/prime` (metaswarm knowledge priming) for review work on "pr" "review" "ci"
 ```
 
 Review the output for PR handling patterns and gotchas.
@@ -131,7 +131,6 @@ When PR is ready to merge:
 
 ```bash
 # All checks passing, all threads resolved
-bd update <task-id> --status completed
 bd close <task-id> --reason "PR #${PR_NUMBER} ready to merge. All CI green, all threads resolved."
 
 # Notify Issue Orchestrator

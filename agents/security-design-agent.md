@@ -46,8 +46,8 @@ Triggered when:
 
 ### Step 0: Knowledge Priming (CRITICAL)
 
-```bash
-bd prime --work-type review --keywords "security authentication authorization"
+```text
+`/prime` (metaswarm knowledge priming) for review work on "security authentication authorization"
 ```
 
 ### Step 1: Gather Context

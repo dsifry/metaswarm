@@ -46,9 +46,9 @@ Triggered when:
 
 **BEFORE any other work**, prime your context with relevant knowledge:
 
-```bash
-# Prime with research-specific context
-bd prime --work-type research --keywords "<task-keywords>"
+```text
+Prime with research-specific context:
+`/prime` (metaswarm knowledge priming) for research work on "<task-keywords>"
 ```
 
 Review the output and note:

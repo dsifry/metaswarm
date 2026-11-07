@@ -215,7 +215,7 @@ See Section 6. ALWAYS a fresh `Task()` instance on every single review pass. Nev
 | **Orchestrator-run validation** | Validation is always run directly by the orchestrator, never delegated         |
 | **BEADS lifecycle**             | Create --> in_progress --> close lifecycle is identical in both modes           |
 | **4-phase execution loop**      | IMPLEMENT --> VALIDATE --> ADVERSARIAL REVIEW --> COMMIT is mode-agnostic      |
-| **Knowledge priming**           | `bd prime` runs before all agent work in both modes                            |
+| **Knowledge priming**           | `/prime` runs before agent work; the beads plugin's `bd prime` adds only bd workflow context |
 | **Human checkpoints**           | Planned pauses require explicit human approval in both modes                   |
 | **Quality gates**               | Coverage, lint, typecheck, tests -- all blocking state transitions             |
 | **Pipeline pattern**            | Push + PR + shepherd immediately after each agent completes, don't batch       |

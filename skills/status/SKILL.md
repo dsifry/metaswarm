@@ -77,7 +77,7 @@ When checking a Codex project, report `not applicable (Codex uses $skill-name in
 ### 6. BEADS Plugin
 
 - Scan `~/.claude/plugins/cache/` and `~/.codex/plugins/cache/` for a directory containing `.claude-plugin/plugin.json` or `.codex-plugin/plugin.json` with `"name": "beads"`
-- If found: `installed (standalone)` -- metaswarm defers priming to BEADS
+- If found: `installed (standalone)` -- the plugin runs `bd prime` (bd workflow context), so metaswarm's session hook skips its own `bd prime` call. Knowledge-base facts still come from `/prime`
 - If not found: `not separately installed`
 
 ### 7. `bd` CLI
@@ -87,7 +87,7 @@ command -v bd && bd --version 2>/dev/null
 ```
 
 - If found: report path and version
-- If not found: `not installed -- knowledge priming and self-reflect require bd. Core orchestration works without it.`
+- If not found: `not installed -- BEADS task tracking requires bd. Core orchestration and /prime work without it.`
 
 ### 8. `gtg` CLI
 
@@ -153,7 +153,7 @@ node --version 2>/dev/null
 | Command shims | Not applicable (Codex uses $skill-name) |
 | Legacy embedded plugin | Not detected |
 | BEADS plugin | Not separately installed |
-| bd CLI | Available (v0.5.2) |
+| bd CLI | Available (v1.3.4) |
 | gtg CLI | Available |
 | External tools | Codex: available, Gemini: not installed |
 | Coverage thresholds | 100% (all categories) |
@@ -175,7 +175,7 @@ When issues are found:
 2. Codex plugin not installed from a marketplace -- install from `/plugins` after adding the marketplace
 
 ### Recommendations
-1. Install `bd` CLI for knowledge priming and self-reflect
+1. Install `bd` CLI for BEADS task tracking
 2. Install `gtg` for the fastest `$pr-shepherd` readiness checks
 3. Configure external tools for cross-model review (`.metaswarm/external-tools.yaml`)
 ```

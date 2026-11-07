@@ -47,15 +47,16 @@ Triggered when:
 
 **BEFORE any other work**, prime your context:
 
-```bash
-bd prime --work-type research --keywords "metrics" "reporting"
+```text
+`/prime` (metaswarm knowledge priming) for research work on "metrics" "reporting"
 ```
 
 ### Step 1: Collect Agent Metrics
 
 ```bash
-# Get all completed tasks in time period
-bd list --status=closed --since="7 days ago" --json > /tmp/completed-tasks.json
+# Get all completed tasks in time period (closed in the last 7 days)
+SINCE=$(date -v-7d +%F 2>/dev/null || date -d "7 days ago" +%F)  # YYYY-MM-DD (macOS || GNU date)
+bd list --status=closed --closed-after "$SINCE" --json > /tmp/completed-tasks.json
 
 # Get active and blocked tasks
 bd list --status=in_progress --json > /tmp/active-tasks.json

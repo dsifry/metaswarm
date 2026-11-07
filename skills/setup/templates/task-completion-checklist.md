@@ -176,7 +176,7 @@ bd close <ID1> <ID2> --reason "Completed in commit <SHA>"
 - [ ] BEADS issue closed (if applicable)
 - [ ] Completion reason included with commit reference
 - [ ] Any follow-up work captured as new BEADS issues: `bd create --title "..." --priority 2`
-- [ ] Run `bd sync` to push BEADS changes to git
+- [ ] If a Dolt remote is configured: run `bd dolt push` (local-only workspaces need no sync)
 
 ## Final Verification
 

@@ -116,8 +116,8 @@ When Team tools are available:
 
 **BEFORE coordinating work**, prime your context:
 
-```bash
-bd prime --work-type planning --keywords "orchestration" "coordination" "worktree"
+```text
+`/prime` (metaswarm knowledge priming) for planning work on "orchestration" "coordination" "worktree"
 ```
 
 Review the output for patterns about multi-agent coordination and conflict resolution.
@@ -171,35 +171,56 @@ Trigger: Worktree becomes idle OR high-priority issue arrives
 
 ### Status Commands
 
+bd's `swarm` command only has `create`, `list`, `status` and `validate`. Assignments,
+pauses and reassignments are tracked with ordinary bd fields: the assignee names the
+worktree, and labels mark swarm state (`worktree:<name>`, `swarm:paused`).
+
 ```bash
-# View swarm status
-bd swarm status
+# View swarm status for an epic (completed / active / ready / blocked children)
+bd swarm status <epic-id> --json
 
-# List active assignments
-bd swarm assignments
+# List all swarm molecules
+bd swarm list --json
 
-# Check worktree health
-bd swarm worktrees
+# List active assignments (in-progress work and the worktree it is assigned to)
+bd list --status=in_progress --json | jq -r '.[] | "\(.id)\t\(.assignee)\t\(.title)"'
 
-# View conflict registry
-bd swarm conflicts
+# Show the work assigned to one worktree
+bd list --label "worktree:<name>" --json
+
+# Check worktree health (git's view of the worktrees)
+git worktree list --porcelain
 ```
+
+The conflict registry (which issues touch which files) is kept by this agent, not by bd.
 
 ### Control Commands
 
 ```bash
 # Pause an issue's work
-bd swarm pause <issue_number>
+bd update <task-id> --status deferred --add-label swarm:paused
 
 # Resume paused work
-bd swarm resume <issue_number>
+bd update <task-id> --status in_progress --remove-label swarm:paused
 
-# Force rebalance
-bd swarm rebalance
+# List paused work (e.g. before a rebalance)
+bd list --label swarm:paused --json
 
-# Reassign to different worktree
-bd swarm reassign <issue_number> <worktree>
+# Hand a task to a different worktree (works on bd 1.0.4 and 1.3.x)
+# 1. The holding worktree releases it:
+bd update <task-id> --status open --assignee "" --remove-label "worktree:<old-worktree>"
+# 2. The target worktree claims it atomically:
+bd update <task-id> --claim --add-label "worktree:<worktree>"
+bd show <task-id> --json
 ```
+
+Never reassign by overwriting `--assignee` from the coordinator. `--claim` is atomic in every supported bd version, so two worktrees can't both take a released task, while a direct `--assignee` overwrite can clobber a worker's live claim.
+
+- On bd 1.3.x, a direct overwrite of another actor's live `in_progress` claim is refused anyway. If the holding worktree has crashed, `bd reclaim` returns its stale lease to ready, and the target worktree then claims it. Use `--force` only for an abandoned claim that `bd reclaim` can't recover.
+- On bd 1.0.4 there is no lease or overwrite guard. If the holding worktree has crashed, confirm with the human before releasing its task on its behalf, then let the target worktree `--claim` it.
+
+Rebalancing has no bd command: list idle worktrees and ready work (`bd ready --json`),
+then hand tasks over with the release-and-claim steps above.
 
 ## Slack Integration
 

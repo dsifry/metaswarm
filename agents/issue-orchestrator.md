@@ -92,9 +92,9 @@ When Team tools are available:
 
 **BEFORE starting work**, prime your context:
 
-```bash
-# Prime with general context - will be refined by specialist agents
-bd prime --work-type planning --keywords "<issue-keywords>"
+```text
+Prime with general context - will be refined by specialist agents:
+`/prime` (metaswarm knowledge priming) for planning work on "<issue-keywords>"
 ```
 
 Review the output for critical rules and patterns that affect orchestration.
@@ -106,7 +106,7 @@ Review the output for critical rules and patterns that affect orchestration.
 gh issue view <number> --json title,body,labels,comments
 
 # 2. Create BEADS epic linked to Issue
-bd create "<issue-title>" --type epic --issue <number> --json
+bd create "<issue-title>" --type epic --external-ref gh-<number> --json
 
 # 3. Post acknowledgment comment
 gh issue comment <number> --body "Agent claiming this issue. Epic: <epic-id>"
@@ -472,7 +472,6 @@ Task({
   ## Output
   When complete, update the BEADS task:
   \`\`\`bash
-  bd update ${taskId} --status closed
   bd close ${taskId} --reason "Research complete. See findings below."
   \`\`\`
 
@@ -661,7 +660,7 @@ bd doctor
 
 ```bash
 # Create epic linked to GitHub Issue
-bd create "<title>" --type epic --issue <number> --json
+bd create "<title>" --type epic --external-ref gh-<number> --json
 
 # Create task under epic
 bd create "<title>" --type task --parent <epic-id> --json

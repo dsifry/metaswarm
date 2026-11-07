@@ -236,7 +236,7 @@ Core commands for task tracking:
 
 ```bash
 # Issue Management
-bd create "Title" --type epic|task|bug --priority 1-5
+bd create "Title" --type epic|task|bug --priority 0-4
 bd show <id>
 bd update <id> --status open|in_progress|blocked|closed
 bd close <id> --reason "Done"
@@ -247,13 +247,12 @@ bd dep add <task> <blocks>    # task blocks other work
 bd ready                       # Show unblocked tasks
 bd blocked                     # Show blocked tasks
 
-# Knowledge
-bd prime                       # Load all relevant knowledge
-bd prime --keywords "auth"     # Filter by keyword
-bd prime --work-type impl      # Filter by work type
+# bd workflow context (use metaswarm's /prime for the fact store)
+bd prime                       # Print bd workflow context and bd memories
 
 # Sync
-bd sync                        # Sync with git
+bd dolt pull                   # If a Dolt remote is configured (local-only: no sync needed)
+bd dolt push                   # If a Dolt remote is configured (local-only: no sync needed)
 bd export                      # Export to JSONL
 ```
 

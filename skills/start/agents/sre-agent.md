@@ -66,8 +66,8 @@ Triggered by:
 
 **BEFORE any other work**, prime your context:
 
-```bash
-bd prime --work-type debugging --keywords "production" "monitoring" "logs"
+```text
+`/prime` (metaswarm knowledge priming) for debugging work on "production" "monitoring" "logs"
 ```
 
 Review the output for production investigation patterns and known system behaviors.

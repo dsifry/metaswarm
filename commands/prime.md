@@ -2,7 +2,7 @@
 description: Load relevant knowledge base facts into context before starting work
 ---
 
-# BEADS Prime
+# Prime (metaswarm knowledge priming)
 
 **CRITICAL**: Run this command at the START of any investigation, planning, or implementation work to load relevant knowledge into your context.
 
@@ -16,68 +16,82 @@ description: Load relevant knowledge base facts into context before starting wor
 
 ## How It Works
 
-This command queries the BEADS knowledge base for facts relevant to your current context and injects them into the conversation, ensuring you:
+`/prime` reads metaswarm's knowledge base, the JSONL fact files in `.beads/knowledge/` (the project's own learnings) and, in the metaswarm repo, the shipped examples in `knowledge/`, and filters it with `jq` down to the facts relevant to your current work, so you:
 
 1. Follow established patterns and rules
 2. Avoid known gotchas and pitfalls
 3. Make decisions aligned with architectural choices
 4. Don't repeat mistakes that have been learned from
 
+`/prime` filters on three things, any combination of which can be given as arguments (e.g. `/prime auth src/api/auth/ implementation`):
+
+| Filter | Matches against |
+|---|---|
+| **Keyword** (topic, e.g. `auth`) | `.fact` and `.tags` (case-insensitive) |
+| **File** (path or path fragment you will touch) | `.affectedFiles` |
+| **Work type** (planning, implementation, review, debugging, research, release) | `.type` (e.g. `gotcha`, `pattern`, `decision`, `api_behavior`) |
+
+The bd workflow reference is separate: if bd is installed, plain `bd prime` prints bd's own workflow reference and any `bd remember` memories. It has no filters and never reads `.beads/knowledge/`, so use `/prime` for the knowledge base.
+
 ## Usage
 
-### Quick Prime (Most Common)
-
-For general context with automatic detection:
+The knowledge files may start with `#` comment lines (the shipped `knowledge/*.jsonl` do), so strip them with `grep -hv '^#'` before handing the lines to `jq`. Set `KB` to the store you want to search:
 
 ```bash
-bd prime
-```
-
-### Prime for Specific Files
-
-When working on specific files:
-
-```bash
-bd prime --files "src/lib/services/**/*.ts" "src/api/routes/**/*.ts"
+KB=.beads/knowledge      # project knowledge (or: KB=knowledge for the shipped examples)
 ```
 
 ### Prime for Keywords
 
-When working on a specific topic:
+When working on a specific topic (`K` is a case-insensitive regex):
 
 ```bash
-bd prime --keywords "authentication" "jwt" "security"
+K="auth"
+grep -hv '^#' "$KB"/*.jsonl | jq -r --arg k "$K" 'select((.fact | test($k; "i")) or ((.tags // []) | any(test($k; "i")))) | .fact + (if .recommendation then "\n  -> " + .recommendation else "" end)'
+```
+
+### Prime for Files
+
+When working on specific files (`F` is a path or path fragment):
+
+```bash
+F="src/api/auth/"
+grep -hv '^#' "$KB"/*.jsonl | jq -r --arg f "$F" 'select((.affectedFiles // []) | any(contains($f))) | .fact + (if .recommendation then "\n  -> " + .recommendation else "" end)'
 ```
 
 ### Prime for Work Type
 
-When doing a specific type of work:
+Pick the fact types that matter for the work you are doing:
+
+| Work type | Fact types to load |
+|---|---|
+| planning | `decision`, `pattern`, `gotcha`, `dependency`, `security` |
+| implementation | `pattern`, `gotcha`, `api_behavior`, `dependency`, `performance`, `security` |
+| review | `pattern`, `gotcha`, `decision`, `security`, `performance` |
+| debugging | `gotcha`, `api_behavior`, `code_quirk`, `dependency`, `performance` |
+| research | `decision`, `pattern`, `gotcha`, `api_behavior`, `code_quirk`, `dependency`, `performance`, `security` (all types) |
+| release | `decision`, `pattern`, `gotcha`, `dependency`, `security` |
 
 ```bash
-bd prime --work-type planning
-bd prime --work-type implementation
-bd prime --work-type review
-bd prime --work-type debugging
+T="pattern|gotcha|api_behavior|dependency|performance|security"   # implementation
+grep -hv '^#' "$KB"/*.jsonl | jq -r --arg t "$T" 'select(.type | test("^(" + $t + ")$")) | "[\(.type)] " + .fact + (if .recommendation then "\n  -> " + .recommendation else "" end)'
+```
+
+### Combined
+
+Filters compose with `and` inside one `select`:
+
+```bash
+grep -hv '^#' "$KB"/*.jsonl | jq -r --arg k "auth" --arg f "src/api/" --arg t "gotcha|pattern" '
+  select(((.fact | test($k; "i")) or ((.tags // []) | any(test($k; "i"))))
+         and ((.affectedFiles // []) | any(contains($f)))
+         and (.type | test("^(" + $t + ")$")))
+  | "[\(.type)] \(.fact) -> \(.recommendation // "")"'
 ```
 
 ### Prime for Context Recovery
 
-When resuming after context compaction or in a new session:
-
-```bash
-bd prime --work-type recovery
-```
-
-This loads active plan, project context, execution state, and relevant knowledge base facts. See "Context Recovery" section below.
-
-### Combined
-
-```bash
-bd prime \
-  --files "src/lib/services/ai-*.ts" \
-  --keywords "ai" "provider" "openai" \
-  --work-type implementation
-```
+When resuming after context compaction or in a new session, see "Context Recovery" below: read the persisted plan and context files directly, then prime for the work you are resuming.
 
 ## What Gets Loaded
 
@@ -116,58 +130,38 @@ External API quirks:
 
 - "Prisma findMany returns [] not null"
 
-## Auto-Priming
-
-The BEADS system should auto-prime in these scenarios:
-
-1. **Session Start**: When `.beads/` directory is detected
-2. **File Touch**: When reading/editing files that match knowledge patterns
-3. **Keyword Detection**: When task description matches known topics
-
 ## Integration Points
 
 ### In Planning Phase
 
-Before writing a plan, run:
-
-```bash
-bd prime --work-type planning --keywords "<task-keywords>"
-```
+Before writing a plan, run `/prime` for planning work on the task's keywords.
 
 ### In Implementation Phase
 
-Before writing code, run:
-
-```bash
-bd prime --files "<files-to-touch>" --work-type implementation
-```
+Before writing code, run `/prime` for implementation work touching the files you will change.
 
 ### In Review Phase
 
-Before reviewing code, run:
-
-```bash
-bd prime --work-type review --files "<files-changed>"
-```
+Before reviewing code, run `/prime` for review work touching the changed files.
 
 ## Manual Knowledge Check
 
 If you need to check for specific knowledge:
 
 ```bash
-# Search for specific topic
-cat .beads/knowledge/*.jsonl | jq -r 'select(.fact | test("authentication"; "i")) | .fact'
+# Search for a specific topic
+grep -hv '^#' .beads/knowledge/*.jsonl | jq -r 'select(.fact | test("authentication"; "i")) | .fact'
 
 # Get all gotchas
-cat .beads/knowledge/gotchas.jsonl | jq -r '.fact'
+grep -hv '^#' .beads/knowledge/gotchas.jsonl | jq -r '.fact'
 
 # Get all patterns
-cat .beads/knowledge/patterns.jsonl | jq -r '.fact'
+grep -hv '^#' .beads/knowledge/patterns.jsonl | jq -r '.fact'
 ```
 
 ## Output Format
 
-The prime command outputs formatted knowledge that looks like:
+Present the filtered facts grouped like this:
 
 ```markdown
 # Relevant Knowledge Base Facts
@@ -194,14 +188,14 @@ Avoid these known issues:
 
 ## Context Recovery
 
-When `--work-type recovery` is used (or when an orchestrator detects it lost context), the prime command loads additional context beyond the standard knowledge base:
+When an orchestrator detects it lost context (after compaction or in a new session), recover in this order: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge.
 
-### What Gets Loaded
+### What Gets Read
 
-1. **Active Plan** — reads `.beads/plans/active-plan.md` if it exists with `status: in-progress`
-2. **Project Context** — reads `.beads/context/project-context.md` (completed work units, established patterns, tooling)
-3. **Execution State** — reads `.beads/context/execution-state.md` (current work unit, phase, VALIDATE attempts, review round)
-4. **Standard Knowledge** — all the usual MUST FOLLOW, GOTCHAS, PATTERNS, DECISIONS facts
+1. **Active Plan**: `.beads/plans/active-plan.md`, resumed only if it has `status: in-progress`
+2. **Project Context**: `.beads/context/project-context.md` (completed work units, established patterns, tooling)
+3. **Execution State**: `.beads/context/execution-state.md` (current work unit, phase, VALIDATE attempts, review round)
+4. **Standard Knowledge**: the MUST FOLLOW, GOTCHAS, PATTERNS and DECISIONS facts that `/prime` filters for the resumed work
 
 ### Recovery Flow
 
@@ -211,19 +205,21 @@ if [ -f .beads/plans/active-plan.md ]; then
   grep -q 'status: in-progress' .beads/plans/active-plan.md && echo "ACTIVE PLAN FOUND"
 fi
 
-# 2. Load all context files
+# 2. Read all context files
 cat .beads/plans/active-plan.md           # The approved plan
 cat .beads/context/project-context.md     # Completed work, patterns
 cat .beads/context/execution-state.md     # Where we left off
 
-# 3. Load relevant knowledge base facts
-cat .beads/knowledge/*.jsonl | jq -r '.fact'
+# 3. Load knowledge base facts for the resumed work: set T to the resumed
+#    work type's fact types (see the work-type table above); recommendations included
+T="pattern|gotcha|api_behavior|dependency|performance|security"   # e.g. resuming implementation
+grep -hv '^#' .beads/knowledge/*.jsonl | jq -r --arg t "$T" 'select(.type | test("^(" + $t + ")$")) | "[\(.type)] " + .fact + (if .recommendation then "\n  -> " + .recommendation else "" end)'
 ```
 
-### When Recovery Triggers Automatically
+### When Recovery Triggers
 
 - Orchestrated execution starts and finds `.beads/plans/active-plan.md` with `status: in-progress` but has no plan in its current context
-- A new session begins with `bd prime` and active execution state is detected
+- A new session starts while `.beads/context/execution-state.md` shows work in progress
 - After context compaction, when the agent recognizes it has lost plan/execution context
 
 ### Output Format (Recovery Mode)
@@ -231,7 +227,7 @@ cat .beads/knowledge/*.jsonl | jq -r '.fact'
 ```markdown
 # Context Recovery
 
-_Recovered from BEADS persisted state_
+_Recovered from persisted state in .beads/_
 
 ## Active Plan
 <plan summary — title, work unit count, current position>
@@ -256,4 +252,4 @@ After priming, you should be able to answer:
 2. What gotchas should I watch out for?
 3. What patterns should I apply?
 4. What architectural decisions constrain my options?
-5. (If recovery mode) Where did execution stop and what comes next?
+5. (If recovering) Where did execution stop and what comes next?

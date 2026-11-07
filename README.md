@@ -11,7 +11,7 @@ metaswarm is an extraction of a production-tested agentic orchestration system. 
 - **4-Phase Orchestrated Execution Loop**: Each work unit runs through IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT. The orchestrator validates independently (never trusts subagent self-reports), and adversarial reviewers check DoD compliance with file:line evidence
 - **Parallel Design Review Gate**: 5 specialist agents (PM, Architect, Designer, Security, CTO) review in parallel; severity-gated iteration (only `blocker: yes` findings re-run the gate, cap 10 rounds) before human escalation
 - **Recursive orchestration**: Swarm Coordinators spawn Issue Orchestrators, which spawn sub-orchestrators for complex epics (swarm of swarms)
-- **Git-native task tracking**: Uses [BEADS](https://github.com/steveyegge/beads) (`bd` CLI) for issue/task management, dependencies, and knowledge priming
+- **Git-native task tracking**: Uses [BEADS](https://github.com/steveyegge/beads) (`bd` CLI) for issue/task management and dependencies; metaswarm's own `/prime` command handles knowledge priming
 - **Knowledge base**: JSONL-based fact store for patterns, gotchas, decisions, and anti-patterns — agents prime from this before every task
 - **Quality rubrics**: Standardized review criteria for code, architecture, security, testing, planning, and adversarial spec compliance
 - **External AI tool delegation**: Optionally delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI for cost savings and cross-model adversarial review
@@ -194,12 +194,13 @@ These signals feed back into the knowledge base and can generate proposals for n
 
 ### Selective Knowledge Priming
 
-The knowledge base grows continuously, but agents don't load all of it. The `bd prime` command uses **selective retrieval** — filtering by affected files, keywords, and work type to load only the relevant subset:
+The knowledge base grows continuously, but agents don't load all of it. metaswarm's `/prime` command filters the knowledge base with `jq` (keyword over each fact and its tags, file over its affected files, work type over its fact type) so only the relevant subset is loaded:
 
-```bash
-# Only loads knowledge relevant to auth files and implementation work
-bd prime --files "src/api/auth/**" --keywords "authentication" --work-type implementation
+```text
+/prime authentication src/api/auth/ implementation
 ```
+
+See `commands/prime.md` for the exact filters.
 
 This means the knowledge base can grow to hundreds or thousands of entries without consuming context window. Agents get precisely the facts they need — the 5 critical gotchas for the files they're about to touch, not the entire institutional memory.
 
@@ -227,7 +228,7 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 
 - One of: Claude Code, Gemini CLI, or Codex CLI
 - Node.js 18+ (for automation scripts; contributing to metaswarm itself needs Node.js 22.8+ for the coverage gate)
-- [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) v0.40+ — for task tracking (recommended)
+- [BEADS](https://github.com/steveyegge/beads) CLI (`bd`) — for task tracking (recommended). Minimum versions: bd ≥ 1.0.4 (tested with 1.3.4); the beads plugin version matching your bd; Dolt ≥ 2.4.0 only for server mode (`bd init --server`)
 - GitHub CLI (`gh`) — for PR automation (recommended)
 - Playwright — for visual review skill (optional, `npx playwright install chromium`)
 
@@ -239,7 +240,7 @@ MIT
 
 metaswarm stands on the shoulders of two key projects:
 
-- **[BEADS](https://github.com/steveyegge/beads)** by [Steve Yegge](https://github.com/steveyegge) — The git-native, AI-first issue tracking system that serves as the coordination backbone for all agent task management, dependency tracking, and knowledge priming in metaswarm. BEADS made it possible to treat issue tracking as a first-class part of the codebase rather than an external service.
+- **[BEADS](https://github.com/steveyegge/beads)** by [Steve Yegge](https://github.com/steveyegge) — The git-native, AI-first issue tracking system that serves as the coordination backbone for all agent task management and dependency tracking in metaswarm. BEADS made it possible to treat issue tracking as a first-class part of the codebase rather than an external service.
 
 - **[Superpowers](https://github.com/obra/superpowers)** by [Jesse Vincent](https://github.com/obra) and contributors — The agentic skills framework and software development methodology that provides foundational skills metaswarm builds on, including brainstorming, test-driven development, systematic debugging, and plan writing. Superpowers demonstrated that disciplined agent workflows aren't overhead — they're what make autonomous development reliable.
 

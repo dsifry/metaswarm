@@ -55,7 +55,7 @@ Update task status in real-time:
 If you can't complete a task, update it with notes:
 
 ```bash
-bd update <id> --notes="Blocked on X. Remaining: Y and Z."
+bd update <id> --append-notes="Blocked on X. Remaining: Y and Z."
 ```
 
 ### 2. Context Switches
@@ -70,7 +70,7 @@ Before changing branches or starting new work:
 
 When a task needs user action:
 
-- Update with clear next steps: `bd update <id> --notes="Needs user decision on X"`
+- Update with clear next steps: `bd update <id> --append-notes="Needs user decision on X"`
 - Notify user explicitly
 
 ### 4. Dependencies
@@ -97,7 +97,7 @@ bd blocked                        # show all blocked issues
 4. # Complete the work
 5. bd close <id> --reason="Completed in commit <SHA>"
 6. bd ready              # Find next task
-7. bd sync               # Push BEADS changes to git
+7. bd dolt push          # If a Dolt remote is configured (local-only workspaces need no sync)
 ```
 
 ## Creating New Tasks
@@ -116,6 +116,6 @@ bd dep add <tests-id> <feature-id>  # Tests depend on feature
 
 - Before creating PRs: Ensure all related BEADS issues are closed
 - Before context switches: Review and update all in_progress items
-- During long tasks: Periodically update progress with `bd update <id> --notes="..."`
+- During long tasks: Periodically update progress with `bd update <id> --append-notes="..."`
 - After completing features: Close all related issues: `bd close <id1> <id2> ...`
-- At session end: Always run `bd sync`
+- At session end: if a Dolt remote is configured, run `bd dolt push` (local-only workspaces need no sync)

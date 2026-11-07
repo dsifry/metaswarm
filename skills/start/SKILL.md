@@ -24,7 +24,6 @@ This skill coordinates a swarm of specialized AI agents to autonomously handle G
 ```bash
 # User triggers via any of:
 @beads start #123
-bd start 123
 /beads-start 123
 ```
 
@@ -412,7 +411,7 @@ For manually-created PRs, invoke `/pr-shepherd <pr-number>` to start the monitor
 
 ```bash
 # Create epic for GitHub Issue
-bd create "Feature: User Auth" --type epic --issue 123
+bd create "Feature: User Auth" --type epic --external-ref gh-123
 
 # Create task under epic
 bd create "Research auth patterns" --type task --parent bd-abc123
@@ -462,11 +461,14 @@ bd label add <task-id> review:iteration-1
 ### Sync Operations
 
 ```bash
-# Check sync status
-bd sync --status
+# Check version-control status (branch and uncommitted changes)
+bd vc status
 
-# Pull updates from main
-bd sync --from-main
+# If a Dolt remote is configured: pull updates (local-only workspaces need no sync)
+bd dolt pull
+
+# If a Dolt remote is configured: push your changes (local-only workspaces need no sync)
+bd dolt push
 
 # Export to JSONL
 bd export
@@ -490,7 +492,7 @@ gh issue view 123 --json labels | jq '.labels[].name' | grep agent-ready
 ISSUE=$(gh issue view 123 --json title,body,number)
 
 # Create epic linked to Issue
-bd create "$(echo $ISSUE | jq -r .title)" --type epic --issue 123 --json
+bd create "$(echo $ISSUE | jq -r .title)" --type epic --external-ref gh-123 --json
 ```
 
 ### Step 3: Post Acknowledgment
@@ -632,32 +634,26 @@ const [reviewResult, securityResult] = await Promise.all([
 
 **ALL agents MUST prime their context before starting ANY work.** This prevents bad assumptions and ensures alignment with established patterns.
 
-```bash
-# General prime (loads critical rules + gotchas)
-bd prime
+Use `/prime` (metaswarm knowledge priming). It filters the knowledge base (`.beads/knowledge/*.jsonl`) with `jq`, by keyword (over each fact and its tags), by file (over its affected files) and by work type (over its fact type):
 
-# Prime for specific files you'll modify
-bd prime --files "src/lib/services/*.ts" "src/api/routes/*.ts"
-
-# Prime for specific topic
-bd prime --keywords "authentication" "jwt"
-
-# Prime for work type
-bd prime --work-type planning     # Before planning
-bd prime --work-type implementation  # Before coding
-bd prime --work-type review       # Before reviewing
-bd prime --work-type research     # Before exploring
-
-# Combined (most thorough)
-bd prime --files "<files>" --keywords "<topic>" --work-type <type>
+```text
+/prime                                         # MUST FOLLOW rules + gotchas
+/prime src/lib/services/ src/api/routes/       # files you'll modify
+/prime authentication jwt                      # a topic
+/prime planning                                # work type: planning, implementation, review, research
+/prime <topic> <files> <work-type>             # combined (most thorough)
 ```
 
-The prime command outputs relevant facts categorized as:
+See `commands/prime.md` for the exact `jq` filters. `/prime` reports the relevant facts categorized as:
 
 - **MUST FOLLOW**: Critical rules (NEVER/ALWAYS/MUST statements)
 - **GOTCHAS**: Common pitfalls to avoid
 - **PATTERNS**: Best practices for this codebase
 - **DECISIONS**: Architectural choices
+
+### Context Recovery
+
+After compaction or in a new session with an active plan: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge.
 
 ### After Completing Work
 
@@ -669,9 +665,6 @@ GITHUB_TOKEN=$(gh auth token) npx tsx scripts/beads-fetch-pr-comments.ts --days 
 
 # Use self-reflect skill to evaluate and add learnings
 /self-reflect
-
-# Compact closed issues (semantic summarization via beads plugin)
-bd compact
 ```
 
 Or spawn Knowledge Curator agent:
@@ -682,7 +675,7 @@ Task({
   description: "Extract learnings from epic",
   prompt: `Review completed epic <epic-id> and extract learnings.
 
-FIRST: Run \`bd prime --work-type review\` to load context.
+FIRST: Run \`/prime\` (metaswarm knowledge priming) for review work on this epic.
 
 Then analyze:
 - What patterns were used?
@@ -779,14 +772,14 @@ bd dep remove <task1> <task2>
 ### BEADS Sync Issues
 
 ```bash
-# Check sync status
-bd sync --status
+# Check version-control status (branch and uncommitted changes)
+bd vc status
 
 # Force export
 bd export
 
-# Pull from main
-bd sync --from-main
+# If a Dolt remote is configured: pull the latest (local-only workspaces need no sync)
+bd dolt pull
 ```
 
 ---

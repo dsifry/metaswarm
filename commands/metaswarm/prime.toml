@@ -3,5 +3,5 @@ prompt = """Invoke the metaswarm prime skill. The user wants to prime their cont
 
 Arguments provided by the user: {{args}}
 
-Run BEADS knowledge priming with any specified filters (--files, --keywords, --work-type).
+Load metaswarm knowledge-base facts from .beads/knowledge/*.jsonl (skip # comment lines, then filter with jq): match the keyword against each fact and its tags, the file against its affected files, and the work type against its fact type.
 """

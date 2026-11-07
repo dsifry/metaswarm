@@ -639,7 +639,8 @@ When the orchestrator detects it has lost context (after compaction or in a new 
    a. Read `.beads/plans/active-plan.md` — reload the approved plan
    b. Read `.beads/context/project-context.md` — reload completed work and patterns
    c. Read `.beads/context/execution-state.md` — find where execution stopped, and reload its Open Findings table (title, description, evidence, severity, protects, fix attempts) so rule line 3 can still detect a recurring blocker — match each fresh finding by its title/description and protects, and use evidence only as a secondary signal, because a fix can move file:line references. A saved finding without a title (written before this change) falls back to description plus protects; this history is for the orchestrator only — never pass them to a fresh reviewer. A state file written before the column split has a single legacy `Retries` column: read that value as VALIDATE attempts, and take the review round from the Current Position `Review round` line
-   d. Run `bd prime --work-type recovery` — reload relevant knowledge base facts
+   d. Run `/prime` (metaswarm knowledge priming) for the current work unit — reload relevant knowledge base facts.
+      The full recovery order is: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge.
    e. Resume from the current work unit and phase
 
 3. Announce recovery to user:
@@ -700,7 +701,7 @@ When reaching a checkpoint, present this report and **wait for explicit human ap
 - <decision-1>: <rationale>
 - <decision-2>: <rationale>
 
-Record significant decisions persistently with `bd decision "<decision>: <rationale>"` so they survive compaction and are available across sessions.
+Record significant decisions persistently with `bd create "<decision>" --type decision -d "<rationale>"` so they survive compaction and are available across sessions.
 
 ### What Comes Next
 - WU-003: <description>

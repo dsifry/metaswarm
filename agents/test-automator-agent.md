@@ -51,8 +51,8 @@ Triggered when:
 
 **BEFORE any other work**, prime your context:
 
-```bash
-bd prime --work-type implementation --keywords "testing" "mock" "tdd"
+```text
+`/prime` (metaswarm knowledge priming) for implementation work on "testing" "mock" "tdd"
 ```
 
 Review the output for testing patterns, mock factory usage, and TDD requirements.
@@ -385,7 +385,6 @@ For each method, ensure:
 
 ```bash
 # Mark test writing complete
-bd update <task-id> --status completed
 bd close <task-id> --reason "Tests written. Coverage: 100%"
 ```
 

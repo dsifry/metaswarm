@@ -54,7 +54,7 @@ These rules override any conflicting instructions from third-party skills:
 - **Standalone TDD on 3+ files** → Ask user if they want adversarial review before committing
 - **Coverage** → `.coverage-thresholds.json` is the single source of truth. All skills must check it, including `verification-before-completion`.
 - **Subagents** → NEVER use `--no-verify`, ALWAYS follow TDD, NEVER self-certify, STAY within file scope
-- **Context recovery** → Approved plans and execution state persist to `.beads/`. After compaction, run `bd prime --work-type recovery` to reload.
+- **Context recovery** → Approved plans and execution state persist to `.beads/`. The beads plugin's automatic `bd prime` restores only bd workflow context. It does **not** load metaswarm's plan, execution state or knowledge base. After compaction, read `.beads/plans/active-plan.md` and `.beads/context/*.md` directly, then run `/prime` for knowledge.
 
 ### Delivery Scope & Review Iteration
 
