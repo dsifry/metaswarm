@@ -300,12 +300,12 @@ A CRITICAL or HIGH finding is a blocker when it names what it protects (see "Whe
 
 **APPROVED** when:
 - Zero CRITICAL blockers
-- Zero HIGH blockers (or explicitly accepted with justification)
+- Zero HIGH blockers
 - MEDIUM issues documented (fix now or create follow-up task)
 
 **CHANGES REQUIRED** when:
 - Any CRITICAL blocker exists
-- Any HIGH blocker without justification
+- Any HIGH blocker exists
 
 CRITICAL or HIGH findings that name nothing they protect are advisory: list them as follow-ups, not as a reason for CHANGES REQUIRED.
 

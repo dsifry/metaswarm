@@ -108,6 +108,7 @@ assert_in "guide: ordered iteration rule" "$G" \
   '10 rounds'
 assert_in "guide: single-reviewer note (per work unit)" "$G" \
   'Single-reviewer gates' \
+  "(orchestrated execution's Phase 3 adversarial review)" \
   'is simply false' \
   'per work unit'
 assert_in "guide: 'this round fixed', round counting, re-validate notes" "$G" \
@@ -568,7 +569,9 @@ assert_in "orchestrated-execution: execution state records open findings and fix
 RECOVERY="$(section "$OE" '^### Context Recovery Protocol')"
 assert_in "orchestrated-execution: recovery reloads open findings for the orchestrator only" "$RECOVERY" \
   'Open Findings' 'rule line 3' 'never pass them to a fresh reviewer' \
-  'match each fresh finding by its description and evidence'
+  'match each fresh finding by its description and protects' \
+  'use evidence only as a secondary signal'
+assert_not_in "orchestrated-execution: Open Findings example avoids line-number evidence" "$STATE" '<file:line evidence>'
 
 # Collaborative CRITICAL/HIGH/MEDIUM/LOW findings map onto the contract.
 for r in rubrics/code-review-rubric.md skills/start/rubrics/code-review-rubric.md; do
@@ -577,8 +580,10 @@ for r in rubrics/code-review-rubric.md skills/start/rubrics/code-review-rubric.m
   # The collaborative verdict follows the blocker rule: an unprotected CRITICAL is advisory.
   CRITERIA="$(section "$REPO_ROOT/$r" '^## Approval Criteria')"
   assert_in "$r: collaborative verdict keys on blockers, not raw severity" "$CRITERIA" \
-    'Any CRITICAL blocker' 'Any HIGH blocker without justification' \
+    'Any CRITICAL blocker' 'Any HIGH blocker' 'Zero HIGH blockers' \
     'name nothing they protect are advisory'
+  # Approval never coexists with an open blocker: no "accepted with justification" escape.
+  assert_not_in "$r: no justified-blocker approval exception" "$CRITERIA" 'with justification' 'without justification'
   assert_not_in "$r: no raw-severity CHANGES REQUIRED rule" "$CRITERIA" 'Any CRITICAL issues exist'
   # Output examples show the Protects line, so collaborative reviewers can produce blockers.
   assert_in "$r: collaborative output example carries Protects" "$(cat "$REPO_ROOT/$r")" \
