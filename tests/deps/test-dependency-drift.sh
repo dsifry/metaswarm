@@ -485,6 +485,26 @@ for f in templates/beads-developer-setup.md skills/setup/templates/beads-develop
 done
 
 # ===========================================================================
+# WU5: repo-wide regression guard (every class over every in-scope file)
+# ===========================================================================
+echo ""
+echo "WU5: repo-wide regression guard (all in-scope tracked files)"
+
+# In-scope = tracked files minus EXCLUDES (docs/plans, CHANGELOG.md, .beads,
+# tests, node_modules). No pathspecs below means "the whole in-scope tree".
+WU5_COUNT="$(list_files | grep -c . || true)"
+if [ "${WU5_COUNT:-0}" -gt 0 ]; then
+  pass "WU5: in-scope file list is non-empty ($WU5_COUNT files)"
+  assert_no_hits "WU5 5.1: no bd prime flag usage repo-wide (P1)" P1
+  assert_no_hits "WU5 5.1: no stale bd/BEADS priming claims repo-wide (P2)" P2
+  assert_no_hits "WU5 5.1: no stale bd/beads version claims repo-wide (P5)" P5
+  assert_no_hits "WU5 5.1: no stale bd compact wording repo-wide (P6)" P6
+  assert_no_hits "WU5 5.1: no removed/invented bd commands or flags repo-wide (P7)" P7
+else
+  fail "WU5: in-scope file list is empty (DRIFT_ROOT=$DRIFT_ROOT)"
+fi
+
+# ===========================================================================
 # Results
 # ===========================================================================
 echo ""
