@@ -247,7 +247,6 @@ pnpm lint
 
 ```bash
 # Mark implementation complete
-bd update <task-id> --status completed
 bd close <task-id> --reason "Implementation complete. All tests passing."
 
 # List files changed

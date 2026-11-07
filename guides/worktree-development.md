@@ -448,7 +448,7 @@ Every handoff must include:
 - Used repository pattern for data access (consistent with existing services)
 - Chose optimistic locking for concurrent updates (discussed in Issue #45)
 
-**Tip:** Use `bd decision "<decision>: <rationale>"` to record decisions persistently in the beads database — these survive compaction and are available across sessions.
+**Tip:** Use `bd create "<decision>" --type decision -d "<rationale>"` to record decisions persistently in the beads database — these survive compaction and are available across sessions.
 
 ## Gotchas
 

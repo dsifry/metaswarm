@@ -42,7 +42,7 @@ assert_file_contains() {
   local filepath="$2"
   local expected="$3"
   TOTAL=$((TOTAL + 1))
-  if grep -qF "$expected" "$REPO_ROOT/$filepath" 2>/dev/null; then
+  if grep -qF -e "$expected" "$REPO_ROOT/$filepath" 2>/dev/null; then
     PASS=$((PASS + 1))
     echo "  PASS: $desc"
   else
@@ -56,7 +56,7 @@ assert_file_not_contains() {
   local filepath="$2"
   local unexpected="$3"
   TOTAL=$((TOTAL + 1))
-  if grep -qF "$unexpected" "$REPO_ROOT/$filepath" 2>/dev/null; then
+  if grep -qF -e "$unexpected" "$REPO_ROOT/$filepath" 2>/dev/null; then
     FAIL=$((FAIL + 1))
     echo "  FAIL: $desc — '$filepath' still contains: $unexpected"
   else
@@ -87,8 +87,8 @@ echo "Test 3: CLAUDE.md templates reference standalone beads plugin"
 assert_file_contains "Root CLAUDE.md mentions automatic bd prime" "CLAUDE.md" "standalone beads plugin"
 assert_file_contains "Template CLAUDE.md mentions automatic bd prime" "templates/CLAUDE.md" "standalone beads plugin"
 assert_file_contains "Setup template CLAUDE.md mentions automatic bd prime" "skills/setup/templates/CLAUDE.md" "standalone beads plugin"
-assert_file_contains "Root CLAUDE.md mentions bd decision" "CLAUDE.md" "bd decision"
-assert_file_contains "Template CLAUDE.md mentions bd decision" "templates/CLAUDE.md" "bd decision"
+assert_file_contains "Root CLAUDE.md records decisions with --type decision" "CLAUDE.md" "--type decision"
+assert_file_contains "Template CLAUDE.md records decisions with --type decision" "templates/CLAUDE.md" "--type decision"
 
 # --- Test 4: Developer setup references standalone plugin ---
 echo "Test 4: Developer setup references standalone plugin installation"
@@ -113,9 +113,17 @@ echo "Test 7: USAGE.md updated"
 assert_file_not_contains "USAGE.md no longer lists beads-self-reflect.ts" "USAGE.md" "beads-self-reflect.ts"
 assert_file_contains "USAGE.md lists beads-fetch-conversation-history.ts" "USAGE.md" "beads-fetch-conversation-history.ts"
 
-# --- Test 8: self-reflect command references bd compact ---
-echo "Test 8: self-reflect command references bd compact"
-assert_file_contains "self-reflect references bd compact" "commands/self-reflect.md" "bd compact"
+# --- Test 8: self-reflect is about session learnings (no compaction step) ---
+echo "Test 8: self-reflect command has no bd compact / compaction step"
+assert_file_not_contains "self-reflect does not reference bd compact" "commands/self-reflect.md" "bd compact"
+TOTAL=$((TOTAL + 1))
+if grep -qiE '^#+ .*compact' "$REPO_ROOT/commands/self-reflect.md" 2>/dev/null; then
+  FAIL=$((FAIL + 1))
+  echo "  FAIL: self-reflect has no compaction step — a heading still mentions compaction"
+else
+  PASS=$((PASS + 1))
+  echo "  PASS: self-reflect has no compaction step"
+fi
 
 # --- Test 9: No hook conflicts ---
 echo "Test 9: Session hook avoids conflict with beads plugin"

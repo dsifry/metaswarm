@@ -24,10 +24,10 @@ bd show <issue-id>
 
 # Update issue status
 bd update <issue-id> --status in_progress
-bd update <issue-id> --status done
+bd close <issue-id> --reason "Done"
 
-# Sync with git remote
-bd sync
+# If a Dolt remote is configured: push your changes (local-only workspaces need no sync)
+bd dolt push
 ```
 
 ### Working with Issues
@@ -68,7 +68,7 @@ Issues in Beads are:
 /plugin install beads    # from steveyegge/beads marketplace
 ```
 
-The beads plugin (v0.63.3+) automatically handles context priming on SessionStart and PreCompact, provides `bd compact` for semantic summarization, `bd decision` for architectural decision tracking, and ships a `@task-agent` that autonomously finds and completes ready tasks.
+The beads plugin runs `bd prime` on SessionStart and PreCompact (bd workflow context and any `bd remember` memories; metaswarm's knowledge comes from `/prime`). It records architectural decisions as decision issues (`bd create "<title>" --type decision -d "<rationale>"`) and ships a `@task-agent` that autonomously finds and completes ready tasks.
 
 ### Or install the CLI directly
 
@@ -81,6 +81,27 @@ bd init
 # Create your first issue
 bd create "Try out Beads"
 ```
+
+### Housekeeping: compaction
+
+Squash old Dolt history (recent commits are kept; preview first):
+
+```bash
+bd compact --dry-run
+bd compact --force
+```
+
+Plain `bd compact` only rewrites Dolt history.
+
+To summarize old **closed** bd issues locally (agent-driven, no API key needed),
+analyze the candidates, write a summary, then apply it per issue:
+
+```bash
+bd admin compact --analyze --json
+bd admin compact --apply --id <id> --summary <file>
+```
+
+Only `bd admin compact --auto` needs an API key. Neither command touches `.beads/knowledge`.
 
 ## Learn More
 

@@ -213,8 +213,8 @@ Development patterns and standards are documented in `guides/`:
 
 <!-- Document important architectural decisions here so agents have context.
      These get loaded during knowledge priming (/prime).
-     Use `bd decision` to record decisions persistently in the beads database
-     with rationale tracking — these survive compaction and are available across sessions. -->
+     Use `bd create "<title>" --type decision -d "<rationale>"` to record decisions
+     persistently in the beads database with rationale tracking — these survive compaction and are available across sessions. -->
 
 ## Notes
 

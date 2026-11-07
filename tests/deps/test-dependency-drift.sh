@@ -378,6 +378,87 @@ while IFS= read -r a; do
 done < <(git -C "$DRIFT_ROOT" ls-files -- 'agents/*.md')
 
 # ===========================================================================
+# WU3 (owned files): removed bd commands (P7), compact wording (P6), P2
+# ===========================================================================
+echo ""
+echo "WU3: removed bd commands, compact wording and self-reflect (owned files + mirrors)"
+
+WU3_AGENTS=(swarm-coordinator-agent issue-orchestrator architect-agent coder
+            pr-shepherd-agent test-automator-agent metrics-agent)
+WU3_TEMPLATES=(beads-readme beads-developer-setup task-completion-checklist
+               todo-management CLAUDE)
+WU3_FILES=(
+  AGENTS.md CLAUDE.md USAGE.md guides/worktree-development.md
+  commands/self-reflect.md
+  skills/setup/SKILL.md skills/start/SKILL.md skills/orchestrated-execution/SKILL.md
+  # generated mirror
+  .claude/commands/self-reflect.md
+)
+for t in "${WU3_TEMPLATES[@]}"; do
+  WU3_FILES+=("templates/$t.md" "skills/setup/templates/$t.md")
+done
+for a in "${WU3_AGENTS[@]}"; do
+  WU3_FILES+=("agents/$a.md" "skills/start/agents/$a.md")
+done
+
+assert_tracked "WU3 owned files and mirrors are tracked" "${WU3_FILES[@]}"
+assert_no_hits "WU3 3.1: no removed/invented bd commands or flags (P7)" P7 "${WU3_FILES[@]}"
+assert_no_hits "WU3 3.1: no stale bd compact wording (P6)" P6 "${WU3_FILES[@]}"
+assert_no_hits "WU3 3.1: no stale bd/BEADS priming claims (P2)" P2 "${WU3_FILES[@]}"
+
+# .gitattributes (merge=beads / bd merge) is deleted.
+if [ -e "$DRIFT_ROOT/.gitattributes" ]; then
+  fail "WU3: .gitattributes (merge=beads driver) is removed"
+else
+  pass "WU3: .gitattributes (merge=beads driver) is removed"
+fi
+
+# 3.2 self-reflect has no compaction step, no bd compact, and no Step 8.
+for f in commands/self-reflect.md .claude/commands/self-reflect.md; do
+  assert_not_matches "WU3 3.2: no bd compact in $f" "$f" 'bd (admin )?compact'
+  assert_not_matches "WU3 3.2: no compaction step in $f" "$f" '^#+ .*(compact|compaction)'
+  assert_not_matches "WU3 3.2: no Step 8 in $f" "$f" 'step 8'
+  assert_contains_fixed "WU3 3.2: Step 7 still exists in $f (renumbered)" "$f" "Step 7"
+done
+
+# 3.3 beads templates describe bd compact (Dolt history) and bd admin compact.
+for f in templates/beads-readme.md skills/setup/templates/beads-readme.md; do
+  assert_contains_fixed "WU3 3.3: $f documents bd admin compact --analyze" "$f" 'bd admin compact --analyze'
+  assert_contains_fixed "WU3 3.3: $f documents bd admin compact --apply" "$f" 'bd admin compact --apply'
+  assert_contains_fixed "WU3 3.3: $f describes plain bd compact as Dolt history" "$f" 'Dolt history' -i
+done
+
+# Presence: every bd dolt push/pull line carries "if a Dolt remote is configured"
+# (on the same line, or the line just before it).
+dolt_unconditioned() {
+  local f
+  while IFS= read -r f; do
+    [ -n "$f" ] && [ -f "$DRIFT_ROOT/$f" ] || continue
+    FILE="$f" awk '
+      { low[NR] = tolower($0); raw[NR] = $0 }
+      END {
+        cond = "if a dolt remote is configured"
+        for (i = 1; i <= NR; i++) {
+          if (low[i] !~ /bd dolt (push|pull)/) continue
+          if (index(low[i], cond) || (i > 1 && index(low[i-1], cond))) continue
+          print ENVIRON["FILE"] ":" i ":" raw[i]
+        }
+      }
+    ' "$DRIFT_ROOT/$f"
+  done < <(list_files "$@")
+}
+hits="$(dolt_unconditioned "${WU3_FILES[@]}")"
+if [ -z "$hits" ]; then
+  pass "WU3: every bd dolt push/pull line carries 'if a Dolt remote is configured'"
+else
+  fail "WU3: bd dolt push/pull without 'if a Dolt remote is configured'"
+  while IFS= read -r line; do echo "      $line"; done <<<"$hits"
+fi
+# The sync replacements actually exist (not just deleted).
+assert_contains_fixed "WU3: skills/start/SKILL.md uses bd dolt push" skills/start/SKILL.md 'bd dolt push'
+assert_contains_fixed "WU3: skills/start/SKILL.md uses bd dolt pull" skills/start/SKILL.md 'bd dolt pull'
+
+# ===========================================================================
 # Results
 # ===========================================================================
 echo ""

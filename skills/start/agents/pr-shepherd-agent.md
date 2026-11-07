@@ -131,7 +131,6 @@ When PR is ready to merge:
 
 ```bash
 # All checks passing, all threads resolved
-bd update <task-id> --status completed
 bd close <task-id> --reason "PR #${PR_NUMBER} ready to merge. All CI green, all threads resolved."
 
 # Notify Issue Orchestrator

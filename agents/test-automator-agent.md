@@ -385,7 +385,6 @@ For each method, ensure:
 
 ```bash
 # Mark test writing complete
-bd update <task-id> --status completed
 bd close <task-id> --reason "Tests written. Coverage: 100%"
 ```
 

@@ -171,35 +171,49 @@ Trigger: Worktree becomes idle OR high-priority issue arrives
 
 ### Status Commands
 
+bd's `swarm` command only has `create`, `list`, `status` and `validate`. Assignments,
+pauses and reassignments are tracked with ordinary bd fields: the assignee names the
+worktree, and labels mark swarm state (`worktree:<name>`, `swarm:paused`).
+
 ```bash
-# View swarm status
-bd swarm status
+# View swarm status for an epic (completed / active / ready / blocked children)
+bd swarm status <epic-id> --json
 
-# List active assignments
-bd swarm assignments
+# List all swarm molecules
+bd swarm list --json
 
-# Check worktree health
-bd swarm worktrees
+# List active assignments (in-progress work and the worktree it is assigned to)
+bd list --status=in_progress --json | jq -r '.[] | "\(.id)\t\(.assignee)\t\(.title)"'
 
-# View conflict registry
-bd swarm conflicts
+# Show the work assigned to one worktree
+bd list --label "worktree:<name>" --json
+
+# Check worktree health (git's view of the worktrees)
+git worktree list --porcelain
 ```
+
+The conflict registry (which issues touch which files) is kept by this agent, not by bd.
 
 ### Control Commands
 
 ```bash
 # Pause an issue's work
-bd swarm pause <issue_number>
+bd update <task-id> --status deferred --add-label swarm:paused
 
 # Resume paused work
-bd swarm resume <issue_number>
+bd update <task-id> --status in_progress --remove-label swarm:paused
 
-# Force rebalance
-bd swarm rebalance
+# List paused work (e.g. before a rebalance)
+bd list --label swarm:paused --json
 
-# Reassign to different worktree
-bd swarm reassign <issue_number> <worktree>
+# Reassign to a different worktree
+bd update <task-id> --assignee <worktree> \
+  --remove-label "worktree:<old>" --add-label "worktree:<worktree>"
+bd show <task-id> --json
 ```
+
+Rebalancing has no bd command: list idle worktrees and ready work (`bd ready --json`),
+then reassign with `bd update` as above.
 
 ## Slack Integration
 

@@ -211,12 +211,29 @@ bd create --title "Write tests" --type task --parent <epic-id>
 # Close completed tasks
 bd close <task-id> --reason "Implementation complete"
 
-# Compact closed issues (semantic summarization)
-bd compact
-
 # Record architectural decisions
-bd decision "Chose X over Y because Z"
+bd create "Chose X over Y" --type decision -d "Because Z"
 ```
+
+#### 4. Housekeeping (occasional)
+
+Squash old Dolt history (recent commits are kept; preview first):
+
+```bash
+bd compact --dry-run
+bd compact --force
+```
+
+Plain `bd compact` only rewrites Dolt history.
+
+To summarize old **closed** bd issues locally (agent-driven, no API key needed):
+
+```bash
+bd admin compact --analyze --json
+bd admin compact --apply --id <id> --summary <file>
+```
+
+Only `bd admin compact --auto` needs an API key. Neither command touches `.beads/knowledge`.
 
 ---
 

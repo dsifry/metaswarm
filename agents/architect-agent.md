@@ -327,7 +327,6 @@ model NewModel {
 ### Step 6: Update BEADS
 
 ```bash
-bd update <task-id> --status completed
 bd close <task-id> --reason "Implementation plan created. Ready for CTO review."
 ````
 
