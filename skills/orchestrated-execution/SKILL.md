@@ -393,7 +393,7 @@ IMPLEMENT ──→ VALIDATE ──→ REVIEW ──→ COMMIT
 3. **REVIEW → COMMIT**: ONLY if adversarial review returns PASS, or rule line 5 downgraded every remaining blocker to a follow-up
 4. **FAIL → retry**: Fix the issue, then re-run the FAILED gate (not skip it)
 5. **Re-review after fix**: MUST spawn a FRESH reviewer (new `roleType("adversarial-reviewer")` instance, no memory)
-6. **Max retries**: VALIDATE gets 3 attempts, then ESCALATE to human with full failure history (see [Recovery Protocol](#9-recovery-protocol)). VALIDATE attempts count failed VALIDATE runs for the work unit; passing runs do not count, and the count never resets within the work unit (including when VALIDATE re-runs after a review fix), so the third failure escalates. REVIEW follows the severity rule (see On FAIL below; cap 10 rounds).
+6. **Max retries**: VALIDATE gets 3 attempts, then ESCALATE to human with full failure history (see [Recovery Protocol](#9-recovery-protocol)). VALIDATE attempts count consecutive failed VALIDATE runs for the work unit; a VALIDATE PASS resets the count to 0, so each review round's re-validation starts fresh. The number of review rounds is governed separately by the severity rule and its 10-round cap. Three consecutive failures escalate. REVIEW follows the severity rule (see On FAIL below; cap 10 rounds).
 
 ### On FAIL: Mandatory Re-Review Protocol
 
@@ -598,7 +598,7 @@ cat > .beads/context/execution-state.md << 'STATE_EOF'
 ## Current Position
 - Active work unit: <wu-id>
 - Current phase: <IMPLEMENT|VALIDATE|REVIEW|COMMIT>
-- VALIDATE attempts: <0-3> (failed VALIDATE runs for this work unit; never resets)
+- VALIDATE attempts: <0-3> (consecutive failed VALIDATE runs; resets to 0 on PASS)
 - Review round: <1-10>
 
 ## Work Unit Status
@@ -830,7 +830,7 @@ Categorize the failure:
 
 ### Step 3: RETRY (VALIDATE: up to 3 attempts)
 
-VALIDATE attempts count failed VALIDATE runs for the work unit; passing runs do not count, and the count never resets within the work unit (including when VALIDATE re-runs after a review fix).
+VALIDATE attempts count consecutive failed VALIDATE runs for the work unit; a VALIDATE PASS resets the count to 0, so each review round's re-validation starts fresh. The number of review rounds is governed separately by the severity rule and its 10-round cap.
 
 For fixable and ambiguous VALIDATE failures:
 
@@ -840,7 +840,7 @@ For fixable and ambiguous VALIDATE failures:
 
 **Model escalation (coder).** Retrying alone never changes the model. After `escalation.coder.after_failures` failed VALIDATE attempts (default 2, from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default, so the escalated attempt runs on `opus` while earlier attempts ran on the coder's configured model.
 
-Track VALIDATE attempts with labels (review rounds are tracked in `.beads/context/execution-state.md`, not labels):
+Track VALIDATE attempts with labels, and remove the `retry:N` label when VALIDATE passes (review rounds are tracked in `.beads/context/execution-state.md`, not labels):
 
 ```bash
 bd label add <task-id> retry:1  # or retry:2, retry:3

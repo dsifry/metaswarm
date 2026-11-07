@@ -615,10 +615,10 @@ During the 4-phase execution loop, follow the structured recovery protocol defin
 
 1. **DIAGNOSE**: Identify which phase failed and gather evidence
 2. **CLASSIFY**: Fixable (clear error) / Ambiguous (unclear cause) / External (dependency issue)
-3. **RETRY**: VALIDATE failures (tests, coverage, lint, typecheck) get up to 3 attempts per work unit, with escalating approaches. VALIDATE attempts count failed VALIDATE runs for the work unit; passing runs do not count, and the count never resets within the work unit (including when VALIDATE re-runs after a review fix). Review FAILs follow severity-gated iteration instead (cap 10 rounds; see `./guides/delivery-scope.md`)
+3. **RETRY**: VALIDATE failures (tests, coverage, lint, typecheck) get up to 3 attempts per work unit, with escalating approaches. VALIDATE attempts count consecutive failed VALIDATE runs for the work unit; a VALIDATE PASS resets the count to 0, so each review round's re-validation starts fresh. The number of review rounds is governed separately by the severity rule and its 10-round cap. Review FAILs follow severity-gated iteration instead (cap 10 rounds; see `./guides/delivery-scope.md`)
 4. **ESCALATE**: After 3 VALIDATE failures, or when the severity rule escalates, escalate to human with full failure history
 
-Track VALIDATE attempts with labels (review rounds are tracked in `.beads/context/execution-state.md`, not labels):
+Track VALIDATE attempts with labels, and remove the `retry:N` label when VALIDATE passes (review rounds are tracked in `.beads/context/execution-state.md`, not labels):
 
 ```bash
 bd label add <task-id> retry:1  # or retry:2, retry:3

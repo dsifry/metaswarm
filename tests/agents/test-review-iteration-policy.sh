@@ -621,20 +621,26 @@ done
 for f in skills/orchestrated-execution/SKILL.md agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
   T="$(cat "$REPO_ROOT/$f")"
   assert_in "$f: retry labels count VALIDATE attempts only" "$T" 'Track VALIDATE attempts with labels'
+  assert_in "$f: retry labels reset on VALIDATE PASS" "$T" 'remove the `retry:N` label when VALIDATE passes'
   assert_not_in "$f: no ambiguous retry tracking heading" "$T" 'Track retries with labels' 'Track retry count:'
 done
 
-# The VALIDATE attempt counter is defined: failed runs per work unit, never reset (PR #65 review).
-COUNTER_DEF='VALIDATE attempts count failed VALIDATE runs for the work unit; passing runs do not count, and the count never resets within the work unit (including when VALIDATE re-runs after a review fix)'
+# The VALIDATE attempt counter is defined: consecutive failures, reset on PASS (PR #65 review).
+# Review rounds are variable (severity rule, cap 10), so the VALIDATE limit must not accumulate across rounds.
+COUNTER_DEF='VALIDATE attempts count consecutive failed VALIDATE runs for the work unit; a VALIDATE PASS resets the count to 0, so each review round'"'"'s re-validation starts fresh. The number of review rounds is governed separately by the severity rule and its 10-round cap'
 assert_in "orchestrated-execution: Max retries rule defines the VALIDATE counter" \
   "$(grep -F '**Max retries**' "$OE")" "$COUNTER_DEF"
 assert_in "orchestrated-execution: Step 3 RETRY defines the VALIDATE counter" \
   "$(section "$OE" '^### Step 3: RETRY')" "$COUNTER_DEF"
 assert_in "orchestrated-execution: execution state annotates the VALIDATE counter" "$STATE" \
-  '- VALIDATE attempts: <0-3> (failed VALIDATE runs for this work unit; never resets)'
+  '- VALIDATE attempts: <0-3> (consecutive failed VALIDATE runs; resets to 0 on PASS)'
 for a in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
   assert_in "$a: Recovery Protocol defines the VALIDATE counter" \
     "$(section "$REPO_ROOT/$a" '^### Recovery Protocol')" "$COUNTER_DEF"
+done
+
+for f in skills/orchestrated-execution/SKILL.md agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  assert_not_in "$f: VALIDATE counter does not accumulate across review rounds" "$(cat "$REPO_ROOT/$f")" 'never resets'
 done
 
 # Pin the VALIDATE 3-attempt limit and the separate review cap in the issue orchestrator (PR #57 follow-up).
