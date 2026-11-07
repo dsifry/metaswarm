@@ -41,21 +41,25 @@ Hitting the safety cap of 10 rounds is also reported as a signal.
 
 ## Finding contract
 
-Every review finding carries four fields:
+Every review finding carries six fields:
 
 ```text
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
 ```
 
+- **Title and description.** `title` is a single line of about 80 characters or fewer that names the finding. `description` is 1-3 sentences on what is wrong and why it matters. `evidence` stays the proof.
+- **Long titles.** A title over ~80 characters is advisory, not malformed: the orchestrator may truncate it for tables, but never re-requests or escalates a finding over title length.
 - **Verdict.** FAIL only if there is at least one `blocker: yes` finding; otherwise PASS. The design gate keeps APPROVED/NEEDS_REVISION, and NEEDS_REVISION follows the same rule as FAIL.
 - **Findings without `protects` are advisory.** A critical or major finding that cannot name the credible user scenario or explicit requirement it protects is advisory, not a blocker. It becomes a follow-up.
 - **Mapping from existing check tables.** Rubric tables keep their wording and are read as:
   - "BLOCKING if …" checks produce critical or major findings. They block only with `protects`.
   - "WARNING" checks produce minor findings.
-- **Malformed or legacy output.** If a review's findings lack the contract fields (for example a FAIL in the old BLOCKING/WARNING shape, or an external CLI that ignores the format), the orchestrator re-requests the review once in the contract format, escalates with the raw output if it is still malformed, and never treats such a FAIL as PASS.
+- **Malformed or legacy output.** If a review's findings lack the contract fields (for example a FAIL in the old BLOCKING/WARNING shape, an external CLI that ignores the format, or a finding missing `title` or `description`, such as old-format output with a Codex `explanation` key and no title), the orchestrator re-requests the review once in the contract format, escalates with the raw output if it is still malformed, and never treats such a FAIL as PASS.
 
 ## Iteration rule
 
@@ -100,10 +104,10 @@ Minor and nit findings, and blockers downgraded by rule line 5, never block. Rec
 **Rule line**: <2 cap hit | 3 recurring/disputed | 5 overengineering signal>
 
 ### Remaining findings
-- **Critical**: <finding> — protects: <...> — evidence: <...>
-- **Major**: <finding> — protects: <...> — evidence: <...>
-- **Minor**: <finding> (follow-up filed)
-- **Nit**: <finding> (follow-up filed)
+- **Critical**: <title>: <description> — protects: <...> — evidence: <...>
+- **Major**: <title>: <description> — protects: <...> — evidence: <...>
+- **Minor**: <title> (follow-up filed)
+- **Nit**: <title> (follow-up filed)
 
 ### Round history
 | Round | Verdict | Blockers (critical/major) | Fixed this round | Rule decision |

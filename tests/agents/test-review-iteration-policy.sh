@@ -40,6 +40,7 @@ assert_not_in() { # <label> <text> <fixed-string>...
 }
 
 FORBIDDEN=('general-purpose' 'roleType(' 'Task({')
+TITLE_DESC=('title: <short label, ≤ ~80 chars>' 'description: <1-3 sentences: what is wrong and why it matters>')
 
 # ---------------------------------------------------------------------------
 echo "Cycle 1: the policy exists once and is synced (WU1)"
@@ -650,6 +651,23 @@ for a in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md;
     'VALIDATE failures (tests, coverage, lint, typecheck) get up to 3 attempts per work unit' \
     'Review FAILs follow severity-gated iteration instead (cap 10 rounds' \
     'After 3 VALIDATE failures, or when the severity rule escalates'
+done
+
+echo ""
+echo "Issue #58 WU1: canonical contract has title and description"
+
+for f in guides/delivery-scope.md \
+  skills/orchestrated-execution/guides/delivery-scope.md \
+  skills/plan-review-gate/guides/delivery-scope.md \
+  skills/design-review-gate/guides/delivery-scope.md \
+  skills/start/guides/delivery-scope.md \
+  skills/external-tools/guides/delivery-scope.md; do
+  T="$(readf "$f")"
+  assert_in "$f: contract lists title and description" "$T" "${TITLE_DESC[@]}"
+  assert_in "$f: missing title/description is malformed" "$T" 'missing `title` or `description`'
+  assert_in "$f: escalation template uses <title>: <description>" "$T" '**Critical**: <title>: <description>'
+  assert_in "$f: over-length title is advisory" "$T" 'over ~80 characters is advisory, not malformed'
+  assert_not_in "$f: no four-field wording or <finding> placeholder" "$T" 'four fields' '4 fields' '<finding>'
 done
 
 echo ""
