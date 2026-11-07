@@ -70,7 +70,7 @@ Pick the fact types that matter for the work you are doing:
 | review | `pattern`, `gotcha`, `decision`, `security`, `performance` |
 | debugging | `gotcha`, `api_behavior`, `code_quirk`, `dependency`, `performance` |
 | research | `decision`, `pattern`, `gotcha`, `api_behavior`, `code_quirk`, `dependency`, `performance`, `security` (all types) |
-| release | `decision`, `gotcha`, `dependency`, `security` |
+| release | `decision`, `pattern`, `gotcha`, `dependency`, `security` |
 
 ```bash
 T="pattern|gotcha|api_behavior|dependency|performance|security"   # implementation

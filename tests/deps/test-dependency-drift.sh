@@ -561,6 +561,8 @@ USED_TYPES="$(cd "$DRIFT_ROOT" && git grep -hoE 'knowledge priming\) for [a-z]+ 
 for t in $USED_TYPES; do
   if grep -qE "^[|] *$t *[|]" "$DRIFT_ROOT/commands/prime.md"; then pass "PR #71: work type '$t' used by agents is documented"; else fail "PR #71: work type '$t' used by agents is not in the prime.md table"; fi
 done
+REL_ROW="$(grep -E '^[|] *release *[|]' "$DRIFT_ROOT/commands/prime.md" || true)"
+if grep -qF -e '`pattern`' <<<"$REL_ROW"; then pass "PR #71: release work type loads patterns (deploy/rollback procedures)"; else fail "PR #71: release work type misses pattern facts"; fi
 # 4. bd admin compact needs server mode
 for f in templates/beads-readme.md skills/setup/templates/beads-readme.md templates/beads-developer-setup.md skills/setup/templates/beads-developer-setup.md; do
   assert_contains_fixed "PR #71: $f says bd admin needs server mode" "$f" 'requires server mode (`bd init --server`)'
