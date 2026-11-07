@@ -65,7 +65,7 @@ One or more agents found blocking issues. Output includes:
 Reached via the severity rule: an escalate condition (a recurring or disputed blocker, or a blocker that survives the overengineering check) or the 10-round cap:
 
 - Summary of remaining blockers
-- Options: Override / Defer / Cancel
+- Options: Revise / Narrow scope / Defer / Cancel. Escalation never approves: a revised or narrowed design gets a fresh review round
 
 ## Integration
 
@@ -165,7 +165,7 @@ Individual agents have 3-minute timeout. If timeout occurs:
 
 ### "Stuck in review loop"
 
-On any escalation (including the 10-round cap), use `--force-override` to proceed anyway (documents technical debt).
+On any escalation (including the 10-round cap), the human chooses Revise, Narrow scope, Defer or Cancel. There is no way to advance with open blockers: a revised or narrowed design gets a fresh review round and passes only by that round.
 
 ## Related Commands
 

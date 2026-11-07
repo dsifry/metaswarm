@@ -114,5 +114,13 @@ Minor and nit findings, and blockers downgraded by rule line 5, never block. Rec
 |-------|---------|---------------------------|------------------|---------------|
 | 1     | FAIL    | 0 / 2                     | —                | 6: iterate    |
 
-**Recommendation**: <commit|another pass|human decision> — <reason from the rule>
+### Options
+1. **Revise** — fix the remaining blockers (or the requirement they protect), then run a fresh review round
+2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
+3. **Defer** — shelve this work for later; nothing advances
+4. **Cancel** — abandon this work
+
+**Recommendation**: <revise|narrow scope|defer|cancel> — <reason from the rule>
 ```
+
+**Escalation never approves.** A gate passes only when a review round has no `blocker: yes` finding (rule line 1), or through rule line 5's downgrade. At an escalation the human decides how to change the work, choosing from the four options above. Any revised or narrowed plan, design or work unit gets a fresh review round, and it passes only by that round. There is no option that advances with open blockers. Never describe an escalated gate as approved, and never offer an option that skips the fresh round or accepts open blockers.

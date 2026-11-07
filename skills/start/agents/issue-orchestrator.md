@@ -553,6 +553,10 @@ Escalate to human when:
 
 ### Escalation Format
 
+**Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), post the Review Escalation report from the Escalation template in `./guides/delivery-scope.md` instead. Its options are **Revise**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. There is no `@beads approve` for an escalated review gate: escalation never approves.
+
+For the triggers above:
+
 ```bash
 # Mark task as waiting for human
 bd update <task-id> --status blocked

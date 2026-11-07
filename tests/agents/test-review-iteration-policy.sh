@@ -136,7 +136,7 @@ assert_in "guide: follow-up rule" "$G" \
 assert_in "guide: escalation template" "$G" \
   'Critical' 'Major' 'Minor' 'Nit' \
   'Round history' \
-  '**Recommendation**: <commit|another pass|human decision> — <reason'
+  '**Recommendation**: <revise|narrow scope|defer|cancel> — <reason'
 
 # DoD 1.2: mirrors exist and sync check passes
 MIRRORS=(
@@ -359,7 +359,7 @@ RULE_LINES=(
   'otherwise downgrade them to follow-ups and advance'
   '6. otherwise                           → fix blockers, re-validate, FRESH review'
 )
-RECOMMENDATION='**Recommendation**: <commit|another pass|human decision> — <reason from the rule>'
+RECOMMENDATION='**Recommendation**: <revise|narrow scope|defer|cancel> — <reason from the rule>'
 
 for g in "${GATES[@]}"; do
   T="$(readf "$g")"
@@ -933,6 +933,48 @@ for entry in "${EXACT[@]}"; do
   else
     pass "$f: exact-format findings use no bold-heading title"
   fi
+done
+
+# ---------------------------------------------------------------------------
+echo "Issue #68: escalation never approves; no Override with open blockers"
+# A gate is approved only when a review round has no `blocker: yes` finding (or via rule line 5).
+# Escalating to the human never approves: there is no option that advances with open blockers.
+ESC_OPTIONS=('**Revise**' '**Narrow scope**' '**Defer**' '**Cancel**')
+for f in guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-scope.md \
+         skills/plan-review-gate/guides/delivery-scope.md skills/design-review-gate/guides/delivery-scope.md \
+         skills/start/guides/delivery-scope.md skills/external-tools/guides/delivery-scope.md; do
+  T="$(cat "$REPO_ROOT/$f")"
+  assert_in "$f: states escalation never approves" "$T" \
+    '**Escalation never approves.**' 'fresh review round' 'no option that advances with open blockers'
+  assert_in "$f: escalation template lists the standard options" "$(section "$REPO_ROOT/$f" '^## Escalation template')" \
+    "${ESC_OPTIONS[@]}"
+done
+for f in skills/plan-review-gate/SKILL.md skills/design-review-gate/SKILL.md skills/orchestrated-execution/SKILL.md; do
+  assert_in "$f: escalation Options are the standard four" "$(section "$REPO_ROOT/$f" '^### Options')" "${ESC_OPTIONS[@]}"
+done
+for f in skills/plan-review-gate/SKILL.md skills/design-review-gate/SKILL.md commands/review-design.md \
+         .claude/commands/review-design.md skills/brainstorming-extension/SKILL.md skills/start/SKILL.md \
+         guides/delivery-scope.md; do
+  T="$(cat "$REPO_ROOT/$f")"
+  if grep -qiE '(^|[^a-z])override([^a-z]|$)' <<<"$T"; then
+    fail "$f: offers an Override escalation option"
+  else
+    pass "$f: no Override escalation option"
+  fi
+  assert_not_in "$f: no proceed-with-blockers wording" "$T" \
+    'Proceed anyway' 'proceed anyway' 'known risks' 'technical debt' 'force-override' '<commit|another pass'
+done
+
+# Severity-rule escalations must not go through the free-form "@beads approve" request template (#68 review).
+SEV_ESC='**Severity-rule escalations never use this template.**'
+SEV_ESC_REST=('Escalation template' '**Revise**' '**Narrow scope**' '**Defer**' '**Cancel**' 'There is no `@beads approve` for an escalated review gate')
+assert_in "skills/start/SKILL.md: How to Escalate routes severity-rule escalations to the standard report" \
+  "$(section "$REPO_ROOT/skills/start/SKILL.md" '^### How to Escalate')" "$SEV_ESC" "${SEV_ESC_REST[@]}"
+assert_in "skills/start/SKILL.md: @beads approve is never for an escalated review gate" \
+  "$(section "$REPO_ROOT/skills/start/SKILL.md" '^### Human Response Patterns')" 'never for an escalated review gate'
+for a in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  assert_in "$a: Escalation Format routes severity-rule escalations to the standard report" \
+    "$(section "$REPO_ROOT/$a" '^### Escalation Format')" "$SEV_ESC" "${SEV_ESC_REST[@]}"
 done
 
 echo ""

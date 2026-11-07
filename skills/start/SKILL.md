@@ -110,7 +110,7 @@ The gate is automatically triggered when:
 
 - **Severity-gated iteration** (cap 10 rounds; see `./guides/delivery-scope.md`): only `blocker: yes` findings keep the loop going; minor/nit findings become follow-ups
 - Each iteration: revise design → re-run all reviewers
-- Escalation options: Override / Defer / Cancel
+- Escalation options: Revise / Narrow scope / Defer / Cancel. Escalation never approves: a revised design gets a fresh review round
 
 See the `design-review-gate` skill for full details.
 
@@ -535,6 +535,10 @@ Follow the workflow phases exactly as specified.`,
 
 ### How to Escalate
 
+**Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), post the Review Escalation report from the Escalation template in `./guides/delivery-scope.md` instead. Its options are **Revise**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. There is no `@beads approve` for an escalated review gate: escalation never approves.
+
+For triggers 1-4:
+
 ```bash
 # Mark task as waiting
 bd update <task-id> --status blocked
@@ -561,6 +565,8 @@ EOF
 ```
 
 ### Human Response Patterns
+
+`@beads approve` unblocks a task waiting on triggers 1-4. It is never for an escalated review gate, which passes only by a fresh review round.
 
 ```bash
 # Approve a blocked task
