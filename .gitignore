@@ -24,3 +24,6 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# Session handoff docs (transient, per-session)
+docs/handoffs/
