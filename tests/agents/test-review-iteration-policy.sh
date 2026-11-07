@@ -671,5 +671,43 @@ for f in guides/delivery-scope.md \
 done
 
 echo ""
+echo "Issue #58 WU2: rubrics carry title and description"
+
+for f in rubrics/adversarial-review-rubric.md \
+  skills/orchestrated-execution/rubrics/adversarial-review-rubric.md \
+  skills/start/rubrics/adversarial-review-rubric.md \
+  rubrics/plan-review-rubric-adversarial.md \
+  skills/plan-review-gate/rubrics/plan-review-rubric-adversarial.md \
+  skills/start/rubrics/plan-review-rubric-adversarial.md \
+  rubrics/external-tool-review-rubric.md \
+  skills/external-tools/rubrics/external-tool-review-rubric.md; do
+  FC="$(section "$REPO_ROOT/$f" '^## Finding Contract')"
+  assert_in "$f: Finding Contract lists title and description" "$FC" "${TITLE_DESC[@]}"
+  assert_in "$f: Finding Contract says six fields" "$FC" 'Every finding carries six fields'
+  assert_not_in "$f: no four-field wording" "$(readf "$f")" 'four fields' '4 fields' '4-field'
+done
+
+# Bare field-list FAIL examples carry title and description lines
+for f in rubrics/adversarial-review-rubric.md \
+  skills/orchestrated-execution/rubrics/adversarial-review-rubric.md \
+  skills/start/rubrics/adversarial-review-rubric.md \
+  rubrics/plan-review-rubric-adversarial.md \
+  skills/plan-review-gate/rubrics/plan-review-rubric-adversarial.md \
+  skills/start/rubrics/plan-review-rubric-adversarial.md; do
+  EX="$(section "$REPO_ROOT/$f" '^### For FAIL')"
+  assert_in "$f: FAIL example carries title and description" "$EX" '- title:' '- description:'
+done
+
+# External rubric's Evidence Requirements field list names title and description
+for f in rubrics/external-tool-review-rubric.md skills/external-tools/rubrics/external-tool-review-rubric.md; do
+  ER="$(section "$REPO_ROOT/$f" '^## Evidence Requirements')"
+  assert_in "$f: Evidence Requirements lists title and description" "$ER" '**title**' '**description**' 'six contract fields'
+done
+
+for f in rubrics/code-review-rubric.md skills/start/rubrics/code-review-rubric.md; do
+  assert_in "$f: collaborative mapping carries title and description" "$(readf "$f")" 'each with a title and description'
+done
+
+echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

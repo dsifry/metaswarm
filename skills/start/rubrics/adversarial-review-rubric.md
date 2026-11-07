@@ -33,9 +33,11 @@ There is no "APPROVED WITH COMMENTS." There is no "CHANGES SUGGESTED." PASS or F
 
 ## Finding Contract
 
-The policy, the finding contract and the iteration rule live in `guides/delivery-scope.md` (plugin root; `../guides/delivery-scope.md` from a skill's `rubrics/` dir). Every finding carries four fields:
+The policy, the finding contract and the iteration rule live in `guides/delivery-scope.md` (plugin root; `../guides/delivery-scope.md` from a skill's `rubrics/` dir). Every finding carries six fields:
 
 ```text
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
@@ -71,6 +73,8 @@ Every finding — whether PASS or FAIL — requires **cited evidence**. Assertio
 ```markdown
 **DoD #3**: "Rate limiting returns 429 after 10 requests per minute"
 **Verdict**: FAIL
+- title: Rate limit threshold is 100, not 10
+- description: The middleware allows 100 requests per minute instead of the required 10, so clients are not throttled at the specified limit. No test pins the threshold, so the regression went unnoticed.
 - severity: major
 - protects: DoD #3 "Rate limiting returns 429 after 10 requests per minute"
 - evidence: `src/middleware/rate-limit.ts:12` — expected a 10 requests/minute threshold, found `const MAX_REQUESTS = 100`; no test verifies the 10-request threshold
