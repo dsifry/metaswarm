@@ -40,6 +40,7 @@ assert_not_in() { # <label> <text> <fixed-string>...
 }
 
 FORBIDDEN=('general-purpose' 'roleType(' 'Task({')
+TITLE_DESC=('title: <short label, ≤ ~80 chars>' 'description: <1-3 sentences: what is wrong and why it matters>')
 
 # ---------------------------------------------------------------------------
 echo "Cycle 1: the policy exists once and is synced (WU1)"
@@ -210,6 +211,7 @@ CONTRACT=(
   'protects: <credible user scenario | explicit requirement | DoD item>'
   'evidence: <file:line or expected-vs-found>'
   'blocker: yes | no'
+  "${TITLE_DESC[@]}"
 )
 RUBRIC_GUIDE_REF='`guides/delivery-scope.md` (plugin root; `../guides/delivery-scope.md` from a skill'"'"'s `rubrics/` dir)'
 
@@ -239,7 +241,7 @@ for r in "${CONTRACT_RUBRICS[@]}"; do
     'severity:' 'protects:' 'evidence:' 'blocker:' 'blocker: yes'
 done
 
-# DoD 2.1a: adapter footers ask for the 4 fields and FAIL only on blocker: yes
+# DoD 2.1a: adapter footers ask for the 6 fields and FAIL only on blocker: yes
 for a in skills/external-tools/adapters/codex.sh skills/external-tools/adapters/gemini.sh; do
   A="$(readf "$a")"
   assert_in "$a: footer asks for severity/protects/evidence/blocker" "$A" \
@@ -248,8 +250,8 @@ for a in skills/external-tools/adapters/codex.sh skills/external-tools/adapters/
   assert_not_in "$a: no legacy BLOCKING verdict / classification" "$A" \
     'FAIL if any BLOCKING' '"classification": "BLOCKING|WARNING"' 'Classification: BLOCKING or WARNING'
 done
-assert_in "gemini.sh: JSON schema carries the 4 fields" "$(readf skills/external-tools/adapters/gemini.sh)" \
-  '"severity": "critical|major|minor|nit"' '"protects":' '"evidence":' '"blocker": "yes|no"'
+assert_in "gemini.sh: JSON schema carries the 6 fields" "$(readf skills/external-tools/adapters/gemini.sh)" \
+  '"title":' '"description":' '"severity": "critical|major|minor|nit"' '"protects":' '"evidence":' '"blocker": "yes|no"'
 
 # DoD 2.2: the "err on FAIL" bias is gone from both adversarial rubrics and their mirrors
 for r in rubrics/adversarial-review-rubric.md \
@@ -409,7 +411,7 @@ RS="$(between "$OE" '**Reviewer spawn template**' '**Phase 3 outcomes:**')"
 assert_in "$OE: reviewer spawn prompt carries the contract and blocker criteria" "$RS" \
   "${CONTRACT[@]}" 'yes only if severity ∈ {critical, major} AND protects is non-empty' \
   'Any `blocker: yes` finding means overall FAIL' \
-  'Report every finding with the 4 fields; minor/nit findings are recorded as follow-ups, not suggestions' \
+  'Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions' \
   '`./guides/delivery-scope.md`'
 assert_not_in "$OE: reviewer spawn prompt drops the old rules" "$RS" \
   'Do NOT suggest improvements' 'Any single BLOCKING issue'
@@ -498,9 +500,9 @@ assert_in "$DRG: ReviewResult carries findings: Finding[]" "$T" \
 n="$(grep -cF '"findings": [' "$REPO_ROOT/$DRG" || true)"
 [ "$n" -eq 5 ] && pass "$DRG: 5 persona JSON schemas have a findings array" || fail "$DRG: 5 persona JSON schemas have a findings array (found $n)"
 n="$(grep -cF '"severity": "critical|major|minor|nit", "protects": "<' "$REPO_ROOT/$DRG" || true)"
-[ "$n" -eq 5 ] && pass "$DRG: 5 persona findings use the 4 fields" || fail "$DRG: 5 persona findings use the 4 fields (found $n)"
+[ "$n" -eq 5 ] && pass "$DRG: 5 persona findings use the 6 fields" || fail "$DRG: 5 persona findings use the 6 fields (found $n)"
 NR="$(section "$REPO_ROOT/$DRG" '^### Needs Revision')"
-assert_in "$DRG: Needs Revision template groups by severity, tags each agent, shows the 4 fields" "$NR" \
+assert_in "$DRG: Needs Revision template groups by severity, tags each agent, shows the 6 fields" "$NR" \
   '#### Critical' '#### Major' '[Security Design]' '[Designer]' 'protects:' 'evidence:' 'Rule decision'
 ESC="$(section "$REPO_ROOT/$DRG" '^### Escalation')"
 assert_in "$DRG: Escalation template groups by severity and tags each agent" "$ESC" \
@@ -508,7 +510,7 @@ assert_in "$DRG: Escalation template groups by severity and tags each agent" "$E
 
 # DoD 3.10: plan-review-gate
 PRO="$(section "$REPO_ROOT/$PRG" '^### Per-Reviewer Output')"
-assert_in "$PRG: per-reviewer output lists findings with the 4 fields" "$PRO" \
+assert_in "$PRG: per-reviewer output lists findings with the 6 fields" "$PRO" \
   'severity:' 'protects:' 'evidence:' 'blocker:' 'at least one `blocker: yes`'
 CF="$(section "$REPO_ROOT/$PRG" '^### Consolidated Gate Output .Any FAIL.')"
 assert_in "$PRG: consolidated FAIL groups by severity, tags reviewers, shows rule decision" "$CF" \
@@ -569,7 +571,7 @@ assert_in "orchestrated-execution: execution state records open findings and fix
 RECOVERY="$(section "$OE" '^### Context Recovery Protocol')"
 assert_in "orchestrated-execution: recovery reloads open findings for the orchestrator only" "$RECOVERY" \
   'Open Findings' 'rule line 3' 'never pass them to a fresh reviewer' \
-  'match each fresh finding by its description and protects' \
+  'match each fresh finding by its title/description and protects' \
   'use evidence only as a secondary signal'
 assert_not_in "orchestrated-execution: Open Findings example avoids line-number evidence" "$STATE" '<file:line evidence>'
 
@@ -650,6 +652,287 @@ for a in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md;
     'VALIDATE failures (tests, coverage, lint, typecheck) get up to 3 attempts per work unit' \
     'Review FAILs follow severity-gated iteration instead (cap 10 rounds' \
     'After 3 VALIDATE failures, or when the severity rule escalates'
+done
+
+echo ""
+echo "Issue #58 WU1: canonical contract has title and description"
+
+for f in guides/delivery-scope.md \
+  skills/orchestrated-execution/guides/delivery-scope.md \
+  skills/plan-review-gate/guides/delivery-scope.md \
+  skills/design-review-gate/guides/delivery-scope.md \
+  skills/start/guides/delivery-scope.md \
+  skills/external-tools/guides/delivery-scope.md; do
+  T="$(readf "$f")"
+  assert_in "$f: contract lists title and description" "$T" "${TITLE_DESC[@]}"
+  assert_in "$f: missing title/description is malformed" "$T" 'missing `title` or `description`'
+  assert_in "$f: escalation template uses <title>: <description>" "$T" '**Critical**: <title>: <description>'
+  assert_in "$f: over-length title is advisory" "$T" 'over ~80 characters is advisory, not malformed'
+  assert_not_in "$f: no four-field wording or <finding> placeholder" "$T" 'four fields' '4 fields' '<finding>'
+done
+
+echo ""
+echo "Issue #58 WU2: rubrics carry title and description"
+
+for f in rubrics/adversarial-review-rubric.md \
+  skills/orchestrated-execution/rubrics/adversarial-review-rubric.md \
+  skills/start/rubrics/adversarial-review-rubric.md \
+  rubrics/plan-review-rubric-adversarial.md \
+  skills/plan-review-gate/rubrics/plan-review-rubric-adversarial.md \
+  skills/start/rubrics/plan-review-rubric-adversarial.md \
+  rubrics/external-tool-review-rubric.md \
+  skills/external-tools/rubrics/external-tool-review-rubric.md; do
+  FC="$(section "$REPO_ROOT/$f" '^## Finding Contract')"
+  assert_in "$f: Finding Contract lists title and description" "$FC" "${TITLE_DESC[@]}"
+  assert_in "$f: Finding Contract says six fields" "$FC" 'Every finding carries six fields'
+  assert_not_in "$f: no four-field wording" "$(readf "$f")" 'four fields' '4 fields' '4-field'
+done
+
+# Bare field-list FAIL examples carry title and description lines
+for f in rubrics/adversarial-review-rubric.md \
+  skills/orchestrated-execution/rubrics/adversarial-review-rubric.md \
+  skills/start/rubrics/adversarial-review-rubric.md \
+  rubrics/plan-review-rubric-adversarial.md \
+  skills/plan-review-gate/rubrics/plan-review-rubric-adversarial.md \
+  skills/start/rubrics/plan-review-rubric-adversarial.md; do
+  EX="$(section "$REPO_ROOT/$f" '^### For FAIL')"
+  assert_in "$f: FAIL example carries title and description" "$EX" '- title:' '- description:'
+done
+
+# External rubric's Evidence Requirements field list names title and description
+for f in rubrics/external-tool-review-rubric.md skills/external-tools/rubrics/external-tool-review-rubric.md; do
+  ER="$(section "$REPO_ROOT/$f" '^## Evidence Requirements')"
+  assert_in "$f: Evidence Requirements lists title and description" "$ER" '**title**' '**description**' 'six contract fields'
+done
+
+for f in rubrics/code-review-rubric.md skills/start/rubrics/code-review-rubric.md; do
+  assert_in "$f: collaborative mapping carries title and description" "$(readf "$f")" 'each with a title and description'
+done
+
+echo ""
+echo "Issue #58 WU3: reviewer agents carry title and description"
+
+for dir in agents skills/start/agents; do
+  for ag in adversarial-reviewer plan-reviewer design-reviewer; do
+    f="$dir/$ag.md"
+    [ -f "$REPO_ROOT/$f" ] || { fail "$f exists"; continue; }
+    FC="$(section "$REPO_ROOT/$f" '^#+ Finding Contract')"
+    assert_in "$f: Finding Contract lists title and description" "$FC" "${TITLE_DESC[@]}"
+    assert_in "$f: Finding Contract says six fields" "$FC" 'Every finding carries six fields'
+    assert_not_in "$f: no four-field wording" "$(readf "$f")" 'four fields' '4 fields' '4-field'
+  done
+  f="$dir/issue-orchestrator.md"
+  [ -f "$REPO_ROOT/$f" ] || { fail "$f exists"; continue; }
+  FS="$(between "$f" '## Findings' '## Rules')"
+  assert_in "$f: reviewer prompt Findings list carries title and description" "$FS" "${TITLE_DESC[@]}"
+  assert_in "$f: reviewer prompt asks for 6 fields" "$(readf "$f")" \
+    'Report every finding with the 6 fields defined in `' 'guides/delivery-scope.md`:' \
+    'Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.'
+  assert_not_in "$f: no four-field wording" "$(readf "$f")" 'four fields' '4 fields' '4-field'
+done
+
+# Twins differ from their agents/ source only in ./ and .claude/ path prefixes
+for ag in adversarial-reviewer plan-reviewer design-reviewer issue-orchestrator cto-agent; do
+  if diff -q <(sed 's#\./##g;s#\.claude/##g' "$REPO_ROOT/agents/$ag.md") \
+    <(sed 's#\./##g;s#\.claude/##g' "$REPO_ROOT/skills/start/agents/$ag.md") >/dev/null 2>&1; then
+    pass "$ag: twin differs only in path prefixes"
+  else
+    fail "$ag: twin differs only in path prefixes"
+  fi
+done
+
+echo ""
+echo "Issue #58 WU4: gate skills carry title and description"
+
+OE_R=skills/orchestrated-execution/SKILL.md
+PRG_R=skills/plan-review-gate/SKILL.md
+DRG_R=skills/design-review-gate/SKILL.md
+
+# title_first <label> <text>: every field-list `severity:` line is directly preceded by
+# the canonical title and description lines (title, description come first).
+title_first() {
+  local label="$1" text="$2" bad
+  bad="$(awk '
+    index($0, "severity: critical | major | minor | nit") {
+      n++
+      if (index(p1, "description: <1-3 sentences: what is wrong and why it matters>") == 0 ||
+          index(p2, "title: <short label, ≤ ~80 chars>") == 0) b++
+    }
+    { p2 = p1; p1 = $0 }
+    END { if (n == 0) print "none"; else if (b > 0) print b }
+  ' <<<"$text")"
+  if [ -z "$bad" ]; then pass "$label"; else fail "$label (bad: $bad)"; fi
+}
+
+# DoD 4.1: every reviewer return-format template lists title and description first
+RS="$(between "$OE_R" '**Reviewer spawn template**' '**Phase 3 outcomes:**')"
+assert_in "$OE_R: reviewer spawn template carries title and description" "$RS" "${TITLE_DESC[@]}" \
+  'Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:'
+title_first "$OE_R: reviewer spawn template lists title and description first" "$RS"
+for p in 'Feasibility Reviewer Prompt' 'Completeness Reviewer Prompt' 'Scope & Alignment Reviewer Prompt'; do
+  P="$(section "$REPO_ROOT/$PRG_R" "^### $p")"
+  assert_in "$PRG_R $p: carries title and description" "$P" "${TITLE_DESC[@]}" \
+    'Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:' \
+    'Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.'
+  title_first "$PRG_R $p: lists title and description first" "$P"
+done
+PRO="$(section "$REPO_ROOT/$PRG_R" '^### Per-Reviewer Output')"
+assert_in "$PRG_R: Per-Reviewer Output carries title and description" "$PRO" "${TITLE_DESC[@]}"
+title_first "$PRG_R: Per-Reviewer Output lists title and description first" "$PRO"
+assert_not_in "$PRG_R: Per-Reviewer Output drops the duplicate '1. <title>' heading" "$PRO" '1. <title>'
+assert_in "$PRG_R: contract mention names all 6 fields" "$(readf "$PRG_R")" \
+  '6-field contract (`title`, `description`, `severity`, `protects`, `evidence`, `blocker`)'
+SFR="$(section "$REPO_ROOT/$DRG_R" '^### Shared Finding Rules')"
+assert_in "$DRG_R: shared finding rules carry title and description" "$SFR" "${TITLE_DESC[@]}" \
+  'Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:'
+title_first "$DRG_R: shared finding rules list title and description first" "$SFR"
+assert_in "$DRG_R: Phase 2 names the 6-field contract" "$(readf "$DRG_R")" 'Every finding uses the 6-field contract'
+
+# DoD 4.2: interface Finding carries both fields, title first
+IF="$(between "$DRG_R" 'interface Finding {' 'interface ReviewResult')"
+assert_in "$DRG_R: interface Finding has title and description" "$IF" \
+  'title: string; // short label, ≤ ~80 chars' \
+  'description: string; // 1-3 sentences: what is wrong and why it matters'
+first_field="$(sed -n 2p <<<"$IF")"
+assert_in "$DRG_R: interface Finding lists title first" "$first_field" 'title: string;'
+
+# DoD 4.1: the 5 persona JSON examples open with title and description
+JSON_OPEN='{ "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit"'
+n="$(grep -cF -- "$JSON_OPEN" "$REPO_ROOT/$DRG_R" || true)"
+[ "$n" -eq 5 ] && pass "$DRG_R: 5 persona JSON findings open with title and description" \
+  || fail "$DRG_R: 5 persona JSON findings open with title and description (found $n)"
+n="$(grep -cF -- '{ "severity"' "$REPO_ROOT/$DRG_R" || true)"
+[ "$n" -eq 0 ] && pass "$DRG_R: no persona JSON finding opens with severity" \
+  || fail "$DRG_R: no persona JSON finding opens with severity (found $n)"
+
+# DoD 4.3: Open Findings header
+STATE58="$(awk '/cat > .beads\/context\/execution-state.md/{on=1} on{print} on&&/^STATE_EOF$/{exit}' "$REPO_ROOT/$OE_R")"
+assert_in "$OE_R: Open Findings header has a Title column" "$STATE58" \
+  '| Finding | Title | Description | Evidence | Severity | Protects | First round | Fix attempts | Status |' \
+  '|---------|-------|-------------|----------|----------|----------|-------------|--------------|--------|'
+OF_ROW="$(grep -F '| WU-002-F1 |' <<<"$STATE58" || true)"
+cols="$(awk -F'|' '{ print NF - 2 }' <<<"$OF_ROW")"
+[ "$cols" = 9 ] && pass "$OE_R: Open Findings example row has 9 cells" \
+  || fail "$OE_R: Open Findings example row has 9 cells (got: $cols)"
+
+# DoD 4.4: recovery step c matches on title/description and protects, with a legacy fallback
+REC58="$(section "$REPO_ROOT/$OE_R" '^### Context Recovery Protocol')"
+assert_in "$OE_R: recovery step c reloads and matches on title/description and protects" "$REC58" \
+  '(title, description, evidence, severity, protects, fix attempts)' \
+  'match each fresh finding by its title/description and protects' \
+  'use evidence only as a secondary signal' \
+  'A saved finding without a title (written before this change) falls back to description plus protects' \
+  'rule line 3' 'never pass them to a fresh reviewer' 'legacy `Retries` column'
+
+# DoD 4.5: render, escalation and follow-up lines use <title> (and <description> on critical/major)
+assert_in "$OE_R: escalation lines use <title>/<description>" "$(readf "$OE_R")" \
+  '- **Critical**: <title>: <description> — protects: <...> — evidence: <...>' \
+  '- **Major**: <title>: <description> — protects: <...> — evidence: <...>' \
+  '- **Minor**: <title> (follow-up filed)' '- **Nit**: <title> (follow-up filed)'
+assert_in "$PRG_R: escalation and follow-up lines use <title>/<description>" "$(readf "$PRG_R")" \
+  '- **Critical**: [Feasibility] <title>: <description> — protects: <...> — evidence: <...>' \
+  '- **Major**: [Completeness] <title>: <description> — protects: <...> — evidence: <...>' \
+  '- **Minor**: [Scope & Alignment] <title> (follow-up filed)' '- **Nit**: [Feasibility] <title> (follow-up filed)' \
+  '- [Scope & Alignment] minor: <title> (bd-123)' '- [Feasibility] minor: <title> (bd-124)' \
+  '- [Scope & Alignment] nit: <title> (bd-125)'
+assert_in "$DRG_R: escalation and follow-up lines use <title>/<description>" "$(readf "$DRG_R")" \
+  '- **Critical**: [Security Design] <title>: <description> — protects: <...> — evidence: <...>' \
+  '- **Major**: [Architect] <title>: <description> — protects: <...> — evidence: <...>' \
+  '- **Major**: [CTO] <title>: <description> — protects: <...> — evidence: <...>' \
+  '- **Minor**: [Designer] <title> (follow-up filed)' '- **Nit**: [CTO] <title> (follow-up filed)' \
+  '- [Architect] minor: <title> (bd-123)' '- [Security Design] minor: <title> (bd-124)' \
+  '- [Architect] minor: <title> (bd-125)' '- [Designer] nit: <title> (bd-126)' \
+  '- [Security Design] minor: <title> (bd-127)'
+
+# DoD 4.6: malformed-output rules say 6 fields; no 4-field wording or <finding> anywhere
+for g in "$OE_R" "$PRG_R" "$DRG_R"; do
+  MR="$(grep -F 'is re-requested once in the contract format' "$REPO_ROOT/$g" || true)"
+  assert_in "$g: malformed-output rule says 'lack the 6 fields'" "$MR" 'lack the 6 fields'
+  assert_not_in "$g: no 4-field wording or <finding> placeholder" "$(readf "$g")" \
+    '4 fields' 'four fields' '4-field' '<finding>'
+done
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "Issue #58 WU5: adapters carry title and description; repo-wide guard"
+# ---------------------------------------------------------------------------
+
+CODEX_A="skills/external-tools/adapters/codex.sh"
+GEMINI_A="skills/external-tools/adapters/gemini.sh"
+CX="$(readf "$CODEX_A")"
+GM="$(readf "$GEMINI_A")"
+
+# DoD 5.1: codex footer asks for title/description, JSON keys include both, explanation gone
+assert_in "$CODEX_A: footer asks for title and description" "$CX" "${TITLE_DESC[@]}"
+assert_in "$CODEX_A: JSON keys list carries title and description first" "$CX" \
+  '(array of objects with keys "title", "description", "severity", "protects", "evidence", "blocker")'
+assert_not_in "$CODEX_A: no explanation field" "$CX" '"explanation"' 'explanation:'
+CX_FIELDS="$(grep -E '^   - (title|description|severity|protects|evidence|blocker):' <<<"$CX" | head -2 | sed -E 's/^   - //' || true)"
+assert_in "$CODEX_A: title and description are the first two fields" "$CX_FIELDS" "${TITLE_DESC[@]}"
+
+# DoD 5.2: gemini field list starts with the canonical lines; JSON example carries title/description
+assert_in "$GEMINI_A: field list asks for title and description" "$GM" "${TITLE_DESC[@]}"
+assert_not_in "$GEMINI_A: no bare 'Description of the issue' line" "$GM" \
+  '- Description of the issue' '"description": "Description of the issue"'
+GM_FIELDS="$(grep -E '^   - ' <<<"$GM" | head -2 | sed -E 's/^   - //' || true)"
+assert_in "$GEMINI_A: title and description are the first two fields" "$GM_FIELDS" "${TITLE_DESC[@]}"
+GM_JSON="$(sed -n '/^Respond in JSON format:/,/^PROMPT_EOF/p' "$REPO_ROOT/$GEMINI_A")"
+assert_in "$GEMINI_A: example JSON carries title and description" "$GM_JSON" \
+  '"title": "<short label, ≤ ~80 chars>"' '"description": "<1-3 sentences: what is wrong and why it matters>"'
+DESC_N="$(grep -c '"description":' <<<"$GM_JSON" || true)"
+if [ "$DESC_N" = "1" ]; then pass "$GEMINI_A: example JSON has exactly one description key"
+else fail "$GEMINI_A: example JSON has exactly one description key (found $DESC_N)"; fi
+key_line() { { grep -nF -- "$1" <<<"$GM_JSON" || true; } | head -1 | cut -d: -f1; }
+T_L="$(key_line '"title":')"; D_L="$(key_line '"description":')"; S_L="$(key_line '"severity":')"
+if [ -n "$T_L" ] && [ -n "$D_L" ] && [ -n "$S_L" ] && [ "$T_L" -lt "$D_L" ] && [ "$D_L" -lt "$S_L" ]; then
+  pass "$GEMINI_A: example JSON orders title, description before severity"
+else
+  fail "$GEMINI_A: example JSON orders title, description before severity (title=$T_L description=$D_L severity=$S_L)"
+fi
+
+# DoD 5.5: no contract-bearing source carries 4-field wording or the <finding> placeholder
+GUARD_FILES=()
+shopt -s nullglob
+for gf in "$REPO_ROOT"/guides/*.md "$REPO_ROOT"/rubrics/*.md "$REPO_ROOT"/agents/*.md \
+          "$REPO_ROOT"/skills/*/SKILL.md "$REPO_ROOT"/skills/*/rubrics/*.md \
+          "$REPO_ROOT"/skills/*/guides/*.md "$REPO_ROOT"/skills/start/agents/*.md \
+          "$REPO_ROOT"/skills/external-tools/adapters/*.sh; do
+  GUARD_FILES+=("${gf#"$REPO_ROOT"/}")
+done
+shopt -u nullglob
+if [ "${#GUARD_FILES[@]}" -gt 0 ]; then pass "repo-wide guard: found ${#GUARD_FILES[@]} contract-bearing files"
+else fail "repo-wide guard: found no contract-bearing files"; fi
+for gf in "${GUARD_FILES[@]}"; do
+  assert_not_in "$gf: no 4-field wording or <finding> placeholder" "$(readf "$gf")" \
+    '4 fields' 'four fields' '4-field' '<finding>'
+done
+
+# ---------------------------------------------------------------------------
+echo "Issue #58 PR #66 review: exact-format output templates use explicit title/description fields"
+# Reviewers told to "use this exact format" must not copy a bold-heading title,
+# or their findings lack the named title/description fields the malformed rule checks.
+EXACT=(
+  "agents/adversarial-reviewer.md|^### Step A5"
+  "skills/start/agents/adversarial-reviewer.md|^### Step A5"
+  "rubrics/adversarial-review-rubric.md|^## Output Format"
+  "skills/orchestrated-execution/rubrics/adversarial-review-rubric.md|^## Output Format"
+  "skills/start/rubrics/adversarial-review-rubric.md|^## Output Format"
+  "rubrics/plan-review-rubric-adversarial.md|^## Output Format"
+  "skills/plan-review-gate/rubrics/plan-review-rubric-adversarial.md|^## Output Format"
+  "skills/start/rubrics/plan-review-rubric-adversarial.md|^## Output Format"
+  "rubrics/external-tool-review-rubric.md|^## Output Format"
+  "skills/external-tools/rubrics/external-tool-review-rubric.md|^## Output Format"
+)
+for entry in "${EXACT[@]}"; do
+  f="${entry%%|*}"; re="${entry#*|}"
+  X="$(section "$REPO_ROOT/$f" "$re")"
+  assert_in "$f: exact-format findings carry explicit title and description fields" "$X" \
+    '1. - title:' '   - description:'
+  if grep -qE '^[0-9]+\. \*\*' <<<"$X"; then
+    fail "$f: exact-format findings still use a bold-heading title"
+  else
+    pass "$f: exact-format findings use no bold-heading title"
+  fi
 done
 
 echo ""

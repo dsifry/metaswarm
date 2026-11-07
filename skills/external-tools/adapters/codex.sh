@@ -306,16 +306,17 @@ PROMPT_TEMPLATE
 ## Instructions
 1. Evaluate each criterion in the rubric against the diff and spec.
 2. For each finding, provide these fields:
+   - title: <short label, ≤ ~80 chars>
+   - description: <1-3 sentences: what is wrong and why it matters>
    - severity: critical | major | minor | nit
    - protects: the credible user scenario, explicit requirement or DoD item the finding protects (required for critical/major)
    - evidence: file:line reference(s), or expected-vs-found
    - blocker: yes | no (yes only if severity is critical or major AND protects is non-empty)
-   - explanation: why the finding was made
    A critical or major finding without protects is advisory: report it with blocker: no.
 3. At the end, provide an overall verdict: PASS or FAIL.
    - FAIL only if at least one finding has blocker: yes.
    - Otherwise PASS, including when there are minor, nit or advisory findings.
-4. Output your review as structured JSON with keys: "verdict", "findings" (array of objects with keys "severity", "protects", "evidence", "blocker", "explanation"), "summary".
+4. Output your review as structured JSON with keys: "verdict", "findings" (array of objects with keys "title", "description", "severity", "protects", "evidence", "blocker"), "summary".
 PROMPT_FOOTER
 )"
 

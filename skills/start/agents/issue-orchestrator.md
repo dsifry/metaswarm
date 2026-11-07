@@ -279,7 +279,9 @@ ${dodItems.map((item, i) => `${i+1}. ${item}`).join('\n')}
 Run: git diff main..HEAD -- ${fileScope.join(' ')}
 
 ## Findings
-Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
+Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
@@ -289,7 +291,7 @@ Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
 - Check EACH DoD item. Cite file:line evidence for PASS or expected-vs-found for FAIL.
 - Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
-- Report every finding with the 4 fields; minor/nit findings are recorded as follow-ups, not suggestions.
+- Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.
 ```
 
 **Critical orchestrator rules during Phase 3:**

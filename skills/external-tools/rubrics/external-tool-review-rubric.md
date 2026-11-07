@@ -25,9 +25,11 @@ FAIL if and only if there is at least one `blocker: yes` finding. Findings with 
 
 ## Finding Contract
 
-The policy, the finding contract and the iteration rule live in `guides/delivery-scope.md` (plugin root; `../guides/delivery-scope.md` from a skill's `rubrics/` dir). Every finding carries four fields:
+The policy, the finding contract and the iteration rule live in `guides/delivery-scope.md` (plugin root; `../guides/delivery-scope.md` from a skill's `rubrics/` dir). Every finding carries six fields:
 
 ```text
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
@@ -72,7 +74,9 @@ The reviewer MUST check each of these against the spec:
 
 ## Evidence Requirements
 
-Every finding, whatever its severity, MUST include the four contract fields:
+Every finding, whatever its severity, MUST include the six contract fields:
+- **title**: a short label (about 80 characters or fewer) naming the finding
+- **description**: 1-3 sentences on what is wrong and why it matters
 - **severity**: critical | major | minor | nit
 - **protects**: the acceptance criterion (quoted), explicit requirement or credible user scenario it protects; required for critical/major
 - **evidence**: file and line reference (`src/auth/login.ts:42`) and what is wrong, as expected-vs-found
@@ -95,7 +99,8 @@ The reviewer should produce output in this format:
 FAIL only if at least one finding below has `blocker: yes`.
 
 ### Findings
-1. **[issue-title]**: [description]
+1. - title: <short label, ≤ ~80 chars>
+   - description: <1-3 sentences: what is wrong and why it matters>
    - severity: critical | major | minor | nit
    - protects: "[quoted criterion]" (required for critical/major)
    - evidence: `file:line` — expected [X], found [Y]

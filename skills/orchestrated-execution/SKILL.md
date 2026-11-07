@@ -311,7 +311,9 @@ ${dodItems.map((item, i) => `${i+1}. ${item}`).join('\n')}
 Run: git diff main..HEAD -- ${fileScope.join(' ')}
 
 ## Findings
-Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
+Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
+- title: <short label, ≤ ~80 chars>
+- description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
@@ -321,7 +323,7 @@ Report every finding with the 4 fields defined in `./guides/delivery-scope.md`:
 - Check EACH DoD item. Cite file:line evidence for PASS or expected-vs-found for FAIL.
 - Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
-- Report every finding with the 4 fields; minor/nit findings are recorded as follow-ups, not suggestions.
+- Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.
 ```
 
 **Phase 3 outcomes:**
@@ -416,7 +418,7 @@ after each review round (round = 1, 2, ...):
 
 - **Single reviewer.** Phase 3 has one reviewer per work unit, so "≥2 independent reviewers" is false. Reviewers of other work units running in parallel don't count.
 - **Overengineering check (line 5).** Signals include repeated review/fix cycles without a new user-visible risk, tests for states the real storage or API cannot produce, and validation growing faster than the feature. Restate the work unit's DoD, re-classify each open blocker, and escalate only if one still names a credible scenario; otherwise downgrade them to follow-ups and commit.
-- **Malformed output.** A FAIL whose findings lack the 4 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as PASS.
+- **Malformed output.** A FAIL whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as PASS.
 - **Follow-ups.** Minor/nit findings never block. When `bd` is available, file each as a BEADS task (`bd create --type task`) linked to the work unit. Otherwise, or if `bd create` fails, list them under a `### Follow-ups` heading in the work unit's report; the PR body carries them (see 8.5).
 
 When the rule says iterate:
@@ -438,10 +440,10 @@ When the rule says escalate, report:
 **Rule line**: <2 cap hit | 3 recurring/disputed | 5 overengineering signal>
 
 ### Remaining findings
-- **Critical**: <finding> — protects: <...> — evidence: <...>
-- **Major**: <finding> — protects: <...> — evidence: <...>
-- **Minor**: <finding> (follow-up filed)
-- **Nit**: <finding> (follow-up filed)
+- **Critical**: <title>: <description> — protects: <...> — evidence: <...>
+- **Major**: <title>: <description> — protects: <...> — evidence: <...>
+- **Minor**: <title> (follow-up filed)
+- **Nit**: <title> (follow-up filed)
 
 ### Round history
 | Round | Verdict | Blockers (critical/major) | Fixed this round | Rule decision |
@@ -609,9 +611,9 @@ cat > .beads/context/execution-state.md << 'STATE_EOF'
 | WU-003 | PENDING | — | 0 | 0 |
 
 ## Open Findings (orchestrator only, never passed to reviewers)
-| Finding | Description | Evidence | Severity | Protects | First round | Fix attempts | Status |
-|---------|-------------|----------|----------|----------|-------------|--------------|--------|
-| WU-002-F1 | <finding description> | <expected vs. found> | major | <scenario/requirement> | 1 | 1 | open |
+| Finding | Title | Description | Evidence | Severity | Protects | First round | Fix attempts | Status |
+|---------|-------|-------------|----------|----------|----------|-------------|--------------|--------|
+| WU-002-F1 | Expired token not rejected | <finding description> | <expected vs. found> | major | <scenario/requirement> | 1 | 1 | open |
 
 ## Blocked / Escalated
 <any blocked or escalated work units with context>
@@ -630,7 +632,7 @@ When the orchestrator detects it has lost context (after compaction or in a new 
 2. Recovery steps:
    a. Read `.beads/plans/active-plan.md` — reload the approved plan
    b. Read `.beads/context/project-context.md` — reload completed work and patterns
-   c. Read `.beads/context/execution-state.md` — find where execution stopped, and reload its Open Findings table (description, evidence, severity, protects, fix attempts) so rule line 3 can still detect a recurring blocker — match each fresh finding by its description and protects, and use evidence only as a secondary signal, because a fix can move file:line references; this history is for the orchestrator only — never pass them to a fresh reviewer. A state file written before the column split has a single legacy `Retries` column: read that value as VALIDATE attempts, and take the review round from the Current Position `Review round` line
+   c. Read `.beads/context/execution-state.md` — find where execution stopped, and reload its Open Findings table (title, description, evidence, severity, protects, fix attempts) so rule line 3 can still detect a recurring blocker — match each fresh finding by its title/description and protects, and use evidence only as a secondary signal, because a fix can move file:line references. A saved finding without a title (written before this change) falls back to description plus protects; this history is for the orchestrator only — never pass them to a fresh reviewer. A state file written before the column split has a single legacy `Retries` column: read that value as VALIDATE attempts, and take the review round from the Current Position `Review round` line
    d. Run `bd prime --work-type recovery` — reload relevant knowledge base facts
    e. Resume from the current work unit and phase
 
