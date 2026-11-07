@@ -211,6 +211,7 @@ CONTRACT=(
   'protects: <credible user scenario | explicit requirement | DoD item>'
   'evidence: <file:line or expected-vs-found>'
   'blocker: yes | no'
+  "${TITLE_DESC[@]}"
 )
 RUBRIC_GUIDE_REF='`guides/delivery-scope.md` (plugin root; `../guides/delivery-scope.md` from a skill'"'"'s `rubrics/` dir)'
 
@@ -240,7 +241,7 @@ for r in "${CONTRACT_RUBRICS[@]}"; do
     'severity:' 'protects:' 'evidence:' 'blocker:' 'blocker: yes'
 done
 
-# DoD 2.1a: adapter footers ask for the 4 fields and FAIL only on blocker: yes
+# DoD 2.1a: adapter footers ask for the 6 fields and FAIL only on blocker: yes
 for a in skills/external-tools/adapters/codex.sh skills/external-tools/adapters/gemini.sh; do
   A="$(readf "$a")"
   assert_in "$a: footer asks for severity/protects/evidence/blocker" "$A" \
@@ -249,8 +250,8 @@ for a in skills/external-tools/adapters/codex.sh skills/external-tools/adapters/
   assert_not_in "$a: no legacy BLOCKING verdict / classification" "$A" \
     'FAIL if any BLOCKING' '"classification": "BLOCKING|WARNING"' 'Classification: BLOCKING or WARNING'
 done
-assert_in "gemini.sh: JSON schema carries the 4 fields" "$(readf skills/external-tools/adapters/gemini.sh)" \
-  '"severity": "critical|major|minor|nit"' '"protects":' '"evidence":' '"blocker": "yes|no"'
+assert_in "gemini.sh: JSON schema carries the 6 fields" "$(readf skills/external-tools/adapters/gemini.sh)" \
+  '"title":' '"description":' '"severity": "critical|major|minor|nit"' '"protects":' '"evidence":' '"blocker": "yes|no"'
 
 # DoD 2.2: the "err on FAIL" bias is gone from both adversarial rubrics and their mirrors
 for r in rubrics/adversarial-review-rubric.md \
@@ -848,6 +849,61 @@ for g in "$OE_R" "$PRG_R" "$DRG_R"; do
   MR="$(grep -F 'is re-requested once in the contract format' "$REPO_ROOT/$g" || true)"
   assert_in "$g: malformed-output rule says 'lack the 6 fields'" "$MR" 'lack the 6 fields'
   assert_not_in "$g: no 4-field wording or <finding> placeholder" "$(readf "$g")" \
+    '4 fields' 'four fields' '4-field' '<finding>'
+done
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "Issue #58 WU5: adapters carry title and description; repo-wide guard"
+# ---------------------------------------------------------------------------
+
+CODEX_A="skills/external-tools/adapters/codex.sh"
+GEMINI_A="skills/external-tools/adapters/gemini.sh"
+CX="$(readf "$CODEX_A")"
+GM="$(readf "$GEMINI_A")"
+
+# DoD 5.1: codex footer asks for title/description, JSON keys include both, explanation gone
+assert_in "$CODEX_A: footer asks for title and description" "$CX" "${TITLE_DESC[@]}"
+assert_in "$CODEX_A: JSON keys list carries title and description first" "$CX" \
+  '(array of objects with keys "title", "description", "severity", "protects", "evidence", "blocker")'
+assert_not_in "$CODEX_A: no explanation field" "$CX" '"explanation"' 'explanation:'
+CX_FIELDS="$(grep -E '^   - (title|description|severity|protects|evidence|blocker):' <<<"$CX" | head -2 | sed -E 's/^   - //' || true)"
+assert_in "$CODEX_A: title and description are the first two fields" "$CX_FIELDS" "${TITLE_DESC[@]}"
+
+# DoD 5.2: gemini field list starts with the canonical lines; JSON example carries title/description
+assert_in "$GEMINI_A: field list asks for title and description" "$GM" "${TITLE_DESC[@]}"
+assert_not_in "$GEMINI_A: no bare 'Description of the issue' line" "$GM" \
+  '- Description of the issue' '"description": "Description of the issue"'
+GM_FIELDS="$(grep -E '^   - ' <<<"$GM" | head -2 | sed -E 's/^   - //' || true)"
+assert_in "$GEMINI_A: title and description are the first two fields" "$GM_FIELDS" "${TITLE_DESC[@]}"
+GM_JSON="$(sed -n '/^Respond in JSON format:/,/^PROMPT_EOF/p' "$REPO_ROOT/$GEMINI_A")"
+assert_in "$GEMINI_A: example JSON carries title and description" "$GM_JSON" \
+  '"title": "<short label, ≤ ~80 chars>"' '"description": "<1-3 sentences: what is wrong and why it matters>"'
+DESC_N="$(grep -c '"description":' <<<"$GM_JSON" || true)"
+if [ "$DESC_N" = "1" ]; then pass "$GEMINI_A: example JSON has exactly one description key"
+else fail "$GEMINI_A: example JSON has exactly one description key (found $DESC_N)"; fi
+key_line() { { grep -nF -- "$1" <<<"$GM_JSON" || true; } | head -1 | cut -d: -f1; }
+T_L="$(key_line '"title":')"; D_L="$(key_line '"description":')"; S_L="$(key_line '"severity":')"
+if [ -n "$T_L" ] && [ -n "$D_L" ] && [ -n "$S_L" ] && [ "$T_L" -lt "$D_L" ] && [ "$D_L" -lt "$S_L" ]; then
+  pass "$GEMINI_A: example JSON orders title, description before severity"
+else
+  fail "$GEMINI_A: example JSON orders title, description before severity (title=$T_L description=$D_L severity=$S_L)"
+fi
+
+# DoD 5.5: no contract-bearing source carries 4-field wording or the <finding> placeholder
+GUARD_FILES=()
+shopt -s nullglob
+for gf in "$REPO_ROOT"/guides/*.md "$REPO_ROOT"/rubrics/*.md "$REPO_ROOT"/agents/*.md \
+          "$REPO_ROOT"/skills/*/SKILL.md "$REPO_ROOT"/skills/*/rubrics/*.md \
+          "$REPO_ROOT"/skills/*/guides/*.md "$REPO_ROOT"/skills/start/agents/*.md \
+          "$REPO_ROOT"/skills/external-tools/adapters/*.sh; do
+  GUARD_FILES+=("${gf#"$REPO_ROOT"/}")
+done
+shopt -u nullglob
+if [ "${#GUARD_FILES[@]}" -gt 0 ]; then pass "repo-wide guard: found ${#GUARD_FILES[@]} contract-bearing files"
+else fail "repo-wide guard: found no contract-bearing files"; fi
+for gf in "${GUARD_FILES[@]}"; do
+  assert_not_in "$gf: no 4-field wording or <finding> placeholder" "$(readf "$gf")" \
     '4 fields' 'four fields' '4-field' '<finding>'
 done
 
