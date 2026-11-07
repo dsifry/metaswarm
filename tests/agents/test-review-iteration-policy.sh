@@ -598,6 +598,60 @@ for a in agents/adversarial-reviewer.md skills/start/agents/adversarial-reviewer
     'code-review-rubric.md' 'When to Stop Iterating'
 done
 
+# ---------------------------------------------------------------------------
+echo "Issue #59: VALIDATE attempts and review rounds are tracked separately"
+
+# The Work Unit Status table splits the old ambiguous Retries column.
+WU_TABLE="$(grep -F '| WU |' <<<"$STATE")"
+assert_in "orchestrated-execution: Work Unit Status table splits VALIDATE attempts from review rounds" "$WU_TABLE" \
+  '| VALIDATE attempts (0-3) |' '| Review rounds (0-10) |'
+assert_not_in "orchestrated-execution: no ambiguous Retries column" "$STATE" '| Retries |'
+assert_in "orchestrated-execution: Current Position names both counters" "$STATE" \
+  '- VALIDATE attempts: <0-3>' '- Review round: <1-10>'
+assert_not_in "orchestrated-execution: no ambiguous retry count in execution state" "$STATE" 'retry count'
+
+# Recovery reads a pre-#59 state file: an old Retries value counts as VALIDATE attempts.
+assert_in "orchestrated-execution: recovery maps a legacy Retries column" "$RECOVERY" \
+  'legacy `Retries` column' 'VALIDATE attempts' 'Review round'
+
+# Prose that describes execution state names both counters, not a single retry count.
+for f in skills/orchestrated-execution/SKILL.md skills/handoff/SKILL.md commands/prime.md .claude/commands/prime.md; do
+  assert_not_in "$f: no ambiguous 'retry count' for execution state" "$(cat "$REPO_ROOT/$f")" 'retry count'
+done
+for f in skills/orchestrated-execution/SKILL.md agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  T="$(cat "$REPO_ROOT/$f")"
+  assert_in "$f: retry labels count VALIDATE attempts only" "$T" 'Track VALIDATE attempts with labels'
+  assert_in "$f: retry labels reset on VALIDATE PASS" "$T" 'remove the `retry:N` label when VALIDATE passes'
+  assert_not_in "$f: no ambiguous retry tracking heading" "$T" 'Track retries with labels' 'Track retry count:'
+done
+
+# The VALIDATE attempt counter is defined: consecutive failures, reset on PASS (PR #65 review).
+# Review rounds are variable (severity rule, cap 10), so the VALIDATE limit must not accumulate across rounds.
+COUNTER_DEF='VALIDATE attempts count consecutive failed VALIDATE runs for the work unit; a VALIDATE PASS resets the count to 0, so each review round'"'"'s re-validation starts fresh. The number of review rounds is governed separately by the severity rule and its 10-round cap'
+assert_in "orchestrated-execution: Max retries rule defines the VALIDATE counter" \
+  "$(grep -F '**Max retries**' "$OE")" "$COUNTER_DEF"
+assert_in "orchestrated-execution: Step 3 RETRY defines the VALIDATE counter" \
+  "$(section "$OE" '^### Step 3: RETRY')" "$COUNTER_DEF"
+assert_in "orchestrated-execution: execution state annotates the VALIDATE counter" "$STATE" \
+  '- VALIDATE attempts: <0-3> (consecutive failed VALIDATE runs; resets to 0 on PASS)'
+for a in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  assert_in "$a: Recovery Protocol defines the VALIDATE counter" \
+    "$(section "$REPO_ROOT/$a" '^### Recovery Protocol')" "$COUNTER_DEF"
+done
+
+for f in skills/orchestrated-execution/SKILL.md agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  assert_not_in "$f: VALIDATE counter does not accumulate across review rounds" "$(cat "$REPO_ROOT/$f")" 'never resets'
+done
+
+# Pin the VALIDATE 3-attempt limit and the separate review cap in the issue orchestrator (PR #57 follow-up).
+for a in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  RP="$(section "$REPO_ROOT/$a" '^### Recovery Protocol')"
+  assert_in "$a: VALIDATE gets 3 attempts; review follows the severity rule" "$RP" \
+    'VALIDATE failures (tests, coverage, lint, typecheck) get up to 3 attempts per work unit' \
+    'Review FAILs follow severity-gated iteration instead (cap 10 rounds' \
+    'After 3 VALIDATE failures, or when the severity rule escalates'
+done
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
