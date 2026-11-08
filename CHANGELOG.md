@@ -4,7 +4,7 @@
 
 ### Added
 
-- **UX Reviewer is the 6th Design Review Gate reviewer** (#12). The gate now spawns PM, Architect, Designer, Security, UX Reviewer and CTO. The UX Reviewer has its own persona (`agents/ux-reviewer-agent.md`) and rubric (`rubrics/ux-review-rubric.md`). It checks that every user flow has a trigger and a visible outcome, that screens have a component hierarchy, that empty, loading and error states are defined, and that an integration work unit wires the components into the app shell. Designs with no user-facing UI are approved. Issue #12 had described this reviewer in the docs, but it was never added to the gate until now. There are now 23 agents and 10 rubrics, and a test ties the stated counts to the real files.
+- **UX Reviewer is the 6th Design Review Gate reviewer** (#12). The gate now spawns PM, Architect, Designer, Security, UX Reviewer and CTO. The UX Reviewer has its own persona (`agents/ux-reviewer-agent.md`) and rubric (`rubrics/ux-review-rubric.md`). It checks that every user flow has a trigger and a visible outcome, that screens have a component hierarchy, that empty, loading and error states are defined, and that the design describes how the components are wired into the app shell. The integration work unit itself is checked at plan review (new Completeness row in `plan-review-rubric-adversarial.md`). A design with no user-facing UI is approved when the task needs none. Issue #12 had described this reviewer in the docs, but it was never added to the gate until now. There are now 23 agents and 10 rubrics, and a test ties the stated counts to the real files.
 
 ### Changed
 
