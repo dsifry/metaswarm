@@ -79,6 +79,7 @@ FM_CHECK='
   else if (v === "") { why = "empty"; }
   else if (/^[-?:,\[\]{}#&*!|>%@`\x27"]/.test(v)) { why = "plain scalar starts with an indicator"; }
   else if (/: |\s#/.test(v) || v.endsWith(":")) { why = "plain scalar contains \": \" or \" #\" (quote it)"; }
+  else if (/^(true|false|yes|no|on|off|null|~|[-+]?(\.inf|\.nan|[0-9][0-9_]*(\.[0-9]*)?([eE][-+]?[0-9]+)?|0x[0-9a-fA-F]+|0o[0-7]+))$/i.test(v)) { why = "plain scalar resolves to a non-string (quote it)"; }
   else { ok = true; }
   if (!ok) { console.log(why || "invalid"); process.exit(1); }
 '
