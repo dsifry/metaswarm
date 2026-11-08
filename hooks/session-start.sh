@@ -150,13 +150,83 @@ if [ -n "$plugin_version" ]; then
 fi
 
 # bd workflow context: run `bd prime` only if the project is set up and the beads plugin
-# isn't already running it. This hook does not run metaswarm's /prime (knowledge-base facts).
+# isn't already running it. metaswarm's knowledge base is surfaced separately below.
 if [ "$new_project" = false ] && [ "$beads_standalone" = false ]; then
   if command -v bd >/dev/null 2>&1; then
     bd_output=$(bd prime 2>/dev/null || true)
     if [ -n "$bd_output" ]; then
       context_parts+=("$bd_output")
     fi
+  fi
+fi
+
+# metaswarm knowledge base (.beads/knowledge/*.jsonl), in every setup, beads plugin or not:
+# inline the MUST FOLLOW rules (fact or recommendation containing NEVER/ALWAYS/MUST),
+# capped at 10 rules / ~2 KB, then point at /prime for the rest. Without a working jq,
+# only the pointer is added. An empty or missing store adds nothing.
+kb_dir=".beads/knowledge"
+case "$METASWARM_PLATFORM" in
+  gemini) prime_hint='`/metaswarm:prime <topic>`' ;;
+  codex) prime_hint='`$start` (it primes knowledge for the task)' ;;
+  *) prime_hint='`/prime <topic>`' ;;
+esac
+kb_files=()
+if [ -d "$kb_dir" ]; then
+  for kb_file in "$kb_dir"/*.jsonl; do
+    [ -f "$kb_file" ] && kb_files+=("$kb_file")
+  done
+fi
+if [ ${#kb_files[@]} -gt 0 ]; then
+  kb_lines=$(grep -hv '^[[:space:]]*#' "${kb_files[@]}" 2>/dev/null | grep -v '^[[:space:]]*$' || true)
+  kb_total=0
+  kb_rules=""
+  if [ -n "$kb_lines" ]; then
+    if command -v jq >/dev/null 2>&1 && jq -n 1 >/dev/null 2>&1; then
+      kb_total=$(printf '%s\n' "$kb_lines" | jq -R -c 'fromjson? | select(type == "object" and (.fact | type) == "string")' 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+      kb_rules=$(printf '%s\n' "$kb_lines" | jq -R -r '
+        fromjson? | select(type == "object" and (.fact | type) == "string")
+        | (if (.recommendation | type) == "string" then .recommendation else "" end) as $rec
+        | select((.fact + " " + $rec) | test("(^|[^A-Za-z])(NEVER|ALWAYS|MUST)([^A-Za-z]|$)"))
+        | "- [\(.type // "fact")] \(.fact | gsub("[\r\n]+"; " "))"
+          + (if $rec != "" then " -> \($rec | gsub("[\r\n]+"; " "))" else "" end)' 2>/dev/null || true)
+    else
+      kb_total=$(printf '%s\n' "$kb_lines" | grep -c . || true)
+    fi
+  fi
+  kb_shown=0
+  kb_bytes=0
+  kb_section=""
+  if [ -n "$kb_rules" ]; then
+    while IFS= read -r kb_rule; do
+      [ -n "$kb_rule" ] || continue
+      [ "$kb_shown" -ge 10 ] && break
+      if [ "$kb_shown" -eq 0 ] && [ ${#kb_rule} -gt 2000 ]; then
+        kb_rule="${kb_rule:0:2000}…"
+      fi
+      if [ "$kb_shown" -gt 0 ] && [ $((kb_bytes + ${#kb_rule})) -gt 2048 ]; then
+        break
+      fi
+      kb_section="${kb_section}${kb_rule}
+"
+      kb_bytes=$((kb_bytes + ${#kb_rule} + 1))
+      kb_shown=$((kb_shown + 1))
+    done <<<"$kb_rules"
+  fi
+  kb_rest=$((kb_total - kb_shown))
+  [ "$kb_rest" -lt 0 ] && kb_rest=0
+  kb_noun="facts"; [ "$kb_rest" -eq 1 ] && kb_noun="fact"
+  if [ "$kb_shown" -gt 0 ]; then
+    kb_msg="metaswarm knowledge, MUST FOLLOW rules (from .beads/knowledge/):
+${kb_section}"
+    if [ "$kb_rest" -gt 0 ]; then
+      kb_msg="${kb_msg}${kb_rest} more ${kb_noun} in .beads/knowledge/ — run ${prime_hint} to load the ones relevant to your task."
+    else
+      kb_msg="${kb_msg}Run ${prime_hint} for topic-filtered knowledge."
+    fi
+    context_parts+=("$kb_msg")
+  elif [ "$kb_total" -gt 0 ]; then
+    kb_noun="facts"; [ "$kb_total" -eq 1 ] && kb_noun="fact"
+    context_parts+=("metaswarm knowledge: ${kb_total} ${kb_noun} in .beads/knowledge/ — run ${prime_hint} before planning or implementing.")
   fi
 fi
 

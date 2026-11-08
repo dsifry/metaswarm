@@ -81,7 +81,10 @@ assert_file_not_exists() {
 
 # --- Test setup ---
 TMPDIR_BASE=$(mktemp -d)
-trap "rm -rf $TMPDIR_BASE" EXIT
+# bash 3.2 exits with the EXIT trap's status (0) when `set -u` aborts the script,
+# so a crash would look like a pass. DONE is set only after the summary runs.
+DONE=0
+trap 'rm -rf "$TMPDIR_BASE"; [ "$DONE" = 1 ] || { echo "ABORTED before summary" >&2; exit 1; }' EXIT
 
 echo "Running session-start.sh tests..."
 echo ""
@@ -272,9 +275,122 @@ echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
 output=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_not_contains "None: no stale line without generated files" "$output" 'agents are stale'
 
+# --- Test 8: metaswarm knowledge base surfaced in both setups (#70) ---
+echo "Test 8: Knowledge base summary + /prime pointer"
+ctx() { # extract additionalContext from hook JSON on stdin
+  node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{process.stdout.write(JSON.parse(d).hookSpecificOutput.additionalContext)})"
+}
+mk_store() { # <cwd>: configured project with a knowledge store; facts on stdin
+  mkdir -p "$1/.metaswarm" "$1/.beads/knowledge"
+  echo '{"distribution":"plugin"}' > "$1/.metaswarm/project-profile.json"
+  cat > "$1/.beads/knowledge/gotchas.jsonl"
+}
+fact() { # <id> <type> <fact> [recommendation]
+  node -e 'const [id,type,fact,rec]=process.argv.slice(1);const o={id,type,fact};if(rec)o.recommendation=rec;console.log(JSON.stringify(o))' "$@"
+}
+MOCK_BIN_8="$TMPDIR_BASE/mock-bin-8"
+mkdir -p "$MOCK_BIN_8"
+printf '#!/bin/bash\necho "BEADS_PRIME_SENTINEL_8"\n' > "$MOCK_BIN_8/bd"; chmod +x "$MOCK_BIN_8/bd"
+
+KB_FACTS=$(
+  echo '# comment line, ignored'
+  fact must-1 pattern 'NEVER use "as any" casts \ they hide bugs'
+  fact must-2 gotcha 'Truthy checks drop zero values' 'ALWAYS compare with !== undefined'
+  fact must-3 decision 'Every migration MUST be reversible'
+  fact plain-1 pattern 'Use mock factories for test data'
+  fact plain-2 gotcha 'never mind lowercase never, this is not a rule'
+  echo '{ this line is not valid json'
+)
+
+# 8a: without the beads plugin — knowledge AND bd prime both appear.
+TEST_CWD="$TMPDIR_BASE/test8a"
+printf '%s\n' "$KB_FACTS" | mk_store "$TEST_CWD"
+output=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" PATH="$MOCK_BIN_8:$PATH" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "8a: output is valid JSON" "$output"
+c8a=$(printf '%s' "$output" | ctx)
+assert_contains "8a: NEVER rule surfaced" "$c8a" 'NEVER use "as any" casts \ they hide bugs'
+assert_contains "8a: ALWAYS in recommendation surfaced" "$c8a" 'ALWAYS compare with !== undefined'
+assert_contains "8a: MUST rule surfaced" "$c8a" 'Every migration MUST be reversible'
+assert_not_contains "8a: non-rule fact not inlined" "$c8a" 'Use mock factories'
+assert_not_contains "8a: lowercase never is not a rule" "$c8a" 'never mind lowercase'
+assert_contains "8a: pointer counts remaining valid facts" "$c8a" '2 more facts in .beads/knowledge/'
+assert_contains "8a: pointer names /prime" "$c8a" '/prime <topic>'
+assert_contains "8a: bd prime still runs without the plugin" "$c8a" 'BEADS_PRIME_SENTINEL_8'
+
+# 8b: with the beads plugin — knowledge still appears, bd prime skipped.
+TEST_CWD="$TMPDIR_BASE/test8b"
+printf '%s\n' "$KB_FACTS" | mk_store "$TEST_CWD"
+output=$(cd "$TEST_CWD" && HOME="$TMPDIR_BASE" PATH="$MOCK_BIN_8:$PATH" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "8b: output is valid JSON" "$output"
+c8b=$(printf '%s' "$output" | ctx)
+assert_contains "8b: MUST rule surfaced with beads plugin" "$c8b" 'Every migration MUST be reversible'
+assert_contains "8b: pointer surfaced with beads plugin" "$c8b" '2 more facts in .beads/knowledge/'
+assert_not_contains "8b: bd prime still skipped with the plugin" "$c8b" 'BEADS_PRIME_SENTINEL_8'
+
+# 8c: count cap — at most 10 rules inlined.
+TEST_CWD="$TMPDIR_BASE/test8c"
+i=1; facts8c=""
+while [ "$i" -le 15 ]; do facts8c="$facts8c$(fact "m$i" pattern "Rule $i: NEVER do thing number $i")"$'\n'; i=$((i + 1)); done
+printf '%s' "$facts8c" | mk_store "$TEST_CWD"
+c8c=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null | ctx || true)
+n8c=$(printf '%s\n' "$c8c" | grep -c 'NEVER do thing number' || true)
+TOTAL=$((TOTAL + 1))
+if [ "$n8c" -eq 10 ]; then PASS=$((PASS + 1)); echo "  PASS: 8c: count cap inlines 10 rules"; else FAIL=$((FAIL + 1)); echo "  FAIL: 8c: count cap inlines 10 rules (got $n8c)"; fi
+assert_contains "8c: pointer counts the rest" "$c8c" '5 more facts in .beads/knowledge/'
+
+# 8d: byte cap — long rules stop before the knowledge section passes ~2 KB.
+TEST_CWD="$TMPDIR_BASE/test8d"
+long=$(printf 'x%.0s' $(seq 1 600)); facts8d=""
+i=1; while [ "$i" -le 6 ]; do facts8d="$facts8d$(fact "L$i" pattern "LONG$i NEVER $long")"$'\n'; i=$((i + 1)); done
+printf '%s' "$facts8d" | mk_store "$TEST_CWD"
+c8d=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null | ctx || true)
+n8d=$(printf '%s\n' "$c8d" | grep -c 'LONG[0-9] NEVER' || true)
+b8d=$(printf '%s' "$c8d" | wc -c | tr -d ' ')
+TOTAL=$((TOTAL + 1))
+if [ "$n8d" -ge 1 ] && [ "$n8d" -le 3 ] && [ "$b8d" -le 2600 ]; then PASS=$((PASS + 1)); echo "  PASS: 8d: byte cap bounds the section ($n8d rules, $b8d bytes)"; else FAIL=$((FAIL + 1)); echo "  FAIL: 8d: byte cap bounds the section ($n8d rules, $b8d bytes)"; fi
+assert_contains "8d: pointer counts the facts left out" "$c8d" "$((6 - n8d)) more facts in .beads/knowledge/"
+
+# 8e: no rules in the store — pointer only, with the total.
+TEST_CWD="$TMPDIR_BASE/test8e"
+{ fact p1 pattern 'Use mock factories'; fact p2 gotcha 'Prisma findMany returns []'; } | mk_store "$TEST_CWD"
+c8e=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null | ctx || true)
+assert_contains "8e: pointer with total when no rules" "$c8e" '2 facts in .beads/knowledge/'
+assert_not_contains "8e: no rules header when none" "$c8e" 'MUST FOLLOW'
+
+# 8f: broken jq — falls back to the pointer, hook output stays valid.
+TEST_CWD="$TMPDIR_BASE/test8f"
+printf '%s\n' "$KB_FACTS" | mk_store "$TEST_CWD"
+MOCK_BIN_8F="$TMPDIR_BASE/mock-bin-8f"; mkdir -p "$MOCK_BIN_8F"
+printf '#!/bin/bash\nexit 3\n' > "$MOCK_BIN_8F/jq"; chmod +x "$MOCK_BIN_8F/jq"
+output=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" PATH="$MOCK_BIN_8F:$PATH" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "8f: output is valid JSON without working jq" "$output"
+c8f=$(printf '%s' "$output" | ctx)
+assert_contains "8f: pointer without jq" "$c8f" 'facts in .beads/knowledge/'
+assert_contains "8f: pointer names /prime without jq" "$c8f" '/prime <topic>'
+assert_not_contains "8f: no rules inlined without jq" "$c8f" 'Every migration MUST be reversible'
+
+# 8g: empty or missing store — no knowledge line.
+TEST_CWD="$TMPDIR_BASE/test8g"
+echo '# only a comment' | mk_store "$TEST_CWD"
+c8g=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null | ctx || true)
+assert_not_contains "8g: comment-only store adds nothing" "$c8g" '.beads/knowledge/'
+TEST_CWD="$TMPDIR_BASE/test8h"
+mkdir -p "$TEST_CWD/.metaswarm"; echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
+c8h=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null | ctx || true)
+assert_not_contains "8h: missing store adds nothing" "$c8h" '.beads/knowledge/'
+
+# 8i: platform command names in the pointer.
+TEST_CWD="$TMPDIR_BASE/test8i"
+printf '%s\n' "$KB_FACTS" | mk_store "$TEST_CWD"
+c8i=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" extensionPath="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null | ctx || true)
+assert_contains "8i: Gemini pointer uses /metaswarm:prime" "$c8i" '/metaswarm:prime <topic>'
+c8j=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null | ctx || true)
+assert_contains "8j: Codex pointer uses \$start" "$c8j" '$start'
+
 # --- Summary ---
 echo ""
 echo "Results: $PASS/$TOTAL passed, $FAIL failed"
+DONE=1
 if [ "$FAIL" -gt 0 ]; then
   exit 1
 fi
