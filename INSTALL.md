@@ -245,7 +245,7 @@ After installation, the `/setup` command handles most customization automaticall
 }
 ```
 
-Set `enforcement.command` to your project's coverage command (e.g., `pytest --cov`, `cargo tarpaulin`, `go test -cover`). When this file exists, agents must pass all thresholds before pushing or creating PRs.
+Set `enforcement.command` to your project's coverage command (e.g., `pytest --cov --cov-fail-under=100`, `cargo tarpaulin --fail-under 100`, or for Go `go run .metaswarm/go-coverage-gate.go`, since `go test -cover` never fails). When this file exists, agents must pass all thresholds before pushing or creating PRs.
 
 ## Verify Installation
 
