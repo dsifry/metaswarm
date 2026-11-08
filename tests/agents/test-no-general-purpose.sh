@@ -104,7 +104,8 @@ agents/issue-orchestrator.md|— persistent through PR lifecycle|pr-shepherd-age
 agents/issue-orchestrator.md|Adversarial reviewers are ALWAYS fresh `Task()`|adversarial-reviewer
 agents/issue-orchestrator.md|# 5. Spawn Researcher Agent|researcher
 agents/issue-orchestrator.md|# 7. Spawn Architect Agent|planner
-agents/issue-orchestrator.md|# 9. Spawn CTO Agent|design-reviewer
+agents/issue-orchestrator.md|ALL must PASS under the severity rule|plan-reviewer
+agents/issue-orchestrator.md|UX Reviewer, CTO; role type|design-reviewer
 agents/issue-orchestrator.md|├── Spawn Coder Agent|coder
 agents/issue-orchestrator.md|├── Spawn FRESH Code Review Agent|adversarial-reviewer
 agents/issue-orchestrator.md|**Coder Agent spawn template|coder
@@ -118,7 +119,8 @@ skills/start/agents/issue-orchestrator.md|— persistent through PR lifecycle|pr
 skills/start/agents/issue-orchestrator.md|Adversarial reviewers are ALWAYS fresh `Task()`|adversarial-reviewer
 skills/start/agents/issue-orchestrator.md|# 5. Spawn Researcher Agent|researcher
 skills/start/agents/issue-orchestrator.md|# 7. Spawn Architect Agent|planner
-skills/start/agents/issue-orchestrator.md|# 9. Spawn CTO Agent|design-reviewer
+skills/start/agents/issue-orchestrator.md|ALL must PASS under the severity rule|plan-reviewer
+skills/start/agents/issue-orchestrator.md|UX Reviewer, CTO; role type|design-reviewer
 skills/start/agents/issue-orchestrator.md|├── Spawn Coder Agent|coder
 skills/start/agents/issue-orchestrator.md|├── Spawn FRESH Code Review Agent|adversarial-reviewer
 skills/start/agents/issue-orchestrator.md|**Coder Agent spawn template|coder

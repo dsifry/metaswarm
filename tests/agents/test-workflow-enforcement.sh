@@ -362,18 +362,65 @@ rm -rf "${NEG:?}"; NEG=""
 # #73: pipeline order statements. Full orchestration runs Plan → Plan Review Gate
 # → Design Review Gate, so a chain that goes straight from the plan to the
 # Design Review Gate (in any separator style) has dropped the Plan Review Gate.
-ORDER_RE=(
-  'plan(ning)?[[:space:]]*(→|->|──→|,)[[:space:]]*design review'
-)
+# #89: a regex can't see an intermediate step or the reverse mistake, so each
+# candidate line is split into steps on its separators and classified:
+#   plan step    "Plan", "Planning", "the plan" (not a Plan Review Gate)
+#   plan review  "Plan Review Gate", "plan-review-gate"
+#   design       "Design Review Gate", "design-review-gate", "/review-design"
+#   brainstorm   "brainstorming"
+# Flagged: a plan step reaches a design step with no plan review in between
+# (skip), or after brainstorming a plan review comes before the first design
+# step (reverse: the brainstorming path reviews the design doc first).
+# A line with an arrow is a chain and is split on arrows. A comma-only line may
+# be prose, so only the #73 regex judges it (an adjacent "plan, design review");
+# "Plan validation: checks (a, b, c) before design review" is fine.
+# The #73 regex also runs on every line, so the guard is never weaker than it.
+ORDER_SEP='──→|→|⇒|⟶|➜|➔|—>|->|=>'
+ORDER_LEGACY='plan(ning)?[ \t]*(→|->|──→|,)[ \t]*design review'
+IFS= read -r -d '' ORDER_AWK <<'AWK' || true
+{
+  line = $0
+  # git grep -n prints path:lineno:content; keep the content only.
+  p = index(line, ":"); rest = substr(line, p + 1); q = index(rest, ":")
+  content = tolower(substr(rest, q + 1))
+  bad = (content ~ legacy)
+  if (content !~ sep) { if (bad) print line; next }
+  gsub(sep, "\001", content)
+  n = split(content, step, "\001")
+  state = ""; brain = 0; pending = 0
+  for (k = 1; k <= n; k++) {
+    s = step[k]
+    isdesign = (s ~ /design[- ]review|review-design/)
+    isreview = (s ~ /plan[- ]review/)
+    t = s; gsub(/^[^a-z]+|[^a-z]+$/, "", t)
+    isplan = (!isreview && !isdesign && (t ~ /^plan(ning)?([^a-z]|$)/ || t ~ /(^|[^a-z])plan(ning)?$/))
+    # A brainstorming step starts the brainstorming path; a later plan step
+    # means the line has moved on to full orchestration.
+    if (t ~ /^brainstorm/ && brain == 0) brain = 1
+    if (isplan && brain == 1) { brain = 0; pending = 0 }
+    # "Plan Review Gate / Design Review Gate" in one step: the review came first.
+    if (isdesign && isreview && match(s, /plan[- ]review/) < match(s, /design[- ]review|review-design/)) {
+      state = "review"; if (brain == 1) pending = 1
+    }
+    if (isdesign) {
+      if (state == "plan") bad = 1
+      if (brain == 1 && pending) bad = 1
+      if (brain == 1) brain = 2
+      state = "design"
+    }
+    if (isreview) { state = "review"; if (brain == 1 && !isdesign) pending = 1 }
+    else if (isplan) state = "plan"
+  }
+  if (bad) print line
+}
+AWK
 order_hits() { # <git-repo> <pathspec>...  sets OH_OUT and OH_RC like trigger_hits
-  local repo="$1" pat out rc; shift
+  local repo="$1" out rc; shift
   OH_RC=0; OH_OUT=""
-  for pat in "${ORDER_RE[@]}"; do
-    rc=0; out=$(git -C "$repo" grep -n -i -E -e "$pat" -- "$@") || rc=$?
-    if [ "$rc" -ge 2 ]; then OH_RC=2; OH_OUT="$OH_OUT"$'\n'"git grep error rc=$rc for '$pat'"
-    elif [ "$rc" -eq 0 ]; then OH_OUT="$OH_OUT"$'\n'"$out"; fi
-  done
-  OH_OUT="$(printf '%s\n' "$OH_OUT" | sed '/^$/d' | sort -u)"
+  rc=0; out=$(git -C "$repo" grep -n -i -E -e 'design[- ]review|review-design' -- "$@") || rc=$?
+  if [ "$rc" -ge 2 ]; then OH_RC=2; OH_OUT="git grep error rc=$rc"; return; fi
+  [ "$rc" -eq 0 ] || return 0
+  OH_OUT="$(printf '%s\n' "$out" | awk -v sep="$ORDER_SEP" -v legacy="$ORDER_LEGACY" "$ORDER_AWK" | sort -u)"
 }
 order_hits "$REPO_ROOT" . "${WU3_EXCLUDES[@]}"
 if [ "$OH_RC" -ne 0 ]; then
@@ -391,12 +438,32 @@ ORDER_BAD=(
   'Research ──→ Planning ──→ Design Review Gate ──→ Work Unit Decomposition'
   'Research, Plan, Design Review Gate, Work Unit Decomposition'
   'research, plan, design review gate, decompose into work units'
+  # #89 variants: emphasis, other arrows, the command name, an intermediate
+  # step, and the reverse mistake on the brainstorming path.
+  'Research → Plan → **Design Review Gate** → Work Unit Decomposition'
+  'Research ⇒ Plan ⇒ Design Review Gate ⇒ PR'
+  'Research → Plan → /review-design → Work Unit Decomposition'
+  'Research → Plan → Plan Validation → Design Review Gate → PR'
+  '/start-task → brainstorming → Plan Review Gate → Design Review Gate → execution'
+  'Research => Plan => Design Review Gate => PR'
+  # An arrow elsewhere on the line must not hide the #73 comma form.
+  'Research → plan, design review → PR'
+  'Two pipelines (research, plan, design review gate) → PR'
 )
 ORDER_OK=(
   'Research → Plan → Plan Review Gate → Design Review Gate (reviews the plan)'
   'Research, Plan, Plan Review Gate, Design Review Gate (reviews the plan)'
   '| `superpowers:writing-plans` | Plan Review Gate (intercepts before it presents the plan), Design Review Gate |'
   'Research → Plan (with its Plan Review Gate) → Design Review Gate'
+  'Research → Plan → Plan Validation → Plan Review Gate → **Design Review Gate** → PR'
+  '/start-task → brainstorming → Design Review Gate (project-sized design doc only) → writing-plans → Plan Review Gate'
+  'Research → Plan → Plan Review Gate → Design Review Gate. On the brainstorming path the gate reviews the design doc.'
+  '- **Plan validation (pre-flight)**: Checklist catches issues (architecture, security, UI/UX) before design review'
+  'Phase 2 plan, then design review, then ship'
+  'Plan → Plan Review Gate / Design Review Gate'
+  'Plan → Plan Review Gate. Design Review Gate (reviews the plan)'
+  'After brainstorming, the plan goes to the Plan Review Gate → Design Review Gate in full orchestration'
+  'brainstorming (optional) → Plan → Plan Review Gate → Design Review Gate'
 )
 ONEG="$(mktemp -d)"
 git -C "$ONEG" init -q
@@ -417,6 +484,29 @@ while [ "$j" -lt "${#ORDER_OK[@]}" ]; do
 done
 [ "$o_ok" -eq 1 ] && pass "order guard self-test: every separator style flagged, correct orders allowed" || fail "order guard self-test:$o_msg"
 rm -rf "${ONEG:?}"; ONEG=""
+
+# #89: the issue-orchestrator's Phase 2 runs both gates, Plan Review Gate first.
+for orch in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  phase2="$(awk '/^### Phase 2: /{f=1; next} f && /^### /{exit} f' "$REPO_ROOT/$orch")"
+  # Both the instruction to run each skill and its gate task must be there,
+  # Plan Review Gate first.
+  pr_run="$(printf '%s\n' "$phase2" | grep -n 'run the plan-review-gate skill' | head -1 | cut -d: -f1 || true)"
+  dr_run="$(printf '%s\n' "$phase2" | grep -n 'design-review-gate skill on the plan' | head -1 | cut -d: -f1 || true)"
+  pr_task="$(printf '%s\n' "$phase2" | grep -n '^bd create "Plan Review Gate"' | head -1 | cut -d: -f1 || true)"
+  dr_task="$(printf '%s\n' "$phase2" | grep -n '^bd create "Design Review Gate"' | head -1 | cut -d: -f1 || true)"
+  if [ -n "$pr_run" ] && [ -n "$dr_run" ] && [ "$pr_run" -lt "$dr_run" ] \
+    && [ -n "$pr_task" ] && [ -n "$dr_task" ] && [ "$pr_task" -lt "$dr_task" ]; then
+    pass "$orch Phase 2 runs plan-review-gate before design-review-gate"
+  else
+    fail "$orch Phase 2 must run plan-review-gate, then design-review-gate (run lines: ${pr_run:-none}/${dr_run:-none}, task lines: ${pr_task:-none}/${dr_task:-none})"
+  fi
+  # A plan the Design Review Gate changes goes back through the Plan Review Gate.
+  if printf '%s\n' "$phase2" | grep -qi 'design review gate revises the plan.*run the plan review gate again'; then
+    pass "$orch Phase 2 re-runs the Plan Review Gate on a plan the design review changed"
+  else
+    fail "$orch Phase 2 lets a plan changed by the Design Review Gate skip the Plan Review Gate"
+  fi
+done
 
 # The guide is the canonical statement of both pipelines (#73).
 # Each row must carry its order AND the artifact the Design Review Gate reviews.
