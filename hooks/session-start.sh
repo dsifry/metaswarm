@@ -80,6 +80,13 @@ if [ "$new_project" = false ] && [ "$legacy_install" = false ]; then
   if [ ! -f ".coverage-thresholds.json" ]; then
     needs_heal=true
   fi
+  # A Go project's enforcement command runs the gate program (#87). If the file
+  # is gone, restore it. Self-heal runs the setup script in create mode, so it
+  # rewrites the gate but leaves the existing thresholds file as it is.
+  if [ ! -f ".metaswarm/go-coverage-gate.go" ] \
+    && grep -qF ".metaswarm/go-coverage-gate.go" ".coverage-thresholds.json" 2>/dev/null; then
+    needs_heal=true
+  fi
   if { [ "$METASWARM_PLATFORM" = "claude" ] || [ "$METASWARM_PLATFORM" = "all" ]; } \
     && { [ ! -f ".claude/commands/start-task.md" ] || ! grep -q "metaswarm" ".claude/commands/start-task.md" 2>/dev/null; }; then
     needs_heal=true

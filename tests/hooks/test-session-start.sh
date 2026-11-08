@@ -66,6 +66,17 @@ assert_file_exists() {
   fi
 }
 
+assert_same_file() { # desc, expected file, actual file
+  TOTAL=$((TOTAL + 1))
+  if cmp -s "$2" "$3"; then
+    PASS=$((PASS + 1))
+    echo "  PASS: $1"
+  else
+    FAIL=$((FAIL + 1))
+    echo "  FAIL: $1 — $3 differs from $2"
+  fi
+}
+
 assert_file_not_exists() {
   local desc="$1"
   local file="$2"
@@ -145,6 +156,30 @@ assert_json_valid "Output is valid JSON" "$output"
 assert_file_exists "Creates CLAUDE.md" "$TEST_CWD/CLAUDE.md"
 assert_file_exists "Creates Claude command shims" "$TEST_CWD/.claude/commands/start-task.md"
 assert_file_exists "Creates coverage thresholds" "$TEST_CWD/.coverage-thresholds.json"
+
+# --- Test 2d: self-heal restores a missing Go coverage gate (#87) ---
+echo "Test 2d: Self-heal restores a missing Go coverage gate"
+TEST_CWD="$TMPDIR_BASE/test2d"
+mkdir -p "$TEST_CWD/.metaswarm"
+echo '{"distribution":"plugin","coverage":{"threshold":87},"commands":{"coverage":"go run .metaswarm/go-coverage-gate.go"}}' > "$TEST_CWD/.metaswarm/project-profile.json"
+(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" >/dev/null 2>&1 || true)
+assert_file_exists "First run writes the Go gate" "$TEST_CWD/.metaswarm/go-coverage-gate.go"
+# The user later edits the threshold by hand; then the gate file goes missing.
+node -e "
+  const f = process.argv[1], fs = require('fs');
+  const j = JSON.parse(fs.readFileSync(f, 'utf-8'));
+  for (const k of Object.keys(j.thresholds)) j.thresholds[k] = 91;
+  fs.writeFileSync(f, JSON.stringify(j, null, 2) + '\n');
+" "$TEST_CWD/.coverage-thresholds.json"
+cp "$TEST_CWD/.coverage-thresholds.json" "$TMPDIR_BASE/test2d-thresholds.before"
+rm -f "$TEST_CWD/.metaswarm/go-coverage-gate.go"
+output=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "Output is valid JSON" "$output"
+assert_file_exists "Restores the missing Go gate" "$TEST_CWD/.metaswarm/go-coverage-gate.go"
+assert_same_file "Restored gate matches the plugin template" \
+  "$REPO_ROOT/skills/setup/templates/go-coverage-gate.go" "$TEST_CWD/.metaswarm/go-coverage-gate.go"
+assert_same_file "Leaves .coverage-thresholds.json untouched (no --reconfigure)" \
+  "$TMPDIR_BASE/test2d-thresholds.before" "$TEST_CWD/.coverage-thresholds.json"
 
 # --- Test 3: Legacy install detection ---
 echo "Test 3: Legacy install detection"
