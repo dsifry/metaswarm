@@ -98,18 +98,121 @@ fi
 
 # ---------------------------------------------------------------------------
 echo ""
-echo "(c) both design-reviewer twins name UX"
+echo "(c) both design-reviewer twins name UX and map it to the UX persona"
 # ---------------------------------------------------------------------------
 for f in agents/design-reviewer.md skills/start/agents/design-reviewer.md; do
   D="$(cat "$REPO_ROOT/$f")"
-  assert_in "$f names UX in description, body and role table" "$D" \
+  assert_in "$f names UX in description and body" "$D" \
     'The role (PM, Architect, Designer, Security, UX or CTO) is passed in the prompt' \
-    'passes the **role** in the prompt: PM, Architect, Designer, Security, UX or CTO' \
-    "| UX | none: the checklist is in the gate's UX Reviewer prompt |"
+    'passes the **role** in the prompt: PM, Architect, Designer, Security, UX or CTO'
+  if grep -q -E -e '^\| UX \| `(\./)?agents/ux-reviewer-agent\.md` \|$' <<<"$D"; then
+    pass "$f maps UX to agents/ux-reviewer-agent.md"
+  else
+    fail "$f maps UX to agents/ux-reviewer-agent.md"
+  fi
 done
-n="$(ls "$REPO_ROOT"/agents/*.md | wc -l | tr -d ' ')"
-[ "$n" -eq 22 ] && pass "agents/ still has 22 agents (no new UX agent file)" \
-  || fail "agents/ still has 22 agents (no new UX agent file; found $n)"
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "(e) the UX Reviewer persona twins"
+# ---------------------------------------------------------------------------
+fm() { awk 'NR==1 { if ($0 != "---") exit; next } /^---[[:space:]]*$/ { exit } { print }' "$1"; }
+fmv() { fm "$1" | sed -n "s/^$2:[[:space:]]*//p" | head -1 | sed 's/^"\(.*\)"$/\1/'; }
+for f in agents/ux-reviewer-agent.md skills/start/agents/ux-reviewer-agent.md; do
+  if [ ! -f "$REPO_ROOT/$f" ]; then fail "$f exists"; continue; fi
+  pass "$f exists"
+  if [ "$(fmv "$REPO_ROOT/$f" name)" = "ux-reviewer-agent" ] && [ "$(fmv "$REPO_ROOT/$f" model)" = "inherit" ] \
+     && fmv "$REPO_ROOT/$f" description | grep -q -F -e 'Use as the UX role in the design review gate.'; then
+    pass "$f frontmatter: name ux-reviewer-agent, model inherit, UX-role description"
+  else
+    fail "$f frontmatter: name ux-reviewer-agent, model inherit, UX-role description"
+  fi
+  assert_in "$f has the persona header, UI-FLOWS pointer and rubric reference" "$(cat "$REPO_ROOT/$f")" \
+    '**Type**: `ux-reviewer-agent`' '**Spawned By**: Design Review Gate' \
+    'templates/UI-FLOWS.md' 'rubrics/ux-review-rubric.md' 'integration work unit' 'no user-facing UI'
+done
+if [ -f "$REPO_ROOT/agents/ux-reviewer-agent.md" ] && [ -f "$REPO_ROOT/skills/start/agents/ux-reviewer-agent.md" ]; then
+  nd="$(diff <(sed 's#\./##g;s#\.claude/##g' "$REPO_ROOT/agents/ux-reviewer-agent.md") \
+             <(sed 's#\./##g;s#\.claude/##g' "$REPO_ROOT/skills/start/agents/ux-reviewer-agent.md") || true)"
+  [ -z "$nd" ] && pass "ux-reviewer-agent twins differ only in path prefixes" \
+    || fail "ux-reviewer-agent twins differ beyond path prefixes: $nd"
+fi
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "(g) the UX review rubric"
+# ---------------------------------------------------------------------------
+RUB="$REPO_ROOT/rubrics/ux-review-rubric.md"
+RUBRIC_GUIDE_REF='`guides/delivery-scope.md` (plugin root; `../guides/delivery-scope.md` from a skill'"'"'s `rubrics/` dir)'
+if [ -f "$RUB" ]; then pass "rubrics/ux-review-rubric.md exists"; R="$(cat "$RUB")"; else fail "rubrics/ux-review-rubric.md exists"; R=""; fi
+assert_in "UX rubric uses the finding contract" "$R" \
+  '**Used By**: UX Reviewer Agent' "$RUBRIC_GUIDE_REF" \
+  'protects: <credible user scenario | explicit requirement | DoD item>' \
+  'blocker: yes | no' '"BLOCKING if …" checks produce critical or major findings. They block only with `protects`.'
+assert_in "UX rubric covers the issue #12 criteria" "$R" \
+  'trigger' 'visible outcome' 'component hierarchy' 'text wireframe' \
+  'Empty state' 'Loading state' 'Error state' 'integration work unit' 'app shell' 'UI-FLOWS' 'Accessibility'
+assert_in "UX rubric approves designs with no user-facing UI" "$R" \
+  'no user-facing UI' 'APPROVED with no findings'
+for m in skills/design-review-gate/rubrics/ux-review-rubric.md skills/start/rubrics/ux-review-rubric.md; do
+  if [ -f "$RUB" ] && [ -f "$REPO_ROOT/$m" ] && cmp -s "$RUB" "$REPO_ROOT/$m"; then
+    pass "$m mirrors the rubric"
+  else
+    fail "$m mirrors the rubric"
+  fi
+done
+grep -q -F -e "'rubrics/ux-review-rubric.md'" "$REPO_ROOT/lib/sync-resources.js" \
+  && pass "RUBRIC_SYNC lists the UX rubric" || fail "RUBRIC_SYNC lists the UX rubric"
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "(h) the gate's UX prompt follows the rubric"
+# ---------------------------------------------------------------------------
+assert_in "UX prompt reads ./rubrics/ux-review-rubric.md and the persona" "$UXP" \
+  './rubrics/ux-review-rubric.md' 'ux-reviewer-agent.md'
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "(i) stated agent and rubric counts match the files"
+# ---------------------------------------------------------------------------
+AGENTS_N="$(ls "$REPO_ROOT"/agents/*.md | wc -l | tr -d ' ')"
+RUBRICS_N="$(ls "$REPO_ROOT"/rubrics/*.md | wc -l | tr -d ' ')"
+for f in .claude-plugin/plugin.json .codex-plugin/plugin.json gemini-extension.json README.md; do
+  grep -q -F -e "$AGENTS_N agents" "$REPO_ROOT/$f" && pass "$f states $AGENTS_N agents" || fail "$f states $AGENTS_N agents"
+done
+grep -q -F -e "$RUBRICS_N quality review rubrics" "$REPO_ROOT/README.md" \
+  && pass "README.md states $RUBRICS_N quality review rubrics" || fail "README.md states $RUBRICS_N quality review rubrics"
+IDX="$REPO_ROOT/docs/index.html"
+assert_in "docs/index.html headings state the counts" "$(cat "$IDX")" \
+  "<h4>$AGENTS_N Agents</h4>" "<h4>$RUBRICS_N Quality Rubrics</h4>"
+n="$(awk '/<!-- AGENTS -->/,/<\/table>/' "$IDX" | grep -c -F -e '<tr><td>' || true)"
+[ "$n" -eq "$AGENTS_N" ] && pass "docs/index.html agent roster has $AGENTS_N rows" \
+  || fail "docs/index.html agent roster has $AGENTS_N rows (found $n)"
+# USAGE agent tables: one row per agents/*.md, each pointing at a real file
+U="$REPO_ROOT/USAGE.md"
+ua="$(grep -o -E '^\| \*\*[^|]+\*\* \| `agents/[a-z0-9-]+\.md`' "$U" | sed -E 's/.*`(agents\/[a-z0-9-]+\.md)`/\1/' | sort -u)"
+fa="$(cd "$REPO_ROOT" && ls agents/*.md | sort)"
+[ "$ua" = "$fa" ] && pass "USAGE.md agent tables list exactly agents/*.md ($AGENTS_N)" \
+  || fail "USAGE.md agent tables differ from agents/*.md: $(diff <(echo "$fa") <(echo "$ua") | grep '^[<>]' | tr '\n' ' ')"
+ur="$(awk '/^## Rubrics/,/^## Scripts/' "$U" | grep -o -E '^\| `[a-z0-9-]+\.md`' | sed -E 's/^\| `(.*)`/rubrics\/\1/' | sort -u)"
+fr="$(cd "$REPO_ROOT" && ls rubrics/*.md | sort)"
+[ "$ur" = "$fr" ] && pass "USAGE.md rubric table lists exactly rubrics/*.md ($RUBRICS_N)" \
+  || fail "USAGE.md rubric table differs from rubrics/*.md: $(diff <(echo "$fr") <(echo "$ur") | grep '^[<>]' | tr '\n' ' ')"
+# Drift guard: every two-digit agent count and every rubric count stated anywhere equals the files.
+CNT_EXCLUDES=(':!CHANGELOG.md' ':!docs/plans/' ':!docs/handoffs/' ':!.beads/' ':!tests/')
+bad=""
+while IFS= read -r hit; do
+  [ -n "$hit" ] || continue
+  num="$(sed -E 's/^[^:]*:[0-9]+:[^0-9]*([0-9]+).*/\1/' <<<"$hit")"
+  [ "$num" = "$AGENTS_N" ] || bad="$bad $(cut -d: -f1,2 <<<"$hit")($num agents)"
+done < <(git -C "$REPO_ROOT" grep -n -o -i -E -e '(^|[^0-9.])[1-9][0-9] (ai |specialist |specialized )?agent(s|[[:space:]]+personas|[[:space:]]+definitions)' -- . "${CNT_EXCLUDES[@]}" || true)
+while IFS= read -r hit; do
+  [ -n "$hit" ] || continue
+  num="$(sed -E 's/^[^:]*:[0-9]+:[^0-9]*([0-9]+).*/\1/' <<<"$hit")"
+  [ "$num" = "$RUBRICS_N" ] || bad="$bad $(cut -d: -f1,2 <<<"$hit")($num rubrics)"
+done < <(git -C "$REPO_ROOT" grep -n -o -i -E -e '(^|[^0-9.])[0-9]+ (quality |review |quality review )?rubrics' -- . "${CNT_EXCLUDES[@]}" || true)
+[ -z "$bad" ] && pass "every stated agent/rubric count equals the files ($AGENTS_N agents, $RUBRICS_N rubrics)" \
+  || fail "stale agent/rubric counts:$bad"
 
 # ---------------------------------------------------------------------------
 echo ""

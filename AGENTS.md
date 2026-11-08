@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This project is **metaswarm** — a multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. It provides 22 agents, 14 orchestration skills, quality gates, and TDD enforcement.
+This project is **metaswarm** — a multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. It provides 23 agents, 14 orchestration skills, quality gates, and TDD enforcement.
 
 ## Quick Reference
 

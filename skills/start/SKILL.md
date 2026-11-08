@@ -49,7 +49,7 @@ bd doctor         # Check system health
 | **Designer Agent**        | UX/API design review           | Design review gate (parallel)      |
 | **Security Design Agent** | Security threat modeling       | Design review gate (parallel)      |
 | **CTO Agent**             | TDD readiness & plan review    | Design review gate (parallel)      |
-| **UX Reviewer**           | User flows, UI states, integration wiring | Design review gate (parallel); a `design-reviewer` role, no separate agent file |
+| **UX Reviewer Agent**     | User flows, UI states, integration wiring | Design review gate (parallel)      |
 | **Coder Agent**           | TDD implementation             | Design review gate approved        |
 | **Adversarial Reviewer**  | Internal code review           | Implementation complete            |
 | **Security Auditor**      | Security review (code)         | Implementation complete            |
@@ -799,6 +799,7 @@ skills/start/                   # This skill (main orchestration)
 │   ├── product-manager-agent.md # Use case & user benefit review
 │   ├── designer-agent.md       # UX/API design review
 │   ├── security-design-agent.md # Security threat modeling
+│   ├── ux-reviewer-agent.md    # User flows, UI states, integration wiring
 │   ├── cto-agent.md            # TDD readiness review
 │   ├── coder.md          # TDD implementation
 │   ├── adversarial-reviewer.md    # Internal code review (collaborative + adversarial modes)
@@ -817,6 +818,7 @@ skills/start/                   # This skill (main orchestration)
 │   ├── code-review-rubric.md   # Used by Adversarial Reviewer (collaborative mode)
 │   ├── adversarial-review-rubric.md # Used by Adversarial Reviewer (adversarial mode)
 │   ├── security-review-rubric.md # Used by Security Auditor Agent
+│   ├── ux-review-rubric.md     # Used by UX Reviewer Agent
 │   └── release-engineering-rubric.md # Used by Release Engineer Agent
 └── references/                 # Reference docs for other tools
     ├── codex-tools.md          # OpenAI Codex CLI reference

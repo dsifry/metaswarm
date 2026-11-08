@@ -430,6 +430,8 @@ You are the UX REVIEWER AGENT reviewing a design document.
 ## Your Task
 Review this design for user flow completeness and integration: can a user actually do what the design describes once every work unit is built?
 
+Read and follow `./rubrics/ux-review-rubric.md`: it is the single source of the UX criteria and their BLOCKING/WARNING levels. Your persona brief is `agents/ux-reviewer-agent.md` in the metaswarm plugin. The checklist below summarises the rubric.
+
 **Backend-only designs:** if the design has no user-facing UI (no screens, pages, views or interactive components), return APPROVED with no findings and the suggestion "No user-facing UI in this design; UX review not applicable." Do not block backend-only designs.
 
 ## Design Document
@@ -451,6 +453,9 @@ Review this design for user flow completeness and integration: can a user actual
 ### 4. Integration
 - [ ] There is an explicit integration work unit that wires the components into the app shell (routes, layout, data/state hooks), not only component work units
 - [ ] Each user flow can be traced from the app shell to the components and data it uses
+
+### 5. Accessibility Basics
+- [ ] Interactive elements are keyboard reachable, inputs are labelled, state is not conveyed by color alone (minor unless the design names an accessibility requirement)
 
 ${sharedFindingRules}
 
@@ -728,4 +733,4 @@ The design review gate succeeds when:
 
 ## Agent Definitions
 
-See detailed agent definitions in your project's agent definition files (e.g., product-manager-agent.md, architect-agent.md, designer-agent.md, security-design-agent.md, cto-agent.md). The UX Reviewer has no persona file: its checklist is the [UX Reviewer Agent Prompt](#ux-reviewer-agent-prompt) above.
+See detailed agent definitions in your project's agent definition files (e.g., product-manager-agent.md, architect-agent.md, designer-agent.md, security-design-agent.md, ux-reviewer-agent.md, cto-agent.md). The UX Reviewer's persona is ux-reviewer-agent.md, and its criteria live in `./rubrics/ux-review-rubric.md`.

@@ -2,7 +2,7 @@
 
 ## Agents
 
-metaswarm provides 22 agents, each with a defined role in the software development lifecycle.
+metaswarm provides 23 agents, each with a defined role in the software development lifecycle.
 
 ### Orchestration Agents
 
@@ -23,6 +23,7 @@ metaswarm provides 22 agents, each with a defined role in the software developme
 | **Product Manager** | `agents/product-manager-agent.md` | Use case validation, user benefit review, scope verification. |
 | **Designer** | `agents/designer-agent.md` | UX/API design review, developer experience, consistency. |
 | **Security Design** | `agents/security-design-agent.md` | Threat modeling (STRIDE), auth/authz design, OWASP Top 10. |
+| **UX Reviewer** | `agents/ux-reviewer-agent.md` | User flows (trigger and visible outcome), empty/loading/error states, integration work unit wiring components into the app shell. |
 | **CTO** | `agents/cto-agent.md` | TDD readiness review, plan approval, codebase alignment. |
 
 ### Implementation Agents
@@ -384,6 +385,7 @@ Quality standards used by review agents:
 | `adversarial-review-rubric.md` | Adversarial Reviewer (adversarial mode) | Binary PASS/FAIL spec compliance, DoD verification with evidence |
 | `architecture-rubric.md` | Architect Agent | Service design, coupling, scalability |
 | `security-review-rubric.md` | Security Auditor | OWASP Top 10, auth, data handling |
+| `ux-review-rubric.md` | UX Reviewer | User flows, component hierarchy, empty/loading/error states, integration work unit, UI-FLOWS, accessibility basics |
 | `plan-review-rubric.md` | CTO Agent | TDD readiness, completeness, alignment |
 | `plan-review-rubric-adversarial.md` | Plan Reviewer | Plan Review Gate: feasibility, completeness, scope and alignment |
 | `test-coverage-rubric.md` | Test Automator | Coverage, edge cases, mock quality |

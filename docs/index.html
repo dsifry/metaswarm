@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>metaswarm - Multi-Agent Orchestration for Claude Code</title>
-  <meta name="description" content="A self-improving multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. 22 agents, 14 skills, 16 commands. TDD, cross-model adversarial review, spec-driven development. Production-proven.">
+  <meta name="description" content="A self-improving multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. 23 agents, 14 skills, 16 commands. TDD, cross-model adversarial review, spec-driven development. Production-proven.">
   <style>
     :root {
       --bg: #ffffff;
@@ -397,7 +397,7 @@
 
   <header>
     <h1><a href="https://github.com/dsifry/metaswarm" style="color: inherit; text-decoration: none;"><span>meta</span>swarm</a></h1>
-    <p class="tagline">A self-improving multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. 22 agents coordinate through the full development lifecycle, from GitHub issue to merged PR, with TDD, cross-model adversarial review, and spec-driven development.</p>
+    <p class="tagline">A self-improving multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. 23 agents coordinate through the full development lifecycle, from GitHub issue to merged PR, with TDD, cross-model adversarial review, and spec-driven development.</p>
   </header>
 
   <!-- QUICK INSTALL -->
@@ -650,8 +650,8 @@ When all work units pass, create a PR.</code></pre>
     <h2>Components</h2>
     <div class="features">
       <div class="feature">
-        <h4>22 Agents</h4>
-        <p>Researcher, Planner, Architect, PM, Designer, Security, CTO, Design Reviewer, Plan Reviewer, Coder, Adversarial Reviewer, Security Auditor, PR Shepherd, Release Engineer, Test Automator, Knowledge Curator, and more. Each has a defined role, process, and output format.</p>
+        <h4>23 Agents</h4>
+        <p>Researcher, Planner, Architect, PM, Designer, Security, UX Reviewer, CTO, Design Reviewer, Plan Reviewer, Coder, Adversarial Reviewer, Security Auditor, PR Shepherd, Release Engineer, Test Automator, Knowledge Curator, and more. Each has a defined role, process, and output format.</p>
       </div>
       <div class="feature">
         <h4>14 Orchestration Skills</h4>
@@ -662,8 +662,8 @@ When all work units pass, create a PR.</code></pre>
         <p><code>/metaswarm:setup</code>, <code>/metaswarm:update</code>, <code>/metaswarm:status</code>, <code>/metaswarm:start-task</code>, <code>/metaswarm:start</code>, <code>/metaswarm:prime</code>, <code>/metaswarm:review-design</code>, <code>/metaswarm:brainstorm</code>, <code>/metaswarm:self-reflect</code>, <code>/metaswarm:pr-shepherd</code>, <code>/metaswarm:create-issue</code>, <code>/metaswarm:handle-pr-comments</code>, <code>/metaswarm:external-tools-health</code>, <code>/metaswarm:handoff</code>, plus the deprecated aliases <code>/metaswarm:metaswarm-setup</code> and <code>/metaswarm:metaswarm-update-version</code>.</p>
       </div>
       <div class="feature">
-        <h4>9 Quality Rubrics</h4>
-        <p>Standardized review criteria for code, architecture, security, test coverage, implementation plans, adversarial plan review, adversarial spec compliance, external tool review, and release engineering.</p>
+        <h4>10 Quality Rubrics</h4>
+        <p>Standardized review criteria for code, architecture, security, test coverage, implementation plans, adversarial plan review, adversarial spec compliance, external tool review, UX review, and release engineering.</p>
       </div>
       <div class="feature">
         <h4>Coverage Enforcement</h4>
@@ -725,6 +725,7 @@ When all work units pass, create a PR.</code></pre>
         <tr><td>Product Manager</td><td>Review</td><td>Validates use cases, scope, and user benefit</td></tr>
         <tr><td>Designer</td><td>Review</td><td>Reviews API/UX design and consistency</td></tr>
         <tr><td>Security Design</td><td>Review</td><td>Threat modeling, STRIDE analysis, auth review</td></tr>
+        <tr><td>UX Reviewer</td><td>Review</td><td>User flows, empty/loading/error states, integration wiring</td></tr>
         <tr><td>CTO</td><td>Review</td><td>TDD readiness, codebase alignment, final approval</td></tr>
         <tr><td>Design Reviewer</td><td>Review</td><td>Runs each Design Review Gate role (PM, Architect, Designer, Security, UX Reviewer, CTO) from the prompt</td></tr>
         <tr><td>Plan Reviewer</td><td>Review</td><td>Plan Review Gate reviewer: Feasibility, Completeness, Scope &amp; Alignment</td></tr>

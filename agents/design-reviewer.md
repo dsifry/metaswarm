@@ -30,7 +30,7 @@ Read the persona file matching your role. Use the persona file for its checklist
 | Architect | `agents/architect-agent.md` |
 | Designer | `agents/designer-agent.md` |
 | Security | `agents/security-design-agent.md` |
-| UX | none: the checklist is in the gate's UX Reviewer prompt |
+| UX | `agents/ux-reviewer-agent.md` |
 | CTO | `agents/cto-agent.md` |
 
 ## Rules
