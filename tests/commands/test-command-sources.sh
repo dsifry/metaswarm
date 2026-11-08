@@ -152,15 +152,17 @@ fi
 # agent to run must ship in bin/. Historical records and tests are exempt.
 echo "Referenced bin/ scripts exist"
 BIN_RC=0
-# Each match is the whole path token, so absolute paths (/usr/bin/x.sh, ~/bin)
-# and node_modules/.bin/ can be told apart from the plugin's bin/.
-BIN_REFS="$(git -C "$REPO_ROOT" grep -ohIE "[^[:space:]\"'\`()<>|]*bin/[A-Za-z0-9_-]+\.(sh|js)" -- . \
+# Each match is the whole path token, so absolute and system paths
+# (/usr/bin/env, #!/usr/bin/env bash, ~/bin) and node_modules/.bin/ can be told
+# apart from the plugin's bin/. Any extension counts, or none (bin/metaswarm-usage).
+BIN_REFS="$(git -C "$REPO_ROOT" grep -ohIE "[^[:space:]\"'\`()<>|]*bin/[A-Za-z0-9_-]+(\.[A-Za-z0-9]+)?" -- . \
   ':!CHANGELOG.md' ':!docs/plans/' ':!.beads/' ':!tests/')" || BIN_RC=$?
 if [ "$BIN_RC" -gt 1 ]; then
   fail "bin/ reference check: git grep failed (rc=$BIN_RC)"
 else
-  BIN_NAMES="$(printf '%s\n' "$BIN_REFS" | grep -vE '^[/~]' | grep -E '(^|/)bin/[A-Za-z0-9_-]+\.(sh|js)$' |
-    sed -nE 's#.*bin/([A-Za-z0-9_-]+\.(sh|js))$#\1#p' | sort -u || true)"
+  BIN_NAMES="$(printf '%s\n' "$BIN_REFS" | grep -vE '^([/~]|#!)|(^|/)(usr|opt|etc|sbin)/' |
+    grep -E '(^|/)bin/[A-Za-z0-9_-]+(\.[A-Za-z0-9]+)?$' |
+    sed -nE 's#.*bin/([A-Za-z0-9_.-]+)$#\1#p' | sort -u || true)"
   BIN_COUNT=0
   BIN_MISSING=""
   while IFS= read -r name; do
