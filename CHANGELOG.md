@@ -8,11 +8,11 @@
 - **Execution state splits "Retries" into VALIDATE attempts and review rounds** (#59). The VALIDATE counter counts consecutive failures and resets on PASS; review rounds follow the severity rule (cap 10). A pre-split state file's `Retries` value is read as VALIDATE attempts.
 - **Escalation never approves** (#68). A review gate passes only when a fresh round has no `blocker: yes` finding. Escalation options are Revise / Narrow scope / Defer / Cancel; Override and `--force-override` are removed.
 - **Workflow enforcement reconciled with superpowers >= 6.4.1** (#67). The canonical rules live in `guides/workflow-enforcement.md`; skills and the CLAUDE.md/AGENTS.md/GEMINI.md templates point to it.
-- **Design Review Gate runs only for project-sized work.** Quick tasks, chat-only designs and short design docs for small changes (superpowers 7.0.1+) skip it.
-- **`docs/superpowers/specs/` is watched** alongside `docs/plans/`, and `/review-design --latest` searches both folders.
-- **Plan Review Gate intercepts before writing-plans presents the plan**, ahead of its own Execution Handoff.
-- **Execution menu option 3 is now "Native inline execution"** (`superpowers:executing-plans`), replacing "Parallel session"; the 3-option menu replaces writing-plans' 2-option handoff.
-- **INSTALL.md lists all 9 referenced superpowers skills** and states the minimum version (superpowers >= 6.4.1, tested with 7.0.2).
+- **Design Review Gate runs only for project-sized work** (#67). Quick tasks, chat-only designs and short design docs for small changes (superpowers 7.0.1+) skip it.
+- **`docs/superpowers/specs/` is watched** (#67) alongside `docs/plans/`, and `/review-design --latest` searches both folders.
+- **Plan Review Gate intercepts before writing-plans presents the plan** (#67), ahead of its own Execution Handoff.
+- **Execution menu option 3 is now "Native inline execution"** (#67, `superpowers:executing-plans`), replacing "Parallel session"; the 3-option menu replaces writing-plans' 2-option handoff.
+- **INSTALL.md lists all 9 referenced superpowers skills** (#67) and states the minimum version (superpowers >= 6.4.1, tested with 7.0.2).
 - **The session hook surfaces metaswarm's knowledge base** (#70), with or without the beads plugin. At session start and compaction it inlines the MUST FOLLOW rules from `.beads/knowledge/` (capped at 10 rules or about 2 KB) and points to `/prime <topic>` for the rest. Without a working `jq` it adds only the pointer. Existing `bd prime` behaviour is unchanged.
 - **Orphaned command mirrors are caught** (#64). `node lib/sync-resources.js --check` reports any `.claude/commands/*.md` that has no source in `commands/` and isn't on the exclusion list, and `--sync` removes it. Excluded names and non-`.md` files are never touched.
 - **`/metaswarm-setup` and `/metaswarm-update-version` are now short deprecated aliases** for `/setup` and `/update` (#64). Their old npm-era bodies called CLI commands that don't exist (`install`, `changelog`), set the version even when agent regeneration failed, offered CI creation they never performed, and had a Go coverage gate that never failed.
