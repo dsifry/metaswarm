@@ -3,5 +3,5 @@ prompt = """Invoke the metaswarm brainstorm skill. The user wants to brainstorm 
 
 Arguments provided by the user: {{args}}
 
-Run the brainstorming workflow. IMPORTANT: If brainstorming writes and commits a project-sized design doc (see the metaswarm plugin's guides/workflow-enforcement.md), STOP and run the design review gate before proceeding to planning. Designs given only in chat skip the gate.
+Run the brainstorming workflow. IMPORTANT: If brainstorming writes and commits a project-sized design doc (see the metaswarm plugin's guides/workflow-enforcement.md), STOP and run the design review gate before proceeding to planning. Quick tasks, chat-only designs and short design docs for small changes skip the gate.
 """

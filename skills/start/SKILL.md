@@ -61,7 +61,7 @@ See `./agents/` directory for detailed agent definitions.
 
 ## Design Review Gate (NEW)
 
-For project-sized features (brainstorming committed a design doc), an automatic **Design Review Gate** ensures quality before implementation:
+For project-sized features (brainstorming sized the work as a project and committed its design doc; see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)), an automatic **Design Review Gate** ensures quality before implementation:
 
 ```
 Project-Sized Design Doc Committed

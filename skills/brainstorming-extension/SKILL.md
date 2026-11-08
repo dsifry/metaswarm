@@ -10,7 +10,7 @@ triggers:
 
 ## Purpose
 
-This skill bridges `superpowers:brainstorming` into the metaswarm quality pipeline by enforcing the Design Review Gate when brainstorming writes and commits a project-sized design doc. Only project-sized work reaches the gate; designs given only in chat skip it (see [`guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). Without this bridge, brainstorming flows directly into `writing-plans`, bypassing the 5-agent design review that catches architectural, security, and requirements issues before expensive implementation begins.
+This skill bridges `superpowers:brainstorming` into the metaswarm quality pipeline by enforcing the Design Review Gate when brainstorming writes and commits a project-sized design doc. Only project-sized work reaches the gate; quick tasks, chat-only designs and short design docs for small changes skip it (see [`guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). Without this bridge, brainstorming flows directly into `writing-plans`, bypassing the 5-agent design review that catches architectural, security, and requirements issues before expensive implementation begins.
 
 **This is a critical workflow enforcement point, not a passive extension.**
 
@@ -18,13 +18,13 @@ This skill bridges `superpowers:brainstorming` into the metaswarm quality pipeli
 
 ## The Problem This Solves
 
-`superpowers:brainstorming` ends by handing off to `writing-plans`: in superpowers 6.4.1 a terminal-state rule on the Architectural path says writing-plans is the only skill invoked next, and in 7.x a project's design leads to writing-plans. For a project-sized design doc this creates a pipeline bypass:
+`superpowers:brainstorming` ends by handing off to `writing-plans`: in superpowers 6.4.1 a terminal-state rule on the Architectural path says writing-plans is the only skill invoked next, and in 7.x an approved design doc leads to writing-plans. For a project-sized design doc this creates a pipeline bypass:
 
 ```text
 WITHOUT this extension (broken flow):
 
 superpowers:brainstorming
-    └── Commits design doc
+    └── Commits a project-sized design doc
           └── writing-plans (DIRECTLY — no review!)
                 └── executing-plans
                       └── Implementation begins on UNREVIEWED design
@@ -34,7 +34,7 @@ superpowers:brainstorming
 WITH this extension (correct flow):
 
 superpowers:brainstorming
-    └── Commits design doc
+    └── Commits a project-sized design doc
           │
           ▼
     ┌─────────────────────────────────────────┐

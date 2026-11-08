@@ -119,7 +119,7 @@ If the issue lacks DoD items or clear scope, ask the user to clarify before proc
   2. Run the Design Review Gate (`/review-design` or invoke the `design-review-gate` skill)
   3. Wait for all 5 review agents (PM, Architect, Designer, Security, CTO) to APPROVE
   4. Only after ALL APPROVED, proceed to planning
-- For a project-sized design doc, the gate is required even if the brainstorming skill instructs you to invoke `writing-plans` next. Designs given only in chat skip it. The design review gate catches issues before expensive implementation begins.
+- For a project-sized design doc, the gate is required even if the brainstorming skill instructs you to invoke `writing-plans` next. Quick tasks, chat-only designs and short design docs for small changes skip it. The design review gate catches issues before expensive implementation begins.
 - After design review approval, create a GitHub Issue from the refined design
 - The issue should contain: scope, DoD items, file scope, human checkpoints
 

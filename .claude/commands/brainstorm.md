@@ -11,7 +11,7 @@ Invoke the metaswarm brainstorming extension skill, which wraps `superpowers:bra
 ## Behavior
 
 1. If `superpowers:brainstorming` is available, invoke it for the collaborative design process
-2. When brainstorming writes and commits a project-sized design doc, **automatically trigger the design review gate** (`/metaswarm:review-design`); designs given only in chat skip it (see the metaswarm plugin's `guides/workflow-enforcement.md`)
+2. When brainstorming writes and commits a project-sized design doc, **automatically trigger the design review gate** (`/metaswarm:review-design`); quick tasks, chat-only designs and short design docs for small changes skip it (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 3. Wait for all 5 review agents to approve before proceeding to planning
 
 If superpowers is not installed, provide standalone brainstorming guidance:

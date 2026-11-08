@@ -80,7 +80,7 @@ When brainstorming writes and commits a project-sized design doc (see the metasw
 3. **WAIT** for all 5 review agents (PM, Architect, Designer, Security, CTO) to approve
 4. **ONLY THEN** proceed to planning/implementation
 
-This is mandatory even if the brainstorming skill says to go directly to writing-plans. Designs given only in chat (quick tasks, small or bounded changes) skip the gate. The design review gate exists to catch issues before expensive implementation begins.
+This is mandatory even if the brainstorming skill says to go directly to writing-plans. Quick tasks, chat-only designs and short design docs for small changes skip the gate. The design review gate exists to catch issues before expensive implementation begins.
 
 ### After Any Plan Is Created
 
