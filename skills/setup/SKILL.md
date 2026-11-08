@@ -244,7 +244,7 @@ bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<covera
 Example for Codex with Python/pytest at 100%:
 
 ```bash
-bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" 100 "pytest --cov --cov-fail-under=100" --platform codex
+bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" 100 "pytest --cov --cov-fail-under=100" --platform codex --reconfigure
 ```
 
 Check the JSON output. If `"status": "ok"`, the 3 mandatory files are done. Report to the user what was created, and show them every entry in `warnings`.

@@ -86,7 +86,7 @@ Commands with a threshold flag (`--cov-fail-under`, `--fail-under`) repeat the t
 
 `go test` has no coverage-threshold flag, so `go test -cover ./...` reports coverage but never fails. For Go projects `/setup` writes `.metaswarm/go-coverage-gate.go`, a standard-library-only program, and sets `enforcement.command` to `go run .metaswarm/go-coverage-gate.go`. Commit the file so CI can run it. The gate:
 
-- runs `go test -coverprofile=coverage.out ./...` (any arguments, such as `-race` or a package list, are passed on to `go test`) and fails if the tests fail
+- runs `go test` with a fresh cover profile and fails if the tests fail. Arguments, such as `-race` or a package list, are passed on to `go test`; when none of them is a package, `./...` is added. The gate sets `-coverprofile` itself and copies the profile to `coverage.out` afterwards
 - reads `.coverage-thresholds.json` on every run, so editing the thresholds takes effect without re-running setup
 - compares exact statement counts: `go tool cover -func` rounds to one decimal, so 2,499 of 2,500 statements would show as 100.0%
 - enforces `lines` and `statements` against Go's statement coverage, and reports `branches` and `functions` as not enforced, because Go doesn't measure them

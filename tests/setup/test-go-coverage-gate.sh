@@ -135,6 +135,31 @@ thresholds "$SMALL" 50 50 50 50
 gate "$SMALL"; R2=$RC
 [ "$R1" -ne 0 ] && [ "$R2" -eq 0 ] && pass "threshold is read from .coverage-thresholds.json at run time" || fail "threshold not read at run time (90%: rc=$R1, 50%: rc=$R2)"
 
+# --- arguments passed through to go test ---
+# Root package fully covered, sub/ package not: testing only the root would pass.
+ARGS="$TMP/args"
+new_module "$ARGS" 0 0
+mkdir -p "$ARGS/sub"
+printf 'package sub\n\nfunc G(b bool) int {\n\tif b {\n\t\treturn 1\n\t}\n\treturn 0\n}\n' > "$ARGS/sub/g.go"
+thresholds "$ARGS" 100 0 0 100
+args_gate() { OUT="$(cd "$ARGS" && go run .metaswarm/go-coverage-gate.go "$@" 2>&1)"; RC=$?; }
+args_gate -count=1
+[ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -q "sub" && pass "flags only: ./... still tested (sub package counted)" || fail "flags only: sub package skipped (rc=$RC): $OUT"
+args_gate -run TestF
+[ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -q "sub" && pass "a flag's separate value is not taken as a package" || fail "'-run TestF' treated TestF as a package (rc=$RC): $OUT"
+args_gate .
+[ "$RC" -eq 0 ] && pass "an explicit package list is respected" || fail "explicit '.' not respected (rc=$RC): $OUT"
+# -outputdir must not move the profile the gate reads, and a stale root
+# coverage.out must never be judged instead of this run's profile.
+printf 'mode: set\nexample.com/m/f.go:1.1,2.2 5 1\n' > "$ARGS/coverage.out"
+mkdir -p "$ARGS/artifacts"
+args_gate -outputdir artifacts ./...
+[ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -q "FAIL" && ! printf '%s' "$OUT" | grep -q "cannot read cover profile" \
+  && pass "-outputdir: this run's profile is judged (not a stale root file)" || fail "-outputdir broke the gate (rc=$RC): $OUT"
+grep -q "sub/g.go" "$ARGS/coverage.out" && pass "coverage.out at the root holds this run's profile" || fail "root coverage.out not refreshed"
+args_gate -coverprofile=x.out ./...
+[ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -q "sets -coverprofile itself" && pass "a -coverprofile argument is rejected" || fail "-coverprofile argument accepted (rc=$RC): $OUT"
+
 # --- error paths ---
 FAILING="$TMP/failing"
 new_module "$FAILING" 0

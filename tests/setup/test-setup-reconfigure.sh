@@ -172,6 +172,9 @@ grep -q -- "--reconfigure" "$ROOT/hooks/session-start.sh" && fail "session-start
 # after `npx metaswarm setup` copied the template file (no profile yet).
 grep -q 'lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform> --reconfigure$' "$ROOT/skills/setup/SKILL.md" \
   && pass "setup skill passes --reconfigure on every interactive run" || fail "setup skill does not always pass --reconfigure"
+CALLS="$(grep -c 'lib/setup-mandatory-files.sh" "$(pwd)"' "$ROOT/skills/setup/SKILL.md")"
+NOFLAG="$(grep 'lib/setup-mandatory-files.sh" "$(pwd)"' "$ROOT/skills/setup/SKILL.md" | grep -v -- '--reconfigure$' || true)"
+[ "$CALLS" -ge 3 ] && [ -z "$NOFLAG" ] && pass "every setup-mandatory-files.sh call in the skill ($CALLS) passes --reconfigure" || fail "setup skill calls without --reconfigure: $NOFLAG"
 grep -q -- "--reconfigure\]" "$ROOT/skills/setup/SKILL.md" && fail "setup skill still marks --reconfigure optional" || pass "setup skill does not mark --reconfigure optional"
 
 echo ""

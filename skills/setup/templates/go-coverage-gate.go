@@ -3,10 +3,15 @@
 // Written to .metaswarm/go-coverage-gate.go by metaswarm /setup and run as the
 // enforcement command:
 //
-//	go run .metaswarm/go-coverage-gate.go [go test flags and packages...]   (default ./...)
+//	go run .metaswarm/go-coverage-gate.go [go test flags] [packages]
+//
+// Arguments are passed to `go test`. When none of them is a package pattern,
+// ./... is added, so `-race` alone still tests every package. The gate sets
+// -coverprofile itself (a fresh file per run, which -outputdir cannot move)
+// and copies the profile to coverage.out afterwards for other tools.
 //
 // `go test` has no coverage-threshold flag, so this gate runs
-// `go test -coverprofile=coverage.out <arguments>`, counts covered statements
+// `go test -coverprofile=<fresh file> <arguments>`, counts covered statements
 // in the profile, and exits 1 when coverage is below the thresholds in
 // .coverage-thresholds.json. It reads that file every run, so the file stays
 // the single source of truth. It compares exact statement counts: the
@@ -51,30 +56,114 @@ func main() {
 	os.Exit(run(os.Args[1:]))
 }
 
-func run(pkgs []string) int {
+// valueFlags are the go test and build flags that take a separate value
+// (`-run TestX`), so the token after them is a value, not a package.
+var valueFlags = map[string]bool{
+	"run": true, "skip": true, "bench": true, "benchtime": true, "count": true,
+	"cpu": true, "parallel": true, "timeout": true, "list": true, "shuffle": true,
+	"fuzz": true, "fuzztime": true, "fuzzminimizetime": true, "outputdir": true,
+	"blockprofile": true, "blockprofilerate": true, "cpuprofile": true,
+	"memprofile": true, "memprofilerate": true, "mutexprofile": true,
+	"mutexprofilefraction": true, "trace": true, "covermode": true, "coverpkg": true,
+	"exec": true, "o": true, "vet": true, "tags": true, "p": true, "C": true,
+	"mod": true, "modfile": true, "ldflags": true, "gcflags": true, "asmflags": true,
+	"gccgoflags": true, "toolexec": true, "overlay": true, "pgo": true, "pkgdir": true,
+	"compiler": true, "installsuffix": true,
+}
+
+// goTestArgs checks the user's arguments and adds ./... when they name no
+// package pattern.
+func goTestArgs(args []string) ([]string, error) {
+	hasPkg := false
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if !strings.HasPrefix(a, "-") {
+			hasPkg = true
+			continue
+		}
+		name := strings.TrimLeft(a, "-")
+		if eq := strings.IndexByte(name, '='); eq >= 0 {
+			name = name[:eq]
+		} else if valueFlags[name] {
+			i++ // skip the flag's value
+		}
+		if name == "coverprofile" {
+			return nil, fmt.Errorf("the gate sets -coverprofile itself; remove %q from the command", a)
+		}
+	}
+	out := append([]string{}, args...)
+	if !hasPkg {
+		out = append(out, "./...")
+	}
+	return out, nil
+}
+
+func run(userArgs []string) int {
 	thresholds, err := readThresholds(configFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "coverage gate: %v\n", err)
 		return 1
 	}
-
-	if len(pkgs) == 0 {
-		pkgs = []string{"./..."}
+	testArgs, err := goTestArgs(userArgs)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "coverage gate: %v\n", err)
+		return 1
 	}
-	args := append([]string{"test", "-coverprofile=" + profileFile}, pkgs...)
-	cmd := exec.Command("go", args...)
+
+	// A fresh absolute profile path per run: -outputdir cannot move it, a stale
+	// coverage.out is never judged, and concurrent runs cannot collide.
+	tmp, err := os.CreateTemp("", "metaswarm-coverage-*.out")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "coverage gate: cannot create a profile file: %v\n", err)
+		return 1
+	}
+	profile := tmp.Name()
+	tmp.Close()
+	defer os.Remove(profile)
+
+	cmd := exec.Command("go", append([]string{"test", "-coverprofile=" + profile}, testArgs...)...)
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "coverage gate: go test failed: %v\n", err)
 		return 1
 	}
 
-	covered, total, err := countStatements(profileFile)
+	covered, total, err := countStatements(profile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "coverage gate: %v\n", err)
 		return 1
 	}
+	if err := publishProfile(profile); err != nil {
+		fmt.Fprintf(os.Stderr, "coverage gate: warning: could not write %s: %v\n", profileFile, err)
+	}
 	return judge(thresholds, covered, total)
+}
+
+// publishProfile copies this run's profile to coverage.out for other tools,
+// replacing it atomically.
+func publishProfile(profile string) error {
+	data, err := os.ReadFile(profile)
+	if err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(".", ".coverage-*.out")
+	if err != nil {
+		return err
+	}
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		os.Remove(tmp.Name())
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmp.Name())
+		return err
+	}
+	if err := os.Rename(tmp.Name(), profileFile); err != nil {
+		os.Remove(tmp.Name())
+		return err
+	}
+	return nil
 }
 
 func readThresholds(path string) (map[string]*threshold, error) {
