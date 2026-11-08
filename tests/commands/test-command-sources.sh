@@ -52,6 +52,7 @@ for adapter in codex gemini; do
   done
   [ "$ok" = 1 ] && pass "$F $adapter fallback keeps every report field" || fail "$F $adapter fallback keeps every report field"
 done
+has "$F" "For a \`\"status\":\"error\"\` row" && pass "$F step 4 gives adapter errors their own remedy" || fail "$F step 4 gives adapter errors their own remedy"
 has "$F" "adapter error" && pass "$F reports an adapter error as such" || fail "$F reports an adapter error as such"
 if has "$F" "bash bin/external-tools-verify.sh"; then
   fail "$F does not run the repo self-test as a health check"

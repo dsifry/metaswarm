@@ -139,6 +139,13 @@ EACCES_OUT=$(cd "$REPO_ROOT" && node -e '
   try { findOrphanedCommandMirrors(process.argv[1], { src: "src", dest: "dst", exclude: [] }, fake); console.log("SWALLOWED"); }
   catch (e) { console.log(/EACCES/.test(e.message) && /dst/.test(e.message) ? "RETHROWN_WITH_PATH" : "RETHROWN:" + e.message); }' "$DI_ROOT" 2>&1) || true
 assert_eq "Non-ENOENT fs errors are rethrown with the path" "RETHROWN_WITH_PATH" "$EACCES_OUT"
+ERRCLASS_OUT=$(cd "$REPO_ROOT" && node -e '
+  const { findOrphanedCommandMirrors, FileCheckError } = require("./lib/sync-resources.js");
+  const fs = require("fs");
+  const fake = { ...fs, existsSync: () => false, statSync: () => { const e = new Error("EACCES: permission denied"); e.code = "EACCES"; throw e; } };
+  try { findOrphanedCommandMirrors(process.argv[1], { src: "src", dest: "dst", exclude: [] }, fake); console.log("SWALLOWED"); }
+  catch (e) { console.log([e instanceof FileCheckError, e.code, /dst$/.test(e.path), e.cause && e.cause.code].join(",")); }' "$DI_ROOT" 2>&1) || true
+assert_eq "Mirror-folder errors raise FileCheckError (code, path, cause) instead of reading as absent" "true,EACCES,true,EACCES" "$ERRCLASS_OUT"
 
 # Test 1: Check mode should pass when files are in sync (read-only, real checkout)
 echo "Test 1: Check mode passes when synced"

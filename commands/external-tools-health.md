@@ -26,7 +26,11 @@ Check the status of external AI tools (Codex CLI, Gemini CLI) and their configur
 
 3. **Check configuration.** Read `.metaswarm/external-tools.yaml` if it exists, and report which adapters are enabled or disabled. Report a legacy `adapters.<tool>.model` in `external-tools.yaml` as deprecated.
 
-4. **Report status.** Show a summary table with one row per tool: `status`, `version`, `auth_valid`, `model`, and whether it's enabled in the config. For each tool that isn't `ready`, give the fix: install the CLI, log in (`codex login`, or set `OPENAI_API_KEY` / the Gemini credentials), or enable it in `.metaswarm/external-tools.yaml`.
+4. **Report status.** Show a summary table with one row per tool: `status`, `version`, `auth_valid`, `model`, and whether it's enabled in the config. Give each tool that isn't `ready` the remedy that matches its state:
+   - For a `"status":"error"` row (the adapter itself failed, e.g. model resolution): show the adapter's stderr and fix that cause. Don't suggest install or login.
+   - `version` is `not_installed`: install the CLI.
+   - `auth_valid` is `false`: log in (`codex login`, or set `OPENAI_API_KEY` / the Gemini credentials).
+   - Disabled in `.metaswarm/external-tools.yaml`: enable it there if it's wanted.
 
 ## Related
 
