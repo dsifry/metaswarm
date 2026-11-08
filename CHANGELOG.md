@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Changed
+
 - **Workflow enforcement reconciled with superpowers >= 6.4.1** (#67). The canonical rules live in `guides/workflow-enforcement.md`; skills and the CLAUDE.md/AGENTS.md/GEMINI.md templates point to it.
 - **Design Review Gate runs only for project-sized work.** Quick tasks, chat-only designs and short design docs for small changes (superpowers 7.0.1+) skip it.
 - **`docs/superpowers/specs/` is watched** alongside `docs/plans/`, and `/review-design --latest` searches both folders.
@@ -11,6 +12,7 @@
 - **INSTALL.md lists all 9 referenced superpowers skills** and states the minimum version (superpowers >= 6.4.1, tested with 7.0.2).
 
 ### Upgrade note
+
 Neither `/update` (marketplace plugin update) nor `npx metaswarm setup` (skips an instruction file that already mentions metaswarm) rewrites a project's own CLAUDE.md, AGENTS.md or GEMINI.md. Projects that already copied metaswarm's CLAUDE.md, AGENTS.md or GEMINI.md templates (or their `-append` variants) should refresh the "Workflow Enforcement" and "Quality Gates" sections from the new templates by hand.
 
 ## 0.13.0

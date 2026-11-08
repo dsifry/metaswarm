@@ -73,7 +73,11 @@ fi
 if [ -n "$SNIPPET" ]; then pass "review-design.md has latest-design-doc snippet"; else fail "review-design.md has latest-design-doc snippet"; fi
 
 WU2_TMP="$(mktemp -d)"
-trap 'rm -rf "$WU2_TMP"' EXIT
+NEG=""
+# bash 3.2 exits with the EXIT trap's status (0) when `set -u` aborts the script,
+# so a crash would look like a pass. DONE is set only after the summary runs.
+DONE=0
+trap 'rm -rf "$WU2_TMP" ${NEG:+"$NEG"}; [ "$DONE" = 1 ] || { echo "ABORTED before summary" >&2; exit 1; }' EXIT
 WU2_N=0
 NOFOUND='No design doc found in docs/plans/ or docs/superpowers/specs/'
 
@@ -204,17 +208,17 @@ TH_OUT=""; TH_RC=0
 trigger_hits() {
   local repo="$1" pat out rc line; shift
   TH_RC=0; TH_OUT=""
-  for pat in "${FORBIDDEN[@]}"; do
+  for pat in ${FORBIDDEN[@]+"${FORBIDDEN[@]}"}; do
     rc=0; out=$(git -C "$repo" grep -n -i -F -e "$pat" -- "$@") || rc=$?
     if [ "$rc" -ge 2 ]; then TH_RC=2; TH_OUT="$TH_OUT"$'\n'"git grep error rc=$rc for '$pat'"
     elif [ "$rc" -eq 0 ]; then TH_OUT="$TH_OUT"$'\n'"$out"; fi
   done
-  for pat in "${FORBIDDEN_RE[@]}"; do
+  for pat in ${FORBIDDEN_RE[@]+"${FORBIDDEN_RE[@]}"}; do
     rc=0; out=$(git -C "$repo" grep -n -i -E -e "$pat" -- "$@") || rc=$?
     if [ "$rc" -ge 2 ]; then TH_RC=2; TH_OUT="$TH_OUT"$'\n'"git grep error rc=$rc for '$pat'"
     elif [ "$rc" -eq 0 ]; then TH_OUT="$TH_OUT"$'\n'"$out"; fi
   done
-  for pat in "${CONDITIONAL[@]}"; do
+  for pat in ${CONDITIONAL[@]+"${CONDITIONAL[@]}"}; do
     rc=0; out=$(git -C "$repo" grep -n -i -E -e "$pat" -- "$@") || rc=$?
     if [ "$rc" -ge 2 ]; then
       TH_RC=2; TH_OUT="$TH_OUT"$'\n'"git grep error rc=$rc for '$pat'"
@@ -237,26 +241,96 @@ else
 fi
 
 # Negative self-test: the matcher must flag known-bad lines in a scratch git repo.
+# One fixture line per guard pattern. Each BAD line must be flagged by exactly one
+# pattern (so deleting any pattern fails), every pattern must flag at least one
+# BAD line (so a new pattern without a fixture fails), and no ALLOWED line may be
+# flagged. Forbidden-phrase fixtures carry "project-sized" so the conditional
+# class can't also match them.
+NEG_BAD=(
+  'project-sized triggers: after:superpowers:brainstorming'
+  'project-sized triggers: after:brainstorming'
+  'project-sized **MANDATORY HANDOFF**: run the gate'
+  'project-sized: triggered automatically after brainstorming'
+  'project-sized: runs after any design document'
+  'project-sized trigger "design document created"'
+  'project-sized trigger "design document committed"'
+  'project-sized frontmatter after:writing-plans'
+  'Project-sized means brainstorming wrote and committed a design doc file'
+  'project-sized: designs given only in chat skip the gate'
+  'For project-sized features (brainstorming committed a design doc), run the gate'
+  'project-sized 3. **Parallel session** (superpowers:executing-plans)'
+  'project-sized: execute in a separate session with batch checkpoints'
+  'project-sized gate runs after writing-plans finishes'
+  'After brainstorming, run the gate'
+  'The skill commits a design doc and stops'
+  'When brainstorming completes, run it'
+  'Once the design doc is created, run it'
+  'brainstorming → design review gate'
+)
+NEG_ALLOWED=(
+  'After brainstorming of a project-sized design, run the gate'
+  'brainstorming → design review gate (project-sized design doc only)'
+)
 NEG="$(mktemp -d)"
 git -C "$NEG" init -q
-printf '%s\n' 'After brainstorming -> run the gate' 'frontmatter after:superpowers:brainstorming' \
-  'After brainstorming of a project-sized design, run the gate' \
-  'frontmatter after:writing-plans' 'runs after writing-plans finishes' \
-  'Designs given only in chat skip the gate' \
-  'Project-sized means brainstorming wrote and committed a design doc file' \
-  'For project-sized features (brainstorming committed a design doc), run the gate' \
-  'Execute in a separate session with batch checkpoints' \
-  '3. **Parallel session** (superpowers:executing-plans)' >"$NEG/bad.md"
+printf '%s\n' "${NEG_BAD[@]}" "${NEG_ALLOWED[@]}" >"$NEG/bad.md"
 git -C "$NEG" add bad.md
+NEVER='zz-never-matches-zz'
+neg_ok=1; neg_msg=""
+# Full matcher: every BAD line flagged, no ALLOWED line flagged.
 trigger_hits "$NEG" .; neg="$TH_OUT"
-if [ "$TH_RC" -eq 0 ] && grep -qF 'bad.md:1:' <<<"$neg" && grep -qF 'bad.md:2:' <<<"$neg" && ! grep -qF 'bad.md:3:' <<<"$neg" \
-   && grep -qF 'bad.md:4:' <<<"$neg" && grep -qF 'bad.md:5:' <<<"$neg" && grep -qF 'bad.md:6:' <<<"$neg" \
-   && grep -qF 'bad.md:7:' <<<"$neg" && grep -qF 'bad.md:8:' <<<"$neg" && grep -qF 'bad.md:9:' <<<"$neg" && grep -qF 'bad.md:10:' <<<"$neg"; then
-  pass "trigger guard self-test flags bad lines and allows project-sized"
+[ "$TH_RC" -eq 0 ] || { neg_ok=0; neg_msg="$neg_msg rc=$TH_RC"; }
+i=0
+while [ "$i" -lt "${#NEG_BAD[@]}" ]; do
+  n=$((i + 1))
+  grep -qF "bad.md:$n:" <<<"$neg" || { neg_ok=0; neg_msg="$neg_msg unflagged:$n"; }
+  i=$((i + 1))
+done
+j=0
+while [ "$j" -lt "${#NEG_ALLOWED[@]}" ]; do
+  n=$((${#NEG_BAD[@]} + j + 1))
+  ! grep -qF "bad.md:$n:" <<<"$neg" || { neg_ok=0; neg_msg="$neg_msg allowed-flagged:$n"; }
+  j=$((j + 1))
+done
+# Per pattern: run the matcher with only that pattern; count hits per BAD line.
+NEG_COUNTS=""
+neg_one() { # <class> <pattern>: prints the flagged line numbers for one pattern
+  (
+    FORBIDDEN=("$NEVER"); FORBIDDEN_RE=("$NEVER"); CONDITIONAL=("$NEVER")
+    case "$1" in
+      F) FORBIDDEN=("$2") ;;
+      R) FORBIDDEN_RE=("$2") ;;
+      C) CONDITIONAL=("$2") ;;
+    esac
+    trigger_hits "$NEG" .
+    printf '%s\n' "$TH_OUT" | sed -n 's/^bad\.md:\([0-9]*\):.*/\1/p'
+  )
+}
+for cls in F R C; do
+  case "$cls" in
+    F) pats=(${FORBIDDEN[@]+"${FORBIDDEN[@]}"}) ;;
+    R) pats=(${FORBIDDEN_RE[@]+"${FORBIDDEN_RE[@]}"}) ;;
+    C) pats=(${CONDITIONAL[@]+"${CONDITIONAL[@]}"}) ;;
+  esac
+  for pat in ${pats[@]+"${pats[@]}"}; do
+    hits="$(neg_one "$cls" "$pat")"
+    [ -n "$hits" ] || { neg_ok=0; neg_msg="$neg_msg no-fixture:'$pat'"; }
+    NEG_COUNTS="$NEG_COUNTS"$'\n'"$hits"
+  done
+done
+i=0
+while [ "$i" -lt "${#NEG_BAD[@]}" ]; do
+  n=$((i + 1))
+  c=$(printf '%s\n' "$NEG_COUNTS" | grep -cx -e "$n" || true)
+  [ "$c" -eq 1 ] || { neg_ok=0; neg_msg="$neg_msg line$n-matched-by-$c"; }
+  i=$((i + 1))
+done
+if [ "$neg_ok" -eq 1 ]; then
+  pass "trigger guard self-test: each pattern has its own fixture, project-sized lines allowed"
 else
-  fail "trigger guard self-test (rc=$TH_RC, got: $neg)"
+  fail "trigger guard self-test:$neg_msg"
 fi
-rm -rf "${NEG:?}"
+rm -rf "${NEG:?}"; NEG=""
 
 # Pointer check: every sweep source points at the canonical guide.
 WU3_SOURCES=(
@@ -331,4 +405,5 @@ assert_in "CHANGELOG.md mentions guide and minimum version" "$(cat "$REPO_ROOT/C
 # ---------------------------------------------------------------------------
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
+DONE=1
 [ "$FAIL" -eq 0 ] || exit 1
