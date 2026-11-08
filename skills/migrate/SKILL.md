@@ -21,8 +21,8 @@ Before presenting any migration preview or file list, ALWAYS lead with this fram
 >
 > **Nothing is lost**: Your project-specific files (CLAUDE.md, .coverage-thresholds.json, .beads/, bin/, scripts/) are NEVER touched. Only duplicate metaswarm framework files are removed.
 >
-> **Fully reversible**: All removals are staged with `git rm` (not permanently deleted). Before you commit:
-> - Undo everything: `git restore --staged . && git checkout -- .`
+> **Reversible**: Removals of git-tracked files are staged with `git rm` (not permanently deleted). Before you commit:
+> - Undo the removals: see [Rollback](#rollback-nothing-is-permanent) (it restores only the files this migration removed, not other changes)
 > - After committing: `git revert HEAD`
 >
 > **No commit is made automatically** — you review and commit when you're satisfied.
@@ -113,7 +113,7 @@ These are unmodified copies that the plugin now provides directly:
 - .metaswarm/project-profile.json updated with "distribution": "plugin"
 
 ### How to undo (before committing)
-git restore --staged . && git checkout -- .
+git diff --cached --name-only -z --diff-filter=D -- .claude/plugins/metaswarm .claude/rubrics .claude/guides .claude/commands/metaswarm-setup.md .claude/commands/metaswarm-update-version.md | xargs -0 git restore --staged --worktree --
 ```
 
 ---
@@ -121,7 +121,7 @@ git restore --staged . && git checkout -- .
 ## Step 5: User Confirmation
 
 Use `AskUserQuestion`:
-- Remind the user: "This stages the cleanup — nothing is committed yet. You can undo with `git restore --staged . && git checkout -- .`"
+- Remind the user: "This stages the cleanup — nothing is committed yet. You can undo just these removals before committing (see the Rollback section)."
 - Ask: "Ready to clean up the redundant framework files?" (not "Ready to delete files?")
 - For each user-modified file, ask individually: keep, remove, or show diff
 - If the user chooses "diff", display the difference between their version and the plugin's, then re-ask
@@ -151,7 +151,7 @@ git rm .claude/commands/metaswarm-setup.md
 git rm .claude/commands/metaswarm-update-version.md
 ```
 
-**After running**: Reassure: "Done — XX files staged for removal. These are only staged, not committed. Run `git status` to see the staged changes, or `git restore --staged . && git checkout -- .` to undo."
+**After running**: Reassure: "Done — XX files staged for removal. These are only staged, not committed. Run `git status` to see the staged changes; the Rollback section below shows how to undo just these removals."
 
 **Untracked files** -- use `rm -f` (unlikely but handle gracefully).
 
@@ -215,9 +215,9 @@ Your project files (CLAUDE.md, .coverage-thresholds.json, .beads/, etc.) were no
 3. Verify everything works: try `/start-task`
 
 ### If anything seems wrong
-- Undo before committing: `git restore --staged . && git checkout -- .`
+- Undo before committing: `git diff --cached --name-only -z --diff-filter=D -- .claude/plugins/metaswarm .claude/rubrics .claude/guides .claude/commands/metaswarm-setup.md .claude/commands/metaswarm-update-version.md | xargs -0 git restore --staged --worktree --` restores only deletions under the legacy paths Step 7 removes from, leaving your other changes (including other staged deletions) alone
 - Undo after committing: `git revert HEAD`
-- Full re-install: `npx metaswarm install` (npm package still available)
+- Bring the old files back: undoing as above restores the git-tracked ones. Untracked files removed in Step 7 were never in git and can't be restored this way. There is no command that re-creates the old npm-copied layout: today `npx metaswarm init` installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
 ```
 
 ---
@@ -236,10 +236,11 @@ Your project files (CLAUDE.md, .coverage-thresholds.json, .beads/, etc.) were no
 
 All removals use `git rm`, which only stages changes — files are NOT deleted from git history. The migration never auto-commits, so the user always has a chance to review and undo:
 
-- **Before committing** (full undo): `git restore --staged . && git checkout -- .`
+- **Before committing** (undo the migration only): `git diff --cached --name-only -z --diff-filter=D -- .claude/plugins/metaswarm .claude/rubrics .claude/guides .claude/commands/metaswarm-setup.md .claude/commands/metaswarm-update-version.md | xargs -0 git restore --staged --worktree --`. It restores only staged deletions under the legacy paths Step 7 removes from, so unrelated work, including other staged deletions, is kept. The shims and profile changes from Steps 8 and 9 stay; delete or `git restore -- <path>` them by path
 - **After committing** (full undo): `git revert HEAD`
 - **Single file recovery**: `git checkout HEAD~1 -- <path>`
-- **Full re-install of old approach**: `npx metaswarm install` (npm package still published)
+- **Untracked files** removed with `rm -f` in Step 7 are not in git, so none of the above brings them back
+- **Old npm-copied layout**: restore its git-tracked files with the commands above. No current command re-creates it: `npx metaswarm init` now installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
 
 ---
 

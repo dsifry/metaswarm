@@ -110,7 +110,7 @@ Set human checkpoints after the database schema and after the AI
 integration. When all work units pass, create a PR.
 ```
 
-That's it. The orchestrator takes over:
+That's it. The orchestrator takes over (full orchestration: the Design Review Gate reviews the plan):
 
 1. **Research** — Scans your project, notes the tech stack from your prompt
 2. **Plan** — Architect agent creates an implementation plan with work units
@@ -191,15 +191,18 @@ for events, with retry logic, signature verification, and a delivery log UI.
 
 Pick something with real complexity — a new subsystem, a permissions layer, a reporting pipeline. Something that touches multiple files and needs real architecture. Then watch what happens.
 
-This triggers the full pipeline:
+This triggers the `/start-task` pipeline:
 1. **Prime** — Loads relevant knowledge for the task
-2. **Research** — Explores your codebase for related patterns
-3. **Plan** — Creates an implementation plan
-4. **Plan Review Gate** — 3 adversarial reviewers validate the plan (Feasibility, Completeness, Scope & Alignment)
-5. **Design Review** (if complex) — Runs the 6-agent Design Review Gate
-6. **Implement** — TDD implementation
-7. **Review** — Code review + security audit
-8. **PR** — Creates PR with auto-shepherd
+2. **Assess** — Sizes the task and picks the process
+3. **Brainstorm** (if the problem is unclear) — Refines the idea into a design
+4. **Design Review Gate** (project-sized design doc only) — 6 agents review the design doc before any plan is written
+5. **Plan** — Creates an implementation plan
+6. **Plan Review Gate** — 3 adversarial reviewers validate the plan (Feasibility, Completeness, Scope & Alignment) before it is presented
+7. **Implement** — You choose the execution method, then TDD implementation
+8. **Review** — Code review + security audit
+9. **PR** — Creates PR with auto-shepherd
+
+The full orchestration workflow (above) runs the gates the other way round: there is no design doc, so the Design Review Gate reviews the plan after the Plan Review Gate. See `guides/workflow-enforcement.md`.
 
 ### Optional: BEADS Issue Tracking
 

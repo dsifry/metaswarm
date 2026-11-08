@@ -1,7 +1,7 @@
 description = "Begin tracked work on a task with complexity assessment"
-prompt = """Invoke the metaswarm start-task skill. The user wants to begin tracked work.
+prompt = """Follow the metaswarm /start-task command: read `commands/start-task.md` in the metaswarm extension directory (usually ~/.gemini/extensions/metaswarm/) and carry out its steps. Set PLUGIN_ROOT to that directory first, so its snippets find bin/ and lib/ in the extension. The user wants to begin tracked work.
 
 Arguments provided by the user: {{args}}
 
-Follow the start-task workflow: Pre-Task Checklist, Task Assessment, route to Simple or Complex flow.
+Its workflow: Pre-Task Checklist, Task Assessment, route to Simple or Complex flow.
 """

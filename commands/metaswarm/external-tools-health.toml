@@ -1,5 +1,5 @@
 description = "Check status of external AI tools (Codex CLI, Gemini CLI)"
-prompt = """Invoke the metaswarm external-tools-health skill. The user wants to check external tool availability.
+prompt = """Follow the metaswarm /external-tools-health command: read `commands/external-tools-health.md` in the metaswarm extension directory (usually ~/.gemini/extensions/metaswarm/) and carry out its steps. Set PLUGIN_ROOT to that directory first, so its snippets find bin/ and lib/ in the extension. The user wants to check external tool availability.
 
 Arguments provided by the user: {{args}}
 

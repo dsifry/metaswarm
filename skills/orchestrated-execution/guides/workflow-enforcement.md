@@ -2,6 +2,17 @@
 
 How metaswarm's quality gates fit around superpowers' brainstorming and writing-plans skills. This is the canonical copy; other files point here instead of restating it.
 
+## Two pipelines
+
+metaswarm has two entry points, and the Design Review Gate reviews a different artifact in each:
+
+| Pipeline | Started by | Order | The Design Review Gate reviews |
+|---|---|---|---|
+| Brainstorming path | `/start-task`, `/brainstorm` (superpowers brainstorming and writing-plans) | brainstorming → Design Review Gate (project-sized design doc only) → writing-plans → Plan Review Gate → execution method menu | the committed design doc |
+| Full orchestration | "Use the full metaswarm orchestration workflow" (issue-orchestrator, `orchestrated-execution`) | Research → Plan → Plan Review Gate → Design Review Gate → Work Unit Decomposition → orchestrated execution → Final Review → PR | the plan; there is no separate design doc |
+
+The sections below describe the brainstorming path's triggers. In full orchestration, both gates always run, in the order shown.
+
 ## Supported superpowers versions
 
 superpowers 6.4.1 or later. Tested with 7.0.2.

@@ -27,7 +27,7 @@ Run `/metaswarm:start-task` to begin tracked work, or `/metaswarm:setup` to conf
 For complex features, describe what you want with a Definition of Done and say:
 `Use the full metaswarm orchestration workflow.`
 
-This runs: Research -> Plan -> Design Review Gate -> Work Unit Decomposition -> Orchestrated Execution (4-phase loop per unit) -> Final Review -> PR.
+This runs the full orchestration pipeline: Research -> Plan -> Plan Review Gate -> Design Review Gate (reviews the plan) -> Work Unit Decomposition -> Orchestrated Execution (4-phase loop per unit) -> Final Review -> PR. When the work instead goes through brainstorming and it commits a project-sized design doc, the Design Review Gate reviews that design doc, before writing-plans (see the metaswarm plugin's `guides/workflow-enforcement.md`).
 
 ## Quality Gates (MANDATORY)
 

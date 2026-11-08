@@ -182,7 +182,7 @@ Validates every implementation plan through 3 adversarial reviewers before execu
 - **Completeness Reviewer**: Checks for missing work units, untested edge cases, and gaps in the Definition of Done
 - **Scope & Alignment Reviewer**: Verifies the plan stays within the issue scope and aligns with codebase conventions
 
-All 3 reviewers must APPROVE before the plan proceeds to implementation. Sits between the planning phase and the Design Review Gate in the workflow pipeline.
+All 3 reviewers must APPROVE before the plan proceeds to implementation. In the full orchestration pipeline it sits between planning and the Design Review Gate, which then reviews the plan. On the `/start-task` brainstorming path it runs after the Design Review Gate has approved the design doc and the plan is written (see `guides/workflow-enforcement.md`).
 
 ### External Tools
 

@@ -128,7 +128,7 @@ For the full Team Mode protocol — including message routing, context sharing, 
 
 ## Plan Review Gate
 
-After the Architect creates an implementation plan and before it reaches the Design Review Gate, the plan passes through the **Plan Review Gate**. Three adversarial reviewers validate the plan independently:
+Once an implementation plan is written, it passes through the **Plan Review Gate** before it is presented. In full orchestration that is before the Design Review Gate, which then reviews the plan; on the brainstorming path the Design Review Gate has already reviewed the design doc (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md#two-pipelines)). Three adversarial reviewers validate the plan independently:
 
 | Reviewer | Focus |
 | --- | --- |

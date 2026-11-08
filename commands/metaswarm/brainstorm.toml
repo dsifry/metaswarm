@@ -1,5 +1,5 @@
 description = "Refine an idea through collaborative brainstorming before implementation"
-prompt = """Invoke the metaswarm brainstorm skill. The user wants to brainstorm and refine an idea.
+prompt = """Follow the metaswarm /brainstorm command: read `commands/brainstorm.md` in the metaswarm extension directory (usually ~/.gemini/extensions/metaswarm/) and carry out its steps. Set PLUGIN_ROOT to that directory first, so its snippets find bin/ and lib/ in the extension. The user wants to brainstorm and refine an idea.
 
 Arguments provided by the user: {{args}}
 
