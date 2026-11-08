@@ -57,7 +57,7 @@ If a GitHub Issue specifies different coverage requirements, update `.coverage-t
 
 ## Quality Gates
 
-- **Design Review Gate**: 5-reviewer design review after design is drafted (`$design-review-gate`)
+- **Design Review Gate**: 5-reviewer design review after a project-sized design doc is committed (`$design-review-gate`)
 - **Plan Review Gate**: Adversarial review after any implementation plan is drafted. 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) -- ALL must PASS before presenting the plan
 - **Coverage Gate**: Reads `.coverage-thresholds.json` and runs the enforcement command -- BLOCKING gate before PR creation
 
@@ -65,9 +65,9 @@ If a GitHub Issue specifies different coverage requirements, update `.coverage-t
 
 These rules override any conflicting instructions. They ensure the full metaswarm pipeline is followed.
 
-### After Brainstorming
+### After a Project-Sized Design Doc Is Committed
 
-When brainstorming completes and commits a design document:
+When brainstorming writes and commits a project-sized design doc (see the metaswarm plugin's `guides/workflow-enforcement.md`):
 
 1. **STOP** -- do NOT proceed directly to planning or implementation
 2. **RUN the Design Review Gate** -- invoke `$design-review-gate`

@@ -1,18 +1,16 @@
 ---
 name: design-review-gate
-description: Automatic review gate that runs after brainstorming completes - spawns PM, Architect, Designer, Security, and CTO agents in parallel, iterates under the severity rule until all approve or it escalates
+description: Automatic review gate that runs when brainstorming commits a project-sized design doc - spawns PM, Architect, Designer, Security, and CTO agents in parallel, iterates under the severity rule until all approve or it escalates
 auto_activate: true
 triggers:
-  - "design document created"
   - "project-sized design doc committed (docs/plans/*-design.md or docs/superpowers/specs/*-design.md)"
-  - after:superpowers:brainstorming
 ---
 
 # Design Review Gate
 
 ## Purpose
 
-This skill automatically activates after a design document is created (typically via `superpowers:brainstorming`). It ensures complex features receive proper review before implementation begins by spawning five specialist agents:
+This skill automatically activates when brainstorming writes and commits a project-sized design doc (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). It ensures complex features receive proper review before implementation begins by spawning five specialist agents:
 
 1. **Product Manager Agent** - Use case validation and user benefit review
 2. **Architect Agent** - Technical architecture review
@@ -40,8 +38,7 @@ In either mode, the review criteria, the severity rule (see Phase 3), and escala
 This skill auto-activates when:
 
 1. A project-sized design doc is committed to `docs/plans/*-design.md` or `docs/superpowers/specs/*-design.md` (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md))
-2. The `superpowers:brainstorming` skill completes
-3. User explicitly requests: `/review-design <path-to-design.md>`
+2. User explicitly requests: `/review-design <path-to-design.md>`
 
 ---
 
@@ -668,7 +665,7 @@ The design review gate succeeds when:
 
 ## Related Skills
 
-- `superpowers:brainstorming` - Triggers this gate after design completion
+- `superpowers:brainstorming` - Triggers this gate when it commits a project-sized design doc
 - `superpowers:writing-plans` - Used after gate approval for detailed implementation plan
 
 ---

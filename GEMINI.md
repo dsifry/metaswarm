@@ -31,7 +31,7 @@ This runs: Research -> Plan -> Design Review Gate -> Work Unit Decomposition -> 
 
 ## Quality Gates (MANDATORY)
 
-- **After brainstorming** -> MUST run `/metaswarm:review-design` before planning
+- **After a project-sized design doc is committed** -> MUST run `/metaswarm:review-design` before planning (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **After any plan** -> MUST run Plan Review Gate before presenting to user
 - **Before finishing branch** -> MUST run `/metaswarm:self-reflect` before PR
 - **Coverage** -> `.coverage-thresholds.json` is the single source of truth. BLOCKING gate.

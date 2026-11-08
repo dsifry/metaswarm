@@ -90,9 +90,9 @@ Reached via the severity rule: an escalate condition (a recurring or disputed bl
 
 ## Integration
 
-### After Brainstorming
+### After a Project-Sized Design Doc Is Committed
 
-This command is automatically invoked by the brainstorming extension skill after `superpowers:brainstorming` commits a design document.
+This command is automatically invoked by the brainstorming extension skill when brainstorming commits a project-sized design doc (see the metaswarm plugin's `guides/workflow-enforcement.md`).
 
 ### Manual Invocation
 
@@ -197,5 +197,5 @@ On any escalation (including the 10-round cap), the human chooses Revise, Narrow
 ## Related Skills
 
 - `your-project:design-review-gate` - The gate implementation
-- `your-project:brainstorming-extension` - Auto-triggers this after brainstorming
+- `your-project:brainstorming-extension` - Auto-triggers this when brainstorming commits a project-sized design doc
 - `superpowers:brainstorming` - The design creation skill

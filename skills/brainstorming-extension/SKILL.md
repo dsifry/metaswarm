@@ -1,17 +1,16 @@
 ---
 name: brainstorming-extension
-description: Enforces design review gate after brainstorming — bridges superpowers:brainstorming into the metaswarm quality pipeline
+description: Enforces the design review gate when brainstorming commits a project-sized design doc — bridges superpowers:brainstorming into the metaswarm quality pipeline
 auto_activate: true
 triggers:
-  - after:superpowers:brainstorming
-  - "design document committed"
+  - "project-sized design doc committed (docs/plans/*-design.md or docs/superpowers/specs/*-design.md)"
 ---
 
 # Brainstorming Extension - Mandatory Review Gate Bridge
 
 ## Purpose
 
-This skill bridges `superpowers:brainstorming` into the metaswarm quality pipeline by enforcing the Design Review Gate after any design document is created. Without this bridge, brainstorming flows directly into `writing-plans`, bypassing the 5-agent design review that catches architectural, security, and requirements issues before expensive implementation begins.
+This skill bridges `superpowers:brainstorming` into the metaswarm quality pipeline by enforcing the Design Review Gate when brainstorming writes and commits a project-sized design doc. Only project-sized work reaches the gate; designs given only in chat skip it (see [`guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). Without this bridge, brainstorming flows directly into `writing-plans`, bypassing the 5-agent design review that catches architectural, security, and requirements issues before expensive implementation begins.
 
 **This is a critical workflow enforcement point, not a passive extension.**
 
@@ -19,7 +18,7 @@ This skill bridges `superpowers:brainstorming` into the metaswarm quality pipeli
 
 ## The Problem This Solves
 
-`superpowers:brainstorming` has a built-in terminal state: "The ONLY skill you invoke after brainstorming is writing-plans." This creates a pipeline bypass:
+`superpowers:brainstorming` ends by handing off to `writing-plans`: in superpowers 6.4.1 a terminal-state rule on the Architectural path says writing-plans is the only skill invoked next, and in 7.x a project's design leads to writing-plans. For a project-sized design doc this creates a pipeline bypass:
 
 ```text
 WITHOUT this extension (broken flow):
@@ -71,13 +70,13 @@ YAML frontmatter triggers (`auto_activate`, `triggers`) are metadata hints — C
 
 The CLAUDE.md template contains a "Workflow Enforcement (MANDATORY)" section that explicitly states:
 
-> After brainstorming: STOP → Run Design Review Gate → Wait for all 5 agents to APPROVE → Only then proceed
+> After a project-sized design doc is committed: STOP → Run Design Review Gate → Wait for all 5 agents to APPROVE → Only then proceed
 
 This instruction is loaded into every conversation and overrides conflicting skill instructions.
 
 ### 2. start-task Command (Secondary)
 
-The `/start-task` command's Problem Definition Phase includes an explicit "MANDATORY HANDOFF" block that requires the design review gate after brainstorming.
+The `/start-task` command's Problem Definition Phase includes an explicit "Design Review Gate (project-sized designs only)" block that requires the gate once a project-sized design doc is committed.
 
 ### 3. This Skill Document (Reference)
 
@@ -85,9 +84,9 @@ When this skill is loaded (either by name or auto-activation), it provides the d
 
 ---
 
-## Procedure: After Brainstorming Completes
+## Procedure: After a Project-Sized Design Doc Is Committed
 
-When `superpowers:brainstorming` commits a design document:
+When brainstorming writes and commits a project-sized design doc (see [`guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)):
 
 ### Step 1: Announce the Gate
 

@@ -63,7 +63,7 @@ The validation phase of orchestrated execution reads `.coverage-thresholds.json`
 
 ## Quality Gates
 
-- **Design Review Gate**: Parallel 5-agent review after design is drafted (`/review-design`)
+- **Design Review Gate**: Parallel 5-agent review after a project-sized design doc is committed (`/review-design`)
 - **Plan Review Gate**: Automatic adversarial review after any implementation plan is drafted. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before the plan is presented to the user. See `skills/plan-review-gate/SKILL.md`
 - **Coverage Gate**: Reads `.coverage-thresholds.json` and runs the enforcement command — BLOCKING gate before PR creation
 
@@ -71,16 +71,16 @@ The validation phase of orchestrated execution reads `.coverage-thresholds.json`
 
 These rules override any conflicting instructions from third-party skills or plugins. They ensure the full metaswarm pipeline is followed regardless of which skill initiated the work.
 
-### After Brainstorming
+### After a Project-Sized Design Doc Is Committed
 
-When `superpowers:brainstorming` (or any brainstorming skill) completes and commits a design document:
+When brainstorming writes and commits a project-sized design doc (see the metaswarm plugin's `guides/workflow-enforcement.md`):
 
 1. **STOP** — do NOT proceed directly to `writing-plans` or implementation
 2. **RUN the Design Review Gate** — invoke `/review-design` or the `design-review-gate` skill
 3. **WAIT** for all 5 review agents (PM, Architect, Designer, Security, CTO) to approve
 4. **ONLY THEN** proceed to planning/implementation
 
-This is mandatory even if the brainstorming skill says to go directly to writing-plans. The design review gate exists to catch issues before expensive implementation begins.
+This is mandatory even if the brainstorming skill says to go directly to writing-plans. Designs given only in chat (quick tasks, small or bounded changes) skip the gate. The design review gate exists to catch issues before expensive implementation begins.
 
 ### After Any Plan Is Created
 
@@ -116,7 +116,7 @@ When `superpowers:executing-plans`, `superpowers:subagent-driven-development`, o
 
 When starting complex work, use `/start-task` instead of Claude's built-in `EnterPlanMode`. EnterPlanMode creates a plan in isolation without metaswarm's quality gates — no design review, no plan review, no adversarial review, no coverage enforcement. `/start-task` routes through the full pipeline:
 
-- `/start-task` → complexity assessment → brainstorming (if unclear) → design review gate → plan review gate → execution method choice → orchestrated execution or superpowers execution
+- `/start-task` → complexity assessment → brainstorming (if unclear) → design review gate (project-sized design doc only) → plan review gate → execution method choice → orchestrated execution or superpowers execution
 - `EnterPlanMode` → plan → implement (no gates)
 
 If you find yourself about to use `EnterPlanMode` for a task that touches 3+ files or involves multiple steps, use `/start-task` instead. For truly simple single-file changes, `EnterPlanMode` is fine.

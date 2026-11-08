@@ -24,7 +24,7 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 
 ### Quality Gates
 
-- **Design Review Gate** — Parallel 5-agent review after design is drafted (`/review-design`)
+- **Design Review Gate** — Parallel 5-agent review after a project-sized design doc is committed (`/review-design`)
 - **Plan Review Gate** — Automatic adversarial review after any implementation plan is drafted. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before presenting the plan. See `skills/plan-review-gate/SKILL.md`
 - **Coverage Gate** — `.coverage-thresholds.json` defines thresholds. BLOCKING gate before PR creation
 
@@ -46,7 +46,7 @@ Development patterns and standards are documented in `guides/` — covering agen
 
 These rules override any conflicting instructions from third-party skills:
 
-- **After brainstorming** → MUST run Design Review Gate (5 agents) before writing-plans or implementation
+- **After a project-sized design doc is committed** → MUST run Design Review Gate (5 agents) before writing-plans or implementation (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **After any plan is created** → MUST run Plan Review Gate (3 adversarial reviewers) before presenting to user
 - **Execution method choice** → ALWAYS ask the user whether to use metaswarm orchestrated execution (more thorough, uses more tokens) or superpowers execution skills (faster, lighter-weight). Never auto-select.
 - **Before finishing a branch** → MUST run `/self-reflect` and commit knowledge base updates before PR creation

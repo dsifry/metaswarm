@@ -24,7 +24,7 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 
 ### Quality Gates
 
-- **Design Review Gate** -- 5-reviewer design review after design is drafted (`/metaswarm:review-design`)
+- **Design Review Gate** -- 5-reviewer design review after a project-sized design doc is committed (`/metaswarm:review-design`)
 - **Plan Review Gate** -- 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) -- ALL must PASS
 - **Coverage Gate** -- `.coverage-thresholds.json` defines thresholds. BLOCKING gate before PR creation
 
@@ -36,7 +36,7 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 
 ### Workflow Enforcement (MANDATORY)
 
-- **After brainstorming** -> MUST run Design Review Gate before planning or implementation
+- **After a project-sized design doc is committed** -> MUST run Design Review Gate before planning or implementation (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **After any plan is created** -> MUST run Plan Review Gate before presenting to user
 - **Before finishing a branch** -> MUST run `/metaswarm:self-reflect` and commit knowledge base updates before PR creation
 - **Coverage** -> `.coverage-thresholds.json` is the single source of truth. All skills must check it.

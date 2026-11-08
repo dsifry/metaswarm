@@ -155,5 +155,105 @@ done
 
 # ---------------------------------------------------------------------------
 echo ""
+echo "WU3: Design Review Gate trigger guard"
+# ---------------------------------------------------------------------------
+
+# Class A: forbidden on any line. Later work units may append.
+FORBIDDEN=(
+  'after:superpowers:brainstorming'
+  'after:brainstorming'
+  'MANDATORY HANDOFF'
+  'triggered automatically after brainstorming'
+  'after any design document'
+  '"design document created"'
+  '"design document committed"'
+)
+# Class B: allowed only when the same line also says project-sized.
+CONDITIONAL=(
+  '(^|[^[:alnum:]_])after brainstorming'
+  'commits a design (doc|document)'
+  'brainstorming[^.]{0,20}(completes|commits)'
+  'design (doc|document) (is )?(created|committed)'
+  'brainstorming[^→]{0,30}→[^→]{0,10}design review gate'
+)
+
+WU3_EXCLUDES=(
+  ':!guides/workflow-enforcement.md'
+  ':!skills/*/guides/workflow-enforcement.md'
+  ':!CHANGELOG.md'
+  ':!docs/plans/'
+  ':!docs/handoffs/'
+  ':!docs/superpowers/'
+  ':!.beads/'
+  ':!tests/'
+)
+
+# trigger_hits <git-repo> <pathspec>...  sets TH_OUT to offending "file:line:text" lines
+# and TH_RC (0 ok, 2 if git grep itself errored; never swallowed).
+TH_OUT=""; TH_RC=0
+trigger_hits() {
+  local repo="$1" pat out rc line; shift
+  TH_RC=0; TH_OUT=""
+  for pat in "${FORBIDDEN[@]}"; do
+    rc=0; out=$(git -C "$repo" grep -n -i -F -e "$pat" -- "$@") || rc=$?
+    if [ "$rc" -ge 2 ]; then TH_RC=2; TH_OUT="$TH_OUT"$'\n'"git grep error rc=$rc for '$pat'"
+    elif [ "$rc" -eq 0 ]; then TH_OUT="$TH_OUT"$'\n'"$out"; fi
+  done
+  for pat in "${CONDITIONAL[@]}"; do
+    rc=0; out=$(git -C "$repo" grep -n -i -E -e "$pat" -- "$@") || rc=$?
+    if [ "$rc" -ge 2 ]; then
+      TH_RC=2; TH_OUT="$TH_OUT"$'\n'"git grep error rc=$rc for '$pat'"
+    elif [ "$rc" -eq 0 ]; then
+      while IFS= read -r line; do
+        if ! grep -qi -F -e 'project-sized' <<<"$line"; then TH_OUT="$TH_OUT"$'\n'"$line"; fi
+      done <<<"$out"
+    fi
+  done
+  TH_OUT="$(printf '%s\n' "$TH_OUT" | sed '/^$/d' | sort -u)"
+}
+
+trigger_hits "$REPO_ROOT" . "${WU3_EXCLUDES[@]}"
+if [ "$TH_RC" -ne 0 ]; then
+  fail "trigger guard: git grep failed: $TH_OUT"
+elif [ -z "$TH_OUT" ]; then
+  pass "no stale Design Review Gate trigger wording"
+else
+  fail "stale Design Review Gate trigger wording ($(printf '%s\n' "$TH_OUT" | wc -l | tr -d ' ') lines): $(printf '%s\n' "$TH_OUT" | cut -d: -f1,2 | tr '\n' ' ')"
+fi
+
+# Negative self-test: the matcher must flag known-bad lines in a scratch git repo.
+NEG="$(mktemp -d)"
+git -C "$NEG" init -q
+printf '%s\n' 'After brainstorming -> run the gate' 'frontmatter after:superpowers:brainstorming' \
+  'After brainstorming of a project-sized design, run the gate' >"$NEG/bad.md"
+git -C "$NEG" add bad.md
+trigger_hits "$NEG" .; neg="$TH_OUT"
+if [ "$TH_RC" -eq 0 ] && grep -qF 'bad.md:1:' <<<"$neg" && grep -qF 'bad.md:2:' <<<"$neg" && ! grep -qF 'bad.md:3:' <<<"$neg"; then
+  pass "trigger guard self-test flags bad lines and allows project-sized"
+else
+  fail "trigger guard self-test (rc=$TH_RC, got: $neg)"
+fi
+rm -rf "${NEG:?}"
+
+# Pointer check: every sweep source points at the canonical guide.
+WU3_SOURCES=(
+  CLAUDE.md AGENTS.md GEMINI.md
+  templates/CLAUDE.md templates/AGENTS.md templates/GEMINI.md
+  templates/CLAUDE-append.md templates/AGENTS-append.md templates/GEMINI-append.md
+  skills/brainstorming-extension/SKILL.md skills/design-review-gate/SKILL.md skills/start/SKILL.md
+  skills/orchestrated-execution/SKILL.md
+  commands/start-task.md commands/brainstorm.md commands/review-design.md
+  lib/sync-resources.js docs/index.html
+)
+for f in "${WU3_SOURCES[@]}"; do
+  if grep -qF -e 'workflow-enforcement.md' "$REPO_ROOT/$f"; then
+    pass "$f points at workflow-enforcement.md"
+  else
+    fail "$f points at workflow-enforcement.md"
+  fi
+done
+
+# ---------------------------------------------------------------------------
+echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1
