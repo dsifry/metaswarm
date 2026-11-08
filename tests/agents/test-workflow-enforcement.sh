@@ -419,10 +419,14 @@ done
 rm -rf "${ONEG:?}"; ONEG=""
 
 # The guide is the canonical statement of both pipelines (#73).
-grep -qF "| Full orchestration |" "$REPO_ROOT/guides/workflow-enforcement.md" \
-  && grep -qF "Research → Plan → Plan Review Gate → Design Review Gate → Work Unit Decomposition" "$REPO_ROOT/guides/workflow-enforcement.md" \
-  && grep -qF "brainstorming → Design Review Gate (project-sized design doc only) → writing-plans → Plan Review Gate" "$REPO_ROOT/guides/workflow-enforcement.md" \
-  && pass "guide states both pipelines and what the Design Review Gate reviews in each" || fail "guide does not state both pipelines"
+# Each row must carry its order AND the artifact the Design Review Gate reviews.
+GUIDE="$REPO_ROOT/guides/workflow-enforcement.md"
+if grep -E '^\| Full orchestration \|' "$GUIDE" | grep -F "Research → Plan → Plan Review Gate → Design Review Gate → Work Unit Decomposition" | grep -qE '\| the plan; there is no separate design doc \|$' \
+  && grep -E '^\| Brainstorming path \|' "$GUIDE" | grep -F "brainstorming → Design Review Gate (project-sized design doc only) → writing-plans → Plan Review Gate" | grep -qE '\| the committed design doc \|$'; then
+  pass "guide states both pipelines and what the Design Review Gate reviews in each"
+else
+  fail "guide does not state both pipelines with the artifact each Design Review Gate reviews"
+fi
 
 # Pointer check: every sweep source points at the canonical guide.
 WU3_SOURCES=(

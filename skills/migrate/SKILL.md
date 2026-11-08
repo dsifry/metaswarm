@@ -215,9 +215,9 @@ Your project files (CLAUDE.md, .coverage-thresholds.json, .beads/, etc.) were no
 3. Verify everything works: try `/start-task`
 
 ### If anything seems wrong
-- Undo before committing: `git restore --staged . && git checkout -- .`
+- Undo before committing: `git diff --cached --name-only -z --diff-filter=D | xargs -0 git restore --staged --worktree --` restores only the files the migration deleted, leaving your other changes alone
 - Undo after committing: `git revert HEAD`
-- Bring the old files back: undoing as above restores them from git. There is no command that re-creates the old npm-copied layout: today `npx metaswarm init` installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
+- Bring the old files back: undoing as above restores the git-tracked ones. Untracked files removed in Step 7 were never in git and can't be restored this way. There is no command that re-creates the old npm-copied layout: today `npx metaswarm init` installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
 ```
 
 ---
@@ -236,10 +236,11 @@ Your project files (CLAUDE.md, .coverage-thresholds.json, .beads/, etc.) were no
 
 All removals use `git rm`, which only stages changes — files are NOT deleted from git history. The migration never auto-commits, so the user always has a chance to review and undo:
 
-- **Before committing** (full undo): `git restore --staged . && git checkout -- .`
+- **Before committing** (undo the migration only): `git diff --cached --name-only -z --diff-filter=D | xargs -0 git restore --staged --worktree --`. It restores just the staged deletions, so unrelated uncommitted work is kept. The shims and profile changes from Steps 8 and 9 stay; delete or `git restore -- <path>` them by path
 - **After committing** (full undo): `git revert HEAD`
 - **Single file recovery**: `git checkout HEAD~1 -- <path>`
-- **Old npm-copied layout**: restore it from git with the commands above. No current command re-creates it: `npx metaswarm init` now installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
+- **Untracked files** removed with `rm -f` in Step 7 are not in git, so none of the above brings them back
+- **Old npm-copied layout**: restore its git-tracked files with the commands above. No current command re-creates it: `npx metaswarm init` now installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
 
 ---
 
