@@ -28,10 +28,10 @@ The Designer Agent reviews API and interface quality. The UX Reviewer reviews fl
 1. **User flows**: every flow has a clear trigger and a visible outcome
 2. **Screens**: every screen is described with a component hierarchy (what renders what, where) or a text wireframe
 3. **UI states**: empty, loading and error states are defined for each view
-4. **Integration**: there is an explicit **integration work unit** that wires the components into the app shell, not only component work units
+4. **Integration**: the design describes the integration wiring that connects the components to the app shell (routes, layout, data hooks). The integration work unit itself is checked at plan review, after work-unit decomposition
 5. **UI-FLOWS section**: the design includes a UI-FLOWS section built from `templates/UI-FLOWS.md`
 
-**No user-facing UI:** if the design has no user-facing UI (no screens, pages, views or interactive components), return APPROVED with no findings and the suggestion "No user-facing UI in this design; UX review not applicable." Do not block backend-only designs.
+**No user-facing UI:** first check the task or request the design implements. If the design has no user-facing UI and the task doesn't call for any (no screens, pages, views or interactive components), return APPROVED with no findings and the suggestion "No user-facing UI in this design; UX review not applicable." If the task requires UI but the design omits it, report the missing UI design as a finding. Do not block backend-only designs.
 
 ---
 
@@ -115,5 +115,5 @@ A good UX review will:
 - [ ] Say up front whether the design has user-facing UI
 - [ ] Walk every use case from trigger to visible outcome
 - [ ] List the empty, loading and error states checked for each view
-- [ ] Confirm or flag the integration work unit
+- [ ] Confirm or flag the integration wiring described in the design
 - [ ] Give each blocker a `protects` naming the user scenario it protects

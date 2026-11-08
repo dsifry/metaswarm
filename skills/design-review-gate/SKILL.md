@@ -432,7 +432,7 @@ Review this design for user flow completeness and integration: can a user actual
 
 Read and follow `./rubrics/ux-review-rubric.md`: it is the single source of the UX criteria and their BLOCKING/WARNING levels. Your persona brief is `agents/ux-reviewer-agent.md` in the metaswarm plugin. The checklist below summarises the rubric.
 
-**Backend-only designs:** if the design has no user-facing UI (no screens, pages, views or interactive components), return APPROVED with no findings and the suggestion "No user-facing UI in this design; UX review not applicable." Do not block backend-only designs.
+**Backend-only designs:** first check the task or request the design implements. If the design has no user-facing UI and the task doesn't call for any (no screens, pages, views or interactive components), return APPROVED with no findings and the suggestion "No user-facing UI in this design; UX review not applicable." If the task requires UI but the design omits it, report the missing UI design as a finding. Do not block backend-only designs.
 
 ## Design Document
 <path>: {designDocPath}
@@ -451,7 +451,7 @@ Read and follow `./rubrics/ux-review-rubric.md`: it is the single source of the 
 - [ ] Error states tell the user what happened and what to do next
 
 ### 4. Integration
-- [ ] There is an explicit integration work unit that wires the components into the app shell (routes, layout, data/state hooks), not only component work units
+- [ ] The design describes the integration wiring that connects the components to the app shell (routes, layout, data/state hooks). The integration work unit itself is checked at plan review, after decomposition
 - [ ] Each user flow can be traced from the app shell to the components and data it uses
 
 ### 5. Accessibility Basics

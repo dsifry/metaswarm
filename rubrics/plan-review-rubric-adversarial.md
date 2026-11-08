@@ -123,6 +123,7 @@ Does the plan fully address every aspect of the user's request?
 | Edge cases considered | BLOCKING if obvious gaps | Error scenarios, empty/null states, boundary conditions, concurrent access (where relevant) |
 | Rollback/backward compatibility | WARNING | Plan should note if changes are reversible and if they break existing behavior |
 | Cross-file integration points | BLOCKING if missing | Files that import or depend on changed files must be accounted for in the plan |
+| UI integration work unit | BLOCKING if missing | When the plan builds user-facing components, a work unit wires them into the app shell (routes, layout, providers, data hooks). Component-only plans leave the feature unusable (issue #12) |
 
 **How to verify:**
 

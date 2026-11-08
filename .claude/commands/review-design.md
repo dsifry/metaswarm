@@ -163,12 +163,12 @@ Focuses on:
 
 ### UX Reviewer Agent
 
-Focuses on (rubric: `rubrics/ux-review-rubric.md`; designs with no user-facing UI are approved):
+Focuses on (rubric: `rubrics/ux-review-rubric.md`; a design with no user-facing UI is approved when the task needs none):
 
 - User flows: each has a trigger and a visible outcome
 - Screens described with a component hierarchy or text wireframe
 - Empty, loading and error states for each view
-- An integration work unit that wires the components into the app shell
+- The integration wiring that connects the components to the app shell (the integration work unit is checked at plan review)
 
 ### CTO Agent
 

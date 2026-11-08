@@ -21,6 +21,13 @@ assert_in() { # <label> <text> <fixed-string>...
   done
   pass "$label"
 }
+assert_not_in() { # <label> <text> <fixed-string>...
+  local label="$1" text="$2" x; shift 2
+  for x in "$@"; do
+    if grep -qF -e "$x" <<<"$text"; then fail "$label: contains '$x'"; return; fi
+  done
+  pass "$label"
+}
 
 NEG=""
 # bash 3.2 exits with the EXIT trap's status (0) when `set -u` aborts the script,
@@ -84,9 +91,9 @@ assert_in "UX prompt has the persona structure" "$UXP" \
 assert_in "UX prompt checklist covers issue #12" "$UXP" \
   'trigger' 'visible outcome' 'component hierarchy' \
   'Empty, loading and error states are defined for each view' \
-  'explicit integration work unit that wires the components into the app shell' 'UI-FLOWS'
-assert_in "UX prompt approves backend-only designs" "$UXP" \
-  'no user-facing UI' 'return APPROVED with no findings'
+  'describes the integration wiring' 'checked at plan review' 'UI-FLOWS'
+assert_in "UX prompt approves backend-only designs only when the task needs no UI" "$UXP" \
+  'no user-facing UI' 'return APPROVED with no findings' 'If the task requires UI but the design omits it'
 ln_sec="$(grep -n -E '^### Security Design Agent Prompt' "$DRG" | cut -d: -f1 || true)"
 ln_ux="$(grep -n -E '^### UX Reviewer Agent Prompt' "$DRG" | cut -d: -f1 || true)"
 ln_cto="$(grep -n -E '^### CTO Agent Prompt' "$DRG" | cut -d: -f1 || true)"
@@ -129,7 +136,8 @@ for f in agents/ux-reviewer-agent.md skills/start/agents/ux-reviewer-agent.md; d
   fi
   assert_in "$f has the persona header, UI-FLOWS pointer and rubric reference" "$(cat "$REPO_ROOT/$f")" \
     '**Type**: `ux-reviewer-agent`' '**Spawned By**: Design Review Gate' \
-    'templates/UI-FLOWS.md' 'rubrics/ux-review-rubric.md' 'integration work unit' 'no user-facing UI'
+    'templates/UI-FLOWS.md' 'rubrics/ux-review-rubric.md' 'describes the integration wiring' 'no user-facing UI' \
+    'If the task requires UI but the design omits it'
 done
 if [ -f "$REPO_ROOT/agents/ux-reviewer-agent.md" ] && [ -f "$REPO_ROOT/skills/start/agents/ux-reviewer-agent.md" ]; then
   nd="$(diff <(sed 's#\./##g;s#\.claude/##g' "$REPO_ROOT/agents/ux-reviewer-agent.md") \
@@ -152,8 +160,14 @@ assert_in "UX rubric uses the finding contract" "$R" \
 assert_in "UX rubric covers the issue #12 criteria" "$R" \
   'trigger' 'visible outcome' 'component hierarchy' 'text wireframe' \
   'Empty state' 'Loading state' 'Error state' 'integration work unit' 'app shell' 'UI-FLOWS' 'Accessibility'
-assert_in "UX rubric approves designs with no user-facing UI" "$R" \
-  'no user-facing UI' 'APPROVED with no findings'
+assert_in "UX rubric approves designs with no user-facing UI only when the task needs none" "$R" \
+  'no user-facing UI' 'APPROVED with no findings' 'If the task requires UI but the design omits it' \
+  'describes the integration wiring' 'checked at plan review'
+assert_not_in "UX rubric does not require work units before decomposition" "$R" \
+  'An explicit integration work unit exists'
+PRA="$(cat "$REPO_ROOT/rubrics/plan-review-rubric-adversarial.md")"
+assert_in "plan-review Completeness requires the UI integration work unit" "$PRA" \
+  '| UI integration work unit | BLOCKING if missing |'
 for m in skills/design-review-gate/rubrics/ux-review-rubric.md skills/start/rubrics/ux-review-rubric.md; do
   if [ -f "$RUB" ] && [ -f "$REPO_ROOT/$m" ] && cmp -s "$RUB" "$REPO_ROOT/$m"; then
     pass "$m mirrors the rubric"

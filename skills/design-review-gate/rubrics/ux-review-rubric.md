@@ -10,7 +10,7 @@
 
 This rubric is the single source of the UX Reviewer's criteria. It catches the failure behind issue #12: components built and tested in isolation but never wired into the app, so nobody can actually use the feature. The question it asks is "once every work unit is built, can a user do what the design says?"
 
-**No user-facing UI → APPROVED.** If the design has no user-facing UI (no screens, pages, views or interactive components; for example a backend service, library or data migration), return APPROVED with no findings and the suggestion "No user-facing UI in this design; UX review not applicable." Never block a backend-only design on this rubric.
+**No user-facing UI → APPROVED, if the task needs none.** First check the task or request the design implements. If the design has no user-facing UI and the task doesn't call for any (no screens, pages, views or interactive components; for example a backend service, library or data migration), return APPROVED with no findings and the suggestion "No user-facing UI in this design; UX review not applicable." If the task requires UI but the design omits it, report the missing UI design as a finding that protects the user flow the task asks for. Never block a backend-only design on this rubric.
 
 ---
 
@@ -92,7 +92,7 @@ The policy, the finding contract and the iteration rule live in `guides/delivery
 
 | Check | Level | What to Look For |
 | --- | --- | --- |
-| An explicit integration work unit exists | BLOCKING if components are planned but no work unit wires them into the app shell | Routes, layout, providers, data hooks |
+| The design describes the integration wiring | BLOCKING if components are designed but nothing says how they are wired into the app shell | Routes, layout, providers, data hooks. The design gate runs before work-unit decomposition, so the integration work unit itself is checked at plan review (`plan-review-rubric-adversarial.md`, Completeness) |
 | Each flow traces from the app shell to its data | BLOCKING if a flow's path from entry point to data is broken | Route → screen → component → hook → API |
 | Placeholder content is replaced | WARNING | "Todo list will appear here" left in the shell |
 
@@ -123,11 +123,11 @@ Accessibility findings are minor unless the design names an accessibility requir
 
 ## Review Checklist
 
-- [ ] Design has user-facing UI (if not: APPROVED with no findings, and say so in suggestions)
+- [ ] Design has user-facing UI (if not, and the task needs none: APPROVED with no findings, and say so in suggestions)
 - [ ] Every user flow has a trigger and a visible outcome
 - [ ] Every screen has a component hierarchy or text wireframe
 - [ ] Empty, loading and error states are defined for each view
-- [ ] An explicit integration work unit wires the components into the app shell
+- [ ] The design describes the integration wiring into the app shell (the work unit is checked at plan review)
 - [ ] A UI-FLOWS section exists
 - [ ] Accessibility basics considered
 

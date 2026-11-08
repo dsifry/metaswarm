@@ -60,6 +60,13 @@ else
   pass "$F does not run the repo self-test as a health check"
 fi
 
+# docs/coverage-enforcement.md manual steps must leave a working gate (PR #82 review).
+CE="$(cat "$REPO_ROOT/docs/coverage-enforcement.md")"
+echo "Coverage enforcement doc"
+for s in 'npm install --save-dev husky' 'templates/coverage-thresholds.json' 'set `enforcement.command`' 'npm-based'; do
+  grep -qF -e "$s" <<<"$CE" && pass "coverage-enforcement.md mentions: $s" || fail "coverage-enforcement.md mentions: $s"
+done
+
 # Every command has frontmatter with a description, so plugin installs list it for the model
 # (`claude plugin validate` flags commands without one). The description must be a valid YAML
 # scalar: a plain value can't contain ": " or " #" or start with an indicator character, so
