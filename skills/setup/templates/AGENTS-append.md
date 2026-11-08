@@ -16,7 +16,7 @@ Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` synta
 |---|---|
 | `$start` | Begin tracked work on a task |
 | `$setup` | Interactive guided setup |
-| `$design-review-gate` | Trigger design review gate (5 reviewers) |
+| `$design-review-gate` | Trigger design review gate (6 reviewers) |
 | `$pr-shepherd` | Monitor a PR through to merge |
 | `$handling-pr-comments` | Handle PR review comments |
 | `$brainstorming-extension` | Refine an idea with design review gate |
@@ -25,7 +25,7 @@ Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` synta
 
 ### Quality Gates
 
-- **Design Review Gate** -- 5-reviewer design review after a project-sized design doc is committed (`$design-review-gate`)
+- **Design Review Gate** -- 6-reviewer design review after a project-sized design doc is committed (`$design-review-gate`)
 - **Plan Review Gate** -- 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) -- ALL must PASS
 - **Coverage Gate** -- `.coverage-thresholds.json` defines thresholds. BLOCKING gate before PR creation
 

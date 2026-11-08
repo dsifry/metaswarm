@@ -1,5 +1,5 @@
 ---
-description: Trigger the parallel design review gate with 5 specialist reviewers
+description: Trigger the parallel design review gate with 6 specialist reviewers
 ---
 
 # Review Design Command
@@ -28,13 +28,14 @@ Run the design review gate on a design document to get feedback from Product Man
 ## What This Does
 
 1. **Validates the design document exists** and is in the expected format
-2. **Spawns five review agents in parallel** (each `roleType("design-reviewer")`, role in the prompt):
+2. **Spawns six review agents in parallel** (each `roleType("design-reviewer")`, role in the prompt):
    - **Product Manager Agent** - Validates use cases and user benefits
    - **Architect Agent** - Reviews technical architecture
    - **Designer Agent** - Reviews UX, API design, developer experience
    - **Security Design Agent** - Reviews security threats and mitigations
+   - **UX Reviewer** - Reviews user flows, empty/loading/error states and integration wiring
    - **CTO Agent** - Reviews TDD readiness, codebase alignment
-3. **Aggregates results** from all five agents
+3. **Aggregates results** from all six agents
 4. **Reports outcome** with blockers, suggestions, and next steps
 
 ## Arguments
@@ -44,7 +45,7 @@ Run the design review gate on a design document to get feedback from Product Man
 | `<path>`              | Path to design document (required unless --latest)           |
 | `--latest`            | Review the newest dated design doc in `docs/plans/` or `docs/superpowers/specs/` |
 | `--iteration N`       | Mark as iteration N of review cycle                          |
-| `--skip-agent <name>` | Skip specific agent (pm, architect, designer, security, cto) |
+| `--skip-agent <name>` | Skip specific agent (pm, architect, designer, security, ux, cto) |
 
 ### Finding the latest design doc
 
@@ -173,7 +174,7 @@ Focuses on:
 
 The review gate passes when:
 
-- [ ] All five agents return APPROVED
+- [ ] All six agents return APPROVED
 - [ ] All blocking issues resolved
 - [ ] All clarifying questions answered
 - [ ] Design document updated with revisions (if any)

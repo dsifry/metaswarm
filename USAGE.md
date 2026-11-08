@@ -17,7 +17,7 @@ metaswarm provides 22 agents, each with a defined role in the software developme
 |---|---|---|
 | **Researcher** | `agents/researcher.md` | Codebase exploration, pattern discovery, dependency analysis. Read-only; Sonnet by default. |
 | **Planner** | `agents/planner.md` | Plan and decompose into work units. Opus by default; can write plan files. |
-| **Design Reviewer** | `agents/design-reviewer.md` | Design review gate reviewer; role (PM, Architect, Designer, Security, CTO) passed in the prompt. Opus, read-only. |
+| **Design Reviewer** | `agents/design-reviewer.md` | Design review gate reviewer; role (PM, Architect, Designer, Security, UX Reviewer, CTO) passed in the prompt. Opus, read-only. |
 | **Plan Reviewer** | `agents/plan-reviewer.md` | Plan review gate reviewer (Feasibility, Completeness, Scope & Alignment). Opus, read-only. |
 | **Architect** | `agents/architect-agent.md` | Implementation planning, service structure design, pattern selection. |
 | **Product Manager** | `agents/product-manager-agent.md` | Use case validation, user benefit review, scope verification. |

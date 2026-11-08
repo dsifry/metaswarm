@@ -564,7 +564,7 @@ pnpm build
 
 100% coverage required — run `pnpm test --run --coverage` and verify lines, branches, functions, and statements are all at 100%.
 
-All five must pass before closing the implementation task.
+Each of these checks must pass before closing the implementation task.
 
 ---
 

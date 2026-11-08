@@ -380,9 +380,10 @@ The Product Manager Agent runs in parallel with:
 - Architect Agent (technical architecture)
 - Designer Agent (UX/API design)
 - Security Design Agent (security review)
+- UX Reviewer (user flows, UI states, integration wiring)
 - CTO Agent (TDD readiness)
 
-**All five must approve** before implementation proceeds.
+**All six must approve** before implementation proceeds.
 
 PM review is especially important for:
 

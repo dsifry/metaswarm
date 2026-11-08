@@ -9,7 +9,7 @@ metaswarm is an extraction of a production-tested agentic orchestration system. 
 - **22 agents: phase agents and specialized personas** (Researcher, Architect, Coder, Security Auditor, PR Shepherd, etc.)
 - **A structured 9-phase workflow**: Research → Plan → Design Review Gate → Work Unit Decomposition → Orchestrated Execution → Final Review → PR Creation → PR Shepherd → Closure & Learning
 - **4-Phase Orchestrated Execution Loop**: Each work unit runs through IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT. The orchestrator validates independently (never trusts subagent self-reports), and adversarial reviewers check DoD compliance with file:line evidence
-- **Parallel Design Review Gate**: 5 specialist agents (PM, Architect, Designer, Security, CTO) review in parallel; severity-gated iteration (only `blocker: yes` findings re-run the gate, cap 10 rounds) before human escalation
+- **Parallel Design Review Gate**: 6 specialist agents (PM, Architect, Designer, Security, UX Reviewer, CTO) review in parallel; severity-gated iteration (only `blocker: yes` findings re-run the gate, cap 10 rounds) before human escalation
 - **Recursive orchestration**: Swarm Coordinators spawn Issue Orchestrators, which spawn sub-orchestrators for complex epics (swarm of swarms)
 - **Git-native task tracking**: Uses [BEADS](https://github.com/steveyegge/beads) (`bd` CLI) for issue/task management and dependencies; metaswarm's own `/prime` command handles knowledge priming
 - **Knowledge base**: JSONL-based fact store for patterns, gotchas, decisions, and anti-patterns — agents prime from this before every task
@@ -40,7 +40,7 @@ Your prompt (spec with DoD items) or GitHub Issue
 └─────────────────────────────────┘
         │
         ▼
-  Research → Plan → Design Review Gate (5 parallel reviewers)
+  Research → Plan → Design Review Gate (6 parallel reviewers)
         │
         ▼
   Work Unit Decomposition (DoD items, file scopes, dependency graph)
@@ -77,7 +77,7 @@ metaswarm/
 ├── skills/                   # Orchestration skills (Agent Skills standard — portable)
 │   ├── start/                # Main entry point — workflow guide + 22 agent personas
 │   ├── orchestrated-execution/ # 4-phase execution loop (IMPLEMENT→VALIDATE→REVIEW→COMMIT)
-│   ├── design-review-gate/   # Parallel 5-agent review
+│   ├── design-review-gate/   # Parallel 6-agent review
 │   ├── plan-review-gate/     # 3-reviewer adversarial plan review
 │   ├── setup/                # Interactive project setup
 │   ├── migrate/              # Migration from npm to plugin installation

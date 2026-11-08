@@ -498,9 +498,9 @@ assert_in "$DRG: ReviewResult carries findings: Finding[]" "$T" \
   'severity: "critical" | "major" | "minor" | "nit"' 'protects: string' 'evidence: string' 'blocker: "yes" | "no"' \
   'suggestions: string[]' 'questions: string[]'
 n="$(grep -cF '"findings": [' "$REPO_ROOT/$DRG" || true)"
-[ "$n" -eq 5 ] && pass "$DRG: 5 persona JSON schemas have a findings array" || fail "$DRG: 5 persona JSON schemas have a findings array (found $n)"
+[ "$n" -eq 6 ] && pass "$DRG: 6 persona JSON schemas have a findings array" || fail "$DRG: 6 persona JSON schemas have a findings array (found $n)"
 n="$(grep -cF '"severity": "critical|major|minor|nit", "protects": "<' "$REPO_ROOT/$DRG" || true)"
-[ "$n" -eq 5 ] && pass "$DRG: 5 persona findings use the 6 fields" || fail "$DRG: 5 persona findings use the 6 fields (found $n)"
+[ "$n" -eq 6 ] && pass "$DRG: 6 persona findings use the 6 fields" || fail "$DRG: 6 persona findings use the 6 fields (found $n)"
 NR="$(section "$REPO_ROOT/$DRG" '^### Needs Revision')"
 assert_in "$DRG: Needs Revision template groups by severity, tags each agent, shows the 6 fields" "$NR" \
   '#### Critical' '#### Major' '[Security Design]' '[Designer]' 'protects:' 'evidence:' 'Rule decision'
@@ -796,11 +796,11 @@ assert_in "$DRG_R: interface Finding has title and description" "$IF" \
 first_field="$(sed -n 2p <<<"$IF")"
 assert_in "$DRG_R: interface Finding lists title first" "$first_field" 'title: string;'
 
-# DoD 4.1: the 5 persona JSON examples open with title and description
+# DoD 4.1: the 6 persona JSON examples open with title and description
 JSON_OPEN='{ "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit"'
 n="$(grep -cF -- "$JSON_OPEN" "$REPO_ROOT/$DRG_R" || true)"
-[ "$n" -eq 5 ] && pass "$DRG_R: 5 persona JSON findings open with title and description" \
-  || fail "$DRG_R: 5 persona JSON findings open with title and description (found $n)"
+[ "$n" -eq 6 ] && pass "$DRG_R: 6 persona JSON findings open with title and description" \
+  || fail "$DRG_R: 6 persona JSON findings open with title and description (found $n)"
 n="$(grep -cF -- '{ "severity"' "$REPO_ROOT/$DRG_R" || true)"
 [ "$n" -eq 0 ] && pass "$DRG_R: no persona JSON finding opens with severity" \
   || fail "$DRG_R: no persona JSON finding opens with severity (found $n)"

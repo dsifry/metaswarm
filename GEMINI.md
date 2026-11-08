@@ -12,7 +12,7 @@ Run `/metaswarm:start-task` to begin tracked work, or `/metaswarm:setup` to conf
 |---|---|
 | `/metaswarm:start-task` | Begin tracked work on a task |
 | `/metaswarm:prime` | Load relevant knowledge before starting |
-| `/metaswarm:review-design` | Trigger design review gate (5 reviewers) |
+| `/metaswarm:review-design` | Trigger design review gate (6 reviewers) |
 | `/metaswarm:pr-shepherd` | Monitor a PR through to merge |
 | `/metaswarm:self-reflect` | Extract learnings after a PR merge |
 | `/metaswarm:handle-pr-comments` | Handle PR review comments |

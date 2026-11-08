@@ -29,7 +29,7 @@ This triggers the full pipeline: Research, Plan, Design Review Gate, Work Unit D
 |---|---|
 | `/metaswarm:start-task` | Begin tracked work on a task |
 | `/metaswarm:prime` | Load relevant knowledge before starting |
-| `/metaswarm:review-design` | Trigger design review gate (5 reviewers) |
+| `/metaswarm:review-design` | Trigger design review gate (6 reviewers) |
 | `/metaswarm:pr-shepherd` | Monitor a PR through to merge |
 | `/metaswarm:self-reflect` | Extract learnings after a PR merge |
 | `/metaswarm:handle-pr-comments` | Handle PR review comments |
@@ -55,7 +55,7 @@ If a GitHub Issue specifies different coverage requirements, update `.coverage-t
 
 ## Quality Gates
 
-- **Design Review Gate**: 5-reviewer design review after a project-sized design doc is committed (`/metaswarm:review-design`)
+- **Design Review Gate**: 6-reviewer design review after a project-sized design doc is committed (`/metaswarm:review-design`)
 - **Plan Review Gate**: Adversarial review once the plan is written, before writing-plans presents the plan. 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) -- ALL must PASS before presenting the plan
 - **Coverage Gate**: Reads `.coverage-thresholds.json` and runs the enforcement command -- BLOCKING gate before PR creation
 
@@ -69,7 +69,7 @@ When brainstorming writes and commits a project-sized design doc (see the metasw
 
 1. **STOP** -- do NOT proceed directly to planning or implementation
 2. **RUN the Design Review Gate** -- invoke `/metaswarm:review-design`
-3. **WAIT** for all 5 reviewers (PM, Architect, Designer, Security, CTO) to approve
+3. **WAIT** for all 6 reviewers (PM, Architect, Designer, Security, UX Reviewer, CTO) to approve
 4. **ONLY THEN** proceed to planning/implementation
 
 ### After Any Plan Is Created

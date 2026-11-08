@@ -49,6 +49,7 @@ bd doctor         # Check system health
 | **Designer Agent**        | UX/API design review           | Design review gate (parallel)      |
 | **Security Design Agent** | Security threat modeling       | Design review gate (parallel)      |
 | **CTO Agent**             | TDD readiness & plan review    | Design review gate (parallel)      |
+| **UX Reviewer**           | User flows, UI states, integration wiring | Design review gate (parallel); a `design-reviewer` role, no separate agent file |
 | **Coder Agent**           | TDD implementation             | Design review gate approved        |
 | **Code Review Agent**     | Internal code review           | Implementation complete            |
 | **Security Auditor**      | Security review (code)         | Implementation complete            |
@@ -70,13 +71,15 @@ Project-Sized Design Doc Committed
 ┌─────────────────────────────────────────────────┐
 │           DESIGN REVIEW GATE                     │
 │                                                  │
-│  Spawns in PARALLEL:                            │
+│  Spawns 6 reviewers in PARALLEL:                │
+│  • PM Agent (use cases, user benefit)           │
 │  • Architect Agent (technical architecture)     │
 │  • Designer Agent (UX/API design)               │
+│  • Security Design Agent (threat model)         │
 │  • UX Reviewer (user flows, integration WUs)    │
 │  • CTO Agent (TDD readiness)                    │
 │                                                  │
-│  ALL must approve to proceed                    │
+│  ALL SIX must approve to proceed                │
 └─────────────────────────────────────────────────┘
         │
         ├── Any NEEDS_REVISION? → Iterate on design (severity-gated, cap 10 rounds)

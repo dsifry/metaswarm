@@ -473,7 +473,7 @@ This enables context recovery — if the agent loses context mid-execution, it c
 
 ### Relationship to Design Review Gate
 
-The **design review gate** (`design-review-gate`) validates _design documents_ using 5 specialist agents (PM, Architect, Designer, Security, CTO) with APPROVED/NEEDS_REVISION verdicts.
+The **design review gate** (`design-review-gate`) validates _design documents_ using 6 specialist agents (PM, Architect, Designer, Security, UX Reviewer, CTO) with APPROVED/NEEDS_REVISION verdicts.
 
 The **plan review gate** (this skill) validates _implementation plans_ using 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) with binary PASS/FAIL verdicts.
 
