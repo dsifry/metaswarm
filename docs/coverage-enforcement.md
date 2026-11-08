@@ -39,7 +39,7 @@ The CI job reads the command dynamically — if you change `enforcement.command`
 
 **Before you rely on these gates:**
 
-- `templates/ci.yml` and `templates/pre-push` run your `lint` and `typecheck` scripts. The CI template runs both unconditionally, and the hook skips only a missing `typecheck`. Add those scripts to `package.json`, or edit the workflow and hook to drop the steps.
+- `templates/ci.yml` and `templates/pre-push` run your `lint` and `typecheck` scripts. The CI template requires both to pass. The hook blocks on lint failures (and on a missing `lint` script) but ignores all typecheck failures, including a missing script. Add the scripts to `package.json`, or edit the workflow and hook to drop the steps. To make the hook block on type errors, change its typecheck step to skip only a missing script.
 - A CI check blocks merges only if the branch requires it. Add the coverage job (or the CI workflow's job) as a required status check in a branch protection rule or ruleset for your merge branch, and include that branch in the workflow's `on:` filters (the template targets `main`).
 
 ### Gate 2: Pre-Push Hook (Husky)

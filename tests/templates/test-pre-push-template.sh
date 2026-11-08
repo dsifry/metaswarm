@@ -42,7 +42,7 @@ if command -v dash >/dev/null 2>&1 && command -v node >/dev/null 2>&1; then
   done
   DASH="$(command -v dash)"
   rc=0; out="$(cd "$P" && PATH="$TMP/bin" "$DASH" "$REPO_ROOT/templates/pre-push" 2>&1)" || rc=$?
-  if [ "$rc" -eq 0 ] && grep -qF -e 'COVERAGE_RAN' <<<"$out"; then
+  if [ "$rc" -eq 0 ] && grep -qxF -e 'COVERAGE_RAN' <<<"$out"; then   # exact line: not the "Running: ..." log
     pass "under dash without jq/pnpm, the hook runs enforcement.command via the node fallback"
   else
     fail "under dash without jq/pnpm, the hook runs enforcement.command (rc=$rc): $(printf '%s' "$out" | tail -3 | tr '\n' ' ')"
