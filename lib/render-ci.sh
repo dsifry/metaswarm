@@ -48,7 +48,10 @@ if [ -z "$branch" ]; then
   if [ -z "$branch" ] && command -v gh >/dev/null 2>&1; then
     branch="$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || true)"
   fi
-  [ -n "$branch" ] || branch="main"
+  if [ -z "$branch" ]; then
+    branch="main"
+    echo "render-ci: warning: couldn't read the default branch (no origin/HEAD, no gh); guessing main. Pass --branch if that's wrong." >&2
+  fi
 fi
 # A git branch name that is also safe inside a double-quoted YAML string.
 case "$branch" in

@@ -27,7 +27,8 @@ jobs:
           node-version: "22"
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
       # Lint and typecheck run when package.json defines the script, and fail
       # the build when it fails. A missing script is skipped.

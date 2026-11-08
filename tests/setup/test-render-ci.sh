@@ -69,6 +69,10 @@ if [ -f "$RENDER" ]; then
   (cd "$R" && PATH="/usr/bin:/bin" bash "$RENDER" --stack go --out ci.yml) >/dev/null 2>&1 || true
   grep -qF 'branches: ["trunk"]' "$R/ci.yml" 2>/dev/null && pass "without --branch, uses origin/HEAD (the default branch)" || fail "default branch not detected from origin/HEAD"
 
+  R2="$TMP/repo-noorigin"; mkdir -p "$R2"; (cd "$R2" && git init -q)
+  msg="$(cd "$R2" && PATH="/usr/bin:/bin" bash "$RENDER" --stack go --out ci.yml 2>&1)" || true
+  printf '%s' "$msg" | grep -qi 'warning.*main\|guess' && pass "warns when the branch is a guess (no origin/HEAD, no gh)" || fail "no warning on the main fallback: $msg"
+
   rc=0; bash "$RENDER" --stack node --branch 'main"]; evil' --out "$TMP/bad.yml" >/dev/null 2>&1 || rc=$?
   [ "$rc" -ne 0 ] && [ ! -e "$TMP/bad.yml" ] && pass "rejects a branch name that would break the YAML" || fail "accepted a YAML-breaking branch name"
 
@@ -121,6 +125,10 @@ if [ -f "$RENDER" ]; then
   done
 fi
 
+  INSTALL="$(run_step "$TMP/ci-node.yml" "Install dependencies")"
+  printf '%s\n' "$INSTALL" | grep -q 'package-lock.json' && printf '%s\n' "$INSTALL" | grep -q 'npm install' \
+    && pass "node: npm ci with a lockfile, npm install without" || fail "node: npm ci runs even with no package-lock.json: $INSTALL"
+
 echo "/setup wires the renderer and the required-check offer"
 SETUP="$REPO_ROOT/skills/setup/SKILL.md"
 grep -qF 'lib/render-ci.sh" --stack' "$SETUP" && pass "/setup renders CI with lib/render-ci.sh" || fail "/setup does not run lib/render-ci.sh"
@@ -135,6 +143,17 @@ fi
 ask_line="$(printf '%s\n' "$CI_SECTION" | grep -n 'AskUserQuestion' | head -1 | cut -d: -f1 || true)"
 run_line="$(printf '%s\n' "$CI_SECTION" | grep -nF 'lib/require-ci-check.sh' | head -1 | cut -d: -f1 || true)"
 [ -n "$ask_line" ] && [ -n "$run_line" ] && [ "$ask_line" -lt "$run_line" ] && pass "the question comes before the call" || fail "require-ci-check.sh appears before the question"
+# Requiring "CI checks" when no ci.yml was written would block every PR on a
+# check that never runs.
+if printf '%s\n' "$CI_SECTION" | grep -qi 'only if step 1 wrote .*ci.yml\|only when step 1 wrote .*ci.yml'; then
+  pass "the required-check offer is limited to a rendered ci.yml"
+else
+  fail "/setup 5.4 offers the required check even when no ci.yml was written"
+fi
+printf '%s\n' "$CI_SECTION" | grep -qi 'through a PR\|through a pull request' && printf '%s\n' "$CI_SECTION" | grep -qi 'setup commit\|setup files' \
+  && pass "after a Yes, the setup commit lands through a PR" || fail "/setup doesn't say to land the setup commit through a PR once the check is required"
+printf '%s\n' "$CI_SECTION" | grep -qi 'poetry' && printf '%s\n' "$CI_SECTION" | grep -qi 'bun' \
+  && pass "Poetry/uv/Pipenv and bun projects are sent to the fallback job" || fail "/setup 5.4 doesn't route Poetry/uv/Pipenv or bun projects"
 
 echo "Template and its setup mirror"
 cmp -s "$REPO_ROOT/templates/ci.yml" "$REPO_ROOT/skills/setup/templates/ci.yml" && pass "skills/setup/templates/ci.yml mirrors templates/ci.yml" || fail "ci.yml mirror differs"
