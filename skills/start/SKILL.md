@@ -345,9 +345,9 @@ GitHub Issue #123 (agent-ready label)
         │
         ▼
 ┌─────────────────────────────────────┐
-│   PR Creation (Auto-Shepherd)        │
-│   bin/create-pr-with-shepherd.sh     │
-│   → Auto-invokes pr-shepherd skill   │
+│   PR Creation                        │
+│   gh pr create                       │
+│   → then /pr-shepherd <pr-number>    │
 └─────────────────────────────────────┘
         │
         ▼
@@ -396,15 +396,13 @@ If the CI check is stale: `gh workflow run gtg.yml -f pr_number=<PR_NUMBER>`
 
 ### Automatic PR Review Cycles
 
-When a PR is created via `bin/create-pr-with-shepherd.sh`, the script outputs instructions to start monitoring:
+Every PR gets the same cycle, however it was created:
 
-1. **Creates the PR** with proper title/body
-2. **Start pr-shepherd** using `/pr-shepherd <pr-number>`
+1. **Create the PR** with `gh pr create` and a proper title/body
+2. **Start pr-shepherd** right away with `/pr-shepherd <pr-number>`
 3. **PR Shepherd monitors**: CI status, review comments, thread resolution
 4. **Auto-fixes**: Lint, type errors, test failures in your code
 5. **Reports when ready**: All CI green, all threads resolved
-
-For manually-created PRs, invoke `/pr-shepherd <pr-number>` to start the monitoring cycle.
 
 ---
 
