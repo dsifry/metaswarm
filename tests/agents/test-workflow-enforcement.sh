@@ -177,6 +177,7 @@ FORBIDDEN=(
   'brainstorming committed a design doc'
   'Parallel session'
   'separate session with batch checkpoints'
+  'skip the review gate'
 )
 # Class A2: forbidden regexes (any line). WU4 adds the Plan Review Gate trigger.
 FORBIDDEN_RE=(
@@ -260,6 +261,7 @@ NEG_BAD=(
   'For project-sized features (brainstorming committed a design doc), run the gate'
   'project-sized 3. **Parallel session** (superpowers:executing-plans)'
   'project-sized: execute in a separate session with batch checkpoints'
+  'project-sized: the user may skip the review gate'
   'project-sized gate runs after writing-plans finishes'
   'After brainstorming, run the gate'
   'The skill commits a design doc and stops'

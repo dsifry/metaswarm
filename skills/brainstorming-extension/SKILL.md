@@ -167,13 +167,7 @@ Please revise the design document and I'll re-run the review gate.
 
 ## Skip Conditions
 
-Quick tasks, chat-only designs and short design docs for small changes never reach the gate: they skip it automatically by size (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). The conditions below apply only to a project-sized design doc, which would otherwise trigger the gate.
-
-A project-sized design doc can skip the review gate ONLY when:
-
-- The user explicitly requests it ("skip the review gate")
-- AND the agent confirms with the user before skipping
-- AND the design is genuinely simple (< 1 day of work, < 3 files)
+Quick tasks, chat-only designs and short design docs for small changes never reach the gate: they skip it automatically by size (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). A project-sized design doc always goes through the gate; there is no user-requested exception. If the user thinks the work is not project-sized, re-size it during brainstorming (superpowers lets them choose a smaller size) instead of bypassing the gate.
 
 ---
 
