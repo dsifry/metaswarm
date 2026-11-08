@@ -9,7 +9,7 @@ Show metaswarm diagnostic information.
 ## Usage
 
 ```text
-/status
+/metaswarm:status
 ```
 
 ## Behavior

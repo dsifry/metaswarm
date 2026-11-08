@@ -28,7 +28,6 @@
 - **bd/beads dependency drift** (#62). Removed `bd prime --work-type/--keywords/--files` flags (they never existed), `bd sync` (now `bd dolt push/pull`, only with a Dolt remote) and other nonexistent bd commands. The docs no longer claim `bd prime` loads metaswarm's knowledge base. Minimum versions are stated: bd ≥ 1.0.4 (tested with 1.3.4), and Dolt ≥ 2.4.0 only for server mode. `tests/deps/test-dependency-drift.sh` guards against regressions.
 - **The plugin hook works when the plugin path contains a space.** `hooks/hooks.json` now quotes `${CLAUDE_PLUGIN_ROOT}`.
 - **Every command has `description:` frontmatter**, so plugin installs list all 16 commands for the model, not only 4.
-
 - **Documentation fixes from a pre-release review.**
   - `docs/coverage-enforcement.md` no longer documents the removed `init --with-husky --with-ci` flags.
   - INSTALL's superpowers command is now `claude plugin install superpowers@claude-plugins-official`.
@@ -36,6 +35,9 @@
   - The skill, command, guide and rubric counts are corrected.
   - The templates use `/metaswarm:status` rather than the built-in `/status`.
   - The pr-shepherd agents name `metaswarm:pr-shepherd` instead of a `your-project:` placeholder.
+  - The manual Husky steps install `husky` before `husky init`, and the CI coverage steps name the real job keys (`coverage-simple` / `coverage-merge`) in `templates/ci-coverage-job.yml` too.
+  - CONTRIBUTING loads a local checkout with `claude --plugin-dir` (there is no `claude plugin add`).
+  - The code-review and adversarial-review rubrics name the Adversarial Reviewer as their user.
 
 ### Removed
 

@@ -44,7 +44,7 @@ A git hook that runs before every `git push`. Runs lint, typecheck, format check
 **Setup:**
 
 - **No git hooks yet (Node.js project):** run `/setup` and answer Yes to "Set up git hooks for pre-push quality checks?". It installs Husky, runs `npx husky init` and writes `.husky/pre-push` from the plugin's `templates/pre-push`. `/setup` only asks when it detects no hooks.
-- **Manually:** run `npx husky init`, copy `templates/pre-push` from the metaswarm plugin's `templates/` to `.husky/pre-push`, then `chmod +x .husky/pre-push`. If you already have a `.husky/pre-push`, merge its coverage enforcement section into yours instead of overwriting it.
+- **Manually:** run `npm install --save-dev husky`, then `npx husky init` (it adds a `prepare` script and a sample `.husky/pre-commit` that runs `npm test`; delete or edit that file if you don't want it), copy `templates/pre-push` from the metaswarm plugin's `templates/` to `.husky/pre-push`, then `chmod +x .husky/pre-push`. If you already have a `.husky/pre-push`, merge its coverage enforcement section into yours instead of overwriting it.
 
 The hook uses `jq` if available, falls back to a Node one-liner to read the command from `.coverage-thresholds.json`.
 
@@ -128,7 +128,8 @@ The easiest way to set up all three enforcement gates is `/setup`. It always wri
 
 ```bash
 METASWARM="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh)")")}"
-npx husky init
+npm install --save-dev husky   # husky init adds "prepare": "husky", which needs the package
+npx husky init                 # also writes a sample .husky/pre-commit (runs npm test)
 cp "$METASWARM/templates/pre-push" .husky/pre-push
 chmod +x .husky/pre-push
 ```

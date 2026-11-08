@@ -573,9 +573,9 @@ When the severity rule says escalate (cap hit, a recurring or disputed blocker, 
 ### Round history
 | Round | Verdicts (APPROVED / NEEDS_REVISION) | Blockers (critical/major) | Fixed this round | Rule decision |
 |-------|--------------------------------------|---------------------------|------------------|---------------|
-| 1     | 2 / 3                                | 1 / 4                     | —                | 4: iterate    |
-| 2     | 4 / 1                                | 0 / 2                     | 1 / 2            | 4: iterate    |
-| 3     | 4 / 1                                | 0 / 2                     | 0 / 0            | 3: escalate   |
+| 1     | 3 / 3                                | 1 / 4                     | —                | 4: iterate    |
+| 2     | 5 / 1                                | 0 / 2                     | 1 / 2            | 4: iterate    |
+| 3     | 5 / 1                                | 0 / 2                     | 0 / 0            | 3: escalate   |
 
 ### Follow-ups
 - <minor/nit findings, or the BEADS task IDs filed for them>
@@ -663,6 +663,7 @@ One or more reviewers reported a `blocker: yes` finding.
 
 | Agent           | Verdict        | Blockers (critical/major) | Minor/Nit |
 | --------------- | -------------- | ------------------------- | --------- |
+| Product Manager | APPROVED       | 0 / 0                     | 1         |
 | Architect       | APPROVED       | 0 / 0                     | 2         |
 | Designer        | NEEDS_REVISION | 0 / 2                     | 1         |
 | Security Design | NEEDS_REVISION | 1 / 1                     | 1         |
