@@ -30,7 +30,7 @@ See `./guides/agent-coordination.md` for full mode detection and coordination de
 
 ## Plan Review Gate
 
-After drafting an implementation plan (Step 1: Plan Validation), submit it to the **Plan Review Gate** before writing-plans presents the plan (or before you present it to the user); see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md). In full orchestration there is no separate design doc, so after the Plan Review Gate passes the plan goes to the Design Review Gate ([two pipelines](./guides/workflow-enforcement.md#two-pipelines)). The gate spawns 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) — all must PASS. See `skills/plan-review-gate/SKILL.md` for details.
+After drafting an implementation plan (Step 1: Plan Validation), submit it to the **Plan Review Gate** before writing-plans presents the plan (or before you present it to the user); see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md). In full orchestration there is no separate design doc, so after the Plan Review Gate passes the plan goes to the Design Review Gate ([two pipelines](./guides/workflow-enforcement.md#two-pipelines)). The Plan Review Gate spawns 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) — all must PASS. See `skills/plan-review-gate/SKILL.md` for details.
 
 ---
 

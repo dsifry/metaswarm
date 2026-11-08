@@ -480,6 +480,8 @@ The **plan review gate** (this skill) validates _implementation plans_ using 3 a
 These are complementary gates at different stages:
 1. Design review gate validates _what_ to build
 2. Plan review gate validates _how_ to build it
+
+On the brainstorming path the design review gate reviews the design doc before this gate runs. In full orchestration there is no design doc: this gate runs first and the design review gate then reviews the plan (see [two pipelines](./guides/workflow-enforcement.md#two-pipelines)).
 3. Orchestrated execution validates _that_ it was built correctly
 
 ---
@@ -498,7 +500,7 @@ The plan review gate succeeds when:
 
 ## Related Skills
 
-- `design-review-gate` — Validates design documents before planning begins
+- `design-review-gate` — Validates design documents before planning begins (brainstorming path), or the plan after this gate (full orchestration)
 - `orchestrated-execution` — Executes approved plans using the 4-phase loop
 - `writing-plans` — Produces plans that feed into this gate; the gate runs before its Execution Handoff
 

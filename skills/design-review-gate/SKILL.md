@@ -10,7 +10,7 @@ triggers:
 
 ## Purpose
 
-This skill automatically activates when brainstorming writes and commits a project-sized design doc (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). It ensures complex features receive proper review before implementation begins by spawning six specialist reviewers:
+This skill automatically activates when brainstorming writes and commits a project-sized design doc (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). In full orchestration, where there is no design doc, the orchestrator runs it on the plan after the Plan Review Gate (see [two pipelines](./guides/workflow-enforcement.md#two-pipelines)). It ensures complex features receive proper review before implementation begins by spawning six specialist reviewers:
 
 1. **Product Manager Agent** - Use case validation and user benefit review
 2. **Architect Agent** - Technical architecture review

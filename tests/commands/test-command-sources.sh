@@ -137,9 +137,16 @@ done
 # setup, detect and --version). Historical records are exempt: CHANGELOG
 # entries for past releases, docs/plans and the knowledge base's gotcha.
 echo "No nonexistent 'metaswarm install' command"
-INSTALL_HITS="$(cd "$REPO_ROOT" && git ls-files -- '*.md' '*.toml' '*.html' '*.js' '*.sh' ':!CHANGELOG.md' ':!docs/plans/*' ':!tests/*' \
-  | xargs grep -nE 'metaswarm(@[A-Za-z0-9.]+)? install\b' 2>/dev/null || true)"
-[ -z "$INSTALL_HITS" ] && pass "no tracked doc tells users to run 'metaswarm install'" || fail "'metaswarm install' is referenced: $INSTALL_HITS"
+# git grep scans every tracked file (any type, names with spaces); exit 1 means
+# no match, anything above 1 is a real error and fails the check.
+INSTALL_RC=0
+INSTALL_HITS="$(git -C "$REPO_ROOT" grep -nIE 'metaswarm(@[A-Za-z0-9.]+)? install([^A-Za-z0-9_-]|$)' -- . \
+  ':!CHANGELOG.md' ':!docs/plans/' ':!.beads/' ':!tests/commands/test-command-sources.sh')" || INSTALL_RC=$?
+if [ "$INSTALL_RC" -gt 1 ]; then
+  fail "'metaswarm install' check: git grep failed (rc=$INSTALL_RC)"
+else
+  [ -z "$INSTALL_HITS" ] && pass "no tracked file tells users to run 'metaswarm install'" || fail "'metaswarm install' is referenced: $INSTALL_HITS"
+fi
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"

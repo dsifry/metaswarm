@@ -217,7 +217,7 @@ Your project files (CLAUDE.md, .coverage-thresholds.json, .beads/, etc.) were no
 ### If anything seems wrong
 - Undo before committing: `git restore --staged . && git checkout -- .`
 - Undo after committing: `git revert HEAD`
-- Bring the old files back: `git revert HEAD` restores them from git. There is no command that re-creates the old npm-copied layout: today `npx metaswarm init` installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
+- Bring the old files back: undoing as above restores them from git. There is no command that re-creates the old npm-copied layout: today `npx metaswarm init` installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
 ```
 
 ---
