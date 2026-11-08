@@ -369,10 +369,12 @@ git log main..HEAD --oneline
 # Create PR task (blocked by final comprehensive review)
 bd create "Create PR and shepherd to merge" --type task --parent <epic-id>
 
-# Create the PR, then start shepherding it right away
+# Create the PR, then hand it to a PR shepherd right away
 gh pr create --title "<title>" --body "<body>" --base main
-# Then invoke: /pr-shepherd <pr-number>
-# The pr-shepherd monitors CI, responds to comments, resolves threads
+# Then delegate /pr-shepherd <pr-number> (do not run it yourself):
+#   Task Mode: a background Task() with role type roleType("pr-shepherd-agent")
+#   Team Mode: the shepherd teammate in the issue-{number} team
+# The shepherd monitors CI, responds to comments, resolves threads
 
 # Wait for human merge approval
 bd update <pr-task> --status blocked

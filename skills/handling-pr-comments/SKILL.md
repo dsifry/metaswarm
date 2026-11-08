@@ -98,15 +98,18 @@ gh api graphql --paginate -F owner="$OWNER" -F repo="$REPO_NAME" -F pr="$PR_NUMB
       reviewThreads(first:100, after:$endCursor) {
         pageInfo { hasNextPage endCursor }
         nodes { id isResolved isOutdated subjectType path line originalLine
-          comments(first:1) { nodes { author { login } body } } } } } } }' |
+          comments(first:100) { nodes { author { login } body } } } } } } }' |
   jq -r '.data.repository.pullRequest.reviewThreads.nodes[]
     | select((.isResolved | not) and (.isOutdated or (.line == null and .subjectType != "FILE")))
-    | "\(.id) \(.path):\(.originalLine) outdated=\(.isOutdated) \(.comments.nodes[0].author.login): \(.comments.nodes[0].body[0:300])\n---"'
+    | "\(.id) \(.path):\(.originalLine) outdated=\(.isOutdated)\n"
+      + ([.comments.nodes[] | "[\(.author.login)] \(.body)"] | join("\n\n")) + "\n---"'
 
 echo "=== GENERAL PR DISCUSSION COMMENTS ==="
 gh api "repos/$OWNER/$REPO_NAME/issues/$PR_NUMBER/comments" --paginate |
-  jq -r '.[] | "\(.id) \(.user.login): \(.body[0:300])\n---"'
+  jq -r '.[] | "\(.id) \(.user.login):\n\(.body)\n---"'
 ```
+
+The listings print every comment in full, including replies on each thread: a request can sit in a later reply or after a long introduction.
 
 This lists comments that:
 
