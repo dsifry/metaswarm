@@ -129,13 +129,22 @@ bd dep add <plan-task> <research-task>
 # 7. Spawn Architect Agent for planning (role type roleType("planner"))
 # Wait for plan output
 
-# 8. Create CTO review task (blocked by planning)
-bd create "CTO review of implementation plan" --type task --parent <epic-id>
-bd dep add <review-task> <plan-task>
+# 8. Plan Review Gate (blocked by planning): run the plan-review-gate skill
+#    3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment),
+#    role type roleType("plan-reviewer"); ALL must PASS under the severity rule
+bd create "Plan Review Gate" --type task --parent <epic-id>
+bd dep add <plan-review-task> <plan-task>
 
-# 9. Spawn CTO Agent for review (role type roleType("design-reviewer"), CTO role in the prompt)
-# May iterate multiple times until approved
+# 9. Design Review Gate (blocked by the Plan Review Gate): run the
+#    design-review-gate skill on the plan. In full orchestration there is no
+#    separate design doc, so the 6 reviewers (PM, Architect, Designer, Security,
+#    UX Reviewer, CTO; role type roleType("design-reviewer")) review the plan.
+#    ALL must approve; iterate under the severity rule (cap 10 rounds)
+bd create "Design Review Gate" --type task --parent <epic-id>
+bd dep add <design-review-task> <plan-review-task>
 ```
+
+Both gates are BLOCKING: do not decompose into work units until the Plan Review Gate has passed and the Design Review Gate has approved. The plan-review-gate skill presents the plan to the user when it passes; here the Design Review Gate runs first, so present the plan once both gates have approved, and after the user approves it persist it to `.beads/plans/active-plan.md` as that skill's Plan Persistence section describes.
 
 ### Phase 2a: External Dependency Detection
 
@@ -171,7 +180,7 @@ Are these configured in your .env file? [Y/n]
 
 ### Phase 2b: Work Unit Decomposition
 
-After the architect creates the implementation plan and design review approves it, decompose into work units before implementation begins.
+After the plan passes the Plan Review Gate and the Design Review Gate approves it, decompose into work units before implementation begins.
 
 ```bash
 # 10. Decompose the approved plan into work units
@@ -506,7 +515,7 @@ Each sub-epic gets its own Issue Orchestrator instance that follows the full wor
 Before implementation proceeds, ALL parallel reviewers must approve:
 
 ```text
-Plan Complete
+Plan Review Gate passed
     │
     ├── PM Agent (approve/reject)
     ├── Architect Agent (approve/reject)
