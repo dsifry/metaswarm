@@ -59,8 +59,8 @@ bd close <id>         # Complete work
 
 ## Quality Gates (MANDATORY)
 
-- **After brainstorming** -> MUST run `$design-review-gate` before planning
-- **After any plan** -> MUST run `$plan-review-gate` before presenting to user
+- **After a project-sized design doc is committed** -> MUST run `$design-review-gate` before planning (see the metaswarm plugin's `guides/workflow-enforcement.md`)
+- **After the plan is written** -> MUST run `$plan-review-gate` before writing-plans presents the plan (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **TDD is mandatory** -> Write tests first, watch them fail, then implement
 - **Coverage** -> `.coverage-thresholds.json` is the single source of truth. BLOCKING gate.
 - **NEVER** use `--no-verify` on git commits

@@ -55,7 +55,7 @@ Triggered when:
 bd show <task-id> --json
 
 # Get the design document path
-# Usually in docs/plans/YYYY-MM-DD-<topic>-design.md
+# Usually in docs/superpowers/specs/ or docs/plans/ as YYYY-MM-DD-<topic>-design.md
 ```
 
 ### Step 2: Study Existing Patterns

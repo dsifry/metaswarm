@@ -114,12 +114,12 @@ If the issue lacks DoD items or clear scope, ask the user to clarify before proc
 **If the problem is unclear:**
 
 - Route to `superpowers:brainstorming` first to refine the idea into a design
-- **MANDATORY HANDOFF**: After brainstorming commits a design document, you MUST:
+- **Design Review Gate (project-sized designs only)**: When brainstorming writes and commits a project-sized design doc (see the metaswarm plugin's `guides/workflow-enforcement.md`), you MUST:
   1. STOP — do NOT proceed directly to `writing-plans` or implementation
   2. Run the Design Review Gate (`/review-design` or invoke the `design-review-gate` skill)
   3. Wait for all 5 review agents (PM, Architect, Designer, Security, CTO) to APPROVE
   4. Only after ALL APPROVED, proceed to planning
-- This handoff is required even if the brainstorming skill instructs you to invoke `writing-plans` next. The design review gate catches issues before expensive implementation begins.
+- For a project-sized design doc, the gate is required even if the brainstorming skill instructs you to invoke `writing-plans` next. Quick tasks, chat-only designs and short design docs for small changes skip it. The design review gate catches issues before expensive implementation begins.
 - After design review approval, create a GitHub Issue from the refined design
 - The issue should contain: scope, DoD items, file scope, human checkpoints
 

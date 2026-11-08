@@ -61,10 +61,10 @@ See `./agents/` directory for detailed agent definitions.
 
 ## Design Review Gate (NEW)
 
-For complex features created via brainstorming, an automatic **Design Review Gate** ensures quality before implementation:
+For project-sized features (brainstorming sized the work as a project and committed its design doc; see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)), an automatic **Design Review Gate** ensures quality before implementation:
 
 ```
-Design Document Created
+Project-Sized Design Doc Committed
         │
         ▼
 ┌─────────────────────────────────────────────────┐
@@ -89,9 +89,9 @@ Design Document Created
 
 ### Triggering the Design Review Gate
 
-The gate is automatically triggered when:
+The gate is automatically triggered when brainstorming writes and commits a project-sized design doc (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)):
 
-- `superpowers:brainstorming` completes and commits a design doc
+- A project-sized design doc is committed to `docs/plans/*-design.md` or `docs/superpowers/specs/*-design.md`
 - User runs `/review-design <path-to-design.md>`
 
 ### Review Criteria by Agent

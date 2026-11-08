@@ -38,9 +38,38 @@ Run the design review gate on a design document to get feedback from Product Man
 | Argument              | Description                                                  |
 | --------------------- | ------------------------------------------------------------ |
 | `<path>`              | Path to design document (required unless --latest)           |
-| `--latest`            | Review most recent design doc in docs/plans/                 |
+| `--latest`            | Review the newest dated design doc in `docs/plans/` or `docs/superpowers/specs/` |
 | `--iteration N`       | Mark as iteration N of review cycle                          |
 | `--skip-agent <name>` | Skip specific agent (pm, architect, designer, security, cto) |
+
+### Finding the latest design doc
+
+`--latest` looks at `docs/plans/*-design.md` and `docs/superpowers/specs/*-design.md`, considers only names that start with `YYYY-MM-DD-`, and picks the newest by that date prefix (file modification time is unreliable after a clone). Ties on date are broken by the rest of the basename, then by the full path.
+
+<!-- latest-design-doc:start -->
+```bash
+(
+  # Absent folders are skipped; a folder that exists but can't be read is an error.
+  list=$(
+    for d in docs/plans docs/superpowers/specs; do
+      [ -d "$d" ] || continue
+      find "$d" -maxdepth 1 -type f \
+        -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-*-design.md' ||
+        { echo "Cannot read $d" >&2; exit 2; }
+    done
+  ) || exit 2
+  latest=$(printf '%s\n' "$list" |
+    awk 'NF { n = $0; sub(".*/", "", n); print n "\t" $0 }' |
+    LC_ALL=C sort | tail -n 1 | cut -f2)
+  if [ -n "$latest" ]; then
+    printf '%s\n' "$latest"
+  else
+    echo "No design doc found in docs/plans/ or docs/superpowers/specs/"
+    false
+  fi
+)
+```
+<!-- latest-design-doc:end -->
 
 ## Review Verdicts
 
@@ -69,9 +98,9 @@ Reached via the severity rule: an escalate condition (a recurring or disputed bl
 
 ## Integration
 
-### After Brainstorming
+### After a Project-Sized Design Doc Is Committed
 
-This command is automatically invoked by the brainstorming extension skill after `superpowers:brainstorming` commits a design document.
+This command is automatically invoked by the brainstorming extension skill when brainstorming commits a project-sized design doc (see the metaswarm plugin's `guides/workflow-enforcement.md`).
 
 ### Manual Invocation
 
@@ -152,7 +181,7 @@ The review gate passes when:
 Ensure the path is correct and the file exists:
 
 ```bash
-ls -la docs/plans/
+ls -la docs/plans/ docs/superpowers/specs/
 ```
 
 ### "Agent timed out"
@@ -176,5 +205,5 @@ On any escalation (including the 10-round cap), the human chooses Revise, Narrow
 ## Related Skills
 
 - `your-project:design-review-gate` - The gate implementation
-- `your-project:brainstorming-extension` - Auto-triggers this after brainstorming
+- `your-project:brainstorming-extension` - Auto-triggers this when brainstorming commits a project-sized design doc
 - `superpowers:brainstorming` - The design creation skill

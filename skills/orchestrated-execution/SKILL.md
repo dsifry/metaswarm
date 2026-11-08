@@ -30,7 +30,7 @@ See `./guides/agent-coordination.md` for full mode detection and coordination de
 
 ## Plan Review Gate
 
-After drafting an implementation plan (Step 1: Plan Validation), submit it to the **Plan Review Gate** before presenting to the user. The gate spawns 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) — all must PASS. See `skills/plan-review-gate/SKILL.md` for details.
+After drafting an implementation plan (Step 1: Plan Validation), submit it to the **Plan Review Gate** before writing-plans presents the plan (or before you present it to the user); see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md). The gate spawns 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) — all must PASS. See `skills/plan-review-gate/SKILL.md` for details.
 
 ---
 
@@ -902,7 +902,7 @@ These are explicit DON'Ts. Violating any of these undermines the entire orchestr
 | 11 | **Proceeding without external credentials** — building features that require API keys without verifying the user has them | Features will fail at runtime; user discovers this after 10+ commits | Checkpoint before external-service WUs to verify credentials are configured |
 | 12 | **Advisory quality gates** — treating a `blocker: yes` FAIL as advisory, or a failed VALIDATE check as a suggestion | Undermines the entire trust model; equivalent to skipping the gate | Quality gates are state transitions. FAIL means retry, iterate under the severity rule, or escalate, never skip. |
 | 13 | **Using `--no-verify`** — bypassing pre-commit hooks on git commits | Pre-commit hooks catch lint errors, type errors, and formatting issues before they enter history | Never use `--no-verify`. Fix the underlying issue instead. |
-| 14 | **Skipping design review gate after brainstorming** — going directly from brainstorming to writing-plans | Expensive implementation work begins on unreviewed designs | Always run the 5-agent design review gate between brainstorming and planning |
+| 14 | **Skipping design review gate for a project-sized design doc** — going directly from a committed design doc to writing-plans | Expensive implementation work begins on unreviewed designs | Run the 5-agent design review gate between a committed project-sized design doc and planning (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)) |
 | 15 | **Skipping plan review gate** — presenting a plan to the user without adversarial review | Plans with feasibility gaps, missing requirements, or scope creep reach implementation | Always run the 3-reviewer plan review gate before presenting any plan |
 
 ---

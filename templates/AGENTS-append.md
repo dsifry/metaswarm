@@ -25,7 +25,7 @@ Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` synta
 
 ### Quality Gates
 
-- **Design Review Gate** -- 5-reviewer design review after design is drafted (`$design-review-gate`)
+- **Design Review Gate** -- 5-reviewer design review after a project-sized design doc is committed (`$design-review-gate`)
 - **Plan Review Gate** -- 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) -- ALL must PASS
 - **Coverage Gate** -- `.coverage-thresholds.json` defines thresholds. BLOCKING gate before PR creation
 
@@ -37,8 +37,8 @@ Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` synta
 
 ### Workflow Enforcement (MANDATORY)
 
-- **After brainstorming** -> MUST run `$design-review-gate` before planning or implementation
-- **After any plan is created** -> MUST run `$plan-review-gate` before presenting to user
+- **After a project-sized design doc is committed** -> MUST run `$design-review-gate` before planning or implementation (see the metaswarm plugin's `guides/workflow-enforcement.md`)
+- **After the plan is written** -> MUST run `$plan-review-gate` before writing-plans presents the plan (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **Coverage** -> `.coverage-thresholds.json` is the single source of truth. All skills must check it.
 - **Agent discipline** -> NEVER use `--no-verify`, NEVER `git push --force` without approval, NEVER self-certify, ALWAYS follow TDD, STAY within file scope
 
