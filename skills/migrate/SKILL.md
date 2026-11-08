@@ -261,16 +261,23 @@ Removals of tracked files use `git rm`, which only stages changes — files are 
 **Restore untracked files** (use the folder Step 7 printed):
 ```bash
 BACKUP=".metaswarm/migrate-backup-<timestamp>"
-# Copies each file back to its original path; a file that exists again is
-# skipped and reported, never overwritten. The backup's .gitignore stays put.
-find "$BACKUP" -type f ! -path "$BACKUP/.gitignore" -exec sh -c '
-  b=$1; shift
+# Copies each file (and symbolic link, as a link) back to its original path. A
+# path that exists again is skipped and reported, never overwritten; one that
+# can't be restored is reported, and the backup is kept. Its .gitignore stays put.
+if find "$BACKUP" \( -type f -o -type l \) ! -path "$BACKUP/.gitignore" -exec sh -c '
+  b=$1; shift; rc=0
   for src; do
     dst=${src#"$b"/}
-    if [ -e "$dst" ]; then echo "skipped (already exists): $dst"
-    else mkdir -p "$(dirname "$dst")" && cp -p "$src" "$dst"; fi
-  done' sh "$BACKUP" {} +
-echo "Restored the files in $BACKUP; delete the folder once you've checked them"
+    if [ -e "$dst" ] || [ -L "$dst" ]; then echo "skipped (already exists): $dst"
+    elif ! { mkdir -p "$(dirname "$dst")" && cp -RPp "$src" "$dst"; }; then
+      echo "NOT restored: $dst" >&2; rc=1
+    fi
+  done
+  exit $rc' sh "$BACKUP" {} +; then
+  echo "Restored the files in $BACKUP; delete the folder once you've checked them"
+else
+  echo "Some files were NOT restored (see above). Keep $BACKUP until they are." >&2
+fi
 ```
 - **Old npm-copied layout**: restore its git-tracked files with the commands above. No current command re-creates it: `npx metaswarm init` now installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
 

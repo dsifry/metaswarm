@@ -45,12 +45,13 @@ if [ -n "$BACKUP_SNIP" ] && [ -n "$RESTORE_SNIP" ]; then
     printf 'rubric\n' > .claude/rubrics/untracked.md
     printf 'nested\n' > ".claude/plugins/metaswarm/sub dir/file one.md"
     mkdir -p .claude/guides && printf 'guide\n' > .claude/guides/g.md
+    ln -s untracked.md .claude/rubrics/link.md
   )
   cp "$WORK/.claude/rubrics/untracked.md" "$WORK/expect-1"
   cp "$WORK/.claude/plugins/metaswarm/sub dir/file one.md" "$WORK/expect-2"
   # The agent fills in the confirmed untracked files; the snippet marks the list
   # with UNTRACKED=(...).
-  RUN_BACKUP="$(printf '%s\n' "$BACKUP_SNIP" | sed -E "s#^UNTRACKED=\(.*\)\$#UNTRACKED=(.claude/rubrics/untracked.md '.claude/plugins/metaswarm/sub dir/file one.md' .claude/guides/g.md)#")"
+  RUN_BACKUP="$(printf '%s\n' "$BACKUP_SNIP" | sed -E "s#^UNTRACKED=\(.*\)\$#UNTRACKED=(.claude/rubrics/untracked.md '.claude/plugins/metaswarm/sub dir/file one.md' .claude/guides/g.md .claude/rubrics/link.md)#")"
   if printf '%s\n' "$RUN_BACKUP" | grep -q "file one.md"; then pass "backup snippet takes the file list as UNTRACKED=(...)"; else fail "backup snippet has no UNTRACKED=(...) line to fill in"; fi
   rc=0; (cd "$WORK" && bash -c "set -euo pipefail; $RUN_BACKUP") >"$WORK/backup.out" 2>&1 || rc=$?
   [ "$rc" -eq 0 ] && pass "backup snippet runs" || fail "backup snippet failed (rc=$rc): $(cat "$WORK/backup.out")"
@@ -89,6 +90,25 @@ if [ -n "$BACKUP_SNIP" ] && [ -n "$RESTORE_SNIP" ]; then
     fail "restore overwrote a re-created file or didn't report it"
   fi
   [ ! -e "$WORK/.gitignore" ] && pass "restore doesn't copy the backup's .gitignore to the repo root" || fail "restore created a root .gitignore"
+  if [ -L "$WORK/.claude/rubrics/link.md" ] && [ "$(readlink "$WORK/.claude/rubrics/link.md")" = "untracked.md" ]; then
+    pass "restore brings a symbolic link back as a link"
+  else
+    fail "restore did not bring the symbolic link back as a link"
+  fi
+  grep -q 'delete the folder' "$WORK/restore.out" && pass "a clean restore says the folder can go" || fail "a clean restore didn't print its completion line"
+
+  # One file can't go back (its parent is now a regular file) and a later one
+  # can: the restore must say so and must not suggest deleting the backup.
+  rm -r -f "${WORK:?}/.claude/plugins/metaswarm/sub dir"
+  rm -f "${WORK:?}/.claude/rubrics/untracked.md"
+  printf 'blocker\n' > "$WORK/.claude/plugins/metaswarm/sub dir"
+  rc=0; (cd "$WORK" && bash -c "set -euo pipefail; $RUN_RESTORE") >"$WORK/restore2.out" 2>&1 || rc=$?
+  if grep -qi 'not restored' "$WORK/restore2.out" && ! grep -q 'delete the folder' "$WORK/restore2.out"; then
+    pass "a partial restore reports what failed and keeps the backup"
+  else
+    fail "a partial restore looked successful: $(tr '\n' ' ' < "$WORK/restore2.out")"
+  fi
+  cmp -s "$WORK/expect-1" "$WORK/.claude/rubrics/untracked.md" && pass "files after the failed one are still restored" || fail "a failure stopped the remaining files from being restored"
 fi
 
 echo "Migrate skill: the safety notes match the behaviour"
