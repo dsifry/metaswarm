@@ -153,6 +153,23 @@ for SH in bash zsh; do
   expect_pick "$SH" "strict: both folders" "$S/2026-03-01-b-design.md" "$S/2026-03-01-b-design.md" "$P/2026-02-01-a-design.md"
   expect_none "$SH" "strict: no folders at all"
   SNIPPET_PREFIX=""
+  # An existing but unreadable folder must fail loudly, not fall back to the other folder.
+  WU2_N=$((WU2_N + 1)); root="$WU2_TMP/$WU2_N"; mkdir -p "$root"
+  mk "$root" "$P/2026-02-01-a-design.md" "$S/2026-03-01-b-design.md"
+  chmod 000 "$root/$S"
+  if [ -r "$root/$S" ]; then
+    echo "  SKIP: [$SH] unreadable folder (running as root)"
+  else
+    for pre in "" 'set -e; set -o pipefail; '; do
+      SNIPPET_PREFIX="$pre"; run_snippet "$SH" "$root"; SNIPPET_PREFIX=""
+      if [ "$RUN_RC" -ne 0 ] && grep -qF -e "Cannot read $S" <<<"$RUN_OUT" && ! grep -qF -e "$P/2026-02-01-a-design.md" <<<"$RUN_OUT"; then
+        pass "[$SH] unreadable folder fails loudly${pre:+ (strict)}"
+      else
+        fail "[$SH] unreadable folder fails loudly${pre:+ (strict)} (rc=$RUN_RC, out '$RUN_OUT')"
+      fi
+    done
+  fi
+  chmod 755 "$root/$S"
 done
 
 assert_in "design-review-gate names both locations" "$(cat "$REPO_ROOT/skills/design-review-gate/SKILL.md")" \

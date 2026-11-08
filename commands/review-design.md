@@ -49,10 +49,17 @@ Run the design review gate on a design document to get feedback from Product Man
 <!-- latest-design-doc:start -->
 ```bash
 (
-  # `|| :` keeps a missing folder from aborting the lookup under set -e + pipefail.
-  latest=$({ find docs/plans docs/superpowers/specs -maxdepth 1 -type f \
-      -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-*-design.md' 2>/dev/null || :; } |
-    awk '{ n = $0; sub(".*/", "", n); print n "\t" $0 }' |
+  # Absent folders are skipped; a folder that exists but can't be read is an error.
+  list=$(
+    for d in docs/plans docs/superpowers/specs; do
+      [ -d "$d" ] || continue
+      find "$d" -maxdepth 1 -type f \
+        -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-*-design.md' ||
+        { echo "Cannot read $d" >&2; exit 2; }
+    done
+  ) || exit 2
+  latest=$(printf '%s\n' "$list" |
+    awk 'NF { n = $0; sub(".*/", "", n); print n "\t" $0 }' |
     LC_ALL=C sort | tail -n 1 | cut -f2)
   if [ -n "$latest" ]; then
     printf '%s\n' "$latest"
