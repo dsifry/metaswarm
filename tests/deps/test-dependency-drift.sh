@@ -364,18 +364,15 @@ else
   fail "WU2: no tracked agents/*.md or skills/start/agents/*.md files"
 fi
 
-# 2.2 Twins differ only in ./ and .claude/ prefixes. coder.md and
-# pr-shepherd-agent.md carry known pre-existing 2-line content differences;
-# their normalised diff must equal that baseline exactly.
+# 2.2 Twins differ only in ./ and .claude/ prefixes. coder.md carries a
+# known pre-existing 2-line content difference; its normalised diff must
+# equal that baseline exactly. pr-shepherd-agent.md's former difference (a
+# placeholder your-project path) is gone, so its twins must match.
 normalise_twin() { sed 's#\./##g;s#\.claude/##g'; }
 WU2_CODER_BASELINE='323c323
 < See `guides/typescript-patterns.md` for full guidance.
 ---
 > Follow TypeScript strict mode conventions as defined in the project'"'"'s tsconfig.json and ESLint configuration.'
-WU2_SHEPHERD_BASELINE='26c26
-< **See**: `plugins/your-project/skills/pr-shepherd/SKILL.md` for detailed PR monitoring behavior.
----
-> **See**: the `metaswarm:pr-shepherd` skill for detailed PR monitoring behavior.'
 
 twin_diff() {
   # Strip the line-number header so the baseline survives line shifts above it.
@@ -394,7 +391,6 @@ while IFS= read -r a; do
   got="$(twin_diff "$b")"
   case "$b" in
     coder.md) want="$(printf '%s\n' "$WU2_CODER_BASELINE" | strip_hdr)" ;;
-    pr-shepherd-agent.md) want="$(printf '%s\n' "$WU2_SHEPHERD_BASELINE" | strip_hdr)" ;;
     *) want="" ;;
   esac
   if [ "$got" = "$want" ]; then
@@ -404,6 +400,17 @@ while IFS= read -r a; do
     while IFS= read -r line; do echo "      $line"; done <<<"$got"
   fi
 done < <(git -C "$DRIFT_ROOT" ls-files -- 'agents/*.md')
+
+# 2.2b The PR Shepherd agent names the real skill, not the your-project placeholder.
+for f in agents/pr-shepherd-agent.md skills/start/agents/pr-shepherd-agent.md; do
+  if grep -q -F -e 'your-project' "$DRIFT_ROOT/$f"; then
+    fail "WU2 2.2b: $f still names the your-project placeholder"
+  elif grep -q -F -e 'metaswarm:pr-shepherd' "$DRIFT_ROOT/$f"; then
+    pass "WU2 2.2b: $f names metaswarm:pr-shepherd"
+  else
+    fail "WU2 2.2b: $f does not name metaswarm:pr-shepherd"
+  fi
+done
 
 # ===========================================================================
 # WU3 (owned files): removed bd commands (P7), compact wording (P6), P2

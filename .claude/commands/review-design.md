@@ -209,6 +209,6 @@ On any escalation (including the 10-round cap), the human chooses Revise, Narrow
 
 ## Related Skills
 
-- `your-project:design-review-gate` - The gate implementation
-- `your-project:brainstorming-extension` - Auto-triggers this when brainstorming commits a project-sized design doc
+- `metaswarm:design-review-gate` - The gate implementation
+- `metaswarm:brainstorming-extension` - Auto-triggers this when brainstorming commits a project-sized design doc
 - `superpowers:brainstorming` - The design creation skill
