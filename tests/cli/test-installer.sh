@@ -70,7 +70,10 @@ fi
 
 # 8. Project setup dry run (in temp dir)
 TMP_DIR=$(mktemp -d)
-trap 'rm -rf "$TMP_DIR"' EXIT
+# bash 3.2 exits with the EXIT trap's status (0) when `set -u` aborts the script,
+# so a crash would look like a pass. DONE is set only after the summary runs.
+DONE=0
+trap 'rm -rf "${TMP_DIR:?}"; [ "$DONE" = 1 ] || { echo "ABORTED before summary" >&2; exit 1; }' EXIT
 
 cd "$TMP_DIR"
 git init -q .
@@ -123,4 +126,5 @@ fi
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
+DONE=1
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1
