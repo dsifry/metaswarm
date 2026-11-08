@@ -61,52 +61,68 @@ for builtin in status help clear compact config init review memory model cost do
   assert_eq ".claude/commands/$builtin.md does not shadow /$builtin" "OK" "$result"
 done
 
+# Tests 0b, 0c, 2 and 3 run --sync or mutate files, so they run in an isolated copy of
+# the repo: the developer's checkout is never written to (only read-only --check below).
+SANDBOX="$(mktemp -d)"
+CLEANUP='rm -rf "${SANDBOX:?}"'
+tar -C "$REPO_ROOT" --exclude=./.git --exclude=./node_modules --exclude=./.goodtogo -cf - . | tar -C "$SANDBOX" -xf -
+run_sync() { # <mode>: runs sync-resources in the sandbox; sets SYNC_RC, SYNC_OUT
+  SYNC_RC=0
+  SYNC_OUT=$(cd "$SANDBOX" && node lib/sync-resources.js "$1" 2>&1) || SYNC_RC=$?
+}
+expect_rc() { # <desc> <expected rc>: asserts SYNC_RC, printing the output on failure
+  assert_eq "$1" "$2" "$SYNC_RC"
+  [ "$SYNC_RC" = "$2" ] || printf '    sync output:\n%s\n' "$SYNC_OUT"
+}
+
 # Test 0b: --check detects drift in a mirrored command
 echo "Test 0b: --check fails when a mirrored command drifts"
-probe="$REPO_ROOT/.claude/commands/prime.md"
-backup="$(mktemp)"
-cp "$probe" "$backup"
-CLEANUP='cp "$backup" "$probe"; rm -f "$backup"' 
-printf '\ndrift\n' >> "$probe"
-if (cd "$REPO_ROOT" && node lib/sync-resources.js --check >/dev/null 2>&1); then
-  result="PASS"
-else
-  result="FAIL"
-fi
-cp "$backup" "$probe"
-assert_eq "Check fails on drifted .claude/commands copy" "FAIL" "$result"
+printf '\ndrift\n' >> "$SANDBOX/.claude/commands/prime.md"
+run_sync --check
+expect_rc "Check fails on drifted .claude/commands copy" "1"
+run_sync --sync
+expect_rc "Sync repairs the drifted copy" "0"
+if cmp -s "$SANDBOX/commands/prime.md" "$SANDBOX/.claude/commands/prime.md"; then result="SAME"; else result="DIFF"; fi
+assert_eq "Drifted copy restored from source" "SAME" "$result"
 
 # Test 0c: orphaned mirrors (#64). A .claude/commands/*.md with no source in commands/
 # and not on the exclusion list is an orphan: --check reports it, --sync removes it.
 # Excluded names and non-.md files are never touched.
 echo "Test 0c: orphaned .claude/commands mirrors"
-CMDS="$REPO_ROOT/.claude/commands"
-orphan="$CMDS/zz-orphan.md"
-excluded="$CMDS/metaswarm-setup.md"
-nonmd="$CMDS/zz-notes.txt"
-CLEANUP='rm -f "$orphan" "$excluded" "$nonmd"; cp "$backup" "$probe" 2>/dev/null; rm -f "$backup"'
-printf 'stale mirror\n' > "$orphan"
-out=$(cd "$REPO_ROOT" && node lib/sync-resources.js --check 2>&1) && rc=0 || rc=$?
-assert_eq "--check fails on an orphaned mirror" "1" "$rc"
-if printf '%s' "$out" | grep -qF -e 'ORPHAN: .claude/commands/zz-orphan.md'; then result="REPORTED"; else result="SILENT"; fi
+CMDS="$SANDBOX/.claude/commands"
+printf 'stale mirror\n' > "$CMDS/zz-orphan.md"
+run_sync --check
+expect_rc "--check fails on an orphaned mirror" "1"
+if printf '%s' "$SYNC_OUT" | grep -qF -e 'ORPHAN: .claude/commands/zz-orphan.md'; then result="REPORTED"; else result="SILENT"; fi
 assert_eq "--check names the orphan" "REPORTED" "$result"
-printf 'legacy copy\n' > "$excluded"
-printf 'not a command\n' > "$nonmd"
-(cd "$REPO_ROOT" && node lib/sync-resources.js --sync >/dev/null 2>&1) || true
-if [ -e "$orphan" ]; then result="KEPT"; else result="REMOVED"; fi
+printf 'legacy copy\n' > "$CMDS/metaswarm-setup.md"
+printf 'not a command\n' > "$CMDS/zz-notes.txt"
+run_sync --sync
+expect_rc "--sync succeeds" "0"
+if [ -e "$CMDS/zz-orphan.md" ]; then result="KEPT"; else result="REMOVED"; fi
 assert_eq "--sync removes the orphan" "REMOVED" "$result"
-if [ -e "$excluded" ]; then result="KEPT"; else result="REMOVED"; fi
+if [ -e "$CMDS/metaswarm-setup.md" ]; then result="KEPT"; else result="REMOVED"; fi
 assert_eq "--sync leaves an excluded name alone" "KEPT" "$result"
-if [ -e "$nonmd" ]; then result="KEPT"; else result="REMOVED"; fi
+if [ -e "$CMDS/zz-notes.txt" ]; then result="KEPT"; else result="REMOVED"; fi
 assert_eq "--sync leaves non-.md files alone" "KEPT" "$result"
 if [ -e "$CMDS/prime.md" ]; then result="KEPT"; else result="REMOVED"; fi
 assert_eq "--sync keeps mirrors that have a source" "KEPT" "$result"
-out=$(cd "$REPO_ROOT" && node lib/sync-resources.js --check 2>&1) && rc=0 || rc=$?
-if printf '%s' "$out" | grep -qF -e 'ORPHAN'; then result="FLAGGED"; else result="CLEAN"; fi
+run_sync --check
+if printf '%s' "$SYNC_OUT" | grep -qF -e 'ORPHAN'; then result="FLAGGED"; else result="CLEAN"; fi
 assert_eq "--check does not flag excluded or non-.md files" "CLEAN" "$result"
-rm -f "$excluded" "$nonmd"
 
-# Test 1: Check mode should pass when files are in sync
+# Test 0d: the orphan finder takes its root, mirror settings and fs as parameters (DI).
+echo "Test 0d: findOrphanedCommandMirrors with injected root and mirror"
+DI_ROOT="$SANDBOX/di"
+mkdir -p "$DI_ROOT/src" "$DI_ROOT/dst"
+: > "$DI_ROOT/src/a.md"; : > "$DI_ROOT/dst/a.md"; : > "$DI_ROOT/dst/b.md"; : > "$DI_ROOT/dst/skip.md"
+DI_OUT=$(cd "$REPO_ROOT" && node -e '
+  const { findOrphanedCommandMirrors } = require("./lib/sync-resources.js");
+  const out = findOrphanedCommandMirrors(process.argv[1], { src: "src", dest: "dst", exclude: ["skip.md"] });
+  console.log(JSON.stringify(out));' "$DI_ROOT" 2>&1) || true
+assert_eq "Injected root/mirror: only the unsourced, non-excluded file" '["dst/b.md"]' "$DI_OUT"
+
+# Test 1: Check mode should pass when files are in sync (read-only, real checkout)
 echo "Test 1: Check mode passes when synced"
 if (cd "$REPO_ROOT" && node lib/sync-resources.js --check >/dev/null 2>&1); then
   result="PASS"
@@ -115,23 +131,15 @@ else
 fi
 assert_eq "Check mode passes" "PASS" "$result"
 
-# Test 2: Sync mode runs without error
+# Test 2: Sync mode runs without error (sandbox)
 echo "Test 2: Sync mode runs without error"
-if (cd "$REPO_ROOT" && node lib/sync-resources.js --sync >/dev/null 2>&1); then
-  result="PASS"
-else
-  result="FAIL"
-fi
-assert_eq "Sync mode succeeds" "PASS" "$result"
+run_sync --sync
+expect_rc "Sync mode succeeds" "0"
 
-# Test 3: After syncing, check mode should still pass
+# Test 3: After syncing, check mode should still pass (sandbox)
 echo "Test 3: Check after sync still passes"
-if (cd "$REPO_ROOT" && node lib/sync-resources.js --check >/dev/null 2>&1); then
-  result="PASS"
-else
-  result="FAIL"
-fi
-assert_eq "Check after sync passes" "PASS" "$result"
+run_sync --check
+expect_rc "Check after sync passes" "0"
 
 # Test 4: No arguments prints usage and exits non-zero
 echo "Test 4: No arguments prints usage"

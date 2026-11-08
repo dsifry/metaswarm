@@ -73,7 +73,7 @@ Set `enforcement.command` to whatever your project uses:
 | TypeScript (Jest) | `npx jest --coverage` |
 | Python (pytest) | `pytest --cov --cov-fail-under=100` |
 | Rust | `cargo tarpaulin --fail-under 100` |
-| Go | `go test -cover ./...` |
+| Go | `go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out -o coverage.txt && awk -v min=100 '/^total:/ { print; if ($3 + 0 < min) exit 1 }' coverage.txt` |
 
 ## Reading Thresholds in Your Test Config
 
