@@ -4,7 +4,7 @@ description: Automatic review gate that runs after brainstorming completes - spa
 auto_activate: true
 triggers:
   - "design document created"
-  - "docs/plans/*-design.md committed"
+  - "project-sized design doc committed (docs/plans/*-design.md or docs/superpowers/specs/*-design.md)"
   - after:superpowers:brainstorming
 ---
 
@@ -39,7 +39,7 @@ In either mode, the review criteria, the severity rule (see Phase 3), and escala
 
 This skill auto-activates when:
 
-1. A design document is committed to `docs/plans/*-design.md`
+1. A project-sized design doc is committed to `docs/plans/*-design.md` or `docs/superpowers/specs/*-design.md` (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md))
 2. The `superpowers:brainstorming` skill completes
 3. User explicitly requests: `/review-design <path-to-design.md>`
 

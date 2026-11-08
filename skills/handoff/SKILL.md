@@ -81,7 +81,7 @@ Note uncommitted changes, stashes, and whether the branch is pushed.
 List every artifact the next agent must read **before acting**, and for each one say *why* and *what to look for*. Categories to sweep:
 
 - **Specs / Issues** — the requirements source of truth (GitHub Issue, spec section, DoD).
-- **Design docs** — `docs/plans/*-design.md` and any approved design.
+- **Design docs** — `docs/plans/*-design.md`, `docs/superpowers/specs/*-design.md`, and any approved design.
 - **Plans** — `.beads/plans/active-plan.md`, `docs/plans/*-plan.md`.
 - **Code** — the specific files and `file:line` anchors that are the focus of the work, plus any pattern files to imitate.
 - **Tests** — the tests that define correctness (failing tests are the spec under TDD).

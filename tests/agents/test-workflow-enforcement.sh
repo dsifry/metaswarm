@@ -57,5 +57,103 @@ fi
 
 # ---------------------------------------------------------------------------
 echo ""
+echo "WU2: design-doc locations and --latest"
+# ---------------------------------------------------------------------------
+
+RD="$REPO_ROOT/commands/review-design.md"
+SNIPPET=""
+if [ -f "$RD" ]; then
+  SNIPPET="$(awk '
+    /<!-- latest-design-doc:start -->/ { inblk = 1; next }
+    /<!-- latest-design-doc:end -->/ { inblk = 0; next }
+    inblk && /^```/ { next }
+    inblk { print }
+  ' "$RD")"
+fi
+if [ -n "$SNIPPET" ]; then pass "review-design.md has latest-design-doc snippet"; else fail "review-design.md has latest-design-doc snippet"; fi
+
+WU2_TMP="$(mktemp -d)"
+trap 'rm -rf "$WU2_TMP"' EXIT
+WU2_N=0
+NOFOUND='No design doc found in docs/plans/ or docs/superpowers/specs/'
+
+mk() { # <fixture-root> <relative-file>...
+  local root="$1" f; shift
+  for f in "$@"; do mkdir -p "$root/$(dirname "$f")"; : >"$root/$f"; done
+}
+
+run_snippet() { # <shell> <dir>; sets RUN_OUT, RUN_RC
+  RUN_RC=0
+  RUN_OUT="$(cd "$2" && "$1" -c "$SNIPPET" 2>&1)" || RUN_RC=$?
+}
+
+expect_pick() { # <shell> <label> <expected> <file>...
+  local sh="$1" label="$2" expected="$3"; shift 3
+  WU2_N=$((WU2_N + 1))
+  local root="$WU2_TMP/$WU2_N"
+  mkdir -p "$root"
+  [ "$#" -gt 0 ] && mk "$root" "$@"
+  run_snippet "$sh" "$root"
+  if [ "$RUN_RC" -eq 0 ] && [ "$RUN_OUT" = "$expected" ]; then
+    pass "[$sh] $label"
+  else
+    fail "[$sh] $label (rc=$RUN_RC, got '$RUN_OUT', want '$expected')"
+  fi
+}
+
+expect_none() { # <shell> <label> <mkdir-spec: dirs...>
+  local sh="$1" label="$2" d; shift 2
+  WU2_N=$((WU2_N + 1))
+  local root="$WU2_TMP/$WU2_N"
+  mkdir -p "$root"
+  for d in "$@"; do mkdir -p "$root/$d"; done
+  run_snippet "$sh" "$root"
+  if [ "$RUN_RC" -ne 0 ] && grep -qF -e "$NOFOUND" <<<"$RUN_OUT"; then
+    pass "[$sh] $label"
+  else
+    fail "[$sh] $label (rc=$RUN_RC, out '$RUN_OUT')"
+  fi
+}
+
+P=docs/plans
+S=docs/superpowers/specs
+for SH in bash zsh; do
+  if ! command -v "$SH" >/dev/null 2>&1; then echo "  SKIP: $SH not installed"; continue; fi
+  if [ -z "$SNIPPET" ]; then fail "[$SH] snippet missing, cases not run"; continue; fi
+  expect_pick "$SH" "a: specs newer than plans" "$S/2026-03-01-b-design.md" "$S/2026-03-01-b-design.md" "$P/2026-02-01-a-design.md"
+  expect_pick "$SH" "b: plans newer than specs" "$P/2026-03-01-b-design.md" "$P/2026-03-01-b-design.md" "$S/2026-02-01-a-design.md"
+  expect_pick "$SH" "c: only specs, plans absent" "$S/2026-03-01-b-design.md" "$S/2026-03-01-b-design.md"
+  expect_pick "$SH" "d: only plans, specs absent" "$P/2026-02-01-a-design.md" "$P/2026-02-01-a-design.md"
+  expect_pick "$SH" "e: non-design and undated files ignored" "$P/2026-01-01-a-design.md" \
+    "$P/2026-01-01-a-design.md" "$P/2026-05-01-x-plan.md" "$P/notes.md" "$P/api-design.md" "$S/zzz-design.md"
+  expect_pick "$SH" "f: same date, basename decides" "$P/2026-04-01-zeta-design.md" \
+    "$P/2026-04-01-zeta-design.md" "$S/2026-04-01-alpha-design.md"
+  expect_pick "$SH" "g: same basename, full-path tiebreak" "$S/2026-04-01-same-design.md" \
+    "$P/2026-04-01-same-design.md" "$S/2026-04-01-same-design.md"
+  # g (repeat): deterministic across runs
+  WU2_N=$((WU2_N + 1)); root="$WU2_TMP/$WU2_N"; mkdir -p "$root"
+  mk "$root" "$P/2026-04-01-same-design.md" "$S/2026-04-01-same-design.md"
+  run_snippet "$SH" "$root"; r1="$RUN_OUT"; run_snippet "$SH" "$root"; r2="$RUN_OUT"
+  if [ "$r1" = "$r2" ] && [ "$r1" = "$S/2026-04-01-same-design.md" ]; then
+    pass "[$SH] g: same basename, stable across runs"
+  else
+    fail "[$SH] g: same basename, stable across runs ('$r1' vs '$r2')"
+  fi
+  expect_none "$SH" "h: empty tree, both folders exist" "$P" "$S"
+  expect_none "$SH" "h: no folders at all"
+done
+
+assert_in "design-review-gate names both locations" "$(cat "$REPO_ROOT/skills/design-review-gate/SKILL.md")" \
+  'docs/plans/*-design.md' 'docs/superpowers/specs/*-design.md'
+for f in commands/brainstorm.md skills/handoff/SKILL.md agents/designer-agent.md skills/start/agents/designer-agent.md; do
+  if grep -qF -e 'docs/superpowers/specs/' "$REPO_ROOT/$f"; then
+    pass "$f mentions docs/superpowers/specs/"
+  else
+    fail "$f mentions docs/superpowers/specs/"
+  fi
+done
+
+# ---------------------------------------------------------------------------
+echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

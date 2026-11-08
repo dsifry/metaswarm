@@ -18,7 +18,7 @@ If superpowers is not installed, provide standalone brainstorming guidance:
 - Ask clarifying questions one at a time
 - Propose 2-3 approaches with trade-offs
 - Present design sections for approval
-- Write design doc to `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- Write design doc to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` (superpowers' default) or `docs/plans/YYYY-MM-DD-<topic>-design.md`; the design review gate watches both
 - Trigger design review gate
 
 ## Related

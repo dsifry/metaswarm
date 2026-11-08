@@ -38,9 +38,30 @@ Run the design review gate on a design document to get feedback from Product Man
 | Argument              | Description                                                  |
 | --------------------- | ------------------------------------------------------------ |
 | `<path>`              | Path to design document (required unless --latest)           |
-| `--latest`            | Review most recent design doc in docs/plans/                 |
+| `--latest`            | Review the newest dated design doc in `docs/plans/` or `docs/superpowers/specs/` |
 | `--iteration N`       | Mark as iteration N of review cycle                          |
 | `--skip-agent <name>` | Skip specific agent (pm, architect, designer, security, cto) |
+
+### Finding the latest design doc
+
+`--latest` looks at `docs/plans/*-design.md` and `docs/superpowers/specs/*-design.md`, considers only names that start with `YYYY-MM-DD-`, and picks the newest by that date prefix (file modification time is unreliable after a clone). Ties on date are broken by the rest of the basename, then by the full path.
+
+<!-- latest-design-doc:start -->
+```bash
+(
+  latest=$(find docs/plans docs/superpowers/specs -maxdepth 1 -type f \
+      -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-*-design.md' 2>/dev/null |
+    awk '{ n = $0; sub(".*/", "", n); print n "\t" $0 }' |
+    LC_ALL=C sort | tail -n 1 | cut -f2)
+  if [ -n "$latest" ]; then
+    printf '%s\n' "$latest"
+  else
+    echo "No design doc found in docs/plans/ or docs/superpowers/specs/"
+    false
+  fi
+)
+```
+<!-- latest-design-doc:end -->
 
 ## Review Verdicts
 
@@ -152,7 +173,7 @@ The review gate passes when:
 Ensure the path is correct and the file exists:
 
 ```bash
-ls -la docs/plans/
+ls -la docs/plans/ docs/superpowers/specs/
 ```
 
 ### "Agent timed out"
