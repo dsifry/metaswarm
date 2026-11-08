@@ -1,9 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.14.0
 
 ### Changed
 
+- **Review findings carry `title` and `description`** (#58). Every finding uses six fields, `title`, `description`, `severity`, `protects`, `evidence` and `blocker`, and context recovery matches recurring findings by title and description.
+- **Execution state splits "Retries" into VALIDATE attempts and review rounds** (#59). The VALIDATE counter counts consecutive failures and resets on PASS; review rounds follow the severity rule (cap 10). A pre-split state file's `Retries` value is read as VALIDATE attempts.
+- **Escalation never approves** (#68). A review gate passes only when a fresh round has no `blocker: yes` finding. Escalation options are Revise / Narrow scope / Defer / Cancel; Override and `--force-override` are removed.
 - **Workflow enforcement reconciled with superpowers >= 6.4.1** (#67). The canonical rules live in `guides/workflow-enforcement.md`; skills and the CLAUDE.md/AGENTS.md/GEMINI.md templates point to it.
 - **Design Review Gate runs only for project-sized work.** Quick tasks, chat-only designs and short design docs for small changes (superpowers 7.0.1+) skip it.
 - **`docs/superpowers/specs/` is watched** alongside `docs/plans/`, and `/review-design --latest` searches both folders.
@@ -14,6 +17,13 @@
 - **Orphaned command mirrors are caught** (#64). `node lib/sync-resources.js --check` reports any `.claude/commands/*.md` that has no source in `commands/` and isn't on the exclusion list, and `--sync` removes it. Excluded names and non-`.md` files are never touched.
 - **`/metaswarm-setup` and `/metaswarm-update-version` are now short deprecated aliases** for `/setup` and `/update` (#64). Their old npm-era bodies called CLI commands that don't exist (`install`, `changelog`), set the version even when agent regeneration failed, offered CI creation they never performed, and had a Go coverage gate that never failed.
 - **`/external-tools-health` runs each adapter's `health` check** (#64) and reports `status`, `version`, `auth_valid` and `model`. It no longer relies on `command -v` and the repo's own self-test script.
+
+### Fixed
+
+- **`.claude/commands/` mirrors `commands/`** (#61), so this repo's unprefixed commands no longer serve stale copies. `node lib/sync-resources.js --check` blocks drift. `status.md` (it would shadow the built-in `/status`) and the two legacy commands are excluded.
+- **bd/beads dependency drift** (#62). Removed `bd prime --work-type/--keywords/--files` flags (they never existed), `bd sync` (now `bd dolt push/pull`, only with a Dolt remote) and other nonexistent bd commands. The docs no longer claim `bd prime` loads metaswarm's knowledge base. Minimum versions are stated: bd ≥ 1.0.4 (tested with 1.3.4), and Dolt ≥ 2.4.0 only for server mode. `tests/deps/test-dependency-drift.sh` guards against regressions.
+- **The plugin hook works when the plugin path contains a space.** `hooks/hooks.json` now quotes `${CLAUDE_PLUGIN_ROOT}`.
+- **Every command has `description:` frontmatter**, so plugin installs list all 16 commands for the model, not only 4.
 
 ### Removed
 

@@ -1,3 +1,7 @@
+---
+description: Handle PR review comments: verify each finding, fix or reply, and resolve the threads
+---
+
 # /handle-pr-comments
 
 Handle review comments on pull requests with appropriate responses and resolutions.

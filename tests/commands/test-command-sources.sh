@@ -60,6 +60,18 @@ else
   pass "$F does not run the repo self-test as a health check"
 fi
 
+# Every command has frontmatter with a description, so plugin installs list it for the model
+# (`claude plugin validate` flags commands without one). Mirrors follow via --sync.
+echo "Command frontmatter"
+for f in "$REPO_ROOT"/commands/*.md; do
+  rel="commands/$(basename "$f")"
+  if [ "$(head -1 "$f")" = "---" ] && awk 'NR==1{next} /^---$/{exit} /^description: .+/{found=1} END{exit found?0:1}' "$f"; then
+    pass "$rel has a frontmatter description"
+  else
+    fail "$rel has a frontmatter description"
+  fi
+done
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 DONE=1

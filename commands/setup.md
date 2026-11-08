@@ -1,3 +1,7 @@
+---
+description: Interactive project setup: detect the project, configure metaswarm and write project-local files
+---
+
 # Setup
 
 Interactive project setup for metaswarm. Detects your project, configures metaswarm, and writes project-local files.

@@ -432,6 +432,24 @@ c8m=$(printf '%s' "$out8m" | ctx)
 assert_contains "8m: pointer survives a failing jq" "$c8m" 'facts in .beads/knowledge/'
 assert_not_contains "8m: partial jq output not used" "$c8m" 'partial'
 
+# --- Test 9: hooks.json commands survive a plugin root containing a space ---
+echo "Test 9: hooks.json quotes \${CLAUDE_PLUGIN_ROOT}"
+SPACE_ROOT="$TMPDIR_BASE/plugin with space"
+mkdir -p "$SPACE_ROOT/hooks"
+cp "$HOOK_SCRIPT" "$SPACE_ROOT/hooks/session-start.sh"
+TEST_CWD="$TMPDIR_BASE/test9"
+mkdir -p "$TEST_CWD"
+n9=0
+while IFS= read -r hook_cmd; do
+  n9=$((n9 + 1))
+  rc9=0
+  (cd "$TEST_CWD" && HOME="$EMPTY_HOME" CLAUDE_PLUGIN_ROOT="$SPACE_ROOT" sh -c "$hook_cmd" >/dev/null 2>&1) || rc9=$?
+  TOTAL=$((TOTAL + 1))
+  if [ "$rc9" -eq 0 ]; then PASS=$((PASS + 1)); echo "  PASS: 9: hook command $n9 runs with a spaced plugin root"; else FAIL=$((FAIL + 1)); echo "  FAIL: 9: hook command $n9 runs with a spaced plugin root (rc=$rc9: $hook_cmd)"; fi
+done < <(node -e 'const h=require(process.argv[1]).hooks;for(const ev of Object.values(h))for(const m of ev)for(const x of m.hooks)console.log(x.command)' "$REPO_ROOT/hooks/hooks.json")
+TOTAL=$((TOTAL + 1))
+if [ "$n9" -ge 2 ]; then PASS=$((PASS + 1)); echo "  PASS: 9: found $n9 hook commands"; else FAIL=$((FAIL + 1)); echo "  FAIL: 9: expected >= 2 hook commands, found $n9"; fi
+
 # --- Summary ---
 echo ""
 echo "Results: $PASS/$TOTAL passed, $FAIL failed"

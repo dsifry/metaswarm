@@ -1,3 +1,7 @@
+---
+description: Trigger the parallel design review gate with 5 specialist reviewers
+---
+
 # Review Design Command
 
 Run the design review gate on a design document to get feedback from Product Manager, Architect, Designer, Security Design, and CTO agents.
