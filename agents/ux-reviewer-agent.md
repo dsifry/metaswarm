@@ -58,7 +58,7 @@ bd show <task-id> --json
 
 ### Step 2: Decide Whether UX Review Applies
 
-Scan the design for screens, pages, views or interactive components. If there are none, stop and return APPROVED with the "not applicable" suggestion above.
+Scan the design for screens, pages, views or interactive components, and read the task or request the design implements. If the design has none and the task doesn't call for any, stop and return APPROVED with the "not applicable" suggestion above. If the task requires UI but the design omits it, report the missing UI design as a finding and continue.
 
 ### Step 3: Study the App Shell
 
@@ -72,9 +72,9 @@ grep -rn "Route\|createRouter\|<Layout" src --include="*.tsx" | head -20
 
 For each use case in the design, walk the flow as a user: trigger → steps → visible outcome. Note the screen, component and data source for each step, and the empty, loading and error states for each view on the way.
 
-### Step 5: Check the Work Units
+### Step 5: Check the Integration Wiring
 
-Confirm a work unit wires the components into the app shell (routes, layout, data hooks) and that each flow maps to the work units that deliver it.
+Confirm the design describes how the components are wired into the app shell (routes, layout, data hooks) and that each flow can be traced from the shell to its data. Work units don't exist yet at this gate; the integration work unit is checked at plan review.
 
 ### Step 6: Output Review
 
