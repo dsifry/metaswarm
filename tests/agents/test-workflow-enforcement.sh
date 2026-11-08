@@ -171,6 +171,8 @@ FORBIDDEN=(
   'wrote and committed a design doc file'
   'given only in chat'
   'brainstorming committed a design doc'
+  'Parallel session'
+  'separate session with batch checkpoints'
 )
 # Class A2: forbidden regexes (any line). WU4 adds the Plan Review Gate trigger.
 FORBIDDEN_RE=(
@@ -242,12 +244,14 @@ printf '%s\n' 'After brainstorming -> run the gate' 'frontmatter after:superpowe
   'frontmatter after:writing-plans' 'runs after writing-plans finishes' \
   'Designs given only in chat skip the gate' \
   'Project-sized means brainstorming wrote and committed a design doc file' \
-  'For project-sized features (brainstorming committed a design doc), run the gate' >"$NEG/bad.md"
+  'For project-sized features (brainstorming committed a design doc), run the gate' \
+  'Execute in a separate session with batch checkpoints' \
+  '3. **Parallel session** (superpowers:executing-plans)' >"$NEG/bad.md"
 git -C "$NEG" add bad.md
 trigger_hits "$NEG" .; neg="$TH_OUT"
 if [ "$TH_RC" -eq 0 ] && grep -qF 'bad.md:1:' <<<"$neg" && grep -qF 'bad.md:2:' <<<"$neg" && ! grep -qF 'bad.md:3:' <<<"$neg" \
    && grep -qF 'bad.md:4:' <<<"$neg" && grep -qF 'bad.md:5:' <<<"$neg" && grep -qF 'bad.md:6:' <<<"$neg" \
-   && grep -qF 'bad.md:7:' <<<"$neg" && grep -qF 'bad.md:8:' <<<"$neg"; then
+   && grep -qF 'bad.md:7:' <<<"$neg" && grep -qF 'bad.md:8:' <<<"$neg" && grep -qF 'bad.md:9:' <<<"$neg" && grep -qF 'bad.md:10:' <<<"$neg"; then
   pass "trigger guard self-test flags bad lines and allows project-sized"
 else
   fail "trigger guard self-test (rc=$TH_RC, got: $neg)"
@@ -302,6 +306,27 @@ echo "WU-R: 7.0.2 short design docs"
 
 assert_in "guide has 7.0.1+ small change row and short-doc wording" "$G" \
   '7.0.1+ small change' 'short design docs for small changes'
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "WU5: execution menu and INSTALL.md"
+# ---------------------------------------------------------------------------
+
+for f in CLAUDE.md templates/CLAUDE.md; do
+  assert_in "$f has the Native inline execution option" "$(cat "$REPO_ROOT/$f")" "$T_NATIVE"
+done
+
+SP_SKILLS=(
+  brainstorming writing-plans executing-plans subagent-driven-development
+  finishing-a-development-branch test-driven-development systematic-debugging
+  using-git-worktrees verification-before-completion
+)
+INSTALL_TEXT="$(cat "$REPO_ROOT/INSTALL.md")"
+for sk in "${SP_SKILLS[@]}"; do
+  assert_in "INSTALL.md lists superpowers:$sk" "$INSTALL_TEXT" "superpowers:$sk"
+done
+assert_in "INSTALL.md states versions and guide" "$INSTALL_TEXT" "6.4.1" "7.0.2" "workflow-enforcement.md"
+assert_in "CHANGELOG.md mentions guide and minimum version" "$(cat "$REPO_ROOT/CHANGELOG.md")" "workflow-enforcement.md" "6.4.1"
 
 # ---------------------------------------------------------------------------
 echo ""
