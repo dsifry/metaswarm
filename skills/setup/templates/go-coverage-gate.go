@@ -24,6 +24,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"strconv"
@@ -33,6 +34,7 @@ import (
 const (
 	configFile  = ".coverage-thresholds.json"
 	profileFile = "coverage.out"
+	micro       = 1000000 // thresholds are compared in millionths of a percent
 )
 
 type config struct {
@@ -158,17 +160,16 @@ func judge(thresholds map[string]*float64, covered, total int64) int {
 		if t == nil {
 			continue
 		}
-		// covered/total >= t/100, cross-multiplied so no rounded percentage is
-		// compared; exact for whole-number thresholds.
-		ok := float64(covered)*100 >= *t*float64(total)
-		if ok {
+		// covered/total >= t/100 in integers: the threshold is scaled to
+		// millionths of a percent, so neither a rounded percentage nor a float
+		// product (99.9*41000 rounds up in float64) is ever compared.
+		tMicro := int64(math.Round(*t * micro))
+		target := tMicro * total // covered must reach target / (100*micro)
+		if covered*100*micro >= target {
 			fmt.Printf("  PASS %s: %s%% >= %s%% (Go statement coverage)\n", dim, fmtPct(pct), fmtPct(*t))
 		} else {
-			// Statements still needed to reach the threshold.
-			need := int64(0)
-			for float64(covered+need)*100 < *t*float64(total) {
-				need++
-			}
+			// Statements still needed: ceil(target / (100*micro)) - covered.
+			need := (target+100*micro-1)/(100*micro) - covered
 			fmt.Printf("  FAIL %s: %s%% < %s%% (Go statement coverage; cover %d more statement(s))\n", dim, fmtPct(pct), fmtPct(*t), need)
 			failed = true
 		}

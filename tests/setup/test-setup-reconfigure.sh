@@ -70,6 +70,7 @@ done
 [ "$(get enforcement.description)" = "custom" ] && pass "reconfigure: enforcement.description kept" || fail "reconfigure: description lost"
 [ "$(get extra.keep)" = "true" ] && [ "$(get '$comment')" = "custom comment kept" ] && pass "reconfigure: other keys kept" || fail "reconfigure: other keys lost"
 printf '%s' "$OUT" | grep -q "80% -> 95%" && pass "reconfigure: reports the change" || fail "reconfigure: change not reported: $OUT"
+printf '%s' "$OUT" | grep -q "enforcement.command updated to: pytest --cov --cov-fail-under=95" && pass "reconfigure: reports the command update" || fail "reconfigure: command update not reported: $OUT"
 
 # A customised command keeps its customisation; only the embedded threshold changes.
 new_project custom 80 "pytest -q tests/unit --cov=src --cov-fail-under 80"
@@ -86,6 +87,34 @@ run_setup 90 "go run .metaswarm/go-coverage-gate.go" --reconfigure
 [ "$(get enforcement.command)" = "go run .metaswarm/go-coverage-gate.go" ] && pass "reconfigure: threshold-free command unchanged" || fail "reconfigure: go command became '$(get enforcement.command)'"
 printf '%s' "$OUT" | grep -q "may embed" && fail "reconfigure: spurious warning for a threshold-free command" || pass "reconfigure: no warning for a threshold-free command"
 [ "$(get thresholds.lines)" = "90" ] && pass "reconfigure: go project thresholds updated" || fail "reconfigure: go project thresholds not updated"
+
+# An existing Go project on the old non-enforcing `go test` command (#78) is
+# moved to the gate on a re-run, and the gate file is written.
+new_project oldgo 80 "go test -coverprofile=coverage.out ./..."
+run_setup 90 "go run .metaswarm/go-coverage-gate.go" --reconfigure
+[ "$(get enforcement.command)" = "go run .metaswarm/go-coverage-gate.go" ] && pass "reconfigure: old go test command replaced by the gate" || fail "reconfigure: old go command kept: '$(get enforcement.command)'"
+[ -f "$P/.metaswarm/go-coverage-gate.go" ] && pass "reconfigure: gate written for an upgraded Go project" || fail "reconfigure: gate not written: $OUT"
+printf '%s' "$OUT" | grep -q "never fails below the threshold" && pass "reconfigure: says why the Go command changed" || fail "reconfigure: Go command change not explained: $OUT"
+# ...but a Go command the user built themselves is kept, with a warning.
+new_project customgo 80 "make coverage-check"
+run_setup 90 "go run .metaswarm/go-coverage-gate.go" --reconfigure
+[ "$(get enforcement.command)" = "make coverage-check" ] && pass "reconfigure: custom non-go-test command kept" || fail "reconfigure: custom command replaced: '$(get enforcement.command)'"
+printf '%s' "$OUT" | grep -q "go test alone never does" && pass "reconfigure: warns that a custom Go command must enforce" || fail "reconfigure: no warning for a custom Go command: $OUT"
+
+# thresholds as an array or missing: replaced by a proper object, reported sanely.
+new_project arr 80 "pytest --cov --cov-fail-under=80"
+node -e 'const f=process.argv[1],c=JSON.parse(require("fs").readFileSync(f,"utf-8"));c.thresholds=[];require("fs").writeFileSync(f,JSON.stringify(c))' "$P/.coverage-thresholds.json"
+run_setup 90 "pytest --cov --cov-fail-under=90" --reconfigure
+[ "$(get thresholds.lines)" = "90" ] && [ "$(get thresholds.statements)" = "90" ] && pass "reconfigure: array thresholds replaced by an object" || fail "reconfigure: array thresholds: $(get thresholds)"
+printf '%s' "$OUT" | grep -q "undefined" && fail "reconfigure: reports 'undefined': $OUT" || pass "reconfigure: no 'undefined' in the report"
+
+# A carriage return in a command still yields valid JSON output.
+new_project cr 80 "pytest --cov --cov-fail-under=80"
+run_setup 90 $'pytest --cov\r --cov-fail-under=90' --reconfigure
+[ "$(json_status)" != "INVALID-JSON" ] && pass "output stays valid JSON with control characters" || fail "control characters broke the JSON: $OUT"
+P="$TMP/cr-new"; mkdir -p "$P"; printf 'metaswarm\n' > "$P/CLAUDE.md"
+run_setup 90 $'pytest --cov\r\001 --cov-fail-under=90'
+[ "$(json_status)" != "INVALID-JSON" ] && pass "create output stays valid JSON with control characters" || fail "create: control characters broke the JSON: $OUT"
 
 # An embedded threshold in an unknown form is reported, not silently kept.
 new_project unknown 80 "npx vitest run --coverage --coverage.thresholds.lines=80"

@@ -34,17 +34,21 @@ if ! command -v go >/dev/null 2>&1; then
 fi
 export GOFLAGS=-mod=mod GOCACHE="$TMP/gocache" GOPATH="$TMP/gopath" GOTOOLCHAIN=local
 
-# new_module DIR N — a module whose F has N+4 statements; the test calls
-# F(false), so exactly one statement (x--) is never run: N+3 of N+4 covered.
+# new_module DIR N [U] — a module whose F has N+3+U statements; the test calls
+# F(false), so the U statements inside `if b` (default 1) never run:
+# N+3 of N+3+U covered.
 new_module() {
-  local dir="$1" n="$2" i
+  local dir="$1" n="$2" u="${3:-1}" i
   mkdir -p "$dir/.metaswarm"
   printf 'module example.com/m\n\ngo 1.21\n' > "$dir/go.mod"
   {
     printf 'package m\n\nfunc F(b bool) int {\n\tx := 0\n'
     i=0
     while [ "$i" -lt "$n" ]; do printf '\tx++\n'; i=$((i + 1)); done
-    printf '\tif b {\n\t\tx--\n\t}\n\treturn x\n}\n'
+    printf '\tif b {\n'
+    i=0
+    while [ "$i" -lt "$u" ]; do printf '\t\tx--\n'; i=$((i + 1)); done
+    printf '\t}\n\treturn x\n}\n'
   } > "$dir/f.go"
   printf 'package m\n\nimport "testing"\n\nfunc TestF(t *testing.T) { F(false) }\n' > "$dir/f_test.go"
   cp "$GATE_SRC" "$dir/.metaswarm/go-coverage-gate.go"
@@ -82,6 +86,21 @@ gate "$SMALL"
 thresholds "$SMALL" 76 0 0 76
 gate "$SMALL"
 [ "$RC" -ne 0 ] && pass "75% fails at 76%" || fail "75% passed at 76%: $OUT"
+
+# Decimal thresholds compare exactly: 2499/2500 is exactly 99.96%.
+thresholds "$BIG" 99.96 0 0 99.96
+gate "$BIG"
+[ "$RC" -eq 0 ] && pass "exactly at a decimal threshold (99.96%) passes" || fail "99.96% failed at 99.96% (rc=$RC): $OUT"
+thresholds "$BIG" 99.97 0 0 99.97
+gate "$BIG"
+[ "$RC" -ne 0 ] && pass "just below a decimal threshold (99.97%) fails" || fail "99.96% passed at 99.97%: $OUT"
+# 40959/41000 is exactly 99.9%, but 99.9*41000 rounds up in float64.
+DEC="$TMP/dec"
+new_module "$DEC" 40956 41
+thresholds "$DEC" 99.9 0 0 99.9
+gate "$DEC"
+printf '%s' "$OUT" | grep -q "40959 of 41000 statements" || fail "decimal fixture is not 40959/41000: $OUT"
+[ "$RC" -eq 0 ] && pass "40959/41000 passes at exactly 99.9% (no float rounding)" || fail "40959/41000 failed at 99.9% (rc=$RC): $OUT"
 
 # lines and statements are enforced separately: either one below fails.
 thresholds "$SMALL" 75 0 0 80

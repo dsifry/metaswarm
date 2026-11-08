@@ -91,6 +91,8 @@ Commands with a threshold flag (`--cov-fail-under`, `--fail-under`) repeat the t
 - compares exact statement counts: `go tool cover -func` rounds to one decimal, so 2,499 of 2,500 statements would show as 100.0%
 - enforces `lines` and `statements` against Go's statement coverage, and reports `branches` and `functions` as not enforced, because Go doesn't measure them
 
+The gate runs from the project root, where `.coverage-thresholds.json` is, and expects the Go module there too. If the module lives in a subdirectory, set `enforcement.command` to a command that runs from that directory and fails below the threshold. If `.metaswarm/go-coverage-gate.go` goes missing, re-run `/setup` to write it again.
+
 The leading dot in `.metaswarm` keeps the gate out of `go build ./...`, `go test ./...` and `go vet ./...`. The command starts with `go` and has no shell metacharacters, so it passes the command guard in the CI template.
 
 ## Reading Thresholds in Your Test Config

@@ -141,16 +141,25 @@ if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) {
   say('error', '.coverage-thresholds.json is not a JSON object, left unchanged');
   process.exit(0);
 }
-cfg.thresholds = cfg.thresholds && typeof cfg.thresholds === 'object' ? cfg.thresholds : {};
+const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+cfg.thresholds = isObj(cfg.thresholds) ? cfg.thresholds : {};
 const old = DIMS.map((d) => cfg.thresholds[d]);
-const oldShown = [...new Set(old.map(String))].join('/');
+const oldNums = [...new Set(old.filter((v) => typeof v === 'number').map(String))];
+const oldShown = oldNums.length ? oldNums.join('/') + '%' : 'unset';
 for (const d of DIMS) cfg.thresholds[d] = t;
 
-cfg.enforcement = cfg.enforcement && typeof cfg.enforcement === 'object' ? cfg.enforcement : {};
+cfg.enforcement = isObj(cfg.enforcement) ? cfg.enforcement : {};
 const oldCmd = typeof cfg.enforcement.command === 'string' ? cfg.enforcement.command : '';
+const GO_GATE = '.metaswarm/go-coverage-gate.go';
 let newCmd = oldCmd;
+let goReplaced = false;
 if (!oldCmd) {
   newCmd = cmd;
+} else if (cmd.includes(GO_GATE) && /^\s*go\s+test(\s|$)/.test(oldCmd)) {
+  // Setup used to write a bare `go test` command for Go (#78); move it to the gate.
+  newCmd = cmd;
+  goReplaced = true;
+  say('created', `.coverage-thresholds.json enforcement.command: replaced '${oldCmd}' (go test never fails below the threshold) with: ${cmd}`);
 } else {
   // Known threshold flags: pytest-cov --cov-fail-under, tarpaulin/coverage.py --fail-under.
   newCmd = oldCmd.replace(/(--(?:cov-)?fail-under)([= ])(\d+(?:\.\d+)?)(?![\d.])/g, (m, flag, sep) => flag + sep + t);
@@ -162,8 +171,11 @@ if (!thresholdsChanged && newCmd === oldCmd) {
   say('skipped', `.coverage-thresholds.json (already at ${t}%)`);
 } else {
   fs.writeFileSync(file, JSON.stringify(cfg, null, 2) + '\n');
-  say('created', `.coverage-thresholds.json (thresholds ${oldShown}% -> ${t}%)`);
-  if (newCmd !== oldCmd) say('created', `.coverage-thresholds.json enforcement.command updated to: ${newCmd}`);
+  say('created', `.coverage-thresholds.json (thresholds ${oldShown} -> ${t}%)`);
+  if (newCmd !== oldCmd && !goReplaced) say('created', `.coverage-thresholds.json enforcement.command updated to: ${newCmd}`);
+}
+if (cmd.includes(GO_GATE) && !newCmd.includes(GO_GATE)) {
+  say('warning', `enforcement.command '${newCmd}' was kept. Make sure it fails below the threshold: go test alone never does. Setup's Go command is: ${cmd}`);
 }
 // Any old threshold still written in the command, in a form not rewritten above.
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -281,6 +293,9 @@ json_str() {
   v="${v//\"/\\\"}"
   v="${v//$'\t'/\\t}"
   v="${v//$'\n'/\\n}"
+  v="${v//$'\r'/\\r}"
+  # Drop any other control character, which JSON strings cannot hold raw.
+  v="$(printf '%s' "$v" | LC_ALL=C tr -d '\000-\010\013\014\016-\037')"
   printf '"%s"' "$v"
 }
 
