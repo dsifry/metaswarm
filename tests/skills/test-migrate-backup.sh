@@ -78,6 +78,11 @@ if [ -n "$BACKUP_SNIP" ] && [ -n "$RESTORE_SNIP" ]; then
   RUN_RESTORE="$(printf '%s\n' "$RESTORE_SNIP" | sed "s#<timestamp>#${BDIR#.metaswarm/migrate-backup-}#g")"
   rc=0; (cd "$WORK" && bash -c "set -euo pipefail; $RUN_RESTORE") >"$WORK/restore.out" 2>&1 || rc=$?
   [ "$rc" -eq 0 ] && pass "restore snippet runs" || fail "restore snippet failed (rc=$rc): $(cat "$WORK/restore.out")"
+  if grep -q 'g.md' "$WORK/restore.out" && ! grep -q 'delete the folder' "$WORK/restore.out"; then
+    pass "a conflicting file keeps the backup (no 'delete the folder')"
+  else
+    fail "a skipped conflict still said the backup can go: $(tr '\n' ' ' < "$WORK/restore.out")"
+  fi
   if cmp -s "$WORK/expect-1" "$WORK/.claude/rubrics/untracked.md" \
     && cmp -s "$WORK/expect-2" "$WORK/.claude/plugins/metaswarm/sub dir/file one.md"; then
     pass "restore puts every file back byte for byte"
@@ -95,7 +100,12 @@ if [ -n "$BACKUP_SNIP" ] && [ -n "$RESTORE_SNIP" ]; then
   else
     fail "restore did not bring the symbolic link back as a link"
   fi
-  grep -q 'delete the folder' "$WORK/restore.out" && pass "a clean restore says the folder can go" || fail "a clean restore didn't print its completion line"
+  # Once the conflict is cleared, running the restore again finishes it: files
+  # already back (identical) count as restored, not as conflicts.
+  rm -f "${WORK:?}/.claude/guides/g.md"
+  rc=0; (cd "$WORK" && bash -c "set -euo pipefail; $RUN_RESTORE") >"$WORK/restore1b.out" 2>&1 || rc=$?
+  [ "$(cat "$WORK/.claude/guides/g.md" 2>/dev/null)" = "guide" ] && pass "a re-run restores the file once its path is free" || fail "re-run did not restore g.md"
+  grep -q 'delete the folder' "$WORK/restore1b.out" && pass "a clean restore says the folder can go" || fail "a clean re-run didn't print its completion line: $(tr '\n' ' ' < "$WORK/restore1b.out")"
 
   # One file can't go back (its parent is now a regular file) and a later one
   # can: the restore must say so and must not suggest deleting the backup.
@@ -109,6 +119,20 @@ if [ -n "$BACKUP_SNIP" ] && [ -n "$RESTORE_SNIP" ]; then
     fail "a partial restore looked successful: $(tr '\n' ' ' < "$WORK/restore2.out")"
   fi
   cmp -s "$WORK/expect-1" "$WORK/.claude/rubrics/untracked.md" && pass "files after the failed one are still restored" || fail "a failure stopped the remaining files from being restored"
+fi
+
+if [ -n "$BACKUP_SNIP" ]; then
+  # A file that can't be moved is reported, and isn't counted as moved.
+  W2="$(mktemp -d)"
+  mkdir -p "$W2/.claude/rubrics" && printf 'x\n' > "$W2/.claude/rubrics/ok.md"
+  RUN_BACKUP2="$(printf '%s\n' "$BACKUP_SNIP" | sed -E "s#^UNTRACKED=\(.*\)\$#UNTRACKED=(.claude/rubrics/ok.md .claude/rubrics/missing.md)#")"
+  rc=0; (cd "$W2" && bash -c "set -euo pipefail; $RUN_BACKUP2") >"$W2/out" 2>&1 || rc=$?
+  if [ "$rc" -ne 0 ] && grep -q 'NOT moved: .claude/rubrics/missing.md' "$W2/out" && grep -q 'Moved 1 ' "$W2/out"; then
+    pass "a failed move is reported and not counted"
+  else
+    fail "a failed move was hidden (rc=$rc): $(tr '\n' ' ' < "$W2/out")"
+  fi
+  rm -r -f "${W2:?}"
 fi
 
 echo "Migrate skill: the safety notes match the behaviour"

@@ -162,14 +162,22 @@ UNTRACKED=(<each confirmed untracked file>)
 BACKUP=".metaswarm/migrate-backup-$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$BACKUP"
 printf '*\n' > "$BACKUP/.gitignore"   # keeps the backup out of commits
+moved=0; failed=0
 for f in "${UNTRACKED[@]}"; do
-  mkdir -p "$BACKUP/$(dirname "$f")"
-  mv -- "$f" "$BACKUP/$f"
+  if mkdir -p "$BACKUP/$(dirname "$f")" && mv -- "$f" "$BACKUP/$f"; then
+    moved=$((moved + 1))
+  else
+    echo "NOT moved: $f" >&2; failed=$((failed + 1))
+  fi
 done
-echo "Moved ${#UNTRACKED[@]} untracked file(s) to $BACKUP/"
+echo "Moved $moved untracked file(s) to $BACKUP/"
+if [ "$failed" -ne 0 ]; then
+  echo "$failed file(s) were NOT moved (see above) and are still at their legacy paths" >&2
+  false
+fi
 ```
 
-The backup keeps each file at its original path inside the folder, and its own `.gitignore` keeps git from listing or committing it. Delete the folder once you're happy with the migration. Name it in the Step 10 summary.
+If any file is reported as NOT moved, stop and tell the user before continuing; don't report the cleanup as complete. The backup keeps each file at its original path inside the folder, and its own `.gitignore` keeps git from listing or committing it. Delete the folder once you're happy with the migration. Name it in the Step 10 summary.
 
 **Empty directories** -- remove `.claude/rubrics/` and `.claude/guides/` if empty after cleanup. Do NOT remove `.claude/commands/` (shims remain).
 
@@ -261,14 +269,20 @@ Removals of tracked files use `git rm`, which only stages changes — files are 
 **Restore untracked files** (use the folder Step 7 printed):
 ```bash
 BACKUP=".metaswarm/migrate-backup-<timestamp>"
-# Copies each file (and symbolic link, as a link) back to its original path. A
-# path that exists again is skipped and reported, never overwritten; one that
-# can't be restored is reported, and the backup is kept. Its .gitignore stays put.
+# Copies each file (and symbolic link, as a link) back to its original path.
+# A path that already holds the same file counts as restored, so it is safe to
+# run again. A path that holds something different is never overwritten: it is
+# reported, and the backup is kept until you resolve it and run this again. A
+# file that can't be copied is reported too. The backup's .gitignore stays put.
 if find "$BACKUP" \( -type f -o -type l \) ! -path "$BACKUP/.gitignore" -exec sh -c '
   b=$1; shift; rc=0
   for src; do
     dst=${src#"$b"/}
-    if [ -e "$dst" ] || [ -L "$dst" ]; then echo "skipped (already exists): $dst"
+    if [ -e "$dst" ] || [ -L "$dst" ]; then
+      if [ -L "$src" ] && [ -L "$dst" ] && [ "$(readlink "$src")" = "$(readlink "$dst")" ]; then :
+      elif [ ! -L "$src" ] && [ ! -L "$dst" ] && cmp -s "$src" "$dst"; then :
+      else echo "NOT restored (a different file is there now): $dst" >&2; rc=1
+      fi
     elif ! { mkdir -p "$(dirname "$dst")" && cp -RPp "$src" "$dst"; }; then
       echo "NOT restored: $dst" >&2; rc=1
     fi
@@ -276,7 +290,7 @@ if find "$BACKUP" \( -type f -o -type l \) ! -path "$BACKUP/.gitignore" -exec sh
   exit $rc' sh "$BACKUP" {} +; then
   echo "Restored the files in $BACKUP; delete the folder once you've checked them"
 else
-  echo "Some files were NOT restored (see above). Keep $BACKUP until they are." >&2
+  echo "Some files were NOT restored (see above). Resolve them and run this again; keep $BACKUP until then." >&2
 fi
 ```
 - **Old npm-copied layout**: restore its git-tracked files with the commands above. No current command re-creates it: `npx metaswarm init` now installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
