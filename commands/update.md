@@ -1,3 +1,7 @@
+---
+description: Check for and apply metaswarm updates, then regenerate the project's phase agents
+---
+
 # Update
 
 Check for and apply metaswarm updates.

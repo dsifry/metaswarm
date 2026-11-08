@@ -1,3 +1,7 @@
+---
+description: Deprecated alias for /update
+---
+
 # Update Metaswarm (deprecated alias)
 
 `/metaswarm-update-version` is a deprecated alias left over from the npm-era install. Use `/update` instead. It checks for a newer plugin version, regenerates the project's phase agents and verifies that skills load.

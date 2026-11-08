@@ -1,3 +1,7 @@
+---
+description: Show metaswarm diagnostic information
+---
+
 # Status
 
 Show metaswarm diagnostic information.

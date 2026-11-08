@@ -1,3 +1,7 @@
+---
+description: Check the status of external AI tools (Codex CLI, Gemini CLI) and their configuration
+---
+
 # External Tools Health Check
 
 Check the status of external AI tools (Codex CLI, Gemini CLI) and their configuration.

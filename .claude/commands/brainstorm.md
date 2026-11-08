@@ -1,3 +1,7 @@
+---
+description: Refine an idea into a design with brainstorming, then run the design review gate for project-sized designs
+---
+
 # Brainstorm
 
 Invoke the metaswarm brainstorming extension skill, which wraps `superpowers:brainstorming` with metaswarm's design review gate handoff.

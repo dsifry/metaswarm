@@ -1,3 +1,7 @@
+---
+description: Deprecated alias for /setup
+---
+
 # Metaswarm Setup (deprecated alias)
 
 `/metaswarm-setup` is a deprecated alias left over from the npm-era install. Use `/setup` instead. It runs the same guided setup through the `metaswarm:setup` skill.

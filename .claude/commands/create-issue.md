@@ -1,3 +1,7 @@
+---
+description: Create a well-structured GitHub issue with acceptance criteria and agent instructions
+---
+
 # Create GitHub Issue
 
 Create a comprehensive, well-structured GitHub issue with embedded agent instructions for autonomous PR lifecycle management.
