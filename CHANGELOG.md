@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **Gemini commands point at skills and files that exist** (#50). Eight generated `commands/metaswarm/*.toml` prompts told the agent to invoke a metaswarm skill that doesn't exist (`start-task`, `prime`, `review-design`, `self-reflect`, `brainstorm`, `update`, `handle-pr-comments`, `external-tools-health`). They now name the real skill (`start`, `design-review-gate`, `handling-pr-comments`) or tell the agent to follow the command's `commands/<name>.md` in the extension directory. A test checks every TOML target.
+- **No more `npx metaswarm install`** (#74). The migrate skill's rollback notes named a command that doesn't exist. They now say to restore the old files from git, and what `npx metaswarm init` and `setup` actually do today. A test fails on any `metaswarm install` in tracked docs.
+- **The two pipelines are stated, and every order statement matches** (#73). `guides/workflow-enforcement.md` now shows both: on the brainstorming path (`/start-task`, `/brainstorm`) the Design Review Gate reviews the design doc before writing-plans. In full orchestration it reviews the plan, after the Plan Review Gate. The CLAUDE/AGENTS/GEMINI templates, README, GETTING_STARTED, USAGE, the start and orchestrated-execution skills, the issue-orchestrator diagram and the landing page now name the Plan Review Gate and say which pipeline they describe. GETTING_STARTED's `/start-task` list had the gates in the wrong order. A line-level guard with self-test fixtures catches chains that skip the Plan Review Gate.
+
 ## 0.14.0
 
 ### Added

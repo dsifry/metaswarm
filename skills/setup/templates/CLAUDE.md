@@ -21,7 +21,7 @@ I want you to build [description]. [Tech stack, DoD items, file scope.]
 Use the full metaswarm orchestration workflow.
 ```
 
-This triggers the full pipeline: Research → Plan → Design Review Gate → Work Unit Decomposition → Orchestrated Execution (4-phase loop per unit) → Final Review → PR.
+This triggers the full orchestration pipeline: Research → Plan → Plan Review Gate → Design Review Gate (reviews the plan) → Work Unit Decomposition → Orchestrated Execution (4-phase loop per unit) → Final Review → PR. On the `/start-task` path the Design Review Gate instead reviews a project-sized design doc, before writing-plans (see the metaswarm plugin's `guides/workflow-enforcement.md`).
 
 ### Available Commands
 

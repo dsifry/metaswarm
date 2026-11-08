@@ -1,5 +1,5 @@
 description = "Extract learnings from PR comments and session into the knowledge base"
-prompt = """Invoke the metaswarm self-reflect skill. The user wants to capture learnings.
+prompt = """Follow the metaswarm /self-reflect command: read `commands/self-reflect.md` in the metaswarm extension directory (usually ~/.gemini/extensions/metaswarm/) and carry out its steps. The user wants to capture learnings.
 
 Arguments provided by the user: {{args}}
 

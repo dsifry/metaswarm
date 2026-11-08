@@ -405,7 +405,10 @@ gh issue close <number> --comment "Completed via PR #<pr-number>"
 ## Task Dependencies
 
 ```
-Research ──→ Planning ──→ Design Review Gate ──→ Work Unit Decomposition
+Research ──→ Planning ──→ Plan Review Gate ──→ Design Review Gate (reviews the plan)
+                                                         │
+                                                         ▼
+                                              Work Unit Decomposition
                                                          │
                                          ┌───────────────┼───────────────┐
                                          ▼               ▼               ▼

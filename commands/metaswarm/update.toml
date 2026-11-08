@@ -1,5 +1,5 @@
 description = "Update metaswarm to the latest version"
-prompt = """Invoke the metaswarm update skill. The user wants to update metaswarm.
+prompt = """Follow the metaswarm /update command: read `commands/update.md` in the metaswarm extension directory (usually ~/.gemini/extensions/metaswarm/) and carry out its steps. The user wants to update metaswarm.
 
 Arguments provided by the user: {{args}}
 

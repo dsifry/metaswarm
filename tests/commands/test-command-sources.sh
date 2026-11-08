@@ -109,6 +109,38 @@ for f in "$REPO_ROOT"/commands/*.md; do
 done
 [ "$HAVE_PSYCH" = 1 ] || echo "  SKIP: ruby/Psych not available (structural check only)"
 
+# #50: every Gemini TOML command points at something that exists: a skill by its
+# frontmatter name (`Invoke the metaswarm <name> skill`), or a command file
+# (`commands/<name>.md`). There is no `start-task` skill, for example; it is `start`.
+echo "Gemini TOML targets"
+TOML_COUNT=0
+for toml in "$REPO_ROOT"/commands/metaswarm/*.toml; do
+  TOML_COUNT=$((TOML_COUNT + 1))
+  name="$(basename "$toml" .toml)"
+  skill="$(sed -n 's/.*Invoke the metaswarm \([a-z0-9-]*\) skill.*/\1/p' "$toml" | head -1)"
+  cmdfile="$(sed -n 's/.*`commands\/\([a-z0-9-]*\)\.md`.*/\1/p' "$toml" | head -1)"
+  if [ -n "$skill" ]; then
+    if [ -f "$REPO_ROOT/skills/$skill/SKILL.md" ] && grep -q "^name: $skill\$" "$REPO_ROOT/skills/$skill/SKILL.md"; then
+      pass "$name.toml invokes the existing '$skill' skill"
+    else
+      fail "$name.toml invokes a '$skill' skill that does not exist (no skills/$skill/SKILL.md with name: $skill)"
+    fi
+  elif [ -n "$cmdfile" ]; then
+    [ -f "$REPO_ROOT/commands/$cmdfile.md" ] && pass "$name.toml follows the existing commands/$cmdfile.md" || fail "$name.toml points at missing commands/$cmdfile.md"
+  else
+    fail "$name.toml names neither a skill nor a commands/<name>.md file"
+  fi
+done
+[ "$TOML_COUNT" -ge 13 ] && pass "checked $TOML_COUNT TOML commands" || fail "only $TOML_COUNT TOML commands found (expected >= 13)"
+
+# #74: `metaswarm install` does not exist (cli/metaswarm.js dispatches init,
+# setup, detect and --version). Historical records are exempt: CHANGELOG
+# entries for past releases, docs/plans and the knowledge base's gotcha.
+echo "No nonexistent 'metaswarm install' command"
+INSTALL_HITS="$(cd "$REPO_ROOT" && git ls-files -- '*.md' '*.toml' '*.html' '*.js' '*.sh' ':!CHANGELOG.md' ':!docs/plans/*' ':!tests/*' \
+  | xargs grep -nE 'metaswarm(@[A-Za-z0-9.]+)? install\b' 2>/dev/null || true)"
+[ -z "$INSTALL_HITS" ] && pass "no tracked doc tells users to run 'metaswarm install'" || fail "'metaswarm install' is referenced: $INSTALL_HITS"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 DONE=1

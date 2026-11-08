@@ -359,6 +359,71 @@ else
 fi
 rm -rf "${NEG:?}"; NEG=""
 
+# #73: pipeline order statements. Full orchestration runs Plan → Plan Review Gate
+# → Design Review Gate, so a chain that goes straight from the plan to the
+# Design Review Gate (in any separator style) has dropped the Plan Review Gate.
+ORDER_RE=(
+  'plan(ning)?[[:space:]]*(→|->|──→|,)[[:space:]]*design review'
+)
+order_hits() { # <git-repo> <pathspec>...  sets OH_OUT and OH_RC like trigger_hits
+  local repo="$1" pat out rc; shift
+  OH_RC=0; OH_OUT=""
+  for pat in "${ORDER_RE[@]}"; do
+    rc=0; out=$(git -C "$repo" grep -n -i -E -e "$pat" -- "$@") || rc=$?
+    if [ "$rc" -ge 2 ]; then OH_RC=2; OH_OUT="$OH_OUT"$'\n'"git grep error rc=$rc for '$pat'"
+    elif [ "$rc" -eq 0 ]; then OH_OUT="$OH_OUT"$'\n'"$out"; fi
+  done
+  OH_OUT="$(printf '%s\n' "$OH_OUT" | sed '/^$/d' | sort -u)"
+}
+order_hits "$REPO_ROOT" . "${WU3_EXCLUDES[@]}"
+if [ "$OH_RC" -ne 0 ]; then
+  fail "order guard: git grep failed: $OH_OUT"
+elif [ -z "$OH_OUT" ]; then
+  pass "no pipeline order statement skips the Plan Review Gate"
+else
+  fail "pipeline order skips the Plan Review Gate ($(printf '%s\n' "$OH_OUT" | wc -l | tr -d ' ') lines): $(printf '%s\n' "$OH_OUT" | cut -d: -f1,2 | tr '\n' ' ')"
+fi
+# Self-test: one BAD fixture per separator the pattern covers, and the correct
+# forms (and the INSTALL.md table's "the plan), Design Review Gate") allowed.
+ORDER_BAD=(
+  'Research → Plan → Design Review Gate → Work Unit Decomposition'
+  'Research -> Plan -> Design Review Gate -> PR'
+  'Research ──→ Planning ──→ Design Review Gate ──→ Work Unit Decomposition'
+  'Research, Plan, Design Review Gate, Work Unit Decomposition'
+  'research, plan, design review gate, decompose into work units'
+)
+ORDER_OK=(
+  'Research → Plan → Plan Review Gate → Design Review Gate (reviews the plan)'
+  'Research, Plan, Plan Review Gate, Design Review Gate (reviews the plan)'
+  '| `superpowers:writing-plans` | Plan Review Gate (intercepts before it presents the plan), Design Review Gate |'
+  'Research → Plan (with its Plan Review Gate) → Design Review Gate'
+)
+ONEG="$(mktemp -d)"
+git -C "$ONEG" init -q
+printf '%s\n' "${ORDER_BAD[@]}" "${ORDER_OK[@]}" >"$ONEG/order.md"
+git -C "$ONEG" add order.md
+order_hits "$ONEG" .
+o_ok=1; o_msg=""
+[ "$OH_RC" -eq 0 ] || { o_ok=0; o_msg="$o_msg rc=$OH_RC"; }
+i=0
+while [ "$i" -lt "${#ORDER_BAD[@]}" ]; do
+  n=$((i + 1)); grep -qF "order.md:$n:" <<<"$OH_OUT" || { o_ok=0; o_msg="$o_msg unflagged:$n"; }
+  i=$((i + 1))
+done
+j=0
+while [ "$j" -lt "${#ORDER_OK[@]}" ]; do
+  n=$((${#ORDER_BAD[@]} + j + 1)); ! grep -qF "order.md:$n:" <<<"$OH_OUT" || { o_ok=0; o_msg="$o_msg allowed-flagged:$n"; }
+  j=$((j + 1))
+done
+[ "$o_ok" -eq 1 ] && pass "order guard self-test: every separator style flagged, correct orders allowed" || fail "order guard self-test:$o_msg"
+rm -rf "${ONEG:?}"; ONEG=""
+
+# The guide is the canonical statement of both pipelines (#73).
+grep -qF "| Full orchestration |" "$REPO_ROOT/guides/workflow-enforcement.md" \
+  && grep -qF "Research → Plan → Plan Review Gate → Design Review Gate → Work Unit Decomposition" "$REPO_ROOT/guides/workflow-enforcement.md" \
+  && grep -qF "brainstorming → Design Review Gate (project-sized design doc only) → writing-plans → Plan Review Gate" "$REPO_ROOT/guides/workflow-enforcement.md" \
+  && pass "guide states both pipelines and what the Design Review Gate reviews in each" || fail "guide does not state both pipelines"
+
 # Pointer check: every sweep source points at the canonical guide.
 WU3_SOURCES=(
   CLAUDE.md AGENTS.md GEMINI.md

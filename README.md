@@ -7,7 +7,7 @@ A self-improving multi-agent orchestration framework for [Claude Code](https://d
 metaswarm is an extraction of a production-tested agentic orchestration system. It has been proven in the field writing production-level code with 100% test coverage, mandatory TDD, multi-reviewed spec-driven development, and SDLC best practices across hundreds of PRs. It provides:
 
 - **23 agents: phase agents and specialized personas** (Researcher, Architect, Coder, Security Auditor, PR Shepherd, etc.)
-- **A structured 9-phase workflow**: Research → Plan → Design Review Gate → Work Unit Decomposition → Orchestrated Execution → Final Review → PR Creation → PR Shepherd → Closure & Learning
+- **A structured 9-phase workflow**: Research → Plan (with its Plan Review Gate) → Design Review Gate → Work Unit Decomposition → Orchestrated Execution → Final Review → PR Creation → PR Shepherd → Closure & Learning
 - **4-Phase Orchestrated Execution Loop**: Each work unit runs through IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT. The orchestrator validates independently (never trusts subagent self-reports), and adversarial reviewers check DoD compliance with file:line evidence
 - **Parallel Design Review Gate**: 6 specialist agents (PM, Architect, Designer, Security, UX Reviewer, CTO) review in parallel; severity-gated iteration (only `blocker: yes` findings re-run the gate, cap 10 rounds) before human escalation
 - **Recursive orchestration**: Swarm Coordinators spawn Issue Orchestrators, which spawn sub-orchestrators for complex epics (swarm of swarms)
@@ -40,7 +40,7 @@ Your prompt (spec with DoD items) or GitHub Issue
 └─────────────────────────────────┘
         │
         ▼
-  Research → Plan → Design Review Gate (6 parallel reviewers)
+  Research → Plan → Plan Review Gate (3 reviewers) → Design Review Gate (6 reviewers, on the plan)
         │
         ▼
   Work Unit Decomposition (DoD items, file scopes, dependency graph)
