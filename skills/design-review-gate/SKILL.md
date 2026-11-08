@@ -16,8 +16,8 @@ This skill automatically activates when brainstorming writes and commits a proje
 2. **Architect Agent** - Technical architecture review
 3. **Designer Agent** - UX/API design quality review
 4. **Security Design Agent** - Security threat modeling and protection review
-5. **CTO Agent** - Codebase alignment and TDD readiness review
-6. **UX Reviewer Agent** - User flows, UI states (empty, loading, error) and integration wiring review
+5. **UX Reviewer Agent** - User flows, UI states (empty, loading, error) and integration wiring review
+6. **CTO Agent** - Codebase alignment and TDD readiness review
 
 All six must approve before proceeding to implementation.
 

@@ -130,7 +130,7 @@ The Issue Orchestrator creates an issue-level team and spawns specialist agents:
 The Design Review Gate creates a review-level team with all reviewers as persistent teammates:
 
 1. `TeamCreate("review-{design-doc-name}")`
-2. Spawn reviewers as named teammates (e.g., `pm`, `architect`, `designer`, `security`, `cto`), all `roleType("design-reviewer")`
+2. Spawn reviewers as named teammates (e.g., `pm`, `architect`, `designer`, `security`, `ux`, `cto`), all `roleType("design-reviewer")`
 3. Collect verdicts via `SendMessage` to the orchestrator
 4. On revision: message "revised design, please re-review" -- reviewers retain context from previous round
 5. After approval: `shutdown_request` to all reviewers, then `TeamDelete`

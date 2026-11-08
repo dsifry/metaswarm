@@ -164,7 +164,7 @@ This is the most common upgrade path. Your project has metaswarm files in `.clau
 
 3. **Verify the migration:**
    ```text
-   /status
+   /metaswarm:status
    ```
 
 4. **Review and commit** the cleanup when you're satisfied.
@@ -193,12 +193,12 @@ This checks for new versions, shows what changed, and updates all component file
 
 ### Automatic legacy detection
 
-If you skip the manual migration, the session-start hook will detect the old npm installation when you open Claude Code and prompt you to run `/migrate`. You can also run `/status` at any time to check for legacy files.
+If you skip the manual migration, the session-start hook will detect the old npm installation when you open Claude Code and prompt you to run `/migrate`. You can also run `/metaswarm:status` at any time to check for legacy files.
 
 ## Check Installation Status
 
 ```text
-/status
+/metaswarm:status
 ```
 
 This runs platform-aware diagnostic checks: plugin version, project setup, platform install state, command shims where applicable, legacy install detection, BEADS plugin, bd CLI, gtg CLI, external tools, coverage thresholds, and Node.js.

@@ -12,8 +12,9 @@
 #   in a lightweight job. This avoids re-running the entire test suite
 #   for coverage (which can add 4-5 minutes to your CI pipeline).
 #
-# In both cases, add "coverage" to the `needs:` array of your
-# merge-gating job so PRs cannot merge until thresholds pass.
+# In both cases, add the job key you used ("coverage-simple" or
+# "coverage-merge") to the `needs:` array of your merge-gating job
+# so PRs cannot merge until thresholds pass.
 
 # ──────────────────────────────────────────────────────
 # Strategy A: Simple (single job, runs all tests with coverage)

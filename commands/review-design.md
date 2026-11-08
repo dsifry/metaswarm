@@ -4,7 +4,7 @@ description: Trigger the parallel design review gate with 6 specialist reviewers
 
 # Review Design Command
 
-Run the design review gate on a design document to get feedback from Product Manager, Architect, Designer, Security Design, and CTO agents.
+Run the design review gate on a design document to get feedback from Product Manager, Architect, Designer, Security Design, UX Reviewer and CTO agents.
 
 ## Usage
 
@@ -160,6 +160,15 @@ Focuses on:
 - Authentication/authorization design
 - Data protection and privacy
 - OWASP Top 10 compliance
+
+### UX Reviewer Agent
+
+Focuses on (rubric: `rubrics/ux-review-rubric.md`; designs with no user-facing UI are approved):
+
+- User flows: each has a trigger and a visible outcome
+- Screens described with a component hierarchy or text wireframe
+- Empty, loading and error states for each view
+- An integration work unit that wires the components into the app shell
 
 ### CTO Agent
 

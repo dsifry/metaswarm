@@ -221,7 +221,7 @@ Prerequisites: `npx playwright install chromium`
 | `/start` | Alias for `/start-task` |
 | `/setup` | Interactive project setup — detects language, framework, test runner, and configures everything |
 | `/update` | Update metaswarm plugin to latest version |
-| `/status` | Run 12 diagnostic checks on your installation |
+| `/metaswarm:status` | Run 12 diagnostic checks on your installation |
 | `/prime` | Load relevant knowledge before starting work |
 | `/review-design <path>` | Run the 6-agent Design Review Gate |
 | `/brainstorm` | Refine an idea before implementation |

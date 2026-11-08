@@ -61,8 +61,8 @@ n="$(grep -cF -e 'Task({' <<<"$PH1" || true)"
 [ "$n" -eq 6 ] && pass "Phase 1 has 6 Task({ blocks" || fail "Phase 1 has 6 Task({ blocks (found $n)"
 assert_in "Phase 1 has the UX review Task" "$PH1" \
   'description: "UX review"' 'prompt: uxReviewPrompt(designDocPath)' 'uxResult'
-assert_in "Purpose lists the UX Reviewer Agent as item 6" "$T" \
-  '6. **UX Reviewer Agent** - ' 'All six must approve'
+assert_in "Purpose lists the UX Reviewer Agent as item 5, before CTO" "$T" \
+  '5. **UX Reviewer Agent** - ' '6. **CTO Agent** - ' 'All six must approve'
 assert_in "ReviewResult agent union has ux-reviewer" "$T" '| "ux-reviewer" |'
 assert_in "Team Mode names the ux teammate" "$T" \
   'spawn 6 reviewers as named teammates (`pm`, `architect`, `designer`, `security`, `ux`, `cto`)'
@@ -205,7 +205,7 @@ while IFS= read -r hit; do
   [ -n "$hit" ] || continue
   num="$(sed -E 's/^[^:]*:[0-9]+:[^0-9]*([0-9]+).*/\1/' <<<"$hit")"
   [ "$num" = "$AGENTS_N" ] || bad="$bad $(cut -d: -f1,2 <<<"$hit")($num agents)"
-done < <(git -C "$REPO_ROOT" grep -n -o -i -E -e '(^|[^0-9.])[1-9][0-9] (ai |specialist |specialized )?agent(s|[[:space:]]+personas|[[:space:]]+definitions)' -- . "${CNT_EXCLUDES[@]}" || true)
+done < <(git -C "$REPO_ROOT" grep -n -o -i -E -e '(^|[^0-9.])[1-9][0-9]\+? ((ai|specialist|specialized|specialist ai|specialized ai) )?agent(s|[[:space:]]+personas|[[:space:]]+definitions)' -- . "${CNT_EXCLUDES[@]}" || true)
 while IFS= read -r hit; do
   [ -n "$hit" ] || continue
   num="$(sed -E 's/^[^:]*:[0-9]+:[^0-9]*([0-9]+).*/\1/' <<<"$hit")"
@@ -230,6 +230,11 @@ STALE_RE=(
   '\(5 agents\)'
   '(^|[^[:alnum:]_])5 review agents'
   'pm, architect, designer, security,? (and |or )?cto'
+  'product manager, architect, designer, security( design)?,? (and |or )?cto'
+  '(^|[^[:alnum:]_])5 (specialist|parallel|design) (reviewers|agents)'
+  'five (review|parallel|design) agents'
+  'spawn (5|five) parallel'
+  '`pm`, `architect`, `designer`, `security`, `cto`'
 )
 STALE_EXCLUDES=(
   ':!CHANGELOG.md'
@@ -278,12 +283,19 @@ NEG_BAD=(
   'role in prompt: PM, Architect, Designer, Security, CTO'
   'The role (PM, Architect, Designer, Security or CTO) is passed'
   'spawns PM, Architect, Designer, Security, and CTO agents'
+  'feedback from Product Manager, Architect, Designer, Security Design, and CTO agents'
+  'Trigger the gate with 5 specialist reviewers'
+  'Then five review agents run'
+  'Spawn 5 parallel Task() subagents'
+  'teammates (`pm`, `architect`, `designer`, `security`, `cto`)'
 )
 NEG_ALLOWED=(
   'role in prompt: PM, Architect, Designer, Security, UX Reviewer, CTO'
   'The role (PM, Architect, Designer, Security, UX or CTO) is passed'
   'All six must approve; 6 reviewers (6 agents) in a 6-agent review'
   'ran 15 agents and 25 reviewers'
+  'teammates (`pm`, `architect`, `designer`, `security`, `ux`, `cto`)'
+  'feedback from Product Manager, Architect, Designer, Security Design, UX Reviewer and CTO agents'
 )
 NEG="$(mktemp -d)"
 git -C "$NEG" init -q

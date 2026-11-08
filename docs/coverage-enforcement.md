@@ -33,7 +33,7 @@ A CI job that reads `enforcement.command` from the JSON file and runs it. Fails 
 **Setup:**
 
 - **No CI yet:** run `/setup` and answer Yes to "Create a GitHub Actions CI pipeline?". It writes `.github/workflows/ci.yml` from the plugin's `templates/ci.yml`, whose test step runs `enforcement.command`. `/setup` only asks when it detects no CI.
-- **Existing CI:** copy one of the jobs in `templates/ci-coverage-job.yml` (from the metaswarm plugin's `templates/`) under `jobs:` in your workflow, for example `.github/workflows/ci.yml`. Then add `coverage` to the `needs:` array of your merge-gating job.
+- **Existing CI:** copy one of the jobs in `templates/ci-coverage-job.yml` (from the metaswarm plugin's `templates/`) under `jobs:` in your workflow, for example `.github/workflows/ci.yml`. Then add that job's key (`coverage-simple` or `coverage-merge`) to the `needs:` array of your merge-gating job.
 
 The CI job reads the command dynamically — if you change `enforcement.command`, CI picks it up automatically with no workflow edits.
 
@@ -127,6 +127,7 @@ The easiest way to set up all three enforcement gates is `/setup`. It always wri
 `npx metaswarm init` has no Husky or CI options. To add the hook by hand in a Node.js project, run these from your project root, where `$METASWARM` is the metaswarm plugin root, the directory that holds `templates/` (`$CLAUDE_PLUGIN_ROOT` in a Claude Code session, or `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"`):
 
 ```bash
+METASWARM="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh)")")}"
 npx husky init
 cp "$METASWARM/templates/pre-push" .husky/pre-push
 chmod +x .husky/pre-push
