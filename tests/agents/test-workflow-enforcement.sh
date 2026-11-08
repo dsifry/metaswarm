@@ -372,8 +372,8 @@ rm -rf "${NEG:?}"; NEG=""
 # (skip), or after brainstorming a plan review comes before the first design
 # step (reverse: the brainstorming path reviews the design doc first).
 # A line with an arrow is a chain and is split on arrows. A comma-only line may
-# be prose, so there only an adjacent "..., plan, design review" counts (the
-# #73 rule), e.g. "Plan validation: checks (a, b, c) before design review" is fine.
+# be prose, so only the #73 regex judges it (an adjacent "plan, design review");
+# "Plan validation: checks (a, b, c) before design review" is fine.
 # The #73 regex also runs on every line, so the guard is never weaker than it.
 ORDER_SEP='──→|→|⇒|⟶|➜|➔|—>|->|=>'
 ORDER_LEGACY='plan(ning)?[ \t]*(→|->|──→|,)[ \t]*design review'
@@ -384,8 +384,8 @@ IFS= read -r -d '' ORDER_AWK <<'AWK' || true
   p = index(line, ":"); rest = substr(line, p + 1); q = index(rest, ":")
   content = tolower(substr(rest, q + 1))
   bad = (content ~ legacy)
-  comma = (content !~ sep)
-  if (comma) gsub(/,/, "\001", content); else gsub(sep, "\001", content)
+  if (content !~ sep) { if (bad) print line; next }
+  gsub(sep, "\001", content)
   n = split(content, step, "\001")
   state = ""; brain = 0; pending = 0
   for (k = 1; k <= n; k++) {
@@ -393,7 +393,7 @@ IFS= read -r -d '' ORDER_AWK <<'AWK' || true
     isdesign = (s ~ /design[- ]review|review-design/)
     isreview = (s ~ /plan[- ]review/)
     t = s; gsub(/^[^a-z]+|[^a-z]+$/, "", t)
-    isplan = (!isreview && !isdesign && ((!comma && t ~ /^plan(ning)?([^a-z]|$)/) || t ~ /(^|[^a-z])plan(ning)?$/))
+    isplan = (!isreview && !isdesign && (t ~ /^plan(ning)?([^a-z]|$)/ || t ~ /(^|[^a-z])plan(ning)?$/))
     # A brainstorming step starts the brainstorming path; a later plan step
     # means the line has moved on to full orchestration.
     if (t ~ /^brainstorm/ && brain == 0) brain = 1
@@ -410,7 +410,6 @@ IFS= read -r -d '' ORDER_AWK <<'AWK' || true
     }
     if (isreview) { state = "review"; if (brain == 1 && !isdesign) pending = 1 }
     else if (isplan) state = "plan"
-    else if (comma && !isdesign) state = ""
   }
   if (bad) print line
 }
@@ -460,6 +459,7 @@ ORDER_OK=(
   '/start-task → brainstorming → Design Review Gate (project-sized design doc only) → writing-plans → Plan Review Gate'
   'Research → Plan → Plan Review Gate → Design Review Gate. On the brainstorming path the gate reviews the design doc.'
   '- **Plan validation (pre-flight)**: Checklist catches issues (architecture, security, UI/UX) before design review'
+  'Phase 2 plan, then design review, then ship'
   'Plan → Plan Review Gate / Design Review Gate'
   'Plan → Plan Review Gate. Design Review Gate (reviews the plan)'
   'After brainstorming, the plan goes to the Plan Review Gate → Design Review Gate in full orchestration'
@@ -488,8 +488,9 @@ rm -rf "${ONEG:?}"; ONEG=""
 # #89: the issue-orchestrator's Phase 2 runs both gates, Plan Review Gate first.
 for orch in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
   phase2="$(awk '/^### Phase 2: /{f=1; next} f && /^### /{exit} f' "$REPO_ROOT/$orch")"
-  pr_line="$(printf '%s\n' "$phase2" | grep -n 'plan-review-gate' | head -1 | cut -d: -f1 || true)"
-  dr_line="$(printf '%s\n' "$phase2" | grep -n 'design-review-gate' | head -1 | cut -d: -f1 || true)"
+  # Key on the gate task lines, not comments that merely name the skills.
+  pr_line="$(printf '%s\n' "$phase2" | grep -n '^bd create "Plan Review Gate"' | head -1 | cut -d: -f1 || true)"
+  dr_line="$(printf '%s\n' "$phase2" | grep -n '^bd create "Design Review Gate"' | head -1 | cut -d: -f1 || true)"
   if [ -n "$pr_line" ] && [ -n "$dr_line" ] && [ "$pr_line" -lt "$dr_line" ]; then
     pass "$orch Phase 2 runs plan-review-gate before design-review-gate"
   else
