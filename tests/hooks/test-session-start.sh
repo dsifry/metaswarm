@@ -318,9 +318,13 @@ assert_contains "8a: pointer names /prime" "$c8a" '/prime <topic>'
 assert_contains "8a: bd prime still runs without the plugin" "$c8a" 'BEADS_PRIME_SENTINEL_8'
 
 # 8b: with the beads plugin — knowledge still appears, bd prime skipped.
+# Own HOME with its own beads manifest (no state shared with Test 4).
 TEST_CWD="$TMPDIR_BASE/test8b"
+HOME_8B="$TMPDIR_BASE/home-8b"
+mkdir -p "$HOME_8B/.claude/plugins/cache/beads-marketplace/beads/1.0.0/.claude-plugin"
+echo '{"name":"beads","version":"1.0.0"}' > "$HOME_8B/.claude/plugins/cache/beads-marketplace/beads/1.0.0/.claude-plugin/plugin.json"
 printf '%s\n' "$KB_FACTS" | mk_store "$TEST_CWD"
-output=$(cd "$TEST_CWD" && HOME="$TMPDIR_BASE" PATH="$MOCK_BIN_8:$PATH" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+output=$(cd "$TEST_CWD" && HOME="$HOME_8B" PATH="$MOCK_BIN_8:$PATH" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "8b: output is valid JSON" "$output"
 c8b=$(printf '%s' "$output" | ctx)
 assert_contains "8b: MUST rule surfaced with beads plugin" "$c8b" 'Every migration MUST be reversible'
@@ -386,6 +390,47 @@ c8i=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" extensionPath="$REPO_ROOT" bash "$HOO
 assert_contains "8i: Gemini pointer uses /metaswarm:prime" "$c8i" '/metaswarm:prime <topic>'
 c8j=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null | ctx || true)
 assert_contains "8j: Codex pointer uses \$start" "$c8j" '$start'
+
+# 8k: control characters and odd fields stay on one line per rule; word boundaries.
+TEST_CWD="$TMPDIR_BASE/test8k"
+{
+  node -e 'console.log(JSON.stringify({id:"c1",type:"got\ncha\u0001",fact:"Ctrl\u0007 chars\r\nNEVER split lines\tok",recommendation:["not","a","string"]}))'
+  fact c2 pattern 'NEVER_USE is an identifier, not a rule'
+  fact c3 pattern 'MUST1 is a code, not a rule'
+  echo '[1,2,3]'
+  echo '"NEVER a bare string"'
+} | mk_store "$TEST_CWD"
+c8k=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null | ctx || true)
+n8k=$(printf '%s\n' "$c8k" | grep -c '^- \[' || true)
+TOTAL=$((TOTAL + 1))
+if [ "$n8k" -eq 1 ] && printf '%s\n' "$c8k" | grep -qF -e '- [got cha ] Ctrl  chars NEVER split lines ok'; then PASS=$((PASS + 1)); echo "  PASS: 8k: control chars sanitized, one line per rule"; else FAIL=$((FAIL + 1)); echo "  FAIL: 8k: control chars sanitized, one line per rule (got $n8k: $c8k)"; fi
+assert_not_contains "8k: NEVER_USE is not a rule" "$c8k" 'NEVER_USE is an identifier'
+assert_not_contains "8k: MUST1 is not a rule" "$c8k" 'MUST1 is a code'
+assert_contains "8k: only object facts counted" "$c8k" '2 more facts in .beads/knowledge/'
+
+# 8l: byte cap is in bytes, and truncation never splits a UTF-8 character.
+TEST_CWD="$TMPDIR_BASE/test8l"
+cjk=$(node -e 'process.stdout.write("规".repeat(900))')
+{ fact u1 pattern "NEVER $cjk"; fact u2 pattern "NEVER second rule"; } | mk_store "$TEST_CWD"
+out8l=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "8l: output is valid JSON" "$out8l"
+c8l=$(printf '%s' "$out8l" | ctx)
+rules8l=$(printf '%s\n' "$c8l" | grep '^- \[' || true)
+b8l=$(printf '%s' "$rules8l" | wc -c | tr -d ' ')
+TOTAL=$((TOTAL + 1))
+if [ "$b8l" -le 2048 ] && printf '%s' "$rules8l" | node -e "const c=[];process.stdin.on('data',d=>c.push(d));process.stdin.on('end',()=>{const b=Buffer.concat(c);process.exit(Buffer.from(b.toString('utf8'),'utf8').equals(b)?0:1)})"; then PASS=$((PASS + 1)); echo "  PASS: 8l: rules section <= 2048 bytes, valid UTF-8 ($b8l bytes)"; else FAIL=$((FAIL + 1)); echo "  FAIL: 8l: rules section <= 2048 bytes, valid UTF-8 ($b8l bytes)"; fi
+assert_contains "8l: oversized first rule is truncated" "$c8l" '…'
+
+# 8m: jq that prints and then fails falls back to the pointer, never drops the section.
+TEST_CWD="$TMPDIR_BASE/test8m"
+printf '%s\n' "$KB_FACTS" | mk_store "$TEST_CWD"
+MOCK_BIN_8M="$TMPDIR_BASE/mock-bin-8m"; mkdir -p "$MOCK_BIN_8M"
+printf '#!/bin/bash\nif [ "$1" = "-n" ] && [ "$2" = "1" ]; then echo 1; exit 0; fi\necho 3\necho "- [x] partial"\nexit 5\n' > "$MOCK_BIN_8M/jq"; chmod +x "$MOCK_BIN_8M/jq"
+out8m=$(cd "$TEST_CWD" && HOME="$EMPTY_HOME" PATH="$MOCK_BIN_8M:$PATH" CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+assert_json_valid "8m: output is valid JSON when jq fails mid-stream" "$out8m"
+c8m=$(printf '%s' "$out8m" | ctx)
+assert_contains "8m: pointer survives a failing jq" "$c8m" 'facts in .beads/knowledge/'
+assert_not_contains "8m: partial jq output not used" "$c8m" 'partial'
 
 # --- Summary ---
 echo ""

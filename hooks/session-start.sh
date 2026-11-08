@@ -161,63 +161,68 @@ if [ "$new_project" = false ] && [ "$beads_standalone" = false ]; then
 fi
 
 # metaswarm knowledge base (.beads/knowledge/*.jsonl), in every setup, beads plugin or not:
-# inline the MUST FOLLOW rules (fact or recommendation containing NEVER/ALWAYS/MUST),
-# capped at 10 rules / ~2 KB, then point at /prime for the rest. Without a working jq,
-# only the pointer is added. An empty or missing store adds nothing.
-kb_dir=".beads/knowledge"
+# inline the MUST FOLLOW rules (fact or recommendation containing NEVER/ALWAYS/MUST as a
+# word), within KB_MAX_RULES rules and KB_MAX_BYTES bytes, then point at /prime for the
+# rest. One streaming jq pass counts every fact but keeps only the rules that fit. Without
+# a working jq (or if jq fails) only the pointer is added. An empty or missing store adds
+# nothing.
+KB_DIR=".beads/knowledge"
+KB_MAX_RULES=10
+KB_MAX_BYTES=2048
 case "$METASWARM_PLATFORM" in
   gemini) prime_hint='`/metaswarm:prime <topic>`' ;;
   codex) prime_hint='`$start` (it primes knowledge for the task)' ;;
   *) prime_hint='`/prime <topic>`' ;;
 esac
 kb_files=()
-if [ -d "$kb_dir" ]; then
-  for kb_file in "$kb_dir"/*.jsonl; do
+if [ -d "$KB_DIR" ]; then
+  for kb_file in "$KB_DIR"/*.jsonl; do
     [ -f "$kb_file" ] && kb_files+=("$kb_file")
   done
 fi
 if [ ${#kb_files[@]} -gt 0 ]; then
-  kb_lines=$(grep -hv '^[[:space:]]*#' "${kb_files[@]}" 2>/dev/null | grep -v '^[[:space:]]*$' || true)
-  kb_total=0
-  kb_rules=""
-  if [ -n "$kb_lines" ]; then
-    if command -v jq >/dev/null 2>&1 && jq -n 1 >/dev/null 2>&1; then
-      kb_total=$(printf '%s\n' "$kb_lines" | jq -R -c 'fromjson? | select(type == "object" and (.fact | type) == "string")' 2>/dev/null | wc -l | tr -d ' ' || echo 0)
-      kb_rules=$(printf '%s\n' "$kb_lines" | jq -R -r '
-        fromjson? | select(type == "object" and (.fact | type) == "string")
-        | (if (.recommendation | type) == "string" then .recommendation else "" end) as $rec
-        | select((.fact + " " + $rec) | test("(^|[^A-Za-z])(NEVER|ALWAYS|MUST)([^A-Za-z]|$)"))
-        | "- [\(.type // "fact")] \(.fact | gsub("[\r\n]+"; " "))"
-          + (if $rec != "" then " -> \($rec | gsub("[\r\n]+"; " "))" else "" end)' 2>/dev/null || true)
-    else
-      kb_total=$(printf '%s\n' "$kb_lines" | grep -c . || true)
-    fi
-  fi
-  kb_shown=0
-  kb_bytes=0
+  kb_total=""
   kb_section=""
-  if [ -n "$kb_rules" ]; then
-    while IFS= read -r kb_rule; do
-      [ -n "$kb_rule" ] || continue
-      [ "$kb_shown" -ge 10 ] && break
-      if [ "$kb_shown" -eq 0 ] && [ ${#kb_rule} -gt 2000 ]; then
-        kb_rule="${kb_rule:0:2000}…"
-      fi
-      if [ "$kb_shown" -gt 0 ] && [ $((kb_bytes + ${#kb_rule})) -gt 2048 ]; then
-        break
-      fi
-      kb_section="${kb_section}${kb_rule}
-"
-      kb_bytes=$((kb_bytes + ${#kb_rule} + 1))
-      kb_shown=$((kb_shown + 1))
-    done <<<"$kb_rules"
+  kb_out=""
+  if command -v jq >/dev/null 2>&1 && jq -n 1 >/dev/null 2>&1 \
+    && kb_out=$(jq -R -n -r --argjson maxr "$KB_MAX_RULES" --argjson maxb "$KB_MAX_BYTES" '
+      def clean: tostring | gsub("[[:cntrl:]]+"; " ");
+      def fit($n): if utf8bytelength <= $n then .
+        else (.[0:((length * $n / utf8bytelength) | floor)] | until(utf8bytelength <= $n; .[0:length - 1])) end;
+      reduce (inputs | select(test("^[[:space:]]*#") | not) | fromjson?
+              | select(type == "object" and (.fact | type) == "string")) as $f
+        ({total: 0, bytes: 0, rules: [], full: false};
+         .total += 1
+         | if .full then .
+           else ($f.recommendation | if type == "string" then . else "" end) as $rec
+             | if (($f.fact + " " + $rec) | test("(^|[^A-Za-z0-9_])(NEVER|ALWAYS|MUST)([^A-Za-z0-9_]|$)")) then
+                 ("- [" + (($f.type // "fact") | clean) + "] " + ($f.fact | clean)
+                   + (if $rec != "" then " -> " + ($rec | clean) else "" end)) as $line
+                 | (if (.rules | length) == 0 and ($line | utf8bytelength) > $maxb
+                    then ($line | fit($maxb - 3)) + "…" else $line end) as $line
+                 | if (.rules | length) >= $maxr
+                     or ((.rules | length) > 0 and .bytes + ($line | utf8bytelength) + 1 > $maxb)
+                   then .full = true
+                   else .rules += [$line] | .bytes += ($line | utf8bytelength) + 1 end
+               else . end
+           end)
+      | (.total | tostring), .rules[]' "${kb_files[@]}" 2>/dev/null); then
+    kb_total=$(printf '%s\n' "$kb_out" | head -n 1)
+    kb_section=$(printf '%s\n' "$kb_out" | sed '1d')
+  else
+    # No working jq: count lines that look like JSON objects, pointer only.
+    kb_total=$(cat "${kb_files[@]}" 2>/dev/null | grep -c '^[[:space:]]*{' || true)
   fi
+  case "$kb_total" in ''|*[!0-9]*) kb_total=0 ;; esac
+  kb_shown=0
+  [ -n "$kb_section" ] && kb_shown=$(printf '%s\n' "$kb_section" | grep -c . || true)
   kb_rest=$((kb_total - kb_shown))
   [ "$kb_rest" -lt 0 ] && kb_rest=0
-  kb_noun="facts"; [ "$kb_rest" -eq 1 ] && kb_noun="fact"
   if [ "$kb_shown" -gt 0 ]; then
+    kb_noun="facts"; [ "$kb_rest" -eq 1 ] && kb_noun="fact"
     kb_msg="metaswarm knowledge, MUST FOLLOW rules (from .beads/knowledge/):
-${kb_section}"
+${kb_section}
+"
     if [ "$kb_rest" -gt 0 ]; then
       kb_msg="${kb_msg}${kb_rest} more ${kb_noun} in .beads/knowledge/ — run ${prime_hint} to load the ones relevant to your task."
     else
