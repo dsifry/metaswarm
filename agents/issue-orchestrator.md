@@ -144,7 +144,7 @@ bd create "Design Review Gate" --type task --parent <epic-id>
 bd dep add <design-review-task> <plan-review-task>
 ```
 
-Both gates are BLOCKING: do not decompose into work units until the Plan Review Gate has passed and the Design Review Gate has approved. The plan-review-gate skill presents the plan to the user when it passes; here the Design Review Gate runs first, so present the plan once both gates have approved, and after the user approves it persist it to `.beads/plans/active-plan.md` as that skill's Plan Persistence section describes.
+Both gates are BLOCKING: do not decompose into work units until the Plan Review Gate has passed and the Design Review Gate has approved. If the Design Review Gate revises the plan, run the Plan Review Gate again on the revised plan (fresh reviewers) before presenting it; a revision that fails it goes back through both gates. The plan-review-gate skill presents the plan to the user when it passes; here the Design Review Gate runs first, so present the plan once both gates have approved, and after the user approves it persist it to `.beads/plans/active-plan.md` as that skill's Plan Persistence section describes.
 
 ### Phase 2a: External Dependency Detection
 

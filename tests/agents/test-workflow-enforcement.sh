@@ -500,6 +500,12 @@ for orch in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.
   else
     fail "$orch Phase 2 must run plan-review-gate, then design-review-gate (run lines: ${pr_run:-none}/${dr_run:-none}, task lines: ${pr_task:-none}/${dr_task:-none})"
   fi
+  # A plan the Design Review Gate changes goes back through the Plan Review Gate.
+  if printf '%s\n' "$phase2" | grep -qi 'design review gate revises the plan.*run the plan review gate again'; then
+    pass "$orch Phase 2 re-runs the Plan Review Gate on a plan the design review changed"
+  else
+    fail "$orch Phase 2 lets a plan changed by the Design Review Gate skip the Plan Review Gate"
+  fi
 done
 
 # The guide is the canonical statement of both pipelines (#73).
