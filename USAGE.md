@@ -331,7 +331,7 @@ Edit `.coverage-thresholds.json` to set your thresholds and coverage command:
 | `thresholds.branches` | Minimum branch coverage percentage |
 | `thresholds.functions` | Minimum function coverage percentage |
 | `thresholds.statements` | Minimum statement coverage percentage |
-| `enforcement.command` | Shell command to run coverage (e.g., `pytest --cov`, `cargo tarpaulin`, `go test -cover`) |
+| `enforcement.command` | Shell command to run coverage (e.g., `pytest --cov --cov-fail-under=100`, `cargo tarpaulin --fail-under 100`, or for Go `go run .metaswarm/go-coverage-gate.go`; `go test -cover` alone never fails) |
 | `enforcement.blockPRCreation` | If `true`, agents cannot create a PR until all thresholds pass |
 | `enforcement.blockTaskCompletion` | If `true`, agents cannot mark a task complete until all thresholds pass |
 

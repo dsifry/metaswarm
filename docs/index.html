@@ -771,7 +771,7 @@ When all work units pass, create a PR.</code></pre>
 
     <p>The guided setup (<code>/metaswarm:setup</code>) detects your test runner and configures coverage enforcement automatically. For manual setup, copy the template:</p>
     <pre><code><span class="cmd">cp</span> templates/coverage-thresholds.json .coverage-thresholds.json</code></pre>
-    <p>The thresholds work with any test runner. The setup skill maps your detected test runner to the correct coverage command automatically &mdash; <code>pnpm test:coverage</code>, <code>pytest --cov</code>, <code>cargo tarpaulin</code>, <code>go test -cover</code>, or whatever your project uses. See <a href="https://github.com/dsifry/metaswarm/blob/main/docs/coverage-enforcement.md">coverage-enforcement.md</a> for the full setup guide.</p>
+    <p>The thresholds work with any test runner. The setup skill maps your detected test runner to the correct coverage command automatically &mdash; <code>pnpm test:coverage</code>, <code>pytest --cov</code>, <code>cargo tarpaulin</code>, <code>go run .metaswarm/go-coverage-gate.go</code> (a gate program setup writes, since <code>go test</code> has no threshold flag), or whatever your project uses. See <a href="https://github.com/dsifry/metaswarm/blob/main/docs/coverage-enforcement.md">coverage-enforcement.md</a> for the full setup guide.</p>
   </section>
 
   <!-- SETUP -->
