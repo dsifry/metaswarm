@@ -3,10 +3,10 @@
 // Written to .metaswarm/go-coverage-gate.go by metaswarm /setup and run as the
 // enforcement command:
 //
-//	go run .metaswarm/go-coverage-gate.go [packages...]   (default ./...)
+//	go run .metaswarm/go-coverage-gate.go [go test flags and packages...]   (default ./...)
 //
 // `go test` has no coverage-threshold flag, so this gate runs
-// `go test -coverprofile=coverage.out <packages>`, counts covered statements
+// `go test -coverprofile=coverage.out <arguments>`, counts covered statements
 // in the profile, and exits 1 when coverage is below the thresholds in
 // .coverage-thresholds.json. It reads that file every run, so the file stays
 // the single source of truth. It compares exact statement counts: the

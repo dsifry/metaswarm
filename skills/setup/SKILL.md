@@ -23,7 +23,7 @@ fi
 if [ -z "$PLUGIN_ROOT" ] && [ -f "$(pwd)/lib/setup-mandatory-files.sh" ]; then
   PLUGIN_ROOT="$(pwd)"
 fi
-bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform> [--reconfigure]
+bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform> --reconfigure
 ```
 
 Where:
@@ -39,7 +39,7 @@ Where:
   - `claude` when running in Claude Code (`CLAUDE_PLUGIN_ROOT` is present, or the setup skill was invoked there)
   - `gemini` when running in Gemini (`extensionPath` is present, or the setup skill was invoked there)
   - `all` only when the user explicitly asks to configure every supported CLI
-- `--reconfigure`: add it only when the user chose "Re-run setup" at the Existing Profile Check. It updates an existing `.coverage-thresholds.json` to the new threshold, including a `--cov-fail-under`/`--fail-under` value in `enforcement.command`, and keeps every other setting. Without it an existing file is left unchanged.
+- `--reconfigure`: always pass it from interactive setup, so the user's answers apply even when `.coverage-thresholds.json` already exists (a re-run, or a first run after `npx metaswarm setup` copied the template). It updates the thresholds, a `--cov-fail-under`/`--fail-under` value in `enforcement.command` and an old bare `go test` command, and keeps every other setting. Only the session hook's self-heal omits it, so a silent background run never changes the file.
 
 The script handles:
 1. **Instruction file** — `AGENTS.md` for Codex, `CLAUDE.md` for Claude, `GEMINI.md` for Gemini; appends metaswarm section (or writes new), skips if already present
@@ -238,7 +238,7 @@ fi
 if [ -z "$PLUGIN_ROOT" ] && [ -f "$(pwd)/lib/setup-mandatory-files.sh" ]; then
   PLUGIN_ROOT="$(pwd)"
 fi
-bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform> [--reconfigure]
+bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform> --reconfigure
 ```
 
 Example for Codex with Python/pytest at 100%:

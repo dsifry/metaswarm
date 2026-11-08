@@ -111,8 +111,10 @@ esac
 coverage_file="$PROJECT_DIR/.coverage-thresholds.json"
 coverage_template="$TEMPLATE_DIR/coverage-thresholds.json"
 
-# Quoted heredoc: the shell expands nothing inside the script.
-COVERAGE_JS=$(cat <<'JS'
+# Quoted heredoc read directly (not inside $(...), which bash 3.2 misparses
+# when the body has backticks): the shell expands nothing inside the script.
+COVERAGE_JS=""
+IFS= read -r -d '' COVERAGE_JS <<'JS' || true
 const fs = require('fs');
 const [mode, file, tmplPath, rawThreshold, cmd] = process.argv.slice(1);
 const say = (kind, msg) => console.log(kind + '\t' + msg);
@@ -156,10 +158,20 @@ let goReplaced = false;
 if (!oldCmd) {
   newCmd = cmd;
 } else if (cmd.includes(GO_GATE) && /^\s*go\s+test(\s|$)/.test(oldCmd)) {
-  // Setup used to write a bare `go test` command for Go (#78); move it to the gate.
-  newCmd = cmd;
+  // Setup used to write a bare `go test` command for Go (#78); move it to the
+  // gate. The gate passes its arguments to go test, so the user's own flags and
+  // packages carry over; only the cover flags it sets itself are dropped.
+  const toks = oldCmd.trim().split(/\s+/).slice(2);
+  const keep = [];
+  for (let i = 0; i < toks.length; i++) {
+    if (toks[i] === '-cover' || toks[i] === '-coverprofile' && ++i) continue;
+    if (/^-cover(profile)?=/.test(toks[i]) || /^-cover=/.test(toks[i])) continue;
+    keep.push(toks[i]);
+  }
+  const extra = keep.length === 1 && keep[0] === './...' ? [] : keep;
+  newCmd = [cmd, ...extra].join(' ');
   goReplaced = true;
-  say('created', `.coverage-thresholds.json enforcement.command: replaced '${oldCmd}' (go test never fails below the threshold) with: ${cmd}`);
+  say('created', `.coverage-thresholds.json enforcement.command: replaced '${oldCmd}' (go test never fails below the threshold) with: ${newCmd}`);
 } else {
   // Known threshold flags: pytest-cov --cov-fail-under, tarpaulin/coverage.py --fail-under.
   newCmd = oldCmd.replace(/(--(?:cov-)?fail-under)([= ])(\d+(?:\.\d+)?)(?![\d.])/g, (m, flag, sep) => flag + sep + t);
@@ -171,11 +183,13 @@ if (!thresholdsChanged && newCmd === oldCmd) {
   say('skipped', `.coverage-thresholds.json (already at ${t}%)`);
 } else {
   fs.writeFileSync(file, JSON.stringify(cfg, null, 2) + '\n');
-  say('created', `.coverage-thresholds.json (thresholds ${oldShown} -> ${t}%)`);
+  if (thresholdsChanged) say('created', `.coverage-thresholds.json (thresholds ${oldShown} -> ${t}%)`);
   if (newCmd !== oldCmd && !goReplaced) say('created', `.coverage-thresholds.json enforcement.command updated to: ${newCmd}`);
 }
 if (cmd.includes(GO_GATE) && !newCmd.includes(GO_GATE)) {
   say('warning', `enforcement.command '${newCmd}' was kept. Make sure it fails below the threshold: go test alone never does. Setup's Go command is: ${cmd}`);
+} else if (oldCmd && !goReplaced && newCmd.split(/\s+/)[0] !== cmd.split(/\s+/)[0]) {
+  say('warning', `enforcement.command '${newCmd}' was kept, but it differs from the detected command '${cmd}'. If the test runner changed, update enforcement.command by hand.`);
 }
 // Any old threshold still written in the command, in a form not rewritten above.
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -185,7 +199,6 @@ if (stale.length) {
   say('warning', `enforcement.command may embed the old threshold (${stale.join('/')}%): '${newCmd}'. Update it by hand to use ${t}%.`);
 }
 JS
-)
 
 coverage_mode=""
 if [ -f "$coverage_file" ]; then

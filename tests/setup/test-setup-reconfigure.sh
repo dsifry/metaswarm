@@ -95,6 +95,21 @@ run_setup 90 "go run .metaswarm/go-coverage-gate.go" --reconfigure
 [ "$(get enforcement.command)" = "go run .metaswarm/go-coverage-gate.go" ] && pass "reconfigure: old go test command replaced by the gate" || fail "reconfigure: old go command kept: '$(get enforcement.command)'"
 [ -f "$P/.metaswarm/go-coverage-gate.go" ] && pass "reconfigure: gate written for an upgraded Go project" || fail "reconfigure: gate not written: $OUT"
 printf '%s' "$OUT" | grep -q "never fails below the threshold" && pass "reconfigure: says why the Go command changed" || fail "reconfigure: Go command change not explained: $OUT"
+# The old command's own go test flags and packages carry over to the gate.
+new_project racego 80 "go test -race -coverpkg=./... -coverprofile=c.out ./pkg/..."
+run_setup 80 "go run .metaswarm/go-coverage-gate.go" --reconfigure
+[ "$(get enforcement.command)" = "go run .metaswarm/go-coverage-gate.go -race -coverpkg=./... ./pkg/..." ] && pass "reconfigure: custom go test flags and packages kept" || fail "reconfigure: go flags became '$(get enforcement.command)'"
+printf '%s' "$OUT" | grep -q "80% -> 80%" && fail "reconfigure: prints a no-op threshold change: $OUT" || pass "reconfigure: no threshold line when only the command changed"
+new_project plaingo 80 "go test -cover ./..."
+run_setup 80 "go run .metaswarm/go-coverage-gate.go" --reconfigure
+[ "$(get enforcement.command)" = "go run .metaswarm/go-coverage-gate.go" ] && pass "reconfigure: default ./... and -cover not repeated" || fail "reconfigure: plain go command became '$(get enforcement.command)'"
+
+# A stored command for a different runner is kept, with a warning.
+new_project jest 80 "npx jest --coverage"
+run_setup 90 "pytest --cov --cov-fail-under=90" --reconfigure
+[ "$(get enforcement.command)" = "npx jest --coverage" ] && printf '%s' "$OUT" | grep -q "differs from the detected command" \
+  && pass "reconfigure: a different stored command is kept with a warning" || fail "reconfigure: different command not flagged: $OUT"
+
 # ...but a Go command the user built themselves is kept, with a warning.
 new_project customgo 80 "make coverage-check"
 run_setup 90 "go run .metaswarm/go-coverage-gate.go" --reconfigure
@@ -145,7 +160,11 @@ run_setup abc "pytest --cov" --reconfigure
 
 # --- wiring: only the explicit re-run passes --reconfigure ---
 grep -q -- "--reconfigure" "$ROOT/hooks/session-start.sh" && fail "session-start.sh self-heal passes --reconfigure" || pass "session-start.sh self-heal does not pass --reconfigure"
-grep -q -- "--reconfigure" "$ROOT/skills/setup/SKILL.md" && pass "setup skill passes --reconfigure on a re-run" || fail "setup skill never passes --reconfigure"
+# Every interactive /setup applies the user's answers, including the first run
+# after `npx metaswarm setup` copied the template file (no profile yet).
+grep -q 'lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform> --reconfigure$' "$ROOT/skills/setup/SKILL.md" \
+  && pass "setup skill passes --reconfigure on every interactive run" || fail "setup skill does not always pass --reconfigure"
+grep -q -- "--reconfigure\]" "$ROOT/skills/setup/SKILL.md" && fail "setup skill still marks --reconfigure optional" || pass "setup skill does not mark --reconfigure optional"
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
