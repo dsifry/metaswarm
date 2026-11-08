@@ -63,7 +63,8 @@ fi
 # docs/coverage-enforcement.md manual steps must leave a working gate (PR #82 review).
 CE="$(cat "$REPO_ROOT/docs/coverage-enforcement.md")"
 echo "Coverage enforcement doc"
-for s in 'npm install --save-dev husky' 'templates/coverage-thresholds.json' 'set `enforcement.command`' 'npm-based'; do
+# The CI template is rendered per stack (#83); the doc must still point other stacks at the job template.
+for s in 'npm install --save-dev husky' 'templates/coverage-thresholds.json' 'set `enforcement.command`' 'lib/render-ci.sh' 'templates/ci-coverage-job.yml'; do
   grep -qF -e "$s" <<<"$CE" && pass "coverage-enforcement.md mentions: $s" || fail "coverage-enforcement.md mentions: $s"
 done
 

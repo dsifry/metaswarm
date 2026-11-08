@@ -32,15 +32,15 @@ A CI job that reads `enforcement.command` from the JSON file and runs it. Fails 
 
 **Setup:**
 
-- **No CI yet (Node.js/npm projects):** run `/setup` and answer Yes to "Create a GitHub Actions CI pipeline?". It writes `.github/workflows/ci.yml` from the plugin's `templates/ci.yml`, whose test step runs `enforcement.command`. `/setup` only asks when it detects no CI. The template is npm-based (`setup-node`, `npm ci`, `npm run lint`), so for Python, Go, Rust or pnpm-only projects add a CI job for your stack that runs `enforcement.command` instead (see `templates/ci-coverage-job.yml`).
+- **No CI yet (Node.js, Python, Go or Rust):** run `/setup` and answer Yes to "Create a GitHub Actions CI pipeline?". `/setup` only asks when it detects no CI. It renders `.github/workflows/ci.yml` from the plugin's `templates/ci.yml` with `lib/render-ci.sh`, which installs your stack's toolchain, and its test step runs `enforcement.command`. The workflow runs on pushes to your default branch and on every pull request. `/setup` then offers to make its `CI checks` job a required check (see below). For other stacks, or Node projects that install with pnpm or yarn, add a job that runs `enforcement.command` to your own CI (see `templates/ci-coverage-job.yml`).
 - **Existing CI:** copy one of the jobs in `templates/ci-coverage-job.yml` (from the metaswarm plugin's `templates/`) under `jobs:` in your workflow, for example `.github/workflows/ci.yml`. Then add that job's key (`coverage-simple` or `coverage-merge`) to the `needs:` array of your merge-gating job.
 
 The CI job reads the command dynamically — if you change `enforcement.command`, CI picks it up automatically with no workflow edits.
 
 **Before you rely on these gates:**
 
-- `templates/ci.yml` and `templates/pre-push` run your `lint` and `typecheck` scripts. The CI template requires both to pass. The hook blocks on lint failures (and on a missing `lint` script) but ignores all typecheck failures, including a missing script. Add the scripts to `package.json`, or edit the workflow and hook to drop the steps. To make the hook block on type errors, change its typecheck step to skip only a missing script.
-- A CI check blocks merges only if the branch requires it. Add the coverage job (or the CI workflow's job) as a required status check in a branch protection rule or ruleset for your merge branch, and include that branch in the workflow's `on:` filters (the template targets `main`).
+- For Node projects, `templates/ci.yml` and `templates/pre-push` run your `lint` and `typecheck` scripts when `package.json` defines them, and skip a missing one. A script that fails fails the build and blocks the push.
+- A CI check blocks merges only if the branch requires it. When `/setup` writes the workflow, it offers to run `lib/require-ci-check.sh`, which adds a ruleset requiring `CI checks` on the default branch (admin rights needed; existing protection is left alone). Otherwise, add the coverage job (or the CI workflow's job) as a required status check in a branch protection rule or ruleset for your merge branch. If you merge into a branch other than the default, add it to the workflow's `push` filter too.
 
 ### Gate 2: Pre-Push Hook (Husky)
 

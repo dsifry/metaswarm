@@ -29,7 +29,7 @@ This skill auto-activates when:
 3. The orchestrator's plan validation phase produces a plan for review
 4. User explicitly requests: `/plan-review <path-to-plan>`
 
-**Do NOT use for**: Trivial changes (single-file bug fixes, copy edits, config tweaks). The plan must have at least 2 work units or touch 3+ files to warrant gate review.
+**Do NOT use for**: Trivial changes (single-file bug fixes, copy edits, config tweaks). The plan must have at least 2 work units or touch 3+ files to warrant gate review. A plan that builds or changes user-facing UI always gets the gate, whatever its size, so the Completeness check for a UI integration work unit still runs.
 
 ---
 
@@ -428,7 +428,7 @@ Plan is ready for user review.
 | 1 | **Reusing reviewer instances** — passing findings to next review cycle | Anchoring bias: reviewer checks for previous findings instead of reviewing fresh | Spawn new `Task()` instances with no prior context |
 | 2 | **Cross-reviewer contamination** — sharing one reviewer's output with another | Destroys independence; reviewers converge instead of checking independently | Each reviewer sees only: plan, user request, codebase |
 | 3 | **Treating a blocker as advisory** — downgrading a justified blocker without the rule ("it's only one blocker, present the plan anyway") | Undermines the gate; equivalent to not having a gate | A `blocker: yes` FAIL means revise and re-review. Only rule line 5 (overengineering check) may downgrade a blocker to a follow-up. |
-| 4 | **Skipping the gate for "simple" plans** — "this is straightforward, skip review" | Judgment of simplicity is exactly what the gate validates | If the plan has 2+ work units or touches 3+ files, run the gate |
+| 4 | **Skipping the gate for "simple" plans** — "this is straightforward, skip review" | Judgment of simplicity is exactly what the gate validates | If the plan has 2+ work units, touches 3+ files, or builds user-facing UI, run the gate |
 | 5 | **Planner self-reviewing** — same agent that wrote the plan also reviews it | Confirmation bias; planner will approve their own work | Reviewers must be separate `Task()` instances from the planner |
 | 6 | **Iterating on a fixed count** — stopping after N rounds regardless of what remains, or reviewing until every nit is gone | Stops while real blockers remain, or keeps going on findings that don't block delivery | Severity-gated iteration, cap 10: apply the rule after every round, file minor/nit as follow-ups, escalate with a recommendation |
 | 7 | **Partial re-review** — only re-running the reviewer that failed | Other reviewers might fail on the revised plan | All 3 reviewers re-run on every iteration (fresh instances) |

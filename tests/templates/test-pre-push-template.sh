@@ -47,6 +47,22 @@ if command -v dash >/dev/null 2>&1 && command -v node >/dev/null 2>&1; then
   else
     fail "under dash without jq/pnpm, the hook runs enforcement.command (rc=$rc): $(printf '%s' "$out" | tail -3 | tr '\n' ' ')"
   fi
+  # #83: lint and typecheck run only when package.json defines them, and a
+  # failing script fails the hook (typecheck failures used to be ignored).
+  run_hook() { # <package.json scripts JSON> -> sets HOOK_RC, HOOK_OUT
+    printf '{"name":"x","version":"1.0.0","scripts":%s}\n' "$1" > "$P/package.json"
+    HOOK_RC=0; HOOK_OUT="$(cd "$P" && PATH="$TMP/bin" "$DASH" "$REPO_ROOT/templates/pre-push" 2>&1)" || HOOK_RC=$?
+  }
+  run_hook '{}'
+  if [ "$HOOK_RC" -eq 0 ] && grep -qxF -e 'COVERAGE_RAN' <<<"$HOOK_OUT"; then
+    pass "with no lint or typecheck script, the hook skips them and still runs coverage"
+  else
+    fail "missing lint/typecheck scripts broke the hook (rc=$HOOK_RC): $(printf '%s' "$HOOK_OUT" | tail -3 | tr '\n' ' ')"
+  fi
+  run_hook '{"lint":"exit 3","typecheck":"true"}'
+  [ "$HOOK_RC" -ne 0 ] && pass "a failing lint script fails the hook" || fail "a failing lint script passed the hook"
+  run_hook '{"lint":"true","typecheck":"exit 3"}'
+  [ "$HOOK_RC" -ne 0 ] && pass "a failing typecheck script fails the hook" || fail "a failing typecheck script passed the hook"
 else
   echo "  SKIP: dash or node not installed (behaviour not exercised)"
 fi

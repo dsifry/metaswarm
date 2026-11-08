@@ -1,21 +1,27 @@
-# CI Pipeline — lint, typecheck, test, coverage
-# Scaffolded by metaswarm init. Customize for your project.
+# CI Pipeline — toolchain, (Node: lint, typecheck), test with coverage
+# Scaffolded by metaswarm /setup. Customize for your project.
+#~
+#~ This is a template. /setup renders it with lib/render-ci.sh, which keeps the
+#~ toolchain block for your stack (between "# @toolchain <stack>" and "# @end"),
+#~ drops the other blocks, the markers and these "#~" lines, and writes your
+#~ repo's default branch into push.branches. If you copy it by hand, do the same.
 
 name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main] # @branch
+  # Every pull request is checked, whatever branch it targets.
   pull_request:
-    branches: [main]
 
 jobs:
   ci:
-    name: Lint, Test & Coverage
+    name: CI checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      # @toolchain node
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -23,11 +29,55 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Lint and typecheck run when package.json defines the script, and fail
+      # the build when it fails. A missing script is skipped.
       - name: Lint
-        run: npm run lint
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.lint ? 0 : 1)"; then
+            npm run lint
+          else
+            echo "No lint script in package.json; skipping"
+          fi
 
       - name: Typecheck
-        run: npm run typecheck
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.typecheck ? 0 : 1)"; then
+            npm run typecheck
+          else
+            echo "No typecheck script in package.json; skipping"
+          fi
+      # @end
+
+      # @toolchain python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          if [ -f pyproject.toml ]; then pip install -e ".[dev]" || pip install -e .; fi
+          pip install pytest pytest-cov
+      # @end
+
+      # @toolchain go
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Download modules
+        run: go mod download
+      # @end
+
+      # @toolchain rust
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-tarpaulin
+      # @end
 
       - name: Test with coverage
         run: |
@@ -50,5 +100,6 @@ jobs:
             # Execute as array — prevents all shell metacharacter interpretation
             "${CMD_ARRAY[@]}"
           else
-            npm test
+            echo "Error: no .coverage-thresholds.json; run /setup to create it"
+            exit 1
           fi

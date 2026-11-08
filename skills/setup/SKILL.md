@@ -309,7 +309,7 @@ Write them to `scripts/` in the project. Skip any that already exist.
 
 | Condition | Source | Destination |
 |---|---|---|
-| User chose YES for CI | `./templates/ci.yml` | `.github/workflows/ci.yml` |
+| User chose YES for CI | `./templates/ci.yml`, rendered (see 5.4) | `.github/workflows/ci.yml` |
 | User chose YES for git hooks AND Husky detected or Node.js project | `./templates/pre-push` | `.husky/pre-push` (chmod +x) |
 | User chose YES for external tools | `./templates/external-tools.yaml` | `.metaswarm/external-tools.yaml` |
 | Always | `./templates/.env.example` | `.env.example` |
@@ -399,6 +399,28 @@ Command resolution reference:
 **Python**: Suggest `pip install pre-commit` and offer to create `.pre-commit-config.yaml`.
 **Other**: Suggest appropriate hook tools for the ecosystem.
 
+The Node pre-push hook runs `lint` and `typecheck` only when `package.json` defines them, and a failing one blocks the push.
+
+### 5.4 CI (if enabled)
+
+1. Render the workflow for the detected stack. `--stack` is `node` (JavaScript/TypeScript installed with npm; the steps run `npm ci`), `python`, `go` or `rust`. A pnpm or yarn project gets the same treatment as a stack with no toolchain (exit 2 below):
+
+   ```bash
+   bash "${PLUGIN_ROOT}/lib/render-ci.sh" --stack <stack> --out .github/workflows/ci.yml
+   ```
+
+   It keeps that stack's toolchain steps, and points `push` at the repo's default branch (from `origin/HEAD`, else `gh repo view`). Pull requests into any branch are checked. Node's lint and typecheck steps skip a script that `package.json` doesn't define, and fail the build when one fails. Exit 2 means the stack has no toolchain in the template (Java, Ruby, and so on). Don't write `ci.yml` then. Tell the user to add the coverage job from `./templates/ci-coverage-job.yml` to their CI, after the steps that install their toolchain.
+
+2. CI only stops a merge if its check is required. Use AskUserQuestion: "Make the `CI checks` job a required check on the default branch, so a PR can't merge while coverage fails? This needs admin rights on the GitHub repo. It adds a ruleset and leaves your existing branch protection as it is." Options: "Yes (Recommended)" / "No, I'll do it later"
+
+3. Only on Yes, run:
+
+   ```bash
+   bash "${PLUGIN_ROOT}/lib/require-ci-check.sh"
+   ```
+
+   It adds a ruleset named `metaswarm: required CI check` and does nothing if that ruleset already exists. If it exits 1 (no `gh`, not logged in, or no admin rights), show the user the manual steps it printed. On No, put those steps in the summary tips: Settings → Rules → Rulesets, target the default branch, and require the status check `CI checks`.
+
 ---
 
 ## Phase 6: Summary
@@ -437,7 +459,8 @@ You're all set! Run the platform's start command to begin working.
 
 Offer 1-2 relevant tips based on configuration:
 - If external tools enabled: "Use `$external-tools` to check tool status."
-- If no CI set up: "Consider adding CI later -- metaswarm includes a template at `./templates/ci.yml`."
+- If no CI set up: "Consider adding CI later: re-run `/setup`, or render the template yourself with `lib/render-ci.sh --stack <stack>` from the metaswarm plugin."
+- If CI was written but its check isn't required: "Require the `CI checks` status check on your default branch (Settings → Rules → Rulesets) so a failing PR can't merge."
 - If visual review enabled: "The visual review skill will screenshot your app during development."
 
 ---
