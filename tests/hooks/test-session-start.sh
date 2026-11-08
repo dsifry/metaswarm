@@ -172,6 +172,9 @@ node -e "
   fs.writeFileSync(f, JSON.stringify(j, null, 2) + '\n');
 " "$TEST_CWD/.coverage-thresholds.json"
 cp "$TEST_CWD/.coverage-thresholds.json" "$TMPDIR_BASE/test2d-thresholds.before"
+# A customized shim must survive a heal that only restores the gate.
+printf 'my own prime command\n' > "$TEST_CWD/.claude/commands/prime.md"
+cp "$TEST_CWD/.claude/commands/prime.md" "$TMPDIR_BASE/test2d-prime.before"
 rm -f "$TEST_CWD/.metaswarm/go-coverage-gate.go"
 output=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
@@ -180,6 +183,8 @@ assert_same_file "Restored gate matches the plugin template" \
   "$REPO_ROOT/skills/setup/templates/go-coverage-gate.go" "$TEST_CWD/.metaswarm/go-coverage-gate.go"
 assert_same_file "Leaves .coverage-thresholds.json untouched (no --reconfigure)" \
   "$TMPDIR_BASE/test2d-thresholds.before" "$TEST_CWD/.coverage-thresholds.json"
+assert_same_file "Leaves a customized command shim untouched" \
+  "$TMPDIR_BASE/test2d-prime.before" "$TEST_CWD/.claude/commands/prime.md"
 
 # --- Test 3: Legacy install detection ---
 echo "Test 3: Legacy install detection"

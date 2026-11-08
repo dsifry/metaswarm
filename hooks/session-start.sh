@@ -80,12 +80,13 @@ if [ "$new_project" = false ] && [ "$legacy_install" = false ]; then
   if [ ! -f ".coverage-thresholds.json" ]; then
     needs_heal=true
   fi
-  # A Go project's enforcement command runs the gate program (#87). If the file
-  # is gone, restore it. Self-heal runs the setup script in create mode, so it
-  # rewrites the gate but leaves the existing thresholds file as it is.
+  # A Go project's enforcement command runs the gate program (#87). If only the
+  # gate file is gone, it is copied back below without the full setup run, so
+  # customized command shims are not rewritten. A full heal writes it anyway.
+  needs_gate=false
   if [ ! -f ".metaswarm/go-coverage-gate.go" ] \
     && grep -qF ".metaswarm/go-coverage-gate.go" ".coverage-thresholds.json" 2>/dev/null; then
-    needs_heal=true
+    needs_gate=true
   fi
   if { [ "$METASWARM_PLATFORM" = "claude" ] || [ "$METASWARM_PLATFORM" = "all" ]; } \
     && { [ ! -f ".claude/commands/start-task.md" ] || ! grep -q "metaswarm" ".claude/commands/start-task.md" 2>/dev/null; }; then
@@ -112,6 +113,11 @@ if [ "$new_project" = false ] && [ "$legacy_install" = false ]; then
 
     # Run the setup script silently
     bash "$setup_script" "$(pwd)" "$cov_threshold" "$cov_cmd" --platform "$METASWARM_PLATFORM" >/dev/null 2>&1 || true
+  elif [ "$needs_gate" = true ]; then
+    gate_template="${PLUGIN_ROOT}/skills/setup/templates/go-coverage-gate.go"
+    if [ -f "$gate_template" ]; then
+      mkdir -p .metaswarm && cp "$gate_template" .metaswarm/go-coverage-gate.go 2>/dev/null || true
+    fi
   fi
 fi
 
