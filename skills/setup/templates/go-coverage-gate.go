@@ -89,13 +89,13 @@ func goTestArgs(args []string) ([]string, error) {
 			hasPkg = true
 			continue
 		}
-		name := strings.TrimLeft(a, "-")
-		if eq := strings.IndexByte(name, '='); eq >= 0 {
-			name = name[:eq]
-		} else if valueFlags[name] {
+		name, _, attached := strings.Cut(strings.TrimLeft(a, "-"), "=")
+		// go test also accepts its flags as -test.<name> (go help testflag).
+		bare := strings.TrimPrefix(name, "test.")
+		if !attached && valueFlags[bare] {
 			i++ // skip the flag's value
 		}
-		if name == "coverprofile" {
+		if bare == "coverprofile" {
 			return nil, fmt.Errorf("the gate sets -coverprofile itself; remove %q from the command", a)
 		}
 	}
