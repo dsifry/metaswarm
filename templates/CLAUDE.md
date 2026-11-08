@@ -64,7 +64,7 @@ The validation phase of orchestrated execution reads `.coverage-thresholds.json`
 ## Quality Gates
 
 - **Design Review Gate**: Parallel 5-agent review after a project-sized design doc is committed (`/review-design`)
-- **Plan Review Gate**: Automatic adversarial review after any implementation plan is drafted. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before the plan is presented to the user. See `skills/plan-review-gate/SKILL.md`
+- **Plan Review Gate**: Automatic adversarial review once the plan is written, before writing-plans presents the plan. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before the plan is presented to the user. See `skills/plan-review-gate/SKILL.md`
 - **Coverage Gate**: Reads `.coverage-thresholds.json` and runs the enforcement command — BLOCKING gate before PR creation
 
 ## Workflow Enforcement (MANDATORY)
@@ -84,7 +84,7 @@ This is mandatory even if the brainstorming skill says to go directly to writing
 
 ### After Any Plan Is Created
 
-When `superpowers:writing-plans` (or any planning skill) produces an implementation plan:
+When `superpowers:writing-plans` (or any planning skill) has written an implementation plan, run the Plan Review Gate before writing-plans presents the plan: do not link the plan, ask the user to review it, or offer an execution choice (writing-plans' "Execution Handoff") until all 3 reviewers PASS. See the metaswarm plugin's `guides/workflow-enforcement.md`.
 
 1. **STOP** — do NOT present the plan to the user or begin implementation
 2. **RUN the Plan Review Gate** — invoke the `plan-review-gate` skill

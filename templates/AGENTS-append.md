@@ -38,7 +38,7 @@ Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` synta
 ### Workflow Enforcement (MANDATORY)
 
 - **After a project-sized design doc is committed** -> MUST run `$design-review-gate` before planning or implementation (see the metaswarm plugin's `guides/workflow-enforcement.md`)
-- **After any plan is created** -> MUST run `$plan-review-gate` before presenting to user
+- **After the plan is written** -> MUST run `$plan-review-gate` before writing-plans presents the plan (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **Coverage** -> `.coverage-thresholds.json` is the single source of truth. All skills must check it.
 - **Agent discipline** -> NEVER use `--no-verify`, NEVER `git push --force` without approval, NEVER self-certify, ALWAYS follow TDD, STAY within file scope
 

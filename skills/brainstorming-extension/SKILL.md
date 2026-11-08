@@ -57,7 +57,8 @@ superpowers:brainstorming
          Yes
           │
           ▼
-    writing-plans → plan-review-gate → orchestrated-execution
+    writing-plans (plan written) → plan-review-gate → (gate PASS) present plan + execution menu → orchestrated-execution
+    (the gate runs before writing-plans presents the plan; see ./guides/workflow-enforcement.md)
 ```
 
 ---
@@ -178,5 +179,5 @@ The review gate can be skipped ONLY when:
 
 - `superpowers:brainstorming` — The upstream skill this bridges from
 - `design-review-gate` — The 5-agent review implementation
-- `plan-review-gate` — The next gate in the pipeline (after writing-plans)
+- `plan-review-gate` — The next gate in the pipeline: runs once writing-plans has written the plan, before writing-plans presents the plan (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md))
 - `orchestrated-execution` — The execution framework after planning

@@ -1,11 +1,12 @@
 ---
 name: plan-review-gate
-description: Automatic adversarial review gate that spawns 3 independent reviewers in parallel after any plan is drafted - all must PASS before presenting to user
+description: Automatic adversarial review gate that spawns 3 independent reviewers in parallel once a plan is written - all must PASS before writing-plans presents the plan
 auto_activate: true
 triggers:
   - "plan drafted"
   - "implementation plan created"
-  - after:writing-plans
+  - before:writing-plans:execution-handoff
+  - "plan written, before writing-plans presents it"
   - after:orchestrated-execution:plan-validation
 ---
 
@@ -15,7 +16,7 @@ triggers:
 
 ## Purpose
 
-This skill automatically activates after any implementation plan is drafted, before presenting it to the user. It spawns three independent adversarial reviewers in parallel — Feasibility, Completeness, and Scope & Alignment — each as a fresh `Task()` instance. ALL three must PASS. On failure, the planner incorporates feedback and resubmits to entirely fresh reviewer instances. After each round the gate applies the severity rule from [`./guides/delivery-scope.md`](./guides/delivery-scope.md) (at most 10 rounds) to advance, iterate or escalate.
+This skill automatically activates once an implementation plan is written, before writing-plans presents the plan (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). It spawns three independent adversarial reviewers in parallel — Feasibility, Completeness, and Scope & Alignment — each as a fresh `Task()` instance. ALL three must PASS. On failure, the planner incorporates feedback and resubmits to entirely fresh reviewer instances. After each round the gate applies the severity rule from [`./guides/delivery-scope.md`](./guides/delivery-scope.md) (at most 10 rounds) to advance, iterate or escalate.
 
 ---
 
@@ -24,7 +25,7 @@ This skill automatically activates after any implementation plan is drafted, bef
 This skill auto-activates when:
 
 1. An implementation plan is drafted (by planner, explorer, or orchestrator)
-2. The `writing-plans` skill completes a plan
+2. writing-plans has written the plan, before its Execution Handoff (link the plan, user review request, execution choice)
 3. The orchestrator's plan validation phase produces a plan for review
 4. User explicitly requests: `/plan-review <path-to-plan>`
 
@@ -438,7 +439,7 @@ Plan is ready for user review.
 
 ### Upstream (inputs to this gate)
 
-- `writing-plans` skill — produces plans that feed into this gate
+- `writing-plans` skill — produces plans that feed into this gate; the gate runs before writing-plans' Execution Handoff
 - `orchestrated-execution` plan validation — pre-flight checklist runs before this gate
 - Direct plan drafting by planner/explorer agents
 
@@ -499,7 +500,7 @@ The plan review gate succeeds when:
 
 - `design-review-gate` — Validates design documents before planning begins
 - `orchestrated-execution` — Executes approved plans using the 4-phase loop
-- `writing-plans` — Produces plans that feed into this gate
+- `writing-plans` — Produces plans that feed into this gate; the gate runs before its Execution Handoff
 
 ---
 

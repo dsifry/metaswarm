@@ -167,6 +167,11 @@ FORBIDDEN=(
   'after any design document'
   '"design document created"'
   '"design document committed"'
+  'after:writing-plans'
+)
+# Class A2: forbidden regexes (any line). WU4 adds the Plan Review Gate trigger.
+FORBIDDEN_RE=(
+  '(^|[^[:alnum:]_])after writing-plans'
 )
 # Class B: allowed only when the same line also says project-sized.
 CONDITIONAL=(
@@ -199,6 +204,11 @@ trigger_hits() {
     if [ "$rc" -ge 2 ]; then TH_RC=2; TH_OUT="$TH_OUT"$'\n'"git grep error rc=$rc for '$pat'"
     elif [ "$rc" -eq 0 ]; then TH_OUT="$TH_OUT"$'\n'"$out"; fi
   done
+  for pat in "${FORBIDDEN_RE[@]}"; do
+    rc=0; out=$(git -C "$repo" grep -n -i -E -e "$pat" -- "$@") || rc=$?
+    if [ "$rc" -ge 2 ]; then TH_RC=2; TH_OUT="$TH_OUT"$'\n'"git grep error rc=$rc for '$pat'"
+    elif [ "$rc" -eq 0 ]; then TH_OUT="$TH_OUT"$'\n'"$out"; fi
+  done
   for pat in "${CONDITIONAL[@]}"; do
     rc=0; out=$(git -C "$repo" grep -n -i -E -e "$pat" -- "$@") || rc=$?
     if [ "$rc" -ge 2 ]; then
@@ -225,10 +235,12 @@ fi
 NEG="$(mktemp -d)"
 git -C "$NEG" init -q
 printf '%s\n' 'After brainstorming -> run the gate' 'frontmatter after:superpowers:brainstorming' \
-  'After brainstorming of a project-sized design, run the gate' >"$NEG/bad.md"
+  'After brainstorming of a project-sized design, run the gate' \
+  'frontmatter after:writing-plans' 'runs after writing-plans finishes' >"$NEG/bad.md"
 git -C "$NEG" add bad.md
 trigger_hits "$NEG" .; neg="$TH_OUT"
-if [ "$TH_RC" -eq 0 ] && grep -qF 'bad.md:1:' <<<"$neg" && grep -qF 'bad.md:2:' <<<"$neg" && ! grep -qF 'bad.md:3:' <<<"$neg"; then
+if [ "$TH_RC" -eq 0 ] && grep -qF 'bad.md:1:' <<<"$neg" && grep -qF 'bad.md:2:' <<<"$neg" && ! grep -qF 'bad.md:3:' <<<"$neg" \
+   && grep -qF 'bad.md:4:' <<<"$neg" && grep -qF 'bad.md:5:' <<<"$neg"; then
   pass "trigger guard self-test flags bad lines and allows project-sized"
 else
   fail "trigger guard self-test (rc=$TH_RC, got: $neg)"
@@ -252,6 +264,29 @@ for f in "${WU3_SOURCES[@]}"; do
     fail "$f points at workflow-enforcement.md"
   fi
 done
+
+# ---------------------------------------------------------------------------
+echo ""
+echo "WU4: Plan Review Gate intercept"
+# ---------------------------------------------------------------------------
+
+WU4_SOURCES=(
+  skills/plan-review-gate/SKILL.md
+  CLAUDE.md AGENTS.md GEMINI.md
+  templates/CLAUDE.md templates/AGENTS.md templates/GEMINI.md
+  templates/CLAUDE-append.md templates/AGENTS-append.md templates/GEMINI-append.md
+  skills/orchestrated-execution/SKILL.md skills/brainstorming-extension/SKILL.md
+  docs/index.html
+)
+for f in "${WU4_SOURCES[@]}"; do
+  if grep -qiF -e 'before writing-plans presents the plan' "$REPO_ROOT/$f" && grep -qF -e 'workflow-enforcement.md' "$REPO_ROOT/$f"; then
+    pass "$f states the plan-gate intercept and points at the guide"
+  else
+    fail "$f states the plan-gate intercept and points at the guide"
+  fi
+done
+assert_in "plan-review-gate activation item" "$(cat "$REPO_ROOT/skills/plan-review-gate/SKILL.md")" \
+  'writing-plans has written the plan, before its Execution Handoff'
 
 # ---------------------------------------------------------------------------
 echo ""

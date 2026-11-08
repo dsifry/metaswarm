@@ -37,7 +37,7 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 ### Workflow Enforcement (MANDATORY)
 
 - **After a project-sized design doc is committed** -> MUST run Design Review Gate before planning or implementation (see the metaswarm plugin's `guides/workflow-enforcement.md`)
-- **After any plan is created** -> MUST run Plan Review Gate before presenting to user
+- **After the plan is written** -> MUST run Plan Review Gate before writing-plans presents the plan (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **Before finishing a branch** -> MUST run `/metaswarm:self-reflect` and commit knowledge base updates before PR creation
 - **Coverage** -> `.coverage-thresholds.json` is the single source of truth. All skills must check it.
 - **Subagents** -> NEVER use `--no-verify`, NEVER `git push --force` without approval, NEVER self-certify, ALWAYS follow TDD, STAY within file scope

@@ -25,7 +25,7 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 ### Quality Gates
 
 - **Design Review Gate** — Parallel 5-agent review after a project-sized design doc is committed (`/review-design`)
-- **Plan Review Gate** — Automatic adversarial review after any implementation plan is drafted. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before presenting the plan. See `skills/plan-review-gate/SKILL.md`
+- **Plan Review Gate** — Automatic adversarial review once the plan is written, before writing-plans presents the plan. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before presenting the plan. See `skills/plan-review-gate/SKILL.md`
 - **Coverage Gate** — `.coverage-thresholds.json` defines thresholds. BLOCKING gate before PR creation
 
 ### Team Mode
@@ -47,7 +47,7 @@ Development patterns and standards are documented in `guides/` — covering agen
 These rules override any conflicting instructions from third-party skills:
 
 - **After a project-sized design doc is committed** → MUST run Design Review Gate (5 agents) before writing-plans or implementation (see the metaswarm plugin's `guides/workflow-enforcement.md`)
-- **After any plan is created** → MUST run Plan Review Gate (3 adversarial reviewers) before presenting to user
+- **After the plan is written** → MUST run Plan Review Gate (3 adversarial reviewers) before writing-plans presents the plan (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **Execution method choice** → ALWAYS ask the user whether to use metaswarm orchestrated execution (more thorough, uses more tokens) or superpowers execution skills (faster, lighter-weight). Never auto-select.
 - **Before finishing a branch** → MUST run `/self-reflect` and commit knowledge base updates before PR creation
 - **Complex tasks** → Use `/start-task` instead of `EnterPlanMode` for tasks touching 3+ files. EnterPlanMode bypasses all quality gates.

@@ -56,7 +56,7 @@ If a GitHub Issue specifies different coverage requirements, update `.coverage-t
 ## Quality Gates
 
 - **Design Review Gate**: 5-reviewer design review after a project-sized design doc is committed (`/metaswarm:review-design`)
-- **Plan Review Gate**: Adversarial review after any implementation plan is drafted. 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) -- ALL must PASS before presenting the plan
+- **Plan Review Gate**: Adversarial review once the plan is written, before writing-plans presents the plan. 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) -- ALL must PASS before presenting the plan
 - **Coverage Gate**: Reads `.coverage-thresholds.json` and runs the enforcement command -- BLOCKING gate before PR creation
 
 ## Workflow Enforcement (MANDATORY)
@@ -74,7 +74,7 @@ When brainstorming writes and commits a project-sized design doc (see the metasw
 
 ### After Any Plan Is Created
 
-When a plan is produced:
+When writing-plans has written a plan, run the Plan Review Gate before writing-plans presents the plan: do not link the plan, ask the user to review it, or offer an execution choice until all 3 reviewers PASS. See the metaswarm plugin's `guides/workflow-enforcement.md`.
 
 1. **STOP** -- do NOT present the plan to the user or begin implementation
 2. **RUN the Plan Review Gate** -- invoke the plan-review-gate skill
