@@ -61,9 +61,9 @@ for tool in codex gemini; do
 
   new_proj none legacy-external-tools.yaml
   run_adapter "$tool" health --role coder
-  [ "$(model_of)" = "$LEG" ]; check "$tool: legacy adapters.$tool.model used without models.yaml" "$?"
-  printf '%s' "$ERR" | grep -q "deprecated" && printf '%s' "$ERR" | grep -q ".metaswarm/models.yaml"
-  check "$tool: legacy model warns on stderr naming .metaswarm/models.yaml" "$?"
+  [ "$(model_of)" = "$DEF" ]; check "$tool: legacy adapters.$tool.model is no longer read (0.14.0), built-in default used" "$?"
+  printf '%s' "$ERR" | grep -q "no longer read" && printf '%s' "$ERR" | grep -q ".metaswarm/models.yaml"
+  check "$tool: legacy model key warns it is no longer read, naming .metaswarm/models.yaml" "$?"
 
   new_proj adapter-models.yaml legacy-external-tools.yaml
   run_adapter "$tool" health --role coder

@@ -34,7 +34,8 @@ pr-shepherd-agent|sonnet|-
 knowledge-curator-agent|sonnet|-
 issue-orchestrator|inherit|-
 swarm-coordinator-agent|inherit|-"
-STUBS="coder-agent|coder
+# Removed in 0.14.0 (deprecated in 0.13.0): old name|successor
+REMOVED="coder-agent|coder
 researcher-agent|researcher
 code-review-agent|adversarial-reviewer"
 
@@ -86,7 +87,6 @@ done <<< "$ROSTER"
 for f in agents/*.md skills/start/agents/*.md; do
   stem="$(basename "$f" .md)"
   echo "$ROSTER" | cut -d'|' -f1 | grep -qx "$stem" && continue
-  echo "$STUBS" | cut -d'|' -f1 | grep -qx "$stem" && continue
   [ "$(fm_value "$f" model)" = "inherit" ] && pass "$stem persona inherits" || fail "$stem persona should be model: inherit"
 done
 
@@ -95,19 +95,12 @@ for f in agents/*.md skills/start/agents/*.md; do
   if fm_has_key "$f" tools; then fail "$f declares tools:"; else pass "$f has no tools:"; fi
 done
 
-# 6. Deprecated stubs
+# 6. Deprecated stubs removed in 0.14.0 (both directories)
 while IFS='|' read -r old new; do
   for dir in agents skills/start/agents; do
-    f="$dir/$old.md"
-    [ -f "$f" ] || { fail "$f missing"; continue; }
-    want="$(fm_value "agents/$new.md" model)"
-    [ -n "$want" ] && [ "$(fm_value "$f" model)" = "$want" ] && pass "$f carries $new model" || fail "$f model != successor $new"
-    [ "$(fm_value "$f" disallowedTools)" = "$(fm_value "agents/$new.md" disallowedTools)" ] && pass "$f carries $new disallowedTools" || fail "$f disallowedTools != successor $new"
-    d="$(fm_value "$f" description)"
-    case "$d" in *"metaswarm:$new"*) pass "$f names metaswarm:$new" ;; *) fail "$f description missing metaswarm:$new" ;; esac
-    case "$d" in *"0.14.0"*) pass "$f names 0.14.0" ;; *) fail "$f description missing 0.14.0" ;; esac
+    [ -e "$dir/$old.md" ] && fail "$dir/$old.md should be removed (use $new)" || pass "$dir/$old.md removed"
   done
-done <<< "$STUBS"
+done <<< "$REMOVED"
 
 # 7. Old-name references
 STUB_RE='coder-agent|researcher-agent|code-review-agent'
@@ -127,8 +120,7 @@ if [ -z "$BAD" ]; then pass "no stale references to deprecated agent names"; els
 # 8. No stale agent counts (pre-0.13.0 counts were 18/19)
 # Scans tracked and untracked (non-ignored) files, case-insensitively.
 TOTAL=$(ls agents/*.md | wc -l | tr -d ' ')
-NSTUB=$(echo "$STUBS" | wc -l | tr -d ' ')
-ACTIVE=$((TOTAL - NSTUB))
+ACTIVE=$TOTAL
 COUNT_FILES="$( { git ls-files; git ls-files --others --exclude-standard; } | sort -u | grep -v -E '^(CHANGELOG\.md|docs/plans/|tests/|\.playwright-mcp/|\.agents/|\.beads/)' )"
 STALE=""; WRONG=""
 while IFS= read -r p; do
@@ -136,13 +128,13 @@ while IFS= read -r p; do
   hits="$(grep -n -I -i -E '(^|[^0-9.])1[89] ((ai|specialized|specialist) )?(agent|specialized)' "$p" 2>/dev/null || true)"
   [ -n "$hits" ] && STALE="$STALE
 $p: $hits"
-  # Every "<N> agents (+<M> deprecated)" / "<N> agent personas (+...)" must state the active count
-  bad="$(grep -o -I -i -E '[0-9]+ ([a-z-]+ ){0,2}agent( personas| definitions|s)? \(\+[0-9]+ deprecated\)' "$p" 2>/dev/null | grep -v -i -E "^$ACTIVE ([a-z-]+ ){0,2}agent.*\(\+$NSTUB deprecated\)" || true)"
+  # No "(+N deprecated)" agent counts remain after 0.14.0 (the stubs are gone)
+  bad="$(grep -o -I -i -E '\(\+[0-9]+ deprecated\)' "$p" 2>/dev/null || true)"
   [ -n "$bad" ] && WRONG="$WRONG
 $p: $bad"
 done <<< "$COUNT_FILES"
 if [ -z "$STALE" ]; then pass "no stale 18/19 agent counts"; else fail "stale agent counts:$STALE"; fi
-if [ -z "$WRONG" ]; then pass "agent counts state $ACTIVE active (+$NSTUB deprecated)"; else fail "wrong agent counts (want $ACTIVE (+$NSTUB deprecated)):$WRONG"; fi
+if [ -z "$WRONG" ]; then pass "no (+N deprecated) agent counts remain"; else fail "stale (+N deprecated) agent counts:$WRONG"; fi
 
 # 9. Roster agents run in the user's project (not the plugin dir): plugin-file references must be
 #    resolvable there. Each such agent carries the locator line, references only files that exist in

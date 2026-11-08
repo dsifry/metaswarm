@@ -2,7 +2,7 @@
 
 ## Agents
 
-metaswarm provides 22 agents (+3 deprecated), each with a defined role in the software development lifecycle.
+metaswarm provides 22 agents, each with a defined role in the software development lifecycle.
 
 ### Orchestration Agents
 
@@ -415,4 +415,4 @@ The full orchestration lifecycle:
 
 **Note**: For simple tasks without DoD items, phases 4-6 collapse into a linear implementation + code review flow. The orchestrated execution loop is only activated when the task has a written spec with enumerable DoD items.
 
-> **Deprecated names** (removed in 0.14.0): the old `-agent` variants of Coder, Researcher and Code Review are now short stubs that point to `coder`, `researcher` and `adversarial-reviewer`.
+> **Removed in 0.14.0:** the old `-agent` variants of Coder, Researcher and Code Review, deprecated in 0.13.0. Use `coder`, `researcher` and `adversarial-reviewer`.
