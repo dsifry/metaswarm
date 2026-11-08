@@ -8,7 +8,8 @@
 # the default branch and requires the status check NAME (default "CI checks",
 # the job name in templates/ci.yml). Rulesets add to existing branch protection
 # and other rulesets; nothing existing is changed. If the ruleset already
-# exists, it does nothing. Needs an authenticated `gh` with admin rights on the
+# exists, it does nothing. The required check also applies to direct pushes to
+# the default branch (no bypass list), so commits land there through PRs. Needs an authenticated `gh` with admin rights on the
 # repo. When it can't make the change, it prints the manual steps and exits 1.
 
 set -euo pipefail
@@ -31,15 +32,37 @@ case "$check" in
   *'"'*|*'\'*|"") echo "require-ci-check: unsupported check name: $check" >&2; exit 1 ;;
 esac
 
+ruleset_json() {
+  cat <<EOF
+{
+  "name": "$RULESET_NAME",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
+  "rules": [
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": false,
+        "required_status_checks": [ { "context": "$check" } ]
+      }
+    }
+  ]
+}
+EOF
+}
+
 manual() {
-  cat >&2 <<EOF
+  {
+    cat <<EOF
 require-ci-check: could not add the required check ($1).
 To require it by hand: in the repository's Settings → Rules → Rulesets, add a
 branch ruleset that targets the default branch, turn on "Require status checks
-to pass", and add the check "$check". Or run, with admin rights:
-  gh api -X POST repos/<owner>/<repo>/rulesets --input ruleset.json
-with the ruleset JSON this script would send (see lib/require-ci-check.sh).
+to pass", and add the check "$check". Or save this as ruleset.json and run,
+with admin rights:  gh api -X POST repos/<owner>/<repo>/rulesets --input ruleset.json
 EOF
+    ruleset_json
+  } >&2
   exit 1
 }
 
@@ -58,23 +81,7 @@ fi
 
 payload="$(mktemp)"
 trap 'rm -f "$payload"' EXIT
-cat > "$payload" <<EOF
-{
-  "name": "$RULESET_NAME",
-  "target": "branch",
-  "enforcement": "active",
-  "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
-  "rules": [
-    {
-      "type": "required_status_checks",
-      "parameters": {
-        "strict_required_status_checks_policy": false,
-        "required_status_checks": [ { "context": "$check" } ]
-      }
-    }
-  ]
-}
-EOF
+ruleset_json > "$payload"
 
 if ! err="$(gh api -X POST "repos/$repo/rulesets" --input "$payload" 2>&1 >/dev/null)"; then
   manual "GitHub refused: ${err:-unknown error}"

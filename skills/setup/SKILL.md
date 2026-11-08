@@ -409,9 +409,9 @@ The Node pre-push hook runs `lint` and `typecheck` only when `package.json` defi
    bash "${PLUGIN_ROOT}/lib/render-ci.sh" --stack <stack> --out .github/workflows/ci.yml
    ```
 
-   It keeps that stack's toolchain steps, and points `push` at the repo's default branch (from `origin/HEAD`, else `gh repo view`). Pull requests into any branch are checked. Node's lint and typecheck steps skip a script that `package.json` doesn't define, and fail the build when one fails. Exit 2 means the stack has no toolchain in the template (Java, Ruby, and so on). Don't write `ci.yml` then. Tell the user to add the coverage job from `./templates/ci-coverage-job.yml` to their CI, after the steps that install their toolchain.
+   It keeps that stack's toolchain steps, and points `push` at the repo's default branch (from `origin/HEAD`, else `gh repo view`). Pull requests into any branch are checked. Node's lint and typecheck steps skip a script that `package.json` doesn't define, and fail the build when one fails. Exit 1 means it couldn't render, for example because the branch name has characters a workflow file can't hold. Show the user its message, and run it again with `--branch <name>` once they give a branch to use. Exit 2 means the stack has no toolchain in the template (Java, Ruby, and so on). Don't write `ci.yml` then. Tell the user to add the coverage job from `./templates/ci-coverage-job.yml` to their CI, after the steps that install their toolchain.
 
-2. CI only stops a merge if its check is required. Use AskUserQuestion: "Make the `CI checks` job a required check on the default branch, so a PR can't merge while coverage fails? This needs admin rights on the GitHub repo. It adds a ruleset and leaves your existing branch protection as it is." Options: "Yes (Recommended)" / "No, I'll do it later"
+2. CI only stops a merge if its check is required. Use AskUserQuestion: "Make the `CI checks` job a required check on the default branch, so a PR can't merge while coverage fails? This needs admin rights on the GitHub repo. It adds a ruleset and leaves your existing branch protection as it is. The check also applies to direct pushes to that branch, so changes land through PRs." Options: "Yes (Recommended)" / "No, I'll do it later"
 
 3. Only on Yes, run:
 

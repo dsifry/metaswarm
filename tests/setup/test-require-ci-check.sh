@@ -95,6 +95,8 @@ if [ -f "$SCRIPT" ]; then
   STUB_POST_RC=1 run
   [ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -q 'Settings' && printf '%s' "$OUT" | grep -q 'CI checks' \
     && pass "a refused POST prints the manual steps and exits nonzero" || fail "refused POST (rc=$RC): $OUT"
+  printf '%s' "$OUT" | grep -q '"~DEFAULT_BRANCH"' && ! printf '%s' "$OUT" | grep -q 'see lib/require-ci-check.sh' \
+    && pass "the manual steps include the ruleset JSON itself" || fail "manual steps don't include the JSON: $OUT"
   STUB_AUTH_RC=1 run
   [ "$RC" -ne 0 ] && [ ! -f "$STUB_PAYLOAD" ] && printf '%s' "$OUT" | grep -q 'Settings' \
     && pass "without gh auth it prints the manual steps" || fail "no-auth case (rc=$RC): $OUT"

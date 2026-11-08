@@ -7,7 +7,7 @@
 #
 #   --stack     keeps that stack's "# @toolchain <stack>" block, drops the others
 #   --branch    branch for push.branches; default: the repo's default branch
-#               (origin/HEAD, then `gh repo view`, then the current branch, then main)
+#               (origin/HEAD, then `gh repo view`, then main)
 #   --out       output file (default .github/workflows/ci.yml); its directory is created
 #   --template  template to render (default: the plugin's skills/setup/templates/ci.yml)
 #
@@ -48,7 +48,6 @@ if [ -z "$branch" ]; then
   if [ -z "$branch" ] && command -v gh >/dev/null 2>&1; then
     branch="$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || true)"
   fi
-  [ -n "$branch" ] || branch="$(git branch --show-current 2>/dev/null || true)"
   [ -n "$branch" ] || branch="main"
 fi
 # A git branch name that is also safe inside a double-quoted YAML string.

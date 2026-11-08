@@ -98,6 +98,27 @@ if [ -f "$RENDER" ]; then
     rc=0; (cd "$P" && bash -c "set -e; $body") >"$P/out" 2>&1 || rc=$?
     [ "$rc" -ne 0 ] && pass "node $step: a failing script fails the step" || fail "node $step: a failing script passed"
   done
+
+  echo "Python installs the project only when pyproject.toml defines one"
+  PYBODY="$(run_step "$TMP/ci-python.yml" "Install dependencies")"
+  mkdir -p "$TMP/stub"
+  printf '#!/bin/sh\necho "pip $*" >> "$PIPLOG"\n' > "$TMP/stub/pip"
+  printf '#!/bin/sh\n[ "$1 $2" = "-m pip" ] && { shift 2; echo "pip $*" >> "$PIPLOG"; }\nexit 0\n' > "$TMP/stub/python"
+  chmod +x "$TMP/stub/pip" "$TMP/stub/python"
+  for kind in toolonly project; do
+    P="$TMP/py-$kind"; mkdir -p "$P"; : > "$P/requirements.txt"
+    if [ "$kind" = toolonly ]; then printf '[tool.ruff]\nline-length = 100\n' > "$P/pyproject.toml"
+    else printf '[project]\nname = "x"\nversion = "0.1"\n' > "$P/pyproject.toml"; fi
+    export PIPLOG="$P/pip.log"; : > "$PIPLOG"
+    rc=0; (cd "$P" && PATH="$TMP/stub:$PATH" bash -c "set -e; $PYBODY") >"$P/out" 2>&1 || rc=$?
+    [ "$rc" -eq 0 ] || fail "python ($kind): install step failed (rc=$rc): $(cat "$P/out")"
+    if [ "$kind" = toolonly ]; then
+      grep -q 'install -e' "$PIPLOG" && fail "python: a tool-config-only pyproject.toml is pip-installed: $(tr '\n' ' ' < "$PIPLOG")" \
+        || pass "python: a pyproject.toml with only [tool.*] tables isn't installed as a package"
+    else
+      grep -q 'install -e' "$PIPLOG" && pass "python: a pyproject.toml with [project] is installed" || fail "python: [project] not installed: $(tr '\n' ' ' < "$PIPLOG")"
+    fi
+  done
 fi
 
 echo "/setup wires the renderer and the required-check offer"
