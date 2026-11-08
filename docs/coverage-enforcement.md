@@ -32,8 +32,8 @@ A CI job that reads `enforcement.command` from the JSON file and runs it. Fails 
 
 **Setup:**
 
-1. Copy `templates/ci-coverage-job.yml` into your `.github/workflows/ci.yml`
-2. Add `coverage` to the `needs:` array of your merge-gating job
+- **No CI yet:** run `/setup` and answer Yes to "Create a GitHub Actions CI pipeline?". It writes `.github/workflows/ci.yml` from the plugin's `templates/ci.yml`, whose test step runs `enforcement.command`. `/setup` only asks when it detects no CI.
+- **Existing CI:** copy one of the jobs in `templates/ci-coverage-job.yml` (from the metaswarm plugin's `templates/`) under `jobs:` in your workflow, for example `.github/workflows/ci.yml`. Then add `coverage` to the `needs:` array of your merge-gating job.
 
 The CI job reads the command dynamically — if you change `enforcement.command`, CI picks it up automatically with no workflow edits.
 
@@ -43,8 +43,8 @@ A git hook that runs before every `git push`. Runs lint, typecheck, format check
 
 **Setup:**
 
-1. Run `npx metaswarm init --with-husky` (initializes Husky if needed, copies the hook, and copies coverage thresholds)
-2. Or manually: `npx husky init && cp templates/pre-push .husky/pre-push && chmod +x .husky/pre-push`
+- **No git hooks yet (Node.js project):** run `/setup` and answer Yes to "Set up git hooks for pre-push quality checks?". It installs Husky, runs `npx husky init` and writes `.husky/pre-push` from the plugin's `templates/pre-push`. `/setup` only asks when it detects no hooks.
+- **Manually:** run `npx husky init`, copy `templates/pre-push` from the metaswarm plugin's `templates/` to `.husky/pre-push`, then `chmod +x .husky/pre-push`. If you already have a `.husky/pre-push`, merge its coverage enforcement section into yours instead of overwriting it.
 
 The hook uses `jq` if available, falls back to a Node one-liner to read the command from `.coverage-thresholds.json`.
 
@@ -122,12 +122,14 @@ module.exports = {
 
 ## Husky Installation
 
-The easiest way to set up all three enforcement gates:
+The easiest way to set up all three enforcement gates is `/setup`. It always writes `.coverage-thresholds.json`, and it offers the CI pipeline and the pre-push hook when your project has no CI or no git hooks yet (see Gate 1 and Gate 2 above).
+
+`npx metaswarm init` has no Husky or CI options. To add the hook by hand in a Node.js project, run these from your project root, where `$METASWARM` is the metaswarm plugin root, the directory that holds `templates/` (`$CLAUDE_PLUGIN_ROOT` in a Claude Code session, or `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"`):
 
 ```bash
-npx metaswarm init --with-husky --with-ci
+npx husky init
+cp "$METASWARM/templates/pre-push" .husky/pre-push
+chmod +x .husky/pre-push
 ```
 
-This initializes Husky (if needed), copies the pre-push hook, copies coverage thresholds, and creates the CI workflow — all in one command.
-
-If you already have Husky but no pre-push hook, `metaswarm init` (without flags) will copy the template automatically. If you already have a pre-push hook, it won't be overwritten — merge the coverage enforcement section manually.
+If you already have a pre-push hook, don't overwrite it: merge the coverage enforcement section of `templates/pre-push` into it. For CI, copy a job from `$METASWARM/templates/ci-coverage-job.yml` as described in Gate 1.

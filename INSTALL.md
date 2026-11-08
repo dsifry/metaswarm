@@ -112,7 +112,8 @@ Requires superpowers **6.4.1 or later** (tested with **7.0.2**). For how metaswa
 **Install superpowers** (follow their README and marketplace docs for current instructions):
 ```bash
 # See: https://github.com/obra/superpowers
-claude plugin add obra/superpowers
+# Claude Code (superpowers is in the official marketplace):
+claude plugin install superpowers@claude-plugins-official
 
 # Codex: install from the claude-plugins-official marketplace in /plugins
 ```
