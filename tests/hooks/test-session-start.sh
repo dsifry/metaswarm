@@ -186,6 +186,18 @@ assert_same_file "Leaves .coverage-thresholds.json untouched (no --reconfigure)"
 assert_same_file "Leaves a customized command shim untouched" \
   "$TMPDIR_BASE/test2d-prime.before" "$TEST_CWD/.claude/commands/prime.md"
 
+# --- Test 2e: a gate restore that fails is reported, not swallowed (#87) ---
+echo "Test 2e: Failed gate restore is reported on stderr"
+TEST_CWD="$TMPDIR_BASE/test2e"
+cp -R "$TMPDIR_BASE/test2d" "$TEST_CWD"
+rm -f "$TEST_CWD/.metaswarm/go-coverage-gate.go"
+chmod 555 "$TEST_CWD/.metaswarm"
+err=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>&1 >/dev/null || true)
+output=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+chmod 755 "$TEST_CWD/.metaswarm"
+assert_json_valid "Output is still valid JSON" "$output"
+assert_contains "Reports the failed restore on stderr" "$err" "could not restore .metaswarm/go-coverage-gate.go"
+
 # --- Test 3: Legacy install detection ---
 echo "Test 3: Legacy install detection"
 TEST_CWD="$TMPDIR_BASE/test3"

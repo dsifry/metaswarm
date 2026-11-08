@@ -115,8 +115,12 @@ if [ "$new_project" = false ] && [ "$legacy_install" = false ]; then
     bash "$setup_script" "$(pwd)" "$cov_threshold" "$cov_cmd" --platform "$METASWARM_PLATFORM" >/dev/null 2>&1 || true
   elif [ "$needs_gate" = true ]; then
     gate_template="${PLUGIN_ROOT}/skills/setup/templates/go-coverage-gate.go"
-    if [ -f "$gate_template" ]; then
-      mkdir -p .metaswarm && cp "$gate_template" .metaswarm/go-coverage-gate.go 2>/dev/null || true
+    # Best-effort, like the rest of self-heal, but a failure is reported on
+    # stderr (stdout carries the hook's JSON).
+    if [ ! -f "$gate_template" ]; then
+      echo "metaswarm: could not restore .metaswarm/go-coverage-gate.go: template not found at $gate_template" >&2
+    elif ! { mkdir -p .metaswarm && cp "$gate_template" .metaswarm/go-coverage-gate.go; } 2>/dev/null; then
+      echo "metaswarm: could not restore .metaswarm/go-coverage-gate.go from $gate_template (is .metaswarm/ writable?)" >&2
     fi
   fi
 fi
