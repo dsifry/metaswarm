@@ -11,6 +11,9 @@
 - **Execution menu option 3 is now "Native inline execution"** (`superpowers:executing-plans`), replacing "Parallel session"; the 3-option menu replaces writing-plans' 2-option handoff.
 - **INSTALL.md lists all 9 referenced superpowers skills** and states the minimum version (superpowers >= 6.4.1, tested with 7.0.2).
 - **The session hook surfaces metaswarm's knowledge base** (#70), with or without the beads plugin. At session start and compaction it inlines the MUST FOLLOW rules from `.beads/knowledge/` (capped at 10 rules or about 2 KB) and points to `/prime <topic>` for the rest. Without a working `jq` it adds only the pointer. Existing `bd prime` behaviour is unchanged.
+- **Orphaned command mirrors are caught** (#64). `node lib/sync-resources.js --check` reports any `.claude/commands/*.md` that has no source in `commands/` and isn't on the exclusion list, and `--sync` removes it. Excluded names and non-`.md` files are never touched.
+- **`/metaswarm-setup` and `/metaswarm-update-version` are now short deprecated aliases** for `/setup` and `/update` (#64). Their old npm-era bodies called CLI commands that don't exist (`install`, `changelog`), set the version even when agent regeneration failed, offered CI creation they never performed, and had a Go coverage gate that never failed.
+- **`/external-tools-health` runs each adapter's `health` check** (#64) and reports `status`, `version`, `auth_valid` and `model`. It no longer relies on `command -v` and the repo's own self-test script.
 
 ### Upgrade note
 

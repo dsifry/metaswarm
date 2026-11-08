@@ -24,6 +24,12 @@ assert_eq() {
   fi
 }
 
+# bash 3.2 exits with the EXIT trap's status (0) when `set -u` aborts the script,
+# so a crash would look like a pass. DONE is set only after the summary runs.
+DONE=0
+CLEANUP=""
+trap 'eval "$CLEANUP"; [ "$DONE" = 1 ] || { echo "ABORTED before summary" >&2; exit 1; }' EXIT
+
 echo "Testing sync-resources.js..."
 
 # Test 0: .claude/commands/ mirrors every commands/*.md (issue #61).
@@ -60,7 +66,7 @@ echo "Test 0b: --check fails when a mirrored command drifts"
 probe="$REPO_ROOT/.claude/commands/prime.md"
 backup="$(mktemp)"
 cp "$probe" "$backup"
-trap 'cp "$backup" "$probe"; rm -f "$backup"' EXIT
+CLEANUP='cp "$backup" "$probe"; rm -f "$backup"' 
 printf '\ndrift\n' >> "$probe"
 if (cd "$REPO_ROOT" && node lib/sync-resources.js --check >/dev/null 2>&1); then
   result="PASS"
@@ -69,6 +75,36 @@ else
 fi
 cp "$backup" "$probe"
 assert_eq "Check fails on drifted .claude/commands copy" "FAIL" "$result"
+
+# Test 0c: orphaned mirrors (#64). A .claude/commands/*.md with no source in commands/
+# and not on the exclusion list is an orphan: --check reports it, --sync removes it.
+# Excluded names and non-.md files are never touched.
+echo "Test 0c: orphaned .claude/commands mirrors"
+CMDS="$REPO_ROOT/.claude/commands"
+orphan="$CMDS/zz-orphan.md"
+excluded="$CMDS/metaswarm-setup.md"
+nonmd="$CMDS/zz-notes.txt"
+CLEANUP='rm -f "$orphan" "$excluded" "$nonmd"; cp "$backup" "$probe" 2>/dev/null; rm -f "$backup"'
+printf 'stale mirror\n' > "$orphan"
+out=$(cd "$REPO_ROOT" && node lib/sync-resources.js --check 2>&1) && rc=0 || rc=$?
+assert_eq "--check fails on an orphaned mirror" "1" "$rc"
+if printf '%s' "$out" | grep -qF -e 'ORPHAN: .claude/commands/zz-orphan.md'; then result="REPORTED"; else result="SILENT"; fi
+assert_eq "--check names the orphan" "REPORTED" "$result"
+printf 'legacy copy\n' > "$excluded"
+printf 'not a command\n' > "$nonmd"
+(cd "$REPO_ROOT" && node lib/sync-resources.js --sync >/dev/null 2>&1) || true
+if [ -e "$orphan" ]; then result="KEPT"; else result="REMOVED"; fi
+assert_eq "--sync removes the orphan" "REMOVED" "$result"
+if [ -e "$excluded" ]; then result="KEPT"; else result="REMOVED"; fi
+assert_eq "--sync leaves an excluded name alone" "KEPT" "$result"
+if [ -e "$nonmd" ]; then result="KEPT"; else result="REMOVED"; fi
+assert_eq "--sync leaves non-.md files alone" "KEPT" "$result"
+if [ -e "$CMDS/prime.md" ]; then result="KEPT"; else result="REMOVED"; fi
+assert_eq "--sync keeps mirrors that have a source" "KEPT" "$result"
+out=$(cd "$REPO_ROOT" && node lib/sync-resources.js --check 2>&1) && rc=0 || rc=$?
+if printf '%s' "$out" | grep -qF -e 'ORPHAN'; then result="FLAGGED"; else result="CLEAN"; fi
+assert_eq "--check does not flag excluded or non-.md files" "CLEAN" "$result"
+rm -f "$excluded" "$nonmd"
 
 # Test 1: Check mode should pass when files are in sync
 echo "Test 1: Check mode passes when synced"
@@ -111,4 +147,5 @@ fi
 
 echo ""
 echo "Results: $PASS/$TOTAL passed, $FAIL failed"
+DONE=1
 [ "$FAIL" -eq 0 ] || exit 1
