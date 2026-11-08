@@ -488,13 +488,17 @@ rm -rf "${ONEG:?}"; ONEG=""
 # #89: the issue-orchestrator's Phase 2 runs both gates, Plan Review Gate first.
 for orch in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
   phase2="$(awk '/^### Phase 2: /{f=1; next} f && /^### /{exit} f' "$REPO_ROOT/$orch")"
-  # Key on the gate task lines, not comments that merely name the skills.
-  pr_line="$(printf '%s\n' "$phase2" | grep -n '^bd create "Plan Review Gate"' | head -1 | cut -d: -f1 || true)"
-  dr_line="$(printf '%s\n' "$phase2" | grep -n '^bd create "Design Review Gate"' | head -1 | cut -d: -f1 || true)"
-  if [ -n "$pr_line" ] && [ -n "$dr_line" ] && [ "$pr_line" -lt "$dr_line" ]; then
+  # Both the instruction to run each skill and its gate task must be there,
+  # Plan Review Gate first.
+  pr_run="$(printf '%s\n' "$phase2" | grep -n 'run the plan-review-gate skill' | head -1 | cut -d: -f1 || true)"
+  dr_run="$(printf '%s\n' "$phase2" | grep -n 'design-review-gate skill on the plan' | head -1 | cut -d: -f1 || true)"
+  pr_task="$(printf '%s\n' "$phase2" | grep -n '^bd create "Plan Review Gate"' | head -1 | cut -d: -f1 || true)"
+  dr_task="$(printf '%s\n' "$phase2" | grep -n '^bd create "Design Review Gate"' | head -1 | cut -d: -f1 || true)"
+  if [ -n "$pr_run" ] && [ -n "$dr_run" ] && [ "$pr_run" -lt "$dr_run" ] \
+    && [ -n "$pr_task" ] && [ -n "$dr_task" ] && [ "$pr_task" -lt "$dr_task" ]; then
     pass "$orch Phase 2 runs plan-review-gate before design-review-gate"
   else
-    fail "$orch Phase 2 must run plan-review-gate, then design-review-gate (plan-review-gate line: ${pr_line:-none}, design-review-gate line: ${dr_line:-none})"
+    fail "$orch Phase 2 must run plan-review-gate, then design-review-gate (run lines: ${pr_run:-none}/${dr_run:-none}, task lines: ${pr_task:-none}/${dr_task:-none})"
   fi
 done
 
