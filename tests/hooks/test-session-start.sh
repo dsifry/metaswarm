@@ -192,11 +192,16 @@ TEST_CWD="$TMPDIR_BASE/test2e"
 cp -R "$TMPDIR_BASE/test2d" "$TEST_CWD"
 rm -f "$TEST_CWD/.metaswarm/go-coverage-gate.go"
 chmod 555 "$TEST_CWD/.metaswarm"
-err=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>&1 >/dev/null || true)
-output=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+# Root ignores the read-only bit, so the copy would succeed: skip the case there.
+if [ -w "$TEST_CWD/.metaswarm" ]; then
+  echo "  SKIP: .metaswarm/ is still writable after chmod 555 (running as root?)"
+else
+  err=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>&1 >/dev/null || true)
+  output=$(cd "$TEST_CWD" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash "$HOOK_SCRIPT" 2>/dev/null || true)
+  assert_json_valid "Output is still valid JSON" "$output"
+  assert_contains "Reports the failed restore on stderr" "$err" "could not restore .metaswarm/go-coverage-gate.go"
+fi
 chmod 755 "$TEST_CWD/.metaswarm"
-assert_json_valid "Output is still valid JSON" "$output"
-assert_contains "Reports the failed restore on stderr" "$err" "could not restore .metaswarm/go-coverage-gate.go"
 
 # --- Test 3: Legacy install detection ---
 echo "Test 3: Legacy install detection"
