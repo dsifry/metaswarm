@@ -82,16 +82,38 @@ gh api "repos/$OWNER/$REPO_NAME/pulls/$PR_NUMBER/reviews" --paginate | \
 
 ### Phase 2c: Handle Other Out-of-Scope Comments
 
-Run the out-of-scope detection script:
+List the out-of-scope comments:
 
 ```bash
-# Detect out-of-scope comments
-bin/pr-comments-out-of-scope.sh <PR_NUMBER>
+PR_NUMBER=<number>
+OWNER=$(gh repo view --json owner -q .owner.login)
+REPO_NAME=$(gh repo view --json name -q .name)
+
+echo "=== UNRESOLVED THREADS OUTSIDE THE CURRENT DIFF ==="
+# isOutdated: the code changed since the comment. line == null on a line
+# comment (not a FILE-level one): it no longer maps to a line in the PR diff.
+gh api graphql --paginate -F owner="$OWNER" -F repo="$REPO_NAME" -F pr="$PR_NUMBER" -f query='
+  query($owner:String!, $repo:String!, $pr:Int!, $endCursor:String) {
+    repository(owner:$owner, name:$repo) { pullRequest(number:$pr) {
+      reviewThreads(first:100, after:$endCursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes { id isResolved isOutdated subjectType path line originalLine
+          comments(first:100) { nodes { author { login } body } } } } } } }' |
+  jq -r '.data.repository.pullRequest.reviewThreads.nodes[]
+    | select((.isResolved | not) and (.isOutdated or (.line == null and .subjectType != "FILE")))
+    | "\(.id) \(.path):\(.originalLine) outdated=\(.isOutdated)\n"
+      + ([.comments.nodes[] | "[\(.author.login)] \(.body)"] | join("\n\n")) + "\n---"'
+
+echo "=== GENERAL PR DISCUSSION COMMENTS ==="
+gh api "repos/$OWNER/$REPO_NAME/issues/$PR_NUMBER/comments" --paginate |
+  jq -r '.[] | "\(.id) \(.user.login):\n\(.body)\n---"'
 ```
 
-This script detects comments that:
+The listings print every comment in full, including replies on each thread: a request can sit in a later reply or after a long introduction.
 
-- Reference lines NOT in the PR diff
+This lists comments that:
+
+- No longer map to a line in the PR diff (`line` is null)
 - Are marked "outdated" by GitHub (GraphQL `isOutdated` flag)
 - Are general PR discussion comments
 
@@ -309,7 +331,7 @@ Before declaring PR comments handled:
 
 - [ ] Ran `bin/pr-comments-filter.sh <PR>` to identify actionable comments
 - [ ] **CRITICAL**: Extracted "Outside diff range" comments from review bodies (Phase 2b)
-- [ ] Ran `bin/pr-comments-out-of-scope.sh <PR>` to find other out-of-scope feedback
+- [ ] Listed outdated, outside-diff and general discussion comments (Phase 2c) to find other out-of-scope feedback
 - [ ] Code fixes have been made and pushed
 - [ ] Each comment thread has a response posted
 - [ ] "Outside diff range" comments addressed with a general PR comment

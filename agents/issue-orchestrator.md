@@ -369,23 +369,17 @@ git log main..HEAD --oneline
 # Create PR task (blocked by final comprehensive review)
 bd create "Create PR and shepherd to merge" --type task --parent <epic-id>
 
-# Create the actual PR with automatic shepherding
-# Option A: Use the wrapper script (recommended for CLI workflows)
-bin/create-pr-with-shepherd.sh --title "<title>" --body "<body>" --base main
-
-# Option B: Create PR manually and invoke pr-shepherd skill
+# Create the PR, then hand it to a PR shepherd right away
 gh pr create --title "<title>" --body "<body>" --base main
-# Then invoke: /pr-shepherd <pr-number>
-
-# PR Shepherd Agent automatically starts (via Option A or skill invocation)
-# The pr-shepherd monitors CI, responds to comments, resolves threads
+# Then delegate /pr-shepherd <pr-number> (do not run it yourself):
+#   Task Mode: a background Task() with role type roleType("pr-shepherd-agent")
+#   Team Mode: the shepherd teammate in the issue-{number} team
+# The shepherd monitors CI, responds to comments, resolves threads
 
 # Wait for human merge approval
 bd update <pr-task> --status blocked
 bd label add <pr-task> waiting:human
 ```
-
-**Note**: The `create-pr-with-shepherd.sh` script automatically invokes the pr-shepherd skill after creating the PR. Use `--no-shepherd` flag if you want to skip automatic shepherding.
 
 ### Phase 5: Closure
 

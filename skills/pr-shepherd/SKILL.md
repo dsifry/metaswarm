@@ -29,29 +29,10 @@ Activate this skill when ANY of these conditions are true:
 - User invokes `/pr-shepherd <pr-number>`
 - User asks to "watch this PR" or "handle this PR until it's merged"
 - Orchestrator spawned you with instructions to shepherd a PR
-- **Automatic**: `bin/create-pr-with-shepherd.sh` was used (outputs shepherd instructions)
 
-### Automatic Activation via Wrapper Script
+### Starting Right After PR Creation
 
-When `bin/create-pr-with-shepherd.sh` creates a PR, it outputs shepherd instructions:
-
-```text
-==========================================
-  PR Shepherd Active for PR #123
-==========================================
-
-The pr-shepherd skill will:
-  - Monitor CI/CD status
-  - Auto-fix lint, type, and test issues
-  - Handle review comments
-  - Resolve threads after addressing feedback
-  - Report when PR is ready to merge
-
-To manually invoke shepherd later:
-  /pr-shepherd 123
-```
-
-When you see this output, **immediately invoke the pr-shepherd skill** with the PR number shown.
+After `gh pr create`, take the PR number from the URL it prints (or `gh pr view --json number -q .number`) and **immediately invoke the pr-shepherd skill** with it: `/pr-shepherd <pr-number>`.
 
 ## Announce at Start
 
