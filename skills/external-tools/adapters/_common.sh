@@ -125,10 +125,10 @@ configured_model() {
     legacy_file="${project}/.metaswarm/external-tools.yaml"
     if [[ -f "$legacy_file" ]] && awk -v t="$tool" '
         /^adapters:/ { a = 1; next }
-        a && /^[^ #]/ { a = 0 }
+        /^[^ #]/ { a = 0; s = 0 }
         a && $0 ~ "^  " t ":" { s = 1; next }
         a && /^  [A-Za-z]/ { s = 0 }
-        s && /^    model:/ { found = 1; exit }
+        a && s && /^    model:/ { found = 1; exit }
         END { exit found ? 0 : 1 }' "$legacy_file"; then
       printf 'Warning: adapters.%s.model in .metaswarm/external-tools.yaml is no longer read (removed in 0.14.0); set roles.<role>.%s in .metaswarm/models.yaml instead\n' \
         "$tool" "$tool" >&2

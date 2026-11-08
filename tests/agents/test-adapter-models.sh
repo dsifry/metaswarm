@@ -118,6 +118,23 @@ new_proj adapter-models.yaml none
 RC=0; OUT="$(cd "$P" && PATH="/usr/bin:/bin" bash "$COPY/adapters/codex.sh" health --role coder 2>"$TMP_BASE/err")" || RC=$?
 grep -q -i "metaswarm-agents.sh" "$TMP_BASE/err" && pass "warns when resolver missing" || fail "no warning when resolver missing"
 
+echo "Test: docs match the 0.14.0 removal of adapters.<tool>.model"
+DOCS="skills/external-tools/SKILL.md templates/external-tools-setup.md skills/setup/templates/external-tools-setup.md commands/external-tools-health.md .claude/commands/external-tools-health.md"
+for d in $DOCS; do
+  if grep -qiE 'still works|deprecated, warns|with a deprecation warning|model` if one is still set|as deprecated' "$REPO_ROOT/$d"; then
+    fail "$d still describes the legacy adapters.<tool>.model as read"
+  else
+    pass "$d does not describe the legacy model key as read"
+  fi
+  grep -qF -e 'no longer read' "$REPO_ROOT/$d" && pass "$d says the legacy key is no longer read" || fail "$d says the legacy key is no longer read"
+done
+
+echo "Test: a model: outside adapters: does not trigger the legacy warning"
+mkdir -p "$TMP_BASE/scope/.metaswarm"; (cd "$TMP_BASE/scope" && git init -q)
+printf 'adapters:\n  codex:\n    enabled: true\nother:\n  codex:\n    model: z\n' > "$TMP_BASE/scope/.metaswarm/external-tools.yaml"
+ERR8="$(cd "$TMP_BASE/scope" && bash "$REPO_ROOT/skills/external-tools/adapters/codex.sh" health 2>&1 >/dev/null || true)"
+printf '%s' "$ERR8" | grep -q "no longer read" && fail "warns about a model: outside adapters:" || pass "no warning for a model: outside adapters:"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

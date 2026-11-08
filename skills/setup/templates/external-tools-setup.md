@@ -162,9 +162,9 @@ cp /path/to/metaswarm/templates/external-tools.yaml .metaswarm/external-tools.ya
 ### Key settings
 
 Models are set per role in `.metaswarm/models.yaml` (`roles.<role>.codex` or
-`roles.<role>.gemini`), not in this file. A `model:` under `adapters.<tool>` still
-works but is deprecated and prints a warning. Pass `--role <role>` to an adapter to
-use that role's model.
+`roles.<role>.gemini`), not in this file. A `model:` under `adapters.<tool>` is
+no longer read (removed in 0.14.0); the adapters print a warning if one is still present.
+Pass `--role <role>` to an adapter to use that role's model.
 
 Edit `.metaswarm/external-tools.yaml` to customize:
 

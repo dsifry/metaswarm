@@ -52,7 +52,7 @@ budget:
   per_session_usd: 20.00    # circuit breaker per session
 ```
 
-Models are not set here. Set them per role in `.metaswarm/models.yaml` under `roles.<role>.codex` or `roles.<role>.gemini`, and pass `--role <role>` to the adapter. The model resolves in this order: `.metaswarm/models.yaml`, then a legacy `adapters.<tool>.model` in this file (deprecated, warns on stderr), then the adapter's built-in default (`gpt-5.3-codex` for Codex, `pro` for Gemini).
+Models are not set here. Set them per role in `.metaswarm/models.yaml` under `roles.<role>.codex` or `roles.<role>.gemini`, and pass `--role <role>` to the adapter. The model resolves in this order: `.metaswarm/models.yaml`, then the adapter's built-in default (`gpt-5.3-codex` for Codex, `pro` for Gemini). A legacy `adapters.<tool>.model` in this file is no longer read (removed in 0.14.0); the adapter warns on stderr if one is still present.
 
 ### Fallback Behavior
 
@@ -74,7 +74,7 @@ adapters/codex.sh health
 adapters/gemini.sh health --role coder
 ```
 
-Returns JSON with `status: "ready|degraded|unavailable"`. `--role <role>` (also accepted by `implement` and `review`) selects the model from `.metaswarm/models.yaml` `roles.<role>.<tool>`; an unknown role exits non-zero. Without `--role`, the output keys are unchanged and `model` is the legacy `adapters.<tool>.model` if one is still set (with a deprecation warning), otherwise the built-in default. The resolved model is passed to the CLI (`codex exec -m`, `gemini --model`). If `metaswarm-agents.sh` cannot be found, `--role` is ignored with a warning.
+Returns JSON with `status: "ready|degraded|unavailable"`. `--role <role>` (also accepted by `implement` and `review`) selects the model from `.metaswarm/models.yaml` `roles.<role>.<tool>`; an unknown role exits non-zero. Without `--role`, the output keys are unchanged and `model` is the built-in default. A legacy `adapters.<tool>.model` is no longer read (removed in 0.14.0), only warned about. The resolved model is passed to the CLI (`codex exec -m`, `gemini --model`). If `metaswarm-agents.sh` cannot be found, `--role` is ignored with a warning.
 
 ### Implement
 
