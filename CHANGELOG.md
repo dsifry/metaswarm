@@ -10,6 +10,7 @@
 - **Plan Review Gate intercepts before writing-plans presents the plan**, ahead of its own Execution Handoff.
 - **Execution menu option 3 is now "Native inline execution"** (`superpowers:executing-plans`), replacing "Parallel session"; the 3-option menu replaces writing-plans' 2-option handoff.
 - **INSTALL.md lists all 9 referenced superpowers skills** and states the minimum version (superpowers >= 6.4.1, tested with 7.0.2).
+- **The session hook surfaces metaswarm's knowledge base** (#70), with or without the beads plugin. At session start and compaction it inlines the MUST FOLLOW rules from `.beads/knowledge/` (capped at 10 rules or about 2 KB) and points to `/prime <topic>` for the rest. Without a working `jq` it adds only the pointer. Existing `bd prime` behaviour is unchanged.
 
 ### Upgrade note
 
