@@ -72,10 +72,18 @@ var valueFlags = map[string]bool{
 }
 
 // goTestArgs checks the user's arguments and adds ./... when they name no
-// package pattern.
+// package pattern. Everything after -args goes to the test binary unchanged,
+// so the scan stops there and ./... is inserted before it (go help test).
 func goTestArgs(args []string) ([]string, error) {
 	hasPkg := false
+	end := len(args)
 	for i := 0; i < len(args); i++ {
+		if args[i] == "-args" || args[i] == "--args" {
+			end = i
+			break
+		}
+	}
+	for i := 0; i < end; i++ {
 		a := args[i]
 		if !strings.HasPrefix(a, "-") {
 			hasPkg = true
@@ -91,11 +99,11 @@ func goTestArgs(args []string) ([]string, error) {
 			return nil, fmt.Errorf("the gate sets -coverprofile itself; remove %q from the command", a)
 		}
 	}
-	out := append([]string{}, args...)
+	out := append([]string{}, args[:end]...)
 	if !hasPkg {
 		out = append(out, "./...")
 	}
-	return out, nil
+	return append(out, args[end:]...), nil
 }
 
 func run(userArgs []string) int {

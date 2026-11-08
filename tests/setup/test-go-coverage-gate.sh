@@ -147,6 +147,10 @@ args_gate -count=1
 [ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -q "sub" && pass "flags only: ./... still tested (sub package counted)" || fail "flags only: sub package skipped (rc=$RC): $OUT"
 args_gate -run TestF
 [ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -q "sub" && pass "a flag's separate value is not taken as a package" || fail "'-run TestF' treated TestF as a package (rc=$RC): $OUT"
+args_gate -count=1 -args -test.v
+[ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -q "sub" && pass "-args: ./... goes before -args (sub package counted)" || fail "-args: ./... passed to the test binary (rc=$RC): $OUT"
+args_gate -args -test.run=TestF
+[ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -q "sub" && pass "-args only: tokens after it are not taken as packages" || fail "-args only: sub package skipped (rc=$RC): $OUT"
 args_gate .
 [ "$RC" -eq 0 ] && pass "an explicit package list is respected" || fail "explicit '.' not respected (rc=$RC): $OUT"
 # -outputdir must not move the profile the gate reads, and a stale root
