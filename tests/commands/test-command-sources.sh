@@ -148,6 +148,41 @@ else
   [ -z "$INSTALL_HITS" ] && pass "no tracked file tells users to run 'metaswarm install'" || fail "'metaswarm install' is referenced: $INSTALL_HITS"
 fi
 
+# #91: every bin/ script a skill, command, agent, template or doc tells the
+# agent to run must ship in bin/. Historical records and tests are exempt.
+echo "Referenced bin/ scripts exist"
+BIN_RC=0
+# Each match is the whole path token, so absolute and system paths
+# (/usr/bin/env, #!/usr/bin/env bash, ~/bin) and node_modules/.bin/ can be told
+# apart from the plugin's bin/. Any extension counts, or none (bin/metaswarm-usage).
+BIN_REFS="$(git -C "$REPO_ROOT" grep -ohIE "[^[:space:]\"'\`()<>|]*bin/[A-Za-z0-9_-]+(\.[A-Za-z0-9]+)?" -- . \
+  ':!CHANGELOG.md' ':!docs/plans/' ':!.beads/' ':!tests/')" || BIN_RC=$?
+if [ "$BIN_RC" -gt 1 ]; then
+  fail "bin/ reference check: git grep failed (rc=$BIN_RC)"
+else
+  BIN_NAMES="$(printf '%s\n' "$BIN_REFS" | grep -vE '^([/~]|#!)|(^|/)(usr|opt|etc|sbin)/' |
+    grep -E '(^|/)bin/[A-Za-z0-9_-]+(\.[A-Za-z0-9]+)?$' |
+    sed -nE 's#.*bin/([A-Za-z0-9_.-]+)$#\1#p' | sort -u || true)"
+  BIN_COUNT=0
+  BIN_MISSING=""
+  while IFS= read -r name; do
+    [ -n "$name" ] || continue
+    BIN_COUNT=$((BIN_COUNT + 1))
+    [ -f "$REPO_ROOT/bin/$name" ] || BIN_MISSING="$BIN_MISSING $name"
+  done <<EOF
+$BIN_NAMES
+EOF
+  # The repo references at least pr-comments-check, pr-comments-filter,
+  # metaswarm-agents and external-tools-verify; fewer means the grep broke.
+  if [ "$BIN_COUNT" -lt 4 ]; then
+    fail "bin/ reference check found only $BIN_COUNT script names (expected at least 4)"
+  elif [ -n "$BIN_MISSING" ]; then
+    fail "referenced bin/ scripts that do not exist:$BIN_MISSING"
+  else
+    pass "all $BIN_COUNT referenced bin/ scripts exist"
+  fi
+fi
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 DONE=1

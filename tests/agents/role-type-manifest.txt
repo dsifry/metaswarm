@@ -4,7 +4,7 @@ agents/issue-orchestrator.md|coder|3
 agents/issue-orchestrator.md|design-reviewer|1
 agents/issue-orchestrator.md|knowledge-curator-agent|1
 agents/issue-orchestrator.md|planner|2
-agents/issue-orchestrator.md|pr-shepherd-agent|1
+agents/issue-orchestrator.md|pr-shepherd-agent|2
 agents/issue-orchestrator.md|researcher|3
 agents/swarm-coordinator-agent.md|adversarial-reviewer|1
 agents/swarm-coordinator-agent.md|issue-orchestrator|3
@@ -55,7 +55,7 @@ skills/start/agents/issue-orchestrator.md|coder|3
 skills/start/agents/issue-orchestrator.md|design-reviewer|1
 skills/start/agents/issue-orchestrator.md|knowledge-curator-agent|1
 skills/start/agents/issue-orchestrator.md|planner|2
-skills/start/agents/issue-orchestrator.md|pr-shepherd-agent|1
+skills/start/agents/issue-orchestrator.md|pr-shepherd-agent|2
 skills/start/agents/issue-orchestrator.md|researcher|3
 skills/start/agents/swarm-coordinator-agent.md|adversarial-reviewer|1
 skills/start/agents/swarm-coordinator-agent.md|issue-orchestrator|3
