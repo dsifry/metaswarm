@@ -121,7 +121,7 @@ If the issue lacks DoD items or clear scope, ask the user to clarify before proc
 - **Design Review Gate (project-sized designs only)**: When brainstorming writes and commits a project-sized design doc (see the metaswarm plugin's `guides/workflow-enforcement.md`), you MUST:
   1. STOP — do NOT proceed directly to `writing-plans` or implementation
   2. Run the Design Review Gate (`/review-design` or invoke the `design-review-gate` skill)
-  3. Wait for all 5 review agents (PM, Architect, Designer, Security, CTO) to APPROVE
+  3. Wait for all 6 review agents (PM, Architect, Designer, Security, UX Reviewer, CTO) to APPROVE
   4. Only after ALL APPROVED, proceed to planning
 - For a project-sized design doc, the gate is required even if the brainstorming skill instructs you to invoke `writing-plans` next. Quick tasks, chat-only designs and short design docs for small changes skip it. The design review gate catches issues before expensive implementation begins.
 - After design review approval, create a GitHub Issue from the refined design

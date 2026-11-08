@@ -2,7 +2,7 @@
 
 ## Agents
 
-metaswarm provides 22 agents, each with a defined role in the software development lifecycle.
+metaswarm provides 23 agents, each with a defined role in the software development lifecycle.
 
 ### Orchestration Agents
 
@@ -17,12 +17,13 @@ metaswarm provides 22 agents, each with a defined role in the software developme
 |---|---|---|
 | **Researcher** | `agents/researcher.md` | Codebase exploration, pattern discovery, dependency analysis. Read-only; Sonnet by default. |
 | **Planner** | `agents/planner.md` | Plan and decompose into work units. Opus by default; can write plan files. |
-| **Design Reviewer** | `agents/design-reviewer.md` | Design review gate reviewer; role (PM, Architect, Designer, Security, CTO) passed in the prompt. Opus, read-only. |
+| **Design Reviewer** | `agents/design-reviewer.md` | Design review gate reviewer; role (PM, Architect, Designer, Security, UX Reviewer, CTO) passed in the prompt. Opus, read-only. |
 | **Plan Reviewer** | `agents/plan-reviewer.md` | Plan review gate reviewer (Feasibility, Completeness, Scope & Alignment). Opus, read-only. |
 | **Architect** | `agents/architect-agent.md` | Implementation planning, service structure design, pattern selection. |
 | **Product Manager** | `agents/product-manager-agent.md` | Use case validation, user benefit review, scope verification. |
 | **Designer** | `agents/designer-agent.md` | UX/API design review, developer experience, consistency. |
 | **Security Design** | `agents/security-design-agent.md` | Threat modeling (STRIDE), auth/authz design, OWASP Top 10. |
+| **UX Reviewer** | `agents/ux-reviewer-agent.md` | User flows (trigger and visible outcome), empty/loading/error states, integration work unit wiring components into the app shell. |
 | **CTO** | `agents/cto-agent.md` | TDD readiness review, plan approval, codebase alignment. |
 
 ### Implementation Agents
@@ -44,6 +45,7 @@ metaswarm provides 22 agents, each with a defined role in the software developme
 | Agent | File | Role |
 |---|---|---|
 | **PR Shepherd** | `agents/pr-shepherd-agent.md` | PR lifecycle: CI monitoring, review comment handling, thread resolution. |
+| **Release Engineer** | `agents/release-engineer-agent.md` | Safe delivery of approved code from merge through production verification. |
 
 ### Support Agents
 
@@ -57,7 +59,7 @@ metaswarm provides 22 agents, each with a defined role in the software developme
 
 ## Guides
 
-metaswarm ships 6 development guides in the `guides/` directory. These are reference documents for agents and humans working in the project.
+metaswarm ships 8 development guides in the `guides/` directory. These are reference documents for agents and humans working in the project.
 
 | Guide | File | Covers |
 |---|---|---|
@@ -67,6 +69,8 @@ metaswarm ships 6 development guides in the `guides/` directory. These are refer
 | **Coding Standards** | `guides/coding-standards.md` | Language idioms, naming conventions, error handling, code organization |
 | **Worktree Development** | `guides/worktree-development.md` | Parallel development with git worktrees, port allocation, conflict detection |
 | **Build Validation** | `guides/build-validation.md` | Pre-push checks, CI pipeline, build verification, release readiness |
+| **Delivery Scope** | `guides/delivery-scope.md` | Review severity rule: the finding contract, what blocks delivery, when to iterate, advance or escalate |
+| **Workflow Enforcement** | `guides/workflow-enforcement.md` | When the Design and Plan Review Gates trigger, the execution method choice, superpowers version support |
 
 ## Choosing a Workflow
 
@@ -217,7 +221,7 @@ Prerequisites: `npx playwright install chromium`
 | `/start` | Alias for `/start-task` |
 | `/setup` | Interactive project setup — detects language, framework, test runner, and configures everything |
 | `/update` | Update metaswarm plugin to latest version |
-| `/status` | Run 9 diagnostic checks on your installation |
+| `/metaswarm:status` | Run 12 diagnostic checks on your installation |
 | `/prime` | Load relevant knowledge before starting work |
 | `/review-design <path>` | Run the 6-agent Design Review Gate |
 | `/brainstorm` | Refine an idea before implementation |
@@ -377,13 +381,16 @@ Quality standards used by review agents:
 
 | Rubric | Used By | Covers |
 |---|---|---|
-| `code-review-rubric.md` | Code Review Agent (collaborative mode) | Style, patterns, error handling, testing |
-| `adversarial-review-rubric.md` | Code Review Agent (adversarial mode) | Binary PASS/FAIL spec compliance, DoD verification with evidence |
+| `code-review-rubric.md` | Adversarial Reviewer (collaborative mode) | Style, patterns, error handling, testing |
+| `adversarial-review-rubric.md` | Adversarial Reviewer (adversarial mode) | Binary PASS/FAIL spec compliance, DoD verification with evidence |
 | `architecture-rubric.md` | Architect Agent | Service design, coupling, scalability |
 | `security-review-rubric.md` | Security Auditor | OWASP Top 10, auth, data handling |
+| `ux-review-rubric.md` | UX Reviewer | User flows, component hierarchy, empty/loading/error states, integration work unit, UI-FLOWS, accessibility basics |
 | `plan-review-rubric.md` | CTO Agent | TDD readiness, completeness, alignment |
+| `plan-review-rubric-adversarial.md` | Plan Reviewer | Plan Review Gate: feasibility, completeness, scope and alignment |
 | `test-coverage-rubric.md` | Test Automator | Coverage, edge cases, mock quality |
 | `external-tool-review-rubric.md` | Cross-model adversarial reviewers | Binary PASS/FAIL for cross-model review, file:line evidence |
+| `release-engineering-rubric.md` | Release Engineer | Safe delivery from merge through production verification |
 
 ## Scripts
 

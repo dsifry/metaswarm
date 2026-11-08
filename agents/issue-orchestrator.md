@@ -514,8 +514,8 @@ Plan Complete
     ├── PM Agent (approve/reject)
     ├── Architect Agent (approve/reject)
     ├── Designer Agent (approve/reject)
-    ├── UX Reviewer (approve/reject) — NEW
     ├── Security Agent (approve/reject)
+    ├── UX Reviewer (approve/reject)
     └── CTO Agent (approve/reject)
     │
     ALL APPROVED? → Proceed to implementation

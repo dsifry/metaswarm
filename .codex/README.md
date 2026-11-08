@@ -63,7 +63,7 @@ Codex uses the `name` field from each skill's `SKILL.md` frontmatter — not the
 | `$start` | `start` | Begin tracked work on a task |
 | `$setup` | `setup` | Interactive guided setup |
 | `$brainstorming-extension` | `brainstorming-extension` | Refine an idea with design review gate |
-| `$design-review-gate` | `design-review-gate` | 5-reviewer design review |
+| `$design-review-gate` | `design-review-gate` | 6-reviewer design review |
 | `$plan-review-gate` | `plan-review-gate` | 3-reviewer adversarial plan review |
 | `$orchestrated-execution` | `orchestrated-execution` | 4-phase execution loop |
 | `$pr-shepherd` | `pr-shepherd` | Monitor a PR through to merge |

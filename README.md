@@ -1,19 +1,19 @@
 # metaswarm
 
-A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 22 AI agents and 13 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
+A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 23 AI agents and 14 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
 
 ## What Is This?
 
 metaswarm is an extraction of a production-tested agentic orchestration system. It has been proven in the field writing production-level code with 100% test coverage, mandatory TDD, multi-reviewed spec-driven development, and SDLC best practices across hundreds of PRs. It provides:
 
-- **22 agents: phase agents and specialized personas** (Researcher, Architect, Coder, Security Auditor, PR Shepherd, etc.)
+- **23 agents: phase agents and specialized personas** (Researcher, Architect, Coder, Security Auditor, PR Shepherd, etc.)
 - **A structured 9-phase workflow**: Research → Plan → Design Review Gate → Work Unit Decomposition → Orchestrated Execution → Final Review → PR Creation → PR Shepherd → Closure & Learning
 - **4-Phase Orchestrated Execution Loop**: Each work unit runs through IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT. The orchestrator validates independently (never trusts subagent self-reports), and adversarial reviewers check DoD compliance with file:line evidence
-- **Parallel Design Review Gate**: 5 specialist agents (PM, Architect, Designer, Security, CTO) review in parallel; severity-gated iteration (only `blocker: yes` findings re-run the gate, cap 10 rounds) before human escalation
+- **Parallel Design Review Gate**: 6 specialist agents (PM, Architect, Designer, Security, UX Reviewer, CTO) review in parallel; severity-gated iteration (only `blocker: yes` findings re-run the gate, cap 10 rounds) before human escalation
 - **Recursive orchestration**: Swarm Coordinators spawn Issue Orchestrators, which spawn sub-orchestrators for complex epics (swarm of swarms)
 - **Git-native task tracking**: Uses [BEADS](https://github.com/steveyegge/beads) (`bd` CLI) for issue/task management and dependencies; metaswarm's own `/prime` command handles knowledge priming
 - **Knowledge base**: JSONL-based fact store for patterns, gotchas, decisions, and anti-patterns — agents prime from this before every task
-- **Quality rubrics**: Standardized review criteria for code, architecture, security, testing, planning, and adversarial spec compliance
+- **Quality rubrics**: Standardized review criteria for code, architecture, security, testing, planning, UX, release engineering, and adversarial spec compliance
 - **External AI tool delegation**: Optionally delegate implementation and review tasks to OpenAI Codex CLI and Google Gemini CLI for cost savings and cross-model adversarial review
 - **Visual review**: Playwright-based screenshot capture for reviewing web UIs, presentations, and rendered pages
 - **PR lifecycle automation**: Autonomous CI monitoring, review comment handling, and thread resolution
@@ -40,7 +40,7 @@ Your prompt (spec with DoD items) or GitHub Issue
 └─────────────────────────────────┘
         │
         ▼
-  Research → Plan → Design Review Gate (5 parallel reviewers)
+  Research → Plan → Design Review Gate (6 parallel reviewers)
         │
         ▼
   Work Unit Decomposition (DoD items, file scopes, dependency graph)
@@ -75,9 +75,9 @@ metaswarm/
 │   ├── hooks.json            # SessionStart + PreCompact hook definitions
 │   └── session-start.sh      # Context priming (platform-aware)
 ├── skills/                   # Orchestration skills (Agent Skills standard — portable)
-│   ├── start/                # Main entry point — workflow guide + 22 agent personas
+│   ├── start/                # Main entry point — workflow guide + 23 agent personas
 │   ├── orchestrated-execution/ # 4-phase execution loop (IMPLEMENT→VALIDATE→REVIEW→COMMIT)
-│   ├── design-review-gate/   # Parallel 5-agent review
+│   ├── design-review-gate/   # Parallel 6-agent review
 │   ├── plan-review-gate/     # 3-reviewer adversarial plan review
 │   ├── setup/                # Interactive project setup
 │   ├── migrate/              # Migration from npm to plugin installation
@@ -86,13 +86,14 @@ metaswarm/
 │   ├── handling-pr-comments/ # Review comment workflow
 │   ├── brainstorming-extension/
 │   ├── create-issue/
+│   ├── handoff/              # Session handoff doc for a fresh agent
 │   ├── external-tools/       # Cross-model AI delegation (Codex, Gemini CLI)
 │   └── visual-review/        # Playwright-based screenshot review
 ├── commands/                  # Slash commands
-│   ├── *.md                  # Claude Code commands (15 files)
-│   └── metaswarm/*.toml      # Gemini CLI commands (12 files)
-├── agents/                    # 22 agent definitions
-├── rubrics/                   # Quality review standards
+│   ├── *.md                  # Claude Code commands (16 files)
+│   └── metaswarm/*.toml      # Gemini CLI commands (13 files)
+├── agents/                    # 23 agent definitions
+├── rubrics/                   # 10 quality review rubrics
 ├── guides/                    # Development patterns
 ├── knowledge/                 # Knowledge base schema + templates
 ├── templates/                 # Setup templates (CLAUDE.md, AGENTS.md, GEMINI.md + append variants)

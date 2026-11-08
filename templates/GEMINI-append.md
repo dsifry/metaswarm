@@ -1,7 +1,7 @@
 
 ## metaswarm
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-agent orchestration. It provides 22 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-agent orchestration. It provides 23 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
 
 ### Workflow
 
@@ -14,7 +14,7 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 |---|---|
 | `/metaswarm:start-task` | Begin tracked work on a task |
 | `/metaswarm:prime` | Load relevant knowledge before starting |
-| `/metaswarm:review-design` | Trigger design review gate (5 reviewers) |
+| `/metaswarm:review-design` | Trigger design review gate (6 reviewers) |
 | `/metaswarm:pr-shepherd` | Monitor a PR through to merge |
 | `/metaswarm:self-reflect` | Extract learnings after a PR merge |
 | `/metaswarm:handle-pr-comments` | Handle PR review comments |
@@ -24,7 +24,7 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 
 ### Quality Gates
 
-- **Design Review Gate** -- 5-reviewer design review after a project-sized design doc is committed (`/metaswarm:review-design`)
+- **Design Review Gate** -- 6-reviewer design review after a project-sized design doc is committed (`/metaswarm:review-design`)
 - **Plan Review Gate** -- 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) -- ALL must PASS
 - **Coverage Gate** -- `.coverage-thresholds.json` defines thresholds. BLOCKING gate before PR creation
 

@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This project is **metaswarm** — a multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. It provides 22 agents, 13 orchestration skills, quality gates, and TDD enforcement.
+This project is **metaswarm** — a multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. It provides 23 agents, 14 orchestration skills, quality gates, and TDD enforcement.
 
 ## Quick Reference
 
@@ -11,7 +11,7 @@ Codex discovers skills by their SKILL.md `name` field. Invoke with `$name` synta
 | `$start` | Begin tracked work on a task |
 | `$setup` | Interactive guided setup for a project |
 | `$brainstorming-extension` | Refine an idea before implementation |
-| `$design-review-gate` | Trigger design review gate (5 reviewers) |
+| `$design-review-gate` | Trigger design review gate (6 reviewers) |
 | `$plan-review-gate` | Adversarial plan review (3 reviewers) |
 | `$orchestrated-execution` | 4-phase execution loop per work unit |
 | `$pr-shepherd` | Monitor a PR through to merge |

@@ -1,6 +1,6 @@
 ---
 name: design-review-gate
-description: Automatic review gate that runs when brainstorming commits a project-sized design doc - spawns PM, Architect, Designer, Security, and CTO agents in parallel, iterates under the severity rule until all approve or it escalates
+description: Automatic review gate that runs when brainstorming commits a project-sized design doc - spawns PM, Architect, Designer, Security, UX Reviewer and CTO agents in parallel, iterates under the severity rule until all approve or it escalates
 auto_activate: true
 triggers:
   - "project-sized design doc committed (docs/plans/*-design.md or docs/superpowers/specs/*-design.md)"
@@ -10,15 +10,16 @@ triggers:
 
 ## Purpose
 
-This skill automatically activates when brainstorming writes and commits a project-sized design doc (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). It ensures complex features receive proper review before implementation begins by spawning five specialist agents:
+This skill automatically activates when brainstorming writes and commits a project-sized design doc (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). It ensures complex features receive proper review before implementation begins by spawning six specialist reviewers:
 
 1. **Product Manager Agent** - Use case validation and user benefit review
 2. **Architect Agent** - Technical architecture review
 3. **Designer Agent** - UX/API design quality review
 4. **Security Design Agent** - Security threat modeling and protection review
-5. **CTO Agent** - Codebase alignment and TDD readiness review
+5. **UX Reviewer Agent** - User flows, UI states (empty, loading, error) and integration wiring review
+6. **CTO Agent** - Codebase alignment and TDD readiness review
 
-All five must approve before proceeding to implementation.
+All six must approve before proceeding to implementation.
 
 ---
 
@@ -26,8 +27,8 @@ All five must approve before proceeding to implementation.
 
 This skill supports both coordination modes:
 
-- **Task Mode** (default): Spawn 5 parallel `Task()` subagents for each review round, each with role type `roleType("design-reviewer")`. Fresh instances per round. Role types are resolved per [Role type resolution](./guides/agent-coordination.md#role-type-resolution).
-- **Team Mode**: `TeamCreate("review-{design-doc-name}")`, spawn 5 reviewers as named teammates (`pm`, `architect`, `designer`, `security`, `cto`), each using the `roleType("design-reviewer")` type with the role in its prompt. Reviewers retain context through revision cycles — saves 5 cold starts per re-review round. After approval, send `shutdown_request` to all, then `TeamDelete`.
+- **Task Mode** (default): Spawn 6 parallel `Task()` subagents for each review round, each with role type `roleType("design-reviewer")`. Fresh instances per round. Role types are resolved per [Role type resolution](./guides/agent-coordination.md#role-type-resolution).
+- **Team Mode**: `TeamCreate("review-{design-doc-name}")`, spawn 6 reviewers as named teammates (`pm`, `architect`, `designer`, `security`, `ux`, `cto`), each using the `roleType("design-reviewer")` type with the role in its prompt. Reviewers retain context through revision cycles — saves 6 cold starts per re-review round. After approval, send `shutdown_request` to all, then `TeamDelete`.
 
 In either mode, the review criteria, the severity rule (see Phase 3), and escalation rules are identical. See `./guides/agent-coordination.md` for mode detection.
 
@@ -47,9 +48,9 @@ This skill auto-activates when:
 ### Phase 1: Spawn Review Agents (Parallel)
 
 ```typescript
-// Spawn all five agents in parallel for efficiency.
+// Spawn all six agents in parallel for efficiency.
 // Every reviewer uses the design-reviewer role type; the role (PM, Architect, ...) lives in the prompt.
-const [pmResult, architectResult, designerResult, securityResult, ctoResult] = await Promise.all([
+const [pmResult, architectResult, designerResult, securityResult, uxResult, ctoResult] = await Promise.all([
   Task({
     subagent_type: roleType("design-reviewer"),
     description: "PM review",
@@ -69,6 +70,11 @@ const [pmResult, architectResult, designerResult, securityResult, ctoResult] = a
     subagent_type: roleType("design-reviewer"),
     description: "Security design review",
     prompt: securityDesignReviewPrompt(designDocPath),
+  }),
+  Task({
+    subagent_type: roleType("design-reviewer"),
+    description: "UX review",
+    prompt: uxReviewPrompt(designDocPath),
   }),
   Task({
     subagent_type: roleType("design-reviewer"),
@@ -93,7 +99,7 @@ interface Finding {
 }
 
 interface ReviewResult {
-  agent: "product-manager" | "architect" | "designer" | "security-design" | "cto";
+  agent: "product-manager" | "architect" | "designer" | "security-design" | "ux-reviewer" | "cto";
   verdict: "APPROVED" | "NEEDS_REVISION"; // NEEDS_REVISION only with at least one blocker: "yes" finding
   findings: Finding[]; // every finding, any severity
   suggestions: string[]; // Non-finding notes
@@ -118,7 +124,7 @@ A NEEDS_REVISION without any `blocker: yes` finding is read as APPROVED, and its
 
 ### Phase 3: Check Gate
 
-The orchestrator, not the reviewers, decides what happens after each round. It applies the severity rule from [`./guides/delivery-scope.md`](./guides/delivery-scope.md): `SAFETY_CAP` = 10 rounds per gate occurrence, and the first line that matches wins. "Re-validate" here means revising the design document; "FRESH review" means re-running all five reviewers.
+The orchestrator, not the reviewers, decides what happens after each round. It applies the severity rule from [`./guides/delivery-scope.md`](./guides/delivery-scope.md): `SAFETY_CAP` = 10 rounds per gate occurrence, and the first line that matches wins. "Re-validate" here means revising the design document; "FRESH review" means re-running all six reviewers.
 
 ```text
 after each review round (round = 1, 2, ...):
@@ -135,7 +141,7 @@ after each review round (round = 1, 2, ...):
   6. otherwise                           → fix blockers, re-validate, FRESH review
 ```
 
-- **PASS, advance**: all five agents are APPROVED (no `blocker: yes` finding). Proceed to implementation and create the epic with the approved design. Line 5's downgrade-and-advance counts the same, with the downgraded items listed as follow-ups.
+- **PASS, advance**: all six agents are APPROVED (no `blocker: yes` finding). Proceed to implementation and create the epic with the approved design. Line 5's downgrade-and-advance counts the same, with the downgraded items listed as follow-ups.
 - **Iterate**: consolidate the blockers, present them to the user, revise the design, and re-run the gate.
 - **Overengineering check (line 5).** Signals include repeated review/fix cycles without a new user-visible risk, and blockers that protect only theoretical states. Restate the design's goals and DoD, re-classify each open blocker, and escalate only if one still names a credible scenario.
 - **Rounds.** Every re-review is one round. In Team Mode the persistent reviewers re-review, and that still counts as a round.
@@ -416,6 +422,59 @@ Return JSON:
 ```
 ````
 
+### UX Reviewer Agent Prompt
+
+````markdown
+You are the UX REVIEWER AGENT reviewing a design document.
+
+## Your Task
+Review this design for user flow completeness and integration: can a user actually do what the design describes once every work unit is built?
+
+Read and follow `./rubrics/ux-review-rubric.md`: it is the single source of the UX criteria and their BLOCKING/WARNING levels. Your persona brief is `agents/ux-reviewer-agent.md` in the metaswarm plugin. The checklist below summarises the rubric.
+
+**Backend-only designs:** first check the task or request the design implements. If the design has no user-facing UI and the task doesn't call for any (no screens, pages, views or interactive components), return APPROVED with no findings and the suggestion "No user-facing UI in this design; UX review not applicable." If the task requires UI but the design omits it, report the missing UI design as a finding. Do not block backend-only designs.
+
+## Design Document
+<path>: {designDocPath}
+
+## Review Criteria
+
+### 1. User Flows
+- [ ] Every user flow has a clear trigger (what the user does) and a visible outcome (what the user sees change)
+- [ ] The design has a UI-FLOWS section with text wireframes (see the metaswarm plugin's `templates/UI-FLOWS.md`)
+
+### 2. Screens and Components
+- [ ] Every screen is described with a component hierarchy (what renders what, where)
+
+### 3. UI States
+- [ ] Empty, loading and error states are defined for each view
+- [ ] Error states tell the user what happened and what to do next
+
+### 4. Integration
+- [ ] The design describes the integration wiring that connects the components to the app shell (routes, layout, data/state hooks). The integration work unit itself is checked at plan review, after decomposition
+- [ ] Each user flow can be traced from the app shell to the components and data it uses
+
+### 5. Accessibility Basics
+- [ ] Interactive elements are keyboard reachable, inputs are labelled, state is not conveyed by color alone (minor unless the design names an accessibility requirement)
+
+${sharedFindingRules}
+
+## Output Format
+
+Return JSON:
+```json
+{
+  "agent": "ux-reviewer",
+  "verdict": "APPROVED" | "NEEDS_REVISION",
+  "findings": [
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+  ],
+  "suggestions": ["notes that are not findings"],
+  "questions": ["clarifications needed"]
+}
+```
+````
+
 ### CTO Agent Prompt
 
 ````markdown
@@ -483,7 +542,7 @@ Return JSON:
 
 ### Round 1: Initial Review
 
-1. Spawn all five agents in parallel (role type `roleType("design-reviewer")`)
+1. Spawn all six agents in parallel (role type `roleType("design-reviewer")`)
 2. Wait for all results
 3. Apply the severity rule (Phase 3): if no agent reports a `blocker: yes` finding → proceed
 4. If any `blocker: yes` finding → consolidate (see [Needs Revision](#needs-revision)) and present
@@ -492,7 +551,7 @@ Return JSON:
 
 1. Present consolidated blockers to the human
 2. Human revises the design document
-3. Re-run all five agents on the updated doc (a new round)
+3. Re-run all six agents on the updated doc (a new round)
 4. Apply the severity rule again: advance, iterate, or escalate
 
 ### Escalation
@@ -514,9 +573,9 @@ When the severity rule says escalate (cap hit, a recurring or disputed blocker, 
 ### Round history
 | Round | Verdicts (APPROVED / NEEDS_REVISION) | Blockers (critical/major) | Fixed this round | Rule decision |
 |-------|--------------------------------------|---------------------------|------------------|---------------|
-| 1     | 2 / 3                                | 1 / 4                     | —                | 4: iterate    |
-| 2     | 4 / 1                                | 0 / 2                     | 1 / 2            | 4: iterate    |
-| 3     | 4 / 1                                | 0 / 2                     | 0 / 0            | 3: escalate   |
+| 1     | 3 / 3                                | 1 / 4                     | —                | 4: iterate    |
+| 2     | 5 / 1                                | 0 / 2                     | 1 / 2            | 4: iterate    |
+| 3     | 5 / 1                                | 0 / 2                     | 0 / 0            | 3: escalate   |
 
 ### Follow-ups
 - <minor/nit findings, or the BEADS task IDs filed for them>
@@ -556,7 +615,7 @@ When design is approved:
 ```markdown
 ## Design Review Gate: APPROVED
 
-All five reviewers have approved the design.
+All six reviewers have approved the design.
 
 | Agent           | Verdict  | Blockers | Minor/Nit | Suggestions |
 | --------------- | -------- | -------- | --------- | ----------- |
@@ -564,6 +623,7 @@ All five reviewers have approved the design.
 | Architect       | APPROVED | 0        | 1         | 2           |
 | Designer        | APPROVED | 0        | 0         | 1           |
 | Security Design | APPROVED | 0        | 1         | 2           |
+| UX Reviewer     | APPROVED | 0        | 0         | 1           |
 | CTO             | APPROVED | 0        | 0         | 3           |
 
 ### Threat Model Summary (Security Agent)
@@ -603,9 +663,11 @@ One or more reviewers reported a `blocker: yes` finding.
 
 | Agent           | Verdict        | Blockers (critical/major) | Minor/Nit |
 | --------------- | -------------- | ------------------------- | --------- |
+| Product Manager | APPROVED       | 0 / 0                     | 1         |
 | Architect       | APPROVED       | 0 / 0                     | 2         |
 | Designer        | NEEDS_REVISION | 0 / 2                     | 1         |
 | Security Design | NEEDS_REVISION | 1 / 1                     | 1         |
+| UX Reviewer     | APPROVED       | 0 / 0                     | 0         |
 | CTO             | NEEDS_REVISION | 0 / 2                     | 1         |
 
 ### Blockers (MUST FIX)
@@ -654,7 +716,7 @@ One or more reviewers reported a `blocker: yes` finding.
 
 The design review gate succeeds when:
 
-- [ ] All five agents return APPROVED verdict (or rule line 5 downgraded every remaining blocker to a follow-up)
+- [ ] All six agents return APPROVED verdict (or rule line 5 downgraded every remaining blocker to a follow-up)
 - [ ] Every `blocker: yes` finding is resolved; minor/nit findings are filed as follow-ups
 - [ ] All clarifying questions are answered
 - [ ] Design document is updated with revisions
@@ -672,4 +734,4 @@ The design review gate succeeds when:
 
 ## Agent Definitions
 
-See detailed agent definitions in your project's agent definition files (e.g., product-manager-agent.md, architect-agent.md, designer-agent.md, security-design-agent.md, cto-agent.md).
+See detailed agent definitions in your project's agent definition files (e.g., product-manager-agent.md, architect-agent.md, designer-agent.md, security-design-agent.md, ux-reviewer-agent.md, cto-agent.md). The UX Reviewer's persona is ux-reviewer-agent.md, and its criteria live in `./rubrics/ux-review-rubric.md`.

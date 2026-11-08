@@ -112,7 +112,8 @@ Requires superpowers **6.4.1 or later** (tested with **7.0.2**). For how metaswa
 **Install superpowers** (follow their README and marketplace docs for current instructions):
 ```bash
 # See: https://github.com/obra/superpowers
-claude plugin add obra/superpowers
+# Claude Code (superpowers is in the official marketplace):
+claude plugin install superpowers@claude-plugins-official
 
 # Codex: install from the claude-plugins-official marketplace in /plugins
 ```
@@ -163,7 +164,7 @@ This is the most common upgrade path. Your project has metaswarm files in `.clau
 
 3. **Verify the migration:**
    ```text
-   /status
+   /metaswarm:status
    ```
 
 4. **Review and commit** the cleanup when you're satisfied.
@@ -192,12 +193,12 @@ This checks for new versions, shows what changed, and updates all component file
 
 ### Automatic legacy detection
 
-If you skip the manual migration, the session-start hook will detect the old npm installation when you open Claude Code and prompt you to run `/migrate`. You can also run `/status` at any time to check for legacy files.
+If you skip the manual migration, the session-start hook will detect the old npm installation when you open Claude Code and prompt you to run `/migrate`. You can also run `/metaswarm:status` at any time to check for legacy files.
 
 ## Check Installation Status
 
 ```text
-/status
+/metaswarm:status
 ```
 
 This runs platform-aware diagnostic checks: plugin version, project setup, platform install state, command shims where applicable, legacy install detection, BEADS plugin, bd CLI, gtg CLI, external tools, coverage thresholds, and Node.js.

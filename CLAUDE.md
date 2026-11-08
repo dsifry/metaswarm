@@ -1,6 +1,6 @@
 # Project Instructions
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework for Claude Code. It provides 22 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework for Claude Code. It provides 23 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
 
 ## How to Work in This Project
 
@@ -29,7 +29,7 @@ This triggers the full pipeline: Research → Plan → Design Review Gate → Wo
 |---|---|
 | `/start-task` | Begin tracked work on a task |
 | `/prime` | Load relevant knowledge before starting |
-| `/review-design` | Trigger parallel design review gate (5 agents) |
+| `/review-design` | Trigger parallel design review gate (6 agents) |
 | `/pr-shepherd <pr>` | Monitor a PR through to merge |
 | `/self-reflect` | Extract learnings after a PR merge |
 | `/handoff` | Write a self-contained handoff doc so a fresh agent can resume the work |
@@ -39,7 +39,7 @@ This triggers the full pipeline: Research → Plan → Design Review Gate → Wo
 | `/external-tools-health` | Check status of external AI tools (Codex, Gemini) |
 | `/setup` | Interactive guided setup — detects project, configures metaswarm |
 | `/update` | Update metaswarm to latest version |
-| `/status` | Run diagnostic checks on your installation |
+| `/metaswarm:status` | Run diagnostic checks on your installation (plain `/status` is Claude Code's built-in) |
 | `/start` | Alias for `/start-task` |
 
 ### Visual Review
@@ -63,7 +63,7 @@ The validation phase of orchestrated execution reads `.coverage-thresholds.json`
 
 ## Quality Gates
 
-- **Design Review Gate**: Parallel 5-agent review after a project-sized design doc is committed (`/review-design`)
+- **Design Review Gate**: Parallel 6-agent review after a project-sized design doc is committed (`/review-design`)
 - **Plan Review Gate**: Automatic adversarial review once the plan is written, before writing-plans presents the plan. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before the plan is presented to the user. See `skills/plan-review-gate/SKILL.md`
 - **Coverage Gate**: Reads `.coverage-thresholds.json` and runs the enforcement command — BLOCKING gate before PR creation
 
@@ -77,7 +77,7 @@ When brainstorming writes and commits a project-sized design doc (see the metasw
 
 1. **STOP** — do NOT proceed directly to `writing-plans` or implementation
 2. **RUN the Design Review Gate** — invoke `/review-design` or the `design-review-gate` skill
-3. **WAIT** for all 5 review agents (PM, Architect, Designer, Security, CTO) to approve
+3. **WAIT** for all 6 review agents (PM, Architect, Designer, Security, UX Reviewer, CTO) to approve
 4. **ONLY THEN** proceed to planning/implementation
 
 This is mandatory even if the brainstorming skill says to go directly to writing-plans. Quick tasks, chat-only designs and short design docs for small changes skip the gate. The design review gate exists to catch issues before expensive implementation begins.

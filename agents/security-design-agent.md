@@ -437,9 +437,10 @@ The Security Design Agent runs in parallel with:
 - Product Manager Agent (use case/user benefit review)
 - Architect Agent (technical architecture)
 - Designer Agent (UX/API design)
+- UX Reviewer (user flows, UI states, integration wiring)
 - CTO Agent (TDD readiness)
 
-**All five must approve** before implementation proceeds.
+**All six must approve** before implementation proceeds.
 
 Security review is especially important for designs that:
 

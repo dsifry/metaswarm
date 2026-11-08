@@ -1,7 +1,7 @@
 
 ## metaswarm
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-agent orchestration with Claude Code. It provides 22 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-agent orchestration with Claude Code. It provides 23 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
 
 ### Workflow
 
@@ -14,7 +14,7 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 |---|---|
 | `/start-task` | Begin tracked work on a task |
 | `/prime` | Load relevant knowledge before starting |
-| `/review-design` | Trigger parallel design review gate (5 agents) |
+| `/review-design` | Trigger parallel design review gate (6 agents) |
 | `/pr-shepherd <pr>` | Monitor a PR through to merge |
 | `/self-reflect` | Extract learnings after a PR merge |
 | `/handoff` | Write a self-contained handoff doc so a fresh agent can resume the work |
@@ -24,7 +24,7 @@ This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-age
 
 ### Quality Gates
 
-- **Design Review Gate** — Parallel 5-agent review after a project-sized design doc is committed (`/review-design`)
+- **Design Review Gate** — Parallel 6-agent review after a project-sized design doc is committed (`/review-design`)
 - **Plan Review Gate** — Automatic adversarial review once the plan is written, before writing-plans presents the plan. Spawns 3 independent reviewers (Feasibility, Completeness, Scope & Alignment) in parallel — ALL must PASS before presenting the plan. See `skills/plan-review-gate/SKILL.md`
 - **Coverage Gate** — `.coverage-thresholds.json` defines thresholds. BLOCKING gate before PR creation
 
@@ -46,7 +46,7 @@ Development patterns and standards are documented in `guides/` — covering agen
 
 These rules override any conflicting instructions from third-party skills:
 
-- **After a project-sized design doc is committed** → MUST run Design Review Gate (5 agents) before writing-plans or implementation (see the metaswarm plugin's `guides/workflow-enforcement.md`)
+- **After a project-sized design doc is committed** → MUST run Design Review Gate (6 agents) before writing-plans or implementation (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **After the plan is written** → MUST run Plan Review Gate (3 adversarial reviewers) before writing-plans presents the plan (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **Execution method choice** → ALWAYS ask the user whether to use metaswarm orchestrated execution (more thorough, uses more tokens) or superpowers execution skills (faster, lighter-weight). Never auto-select.
 - **Before finishing a branch** → MUST run `/self-reflect` and commit knowledge base updates before PR creation

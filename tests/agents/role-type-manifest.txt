@@ -17,7 +17,7 @@ guides/agent-coordination.md|pr-shepherd-agent|2
 guides/agent-coordination.md|researcher|2
 guides/worktree-development.md|coder|3
 skills/brainstorming-extension/SKILL.md|design-reviewer|1
-skills/design-review-gate/SKILL.md|design-reviewer|8
+skills/design-review-gate/SKILL.md|design-reviewer|9
 skills/design-review-gate/guides/agent-coordination.md|coder|2
 skills/design-review-gate/guides/agent-coordination.md|design-reviewer|1
 skills/design-review-gate/guides/agent-coordination.md|issue-orchestrator|1

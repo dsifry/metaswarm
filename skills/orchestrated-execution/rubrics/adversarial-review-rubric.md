@@ -1,6 +1,6 @@
 # Adversarial Review Rubric
 
-**Used By**: Code Review Agent (adversarial mode)
+**Used By**: Adversarial Reviewer (adversarial mode)
 **Purpose**: Binary spec compliance verification against Definition of Done contract
 **Version**: 1.0
 

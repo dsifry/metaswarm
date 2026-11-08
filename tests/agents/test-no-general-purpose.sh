@@ -78,7 +78,7 @@ if [ -z "$LIT" ]; then pass "no literal general-purpose anywhere in scope"; else
 # 4. Prose spawn sites: anchor phrase -> role type named in the same section
 # Format: file|anchor phrase (fixed string)|role
 SITES='skills/orchestrated-execution/SKILL.md|Spawn a coding subagent|coder
-commands/review-design.md|Spawns five review agents in parallel|design-reviewer
+commands/review-design.md|Spawns six review agents in parallel|design-reviewer
 skills/brainstorming-extension/SKILL.md|Spawning reviews|design-reviewer
 skills/orchestrated-execution/SKILL.md|Spawn a **new** review subagent in adversarial mode|adversarial-reviewer
 skills/orchestrated-execution/SKILL.md|the Architect is spawned as|planner
@@ -90,7 +90,7 @@ agents/swarm-coordinator-agent.md|Adversarial reviewers are ALWAYS fresh `Task()
 skills/start/agents/swarm-coordinator-agent.md|Fire-and-forget `Task()` subagents per worktree orchestrator|issue-orchestrator
 skills/start/agents/swarm-coordinator-agent.md|Spawn Issue Orchestrators as named teammates|issue-orchestrator
 skills/start/agents/swarm-coordinator-agent.md|Adversarial reviewers are ALWAYS fresh `Task()` instances|adversarial-reviewer
-skills/design-review-gate/SKILL.md|**Task Mode** (default): Spawn 5 parallel|design-reviewer
+skills/design-review-gate/SKILL.md|**Task Mode** (default): Spawn 6 parallel|design-reviewer
 skills/design-review-gate/SKILL.md|**Team Mode**: `TeamCreate|design-reviewer
 skills/pr-shepherd/SKILL.md|**Task Mode** (default): Runs as|pr-shepherd-agent
 skills/pr-shepherd/SKILL.md|**Team Mode**: Runs as a persistent `shepherd` teammate|pr-shepherd-agent
@@ -130,7 +130,7 @@ skills/orchestrated-execution/SKILL.md|**Phase 3 (ADVERSARIAL REVIEW)**: ALWAYS 
 skills/plan-review-gate/SKILL.md|2. Spawn 3 adversarial reviewers in PARALLEL|plan-reviewer
 skills/plan-review-gate/SKILL.md|c. Spawn 3 NEW reviewer instances|plan-reviewer
 skills/plan-review-gate/SKILL.md|4. Spawn 3 entirely new|plan-reviewer
-skills/design-review-gate/SKILL.md|1. Spawn all five agents in parallel|design-reviewer
+skills/design-review-gate/SKILL.md|1. Spawn all six agents in parallel|design-reviewer
 skills/orchestrated-execution/SKILL.md|**Subagent spawn template|coder
 skills/orchestrated-execution/SKILL.md|**Reviewer spawn template|adversarial-reviewer
 skills/orchestrated-execution/SKILL.md|Fan-out implementations|coder
@@ -164,6 +164,7 @@ PM review|design-reviewer
 Architect review|design-reviewer
 Designer review|design-reviewer
 Security design review|design-reviewer
+UX review|design-reviewer
 CTO review|design-reviewer
 Feasibility review|plan-reviewer
 Completeness review|plan-reviewer

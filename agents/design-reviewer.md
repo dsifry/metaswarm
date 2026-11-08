@@ -1,6 +1,6 @@
 ---
 name: design-reviewer
-description: "Design review gate reviewer. The role (PM, Architect, Designer, Security or CTO) is passed in the prompt. Read-only."
+description: "Design review gate reviewer. The role (PM, Architect, Designer, Security, UX or CTO) is passed in the prompt. Read-only."
 model: opus
 disallowedTools: Write, Edit, NotebookEdit
 ---
@@ -18,7 +18,7 @@ disallowedTools: Write, Edit, NotebookEdit
 
 ## Purpose
 
-You review a drafted design document from one perspective. The orchestrator passes the **role** in the prompt: PM, Architect, Designer, Security or CTO. If no role is given, ask the orchestrator rather than guessing.
+You review a drafted design document from one perspective. The orchestrator passes the **role** in the prompt: PM, Architect, Designer, Security, UX or CTO. If no role is given, ask the orchestrator rather than guessing.
 
 ## Role briefs
 
@@ -30,6 +30,7 @@ Read the persona file matching your role. Use the persona file for its checklist
 | Architect | `agents/architect-agent.md` |
 | Designer | `agents/designer-agent.md` |
 | Security | `agents/security-design-agent.md` |
+| UX | `agents/ux-reviewer-agent.md` |
 | CTO | `agents/cto-agent.md` |
 
 ## Rules

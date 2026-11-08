@@ -10,7 +10,7 @@ triggers:
 
 ## Purpose
 
-This skill bridges `superpowers:brainstorming` into the metaswarm quality pipeline by enforcing the Design Review Gate when brainstorming writes and commits a project-sized design doc. Only project-sized work reaches the gate; quick tasks, chat-only designs and short design docs for small changes skip it (see [`guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). Without this bridge, brainstorming flows directly into `writing-plans`, bypassing the 5-agent design review that catches architectural, security, and requirements issues before expensive implementation begins.
+This skill bridges `superpowers:brainstorming` into the metaswarm quality pipeline by enforcing the Design Review Gate when brainstorming writes and commits a project-sized design doc. Only project-sized work reaches the gate; quick tasks, chat-only designs and short design docs for small changes skip it (see [`guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). Without this bridge, brainstorming flows directly into `writing-plans`, bypassing the 6-agent design review that catches architectural, security, and requirements issues before expensive implementation begins.
 
 **This is a critical workflow enforcement point, not a passive extension.**
 
@@ -41,14 +41,15 @@ superpowers:brainstorming
     │  MANDATORY DESIGN REVIEW GATE           │
     │  (Enforced by CLAUDE.md + start-task)   │
     │                                         │
-    │  5 parallel review agents:              │
+    │  6 parallel review agents:              │
     │  • Product Manager (use cases)          │
     │  • Architect (architecture)             │
     │  • Designer (UX/API)                    │
     │  • Security Design (threats)            │
-    │  • CTO (TDD readiness)                 │
+    │  • UX Reviewer (user flows, UI states)  │
+    │  • CTO (TDD readiness)                  │
     │                                         │
-    │  ALL FIVE must APPROVE                  │
+    │  ALL SIX must APPROVE                   │
     └─────────────────────────────────────────┘
           │
           ▼
@@ -71,7 +72,7 @@ YAML frontmatter triggers (`auto_activate`, `triggers`) are metadata hints — C
 
 The CLAUDE.md template contains a "Workflow Enforcement (MANDATORY)" section that explicitly states:
 
-> After a project-sized design doc is committed: STOP → Run Design Review Gate → Wait for all 5 agents to APPROVE → Only then proceed
+> After a project-sized design doc is committed: STOP → Run Design Review Gate → Wait for all 6 agents to APPROVE → Only then proceed
 
 This instruction is loaded into every conversation and overrides conflicting skill instructions.
 
@@ -95,13 +96,14 @@ When brainstorming writes and commits a project-sized design doc (see [`guides/w
 ## Design Review Gate Activated
 
 Your design document has been committed. Before proceeding to implementation,
-I'll run it through our 5-agent review panel.
+I'll run it through our 6-agent review panel.
 
 Spawning reviews (each `roleType("design-reviewer")`, role in the prompt):
 - Product Manager Agent (use case/requirements validation)
 - Architect Agent (technical architecture)
 - Designer Agent (UX/API design)
 - Security Design Agent (threat modeling/security review)
+- UX Reviewer (user flows, UI states, integration wiring)
 - CTO Agent (TDD readiness)
 
 This typically takes 2-3 minutes...
@@ -109,7 +111,7 @@ This typically takes 2-3 minutes...
 
 ### Step 2: Invoke the Design Review Gate
 
-Invoke the `design-review-gate` skill with the path to the design document. This spawns all 5 review agents in parallel.
+Invoke the `design-review-gate` skill with the path to the design document. This spawns all 6 review agents in parallel.
 
 ### Step 3: Report Results
 
@@ -118,7 +120,7 @@ Invoke the `design-review-gate` skill with the path to the design document. This
 ```markdown
 ## Design Review Gate: PASSED
 
-All five reviewers have approved your design!
+All six reviewers have approved your design!
 
 | Agent           | Verdict  | Notes                                 |
 | --------------- | -------- | ------------------------------------- |
@@ -126,6 +128,7 @@ All five reviewers have approved your design!
 | Architect       | APPROVED | Clean architecture, follows patterns  |
 | Designer        | APPROVED | Good API design, clear error states   |
 | Security Design | APPROVED | No high-risk threats, mitigations OK  |
+| UX Reviewer     | APPROVED | Flows, UI states and wiring defined   |
 | CTO             | APPROVED | TDD specs present, ready to implement |
 
 ### Next Steps
@@ -174,6 +177,6 @@ Quick tasks, chat-only designs and short design docs for small changes never rea
 ## Related Skills
 
 - `superpowers:brainstorming` — The upstream skill this bridges from
-- `design-review-gate` — The 5-agent review implementation
+- `design-review-gate` — The 6-agent review implementation
 - `plan-review-gate` — The next gate in the pipeline: runs once writing-plans has written the plan, before writing-plans presents the plan (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md))
 - `orchestrated-execution` — The execution framework after planning

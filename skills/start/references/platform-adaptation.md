@@ -20,7 +20,7 @@ This reference documents how metaswarm skills adapt across Claude Code, Gemini C
 ### Claude Code (Full Support)
 
 Claude Code provides `Task()` for spawning independent subagents. metaswarm uses this for:
-- Parallel design review (5 agents simultaneously)
+- Parallel design review (6 agents simultaneously)
 - Adversarial review (fresh reviewer with no prior context)
 - Background research while implementation continues
 

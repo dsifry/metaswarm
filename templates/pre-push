@@ -13,25 +13,25 @@ pkill -f jest 2>/dev/null || true
 
 # --- Lint ---
 echo "  ✓ Lint"
-if command -v pnpm &>/dev/null && [ -f package.json ]; then
+if command -v pnpm >/dev/null 2>&1 && [ -f package.json ]; then
   pnpm lint 2>/dev/null || npm run lint
-elif command -v npm &>/dev/null && [ -f package.json ]; then
+elif command -v npm >/dev/null 2>&1 && [ -f package.json ]; then
   npm run lint
 fi
 
 # --- Typecheck ---
 echo "  ✓ Typecheck"
-if command -v pnpm &>/dev/null && [ -f package.json ]; then
+if command -v pnpm >/dev/null 2>&1 && [ -f package.json ]; then
   pnpm typecheck 2>/dev/null || npm run typecheck 2>/dev/null || true
-elif command -v npm &>/dev/null && [ -f package.json ]; then
+elif command -v npm >/dev/null 2>&1 && [ -f package.json ]; then
   npm run typecheck 2>/dev/null || true
 fi
 
 # --- Format ---
 echo "  ✓ Format check"
-if command -v pnpm &>/dev/null && [ -f package.json ]; then
+if command -v pnpm >/dev/null 2>&1 && [ -f package.json ]; then
   pnpm format:check 2>/dev/null || pnpm prettier --check . 2>/dev/null || true
-elif command -v npm &>/dev/null && [ -f package.json ]; then
+elif command -v npm >/dev/null 2>&1 && [ -f package.json ]; then
   npm run format:check 2>/dev/null || npx prettier --check . 2>/dev/null || true
 fi
 
@@ -40,7 +40,7 @@ if [ -f .coverage-thresholds.json ]; then
   echo "  ✓ Coverage enforcement (.coverage-thresholds.json found)"
 
   # Try jq first, fall back to node
-  if command -v jq &>/dev/null; then
+  if command -v jq >/dev/null 2>&1; then
     CMD=$(jq -r '.enforcement.command' .coverage-thresholds.json)
   else
     CMD=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.coverage-thresholds.json','utf-8')).enforcement.command)")
