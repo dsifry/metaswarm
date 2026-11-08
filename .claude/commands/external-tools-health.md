@@ -18,9 +18,10 @@ Check the status of external AI tools (Codex CLI, Gemini CLI) and their configur
 
 2. **Run each adapter's health check.** Each prints one JSON object with `"tool"`, `"status"` (`ready` or `unavailable`), `"version"` (`not_installed` if the CLI is missing), `"auth_valid"` and `"model"`:
    ```bash
-   bash "$AD/codex.sh" health || echo '{"tool":"codex","status":"error"}'
-   bash "$AD/gemini.sh" health || echo '{"tool":"gemini","status":"error"}'
+   bash "$AD/codex.sh" health || echo '{"tool":"codex","status":"error","version":"unknown","auth_valid":"unknown","model":"unknown"}'
+   bash "$AD/gemini.sh" health || echo '{"tool":"gemini","status":"error","version":"unknown","auth_valid":"unknown","model":"unknown"}'
    ```
+   A `"status":"error"` row means the adapter itself failed (for example, Gemini can exit non-zero while resolving its model). Report it as an adapter error and show the adapter's stderr. Don't infer that the CLI is missing or logged out.
    To see the model for a specific role, add `--role <role>`. Models come from `.metaswarm/models.yaml` (`roles.<role>.codex|gemini`).
 
 3. **Check configuration.** Read `.metaswarm/external-tools.yaml` if it exists, and report which adapters are enabled or disabled. Report a legacy `adapters.<tool>.model` in `external-tools.yaml` as deprecated.

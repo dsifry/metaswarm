@@ -122,6 +122,24 @@ DI_OUT=$(cd "$REPO_ROOT" && node -e '
   console.log(JSON.stringify(out));' "$DI_ROOT" 2>&1) || true
 assert_eq "Injected root/mirror: only the unsourced, non-excluded file" '["dst/b.md"]' "$DI_OUT"
 
+# Test 0e: broken symlinks never crash sync; other fs errors are not swallowed.
+echo "Test 0e: broken symlinks and fs errors"
+ln -s "$SANDBOX/does-not-exist.md" "$SANDBOX/commands/zz-broken-src.md"
+ln -s "$SANDBOX/does-not-exist.md" "$SANDBOX/.claude/commands/zz-broken-mirror.md"
+run_sync --check
+if printf '%s' "$SYNC_OUT" | grep -qF -e 'ORPHAN: .claude/commands/zz-broken-mirror.md'; then result="REPORTED"; else result="MISSING"; fi
+assert_eq "--check survives broken symlinks and reports the broken mirror as an orphan" "REPORTED" "$result"
+if printf '%s' "$SYNC_OUT" | grep -qF -e 'ENOENT'; then result="CRASHED"; else result="OK"; fi
+assert_eq "--check does not crash on a broken source symlink" "OK" "$result"
+rm -f "$SANDBOX/commands/zz-broken-src.md" "$SANDBOX/.claude/commands/zz-broken-mirror.md"
+EACCES_OUT=$(cd "$REPO_ROOT" && node -e '
+  const { findOrphanedCommandMirrors } = require("./lib/sync-resources.js");
+  const fs = require("fs");
+  const fake = { ...fs, statSync: () => { const e = new Error("EACCES: permission denied"); e.code = "EACCES"; throw e; } };
+  try { findOrphanedCommandMirrors(process.argv[1], { src: "src", dest: "dst", exclude: [] }, fake); console.log("SWALLOWED"); }
+  catch (e) { console.log(/EACCES/.test(e.message) && /dst/.test(e.message) ? "RETHROWN_WITH_PATH" : "RETHROWN:" + e.message); }' "$DI_ROOT" 2>&1) || true
+assert_eq "Non-ENOENT fs errors are rethrown with the path" "RETHROWN_WITH_PATH" "$EACCES_OUT"
+
 # Test 1: Check mode should pass when files are in sync (read-only, real checkout)
 echo "Test 1: Check mode passes when synced"
 if (cd "$REPO_ROOT" && node lib/sync-resources.js --check >/dev/null 2>&1); then

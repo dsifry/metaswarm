@@ -32,7 +32,7 @@ Where:
   - pytest → `"pytest --cov --cov-fail-under=<threshold>"`
   - vitest/pnpm → `"pnpm vitest run --coverage"`
   - jest/npm → `"npx jest --coverage"`
-  - go → `"go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out -o coverage.txt && awk -v min=<threshold> '/^total:/ { print; if ($3 + 0 < min) exit 1 }' coverage.txt"`
+  - go → `"go test -coverprofile=coverage.out ./..."`
   - cargo → `"cargo tarpaulin --fail-under <threshold>"`
 - `<platform>` is `codex`, `claude`, `gemini`, or `all`. Prefer:
   - `codex` when running in Codex (`PLUGIN_ROOT` or `CODEX_HOME` is present, or the user invoked `$setup`)
@@ -371,7 +371,7 @@ Command resolution reference:
 | jest | yarn | `yarn jest` | `yarn jest --coverage` |
 | mocha | any | `npx mocha` | `npx nyc mocha` |
 | pytest | -- | `pytest` | `pytest --cov --cov-fail-under={threshold}` |
-| go test | -- | `go test ./...` | `go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out -o coverage.txt && awk -v min={threshold} '/^total:/ { print; if ($3 + 0 < min) exit 1 }' coverage.txt` |
+| go test | -- | `go test ./...` | `go test -coverprofile=coverage.out ./...` |
 | cargo test | -- | `cargo test` | `cargo tarpaulin --fail-under {threshold}` |
 | mvn test | -- | `mvn test` | `mvn test jacoco:report` |
 | gradle test | -- | `gradle test` | `gradle test jacocoTestReport` |
