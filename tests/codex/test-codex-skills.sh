@@ -101,7 +101,10 @@ done
 
 # 8. Symlink creation dry run
 TMP_DIR=$(mktemp -d)
-trap 'rm -rf "$TMP_DIR"' EXIT
+# bash 3.2 exits with the EXIT trap's status (0) when `set -u` aborts the script,
+# so a crash would look like a pass. DONE is set only after the summary runs.
+DONE=0
+trap 'rm -rf "${TMP_DIR:?}"; [ "$DONE" = 1 ] || { echo "ABORTED before summary" >&2; exit 1; }' EXIT
 
 for skill_dir in "$ROOT/skills"/*/; do
   [ -d "$skill_dir" ] || continue
@@ -148,4 +151,5 @@ fi
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
+DONE=1
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1

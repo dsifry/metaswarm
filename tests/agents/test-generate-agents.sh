@@ -13,7 +13,10 @@ VERSION="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$R
 PASS=0
 FAIL=0
 TMP_BASE="$(mktemp -d)"
-trap 'rm -rf "$TMP_BASE"' EXIT
+# bash 3.2 exits with the EXIT trap's status (0) when `set -u` aborts the script,
+# so a crash would look like a pass. DONE is set only after the summary runs.
+DONE=0
+trap 'rm -rf "${TMP_BASE:?}"; [ "$DONE" = 1 ] || { echo "ABORTED before summary" >&2; exit 1; }' EXIT
 
 pass() { PASS=$((PASS + 1)); echo "  PASS: $1"; }
 fail() { FAIL=$((FAIL + 1)); echo "  FAIL: $1"; }
@@ -238,4 +241,5 @@ run resolve coder gemini
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
+DONE=1
 [ "$FAIL" -eq 0 ] || exit 1
