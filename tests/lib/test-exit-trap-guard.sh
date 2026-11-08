@@ -33,8 +33,9 @@ for suite in "$ROOT"/tests/*/test-*.sh; do
   [ -n "$line" ] || continue
   CHECKED=$((CHECKED + 1))
   # The copy sits beside the original so its own ROOT/dirname logic still works;
-  # the leading dot keeps it out of the tests/*/test-*.sh glob.
-  COPY="$(dirname "$suite")/.forced-abort-$(basename "$suite")"
+  # the leading dot keeps it out of the tests/*/test-*.sh glob, and mktemp gives
+  # each run its own file, so concurrent runs in one checkout cannot collide.
+  COPY="$(mktemp "$(dirname "$suite")/.forced-abort-XXXXXX")"
   awk -v n="$line" '{ print } NR == n { print "set -u; : \"$__FORCED_ABORT_UNBOUND\"" }' "$suite" > "$COPY"
   out="$(cd "$ROOT" && bash "$COPY" 2>&1)"
   rc=$?
