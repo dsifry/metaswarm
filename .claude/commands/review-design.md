@@ -49,8 +49,9 @@ Run the design review gate on a design document to get feedback from Product Man
 <!-- latest-design-doc:start -->
 ```bash
 (
-  latest=$(find docs/plans docs/superpowers/specs -maxdepth 1 -type f \
-      -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-*-design.md' 2>/dev/null |
+  # `|| :` keeps a missing folder from aborting the lookup under set -e + pipefail.
+  latest=$({ find docs/plans docs/superpowers/specs -maxdepth 1 -type f \
+      -name '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-*-design.md' 2>/dev/null || :; } |
     awk '{ n = $0; sub(".*/", "", n); print n "\t" $0 }' |
     LC_ALL=C sort | tail -n 1 | cut -f2)
   if [ -n "$latest" ]; then

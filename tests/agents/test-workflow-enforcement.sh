@@ -86,9 +86,10 @@ mk() { # <fixture-root> <relative-file>...
   for f in "$@"; do mkdir -p "$root/$(dirname "$f")"; : >"$root/$f"; done
 }
 
+SNIPPET_PREFIX=""  # set to run the snippet in a strict calling shell
 run_snippet() { # <shell> <dir>; sets RUN_OUT, RUN_RC
   RUN_RC=0
-  RUN_OUT="$(cd "$2" && "$1" -c "$SNIPPET" 2>&1)" || RUN_RC=$?
+  RUN_OUT="$(cd "$2" && "$1" -c "$SNIPPET_PREFIX$SNIPPET" 2>&1)" || RUN_RC=$?
 }
 
 expect_pick() { # <shell> <label> <expected> <file>...
@@ -145,6 +146,13 @@ for SH in bash zsh; do
   fi
   expect_none "$SH" "h: empty tree, both folders exist" "$P" "$S"
   expect_none "$SH" "h: no folders at all"
+  # Strict calling shell (set -e + pipefail): a missing folder must not abort the lookup.
+  SNIPPET_PREFIX='set -e; set -o pipefail; '
+  expect_pick "$SH" "strict: only specs, plans absent" "$S/2026-03-01-b-design.md" "$S/2026-03-01-b-design.md"
+  expect_pick "$SH" "strict: only plans, specs absent" "$P/2026-02-01-a-design.md" "$P/2026-02-01-a-design.md"
+  expect_pick "$SH" "strict: both folders" "$S/2026-03-01-b-design.md" "$S/2026-03-01-b-design.md" "$P/2026-02-01-a-design.md"
+  expect_none "$SH" "strict: no folders at all"
+  SNIPPET_PREFIX=""
 done
 
 assert_in "design-review-gate names both locations" "$(cat "$REPO_ROOT/skills/design-review-gate/SKILL.md")" \
