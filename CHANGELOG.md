@@ -6,7 +6,7 @@
 
 - **Review findings carry `title` and `description`** (#58). Every finding uses six fields, `title`, `description`, `severity`, `protects`, `evidence` and `blocker`, and context recovery matches recurring findings by title and description.
 - **Execution state splits "Retries" into VALIDATE attempts and review rounds** (#59). The VALIDATE counter counts consecutive failures and resets on PASS; review rounds follow the severity rule (cap 10). A pre-split state file's `Retries` value is read as VALIDATE attempts.
-- **Escalation never approves** (#68). A review gate passes only when a fresh round has no `blocker: yes` finding. Escalation options are Revise / Narrow scope / Defer / Cancel; Override and `--force-override` are removed.
+- **Escalation never approves** (#68). A review gate advances only when a fresh round has no `blocker: yes` finding, or when rule line 5's overengineering check downgrades every remaining blocker to a follow-up. Escalating to the human never approves: the options are Revise / Narrow scope / Defer / Cancel, and Override and `--force-override` are removed.
 - **Workflow enforcement reconciled with superpowers >= 6.4.1** (#67). The canonical rules live in `guides/workflow-enforcement.md`; skills and the CLAUDE.md/AGENTS.md/GEMINI.md templates point to it.
 - **Design Review Gate runs only for project-sized work** (#67). Quick tasks, chat-only designs and short design docs for small changes (superpowers 7.0.1+) skip it.
 - **`docs/superpowers/specs/` is watched** (#67) alongside `docs/plans/`, and `/review-design --latest` searches both folders.

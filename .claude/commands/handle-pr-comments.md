@@ -1,5 +1,5 @@
 ---
-description: Handle PR review comments: verify each finding, fix or reply, and resolve the threads
+description: "Handle PR review comments: verify each finding, fix or reply, and resolve the threads"
 ---
 
 # /handle-pr-comments
