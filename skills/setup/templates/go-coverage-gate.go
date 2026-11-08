@@ -24,7 +24,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"math"
+	"math/big"
 	"os"
 	"os/exec"
 	"strconv"
@@ -34,11 +34,17 @@ import (
 const (
 	configFile  = ".coverage-thresholds.json"
 	profileFile = "coverage.out"
-	micro       = 1000000 // thresholds are compared in millionths of a percent
 )
 
 type config struct {
-	Thresholds map[string]*float64 `json:"thresholds"`
+	Thresholds map[string]json.RawMessage `json:"thresholds"`
+}
+
+// threshold is a configured percentage, kept as the exact decimal written in
+// .coverage-thresholds.json so no rounding can lower it.
+type threshold struct {
+	text string   // as written, for messages
+	rat  *big.Rat // exact value
 }
 
 func main() {
@@ -71,7 +77,7 @@ func run(pkgs []string) int {
 	return judge(thresholds, covered, total)
 }
 
-func readThresholds(path string) (map[string]*float64, error) {
+func readThresholds(path string) (map[string]*threshold, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read %s (run from the project root): %w", path, err)
@@ -83,10 +89,26 @@ func readThresholds(path string) (map[string]*float64, error) {
 	if c.Thresholds == nil {
 		return nil, fmt.Errorf("%s has no \"thresholds\" object", path)
 	}
-	if c.Thresholds["lines"] == nil && c.Thresholds["statements"] == nil {
+	out := map[string]*threshold{}
+	for _, dim := range []string{"lines", "statements", "branches", "functions"} {
+		raw, ok := c.Thresholds[dim]
+		if !ok {
+			continue
+		}
+		var n json.Number
+		if err := json.Unmarshal(raw, &n); err != nil {
+			return nil, fmt.Errorf("%s: thresholds.%s is not a number: %s", path, dim, raw)
+		}
+		r, ok := new(big.Rat).SetString(n.String())
+		if !ok || r.Sign() < 0 || r.Cmp(big.NewRat(100, 1)) > 0 {
+			return nil, fmt.Errorf("%s: thresholds.%s must be a number between 0 and 100, got %s", path, dim, n)
+		}
+		out[dim] = &threshold{text: n.String(), rat: r}
+	}
+	if out["lines"] == nil && out["statements"] == nil {
 		return nil, fmt.Errorf("%s sets neither thresholds.lines nor thresholds.statements, so there is nothing to enforce for Go", path)
 	}
-	return c.Thresholds, nil
+	return out, nil
 }
 
 // countStatements reads a Go cover profile. Each line after the "mode:" header
@@ -146,7 +168,7 @@ func countStatements(path string) (covered, total int64, err error) {
 	return covered, total, nil
 }
 
-func judge(thresholds map[string]*float64, covered, total int64) int {
+func judge(thresholds map[string]*threshold, covered, total int64) int {
 	if total == 0 {
 		fmt.Println("coverage gate: no Go statements found in the cover profile; nothing to enforce.")
 		return 0
@@ -160,23 +182,25 @@ func judge(thresholds map[string]*float64, covered, total int64) int {
 		if t == nil {
 			continue
 		}
-		// covered/total >= t/100 in integers: the threshold is scaled to
-		// millionths of a percent, so neither a rounded percentage nor a float
-		// product (99.9*41000 rounds up in float64) is ever compared.
-		tMicro := int64(math.Round(*t * micro))
-		target := tMicro * total // covered must reach target / (100*micro)
-		if covered*100*micro >= target {
-			fmt.Printf("  PASS %s: %s%% >= %s%% (Go statement coverage)\n", dim, fmtPct(pct), fmtPct(*t))
+		// covered/total >= t/100 with exact rationals: no rounded percentage
+		// or float product (99.9*41000 rounds up in float64) is ever compared.
+		required := new(big.Rat).Mul(t.rat, big.NewRat(total, 100)) // statements needed
+		if new(big.Rat).SetInt64(covered).Cmp(required) >= 0 {
+			fmt.Printf("  PASS %s: %s%% >= %s%% (Go statement coverage)\n", dim, fmtPct(pct), t.text)
 		} else {
-			// Statements still needed: ceil(target / (100*micro)) - covered.
-			need := (target+100*micro-1)/(100*micro) - covered
-			fmt.Printf("  FAIL %s: %s%% < %s%% (Go statement coverage; cover %d more statement(s))\n", dim, fmtPct(pct), fmtPct(*t), need)
+			// Statements still needed: ceil(required) - covered.
+			q, m := new(big.Int).QuoRem(required.Num(), required.Denom(), new(big.Int))
+			if m.Sign() > 0 {
+				q.Add(q, big.NewInt(1))
+			}
+			need := q.Int64() - covered
+			fmt.Printf("  FAIL %s: %s%% < %s%% (Go statement coverage; cover %d more statement(s))\n", dim, fmtPct(pct), t.text, need)
 			failed = true
 		}
 	}
 	for _, dim := range []string{"branches", "functions"} {
 		if t := thresholds[dim]; t != nil {
-			fmt.Printf("  NOT ENFORCED %s (%s%%): Go reports statement coverage only\n", dim, fmtPct(*t))
+			fmt.Printf("  NOT ENFORCED %s (%s%%): Go reports statement coverage only\n", dim, t.text)
 		}
 	}
 	if failed {

@@ -102,6 +102,18 @@ gate "$DEC"
 printf '%s' "$OUT" | grep -q "40959 of 41000 statements" || fail "decimal fixture is not 40959/41000: $OUT"
 [ "$RC" -eq 0 ] && pass "40959/41000 passes at exactly 99.9% (no float rounding)" || fail "40959/41000 failed at 99.9% (rc=$RC): $OUT"
 
+# Thresholds are compared as exact decimals: 75.0000001 is above 3/4.
+thresholds "$SMALL" 75.0000001 0 0 75.0000001
+gate "$SMALL"
+[ "$RC" -ne 0 ] && pass "75% fails at 75.0000001% (no rounding of the threshold)" || fail "75% passed at 75.0000001%: $OUT"
+# Out-of-range thresholds are rejected, not silently passed.
+thresholds "$SMALL" -5 0 0 75
+gate "$SMALL"
+[ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -q "between 0 and 100" && pass "a negative threshold is rejected" || fail "negative threshold accepted (rc=$RC): $OUT"
+thresholds "$SMALL" 1e300 0 0 75
+gate "$SMALL"
+[ "$RC" -ne 0 ] && printf '%s' "$OUT" | grep -q "between 0 and 100" && pass "a huge threshold is rejected" || fail "huge threshold accepted (rc=$RC): $OUT"
+
 # lines and statements are enforced separately: either one below fails.
 thresholds "$SMALL" 75 0 0 80
 gate "$SMALL"

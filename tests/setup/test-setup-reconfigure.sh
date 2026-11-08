@@ -100,6 +100,10 @@ new_project racego 80 "go test -race -coverpkg=./... -coverprofile=c.out ./pkg/.
 run_setup 80 "go run .metaswarm/go-coverage-gate.go" --reconfigure
 [ "$(get enforcement.command)" = "go run .metaswarm/go-coverage-gate.go -race -coverpkg=./... ./pkg/..." ] && pass "reconfigure: custom go test flags and packages kept" || fail "reconfigure: go flags became '$(get enforcement.command)'"
 printf '%s' "$OUT" | grep -q "80% -> 80%" && fail "reconfigure: prints a no-op threshold change: $OUT" || pass "reconfigure: no threshold line when only the command changed"
+new_project tagsgo 80 "go test -tags integration -coverprofile coverage.out ./..."
+run_setup 80 "go run .metaswarm/go-coverage-gate.go" --reconfigure
+# ./... stays: with any argument given, the gate no longer defaults to it.
+[ "$(get enforcement.command)" = "go run .metaswarm/go-coverage-gate.go -tags integration ./..." ] && pass "reconfigure: '-tags integration ./...' kept, '-coverprofile <file>' dropped" || fail "reconfigure: tags command became '$(get enforcement.command)'"
 new_project plaingo 80 "go test -cover ./..."
 run_setup 80 "go run .metaswarm/go-coverage-gate.go" --reconfigure
 [ "$(get enforcement.command)" = "go run .metaswarm/go-coverage-gate.go" ] && pass "reconfigure: default ./... and -cover not repeated" || fail "reconfigure: plain go command became '$(get enforcement.command)'"
@@ -127,6 +131,10 @@ printf '%s' "$OUT" | grep -q "undefined" && fail "reconfigure: reports 'undefine
 new_project cr 80 "pytest --cov --cov-fail-under=80"
 run_setup 90 $'pytest --cov\r --cov-fail-under=90' --reconfigure
 [ "$(json_status)" != "INVALID-JSON" ] && pass "output stays valid JSON with control characters" || fail "control characters broke the JSON: $OUT"
+P="$TMP/nl-new"; mkdir -p "$P"; printf 'metaswarm\n' > "$P/CLAUDE.md"
+run_setup 90 $'pytest --cov\n--cov-fail-under=90'
+printf '%s' "$OUT" | grep -q 'command: pytest' || fail "newline fixture: command not in any message: $OUT"
+[ "$(json_status)" = "ok" ] && pass "a newline in the command does not turn success into errors" || fail "newline in command: status '$(json_status)': $OUT"
 P="$TMP/cr-new"; mkdir -p "$P"; printf 'metaswarm\n' > "$P/CLAUDE.md"
 run_setup 90 $'pytest --cov\r\001 --cov-fail-under=90'
 [ "$(json_status)" != "INVALID-JSON" ] && pass "create output stays valid JSON with control characters" || fail "create: control characters broke the JSON: $OUT"

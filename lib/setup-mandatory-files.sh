@@ -117,7 +117,9 @@ COVERAGE_JS=""
 IFS= read -r -d '' COVERAGE_JS <<'JS' || true
 const fs = require('fs');
 const [mode, file, tmplPath, rawThreshold, cmd] = process.argv.slice(1);
-const say = (kind, msg) => console.log(kind + '\t' + msg);
+// One record per line: a newline or tab inside a message (e.g. from a user's
+// command) would split it, so show those as spaces.
+const say = (kind, msg) => console.log(kind + '\t' + String(msg).replace(/[\r\n\t]+/g, ' '));
 const t = Number(rawThreshold);
 const DIMS = ['lines', 'branches', 'functions', 'statements'];
 if (!/^\d+(\.\d+)?$/.test(rawThreshold) || t > 100) {
