@@ -1,5 +1,5 @@
 description = "Update metaswarm to the latest version"
-prompt = """On Gemini CLI, update the extension with `gemini extensions update metaswarm`. Then follow the metaswarm /update command for the project steps: read `commands/update.md` in the metaswarm extension directory (usually ~/.gemini/extensions/metaswarm/); skip its Claude plugin-update steps. The user wants to update metaswarm.
+prompt = """On Gemini CLI, update the extension with `gemini extensions update metaswarm`. Then follow the metaswarm /update command for the project steps: read `commands/update.md` in the metaswarm extension directory (usually ~/.gemini/extensions/metaswarm/), with PLUGIN_ROOT set to that directory; skip its Claude plugin-update steps. The user wants to update metaswarm.
 
 Arguments provided by the user: {{args}}
 

@@ -1,5 +1,5 @@
 description = "Extract learnings from PR comments and session into the knowledge base"
-prompt = """Follow the metaswarm /self-reflect command: read `commands/self-reflect.md` in the metaswarm extension directory (usually ~/.gemini/extensions/metaswarm/) and carry out its steps. The user wants to capture learnings.
+prompt = """Follow the metaswarm /self-reflect command: read `commands/self-reflect.md` in the metaswarm extension directory (usually ~/.gemini/extensions/metaswarm/) and carry out its steps. Set PLUGIN_ROOT to that directory first, so its snippets find bin/ and lib/ in the extension. The user wants to capture learnings.
 
 Arguments provided by the user: {{args}}
 
