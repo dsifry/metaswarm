@@ -23,7 +23,7 @@ fi
 if [ -z "$PLUGIN_ROOT" ] && [ -f "$(pwd)/lib/setup-mandatory-files.sh" ]; then
   PLUGIN_ROOT="$(pwd)"
 fi
-bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform>
+bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform> [--reconfigure]
 ```
 
 Where:
@@ -32,20 +32,21 @@ Where:
   - pytest → `"pytest --cov --cov-fail-under=<threshold>"`
   - vitest/pnpm → `"pnpm vitest run --coverage"`
   - jest/npm → `"npx jest --coverage"`
-  - go → `"go test -coverprofile=coverage.out ./..."`
+  - go → `"go run .metaswarm/go-coverage-gate.go"` (`go test` has no threshold flag; the script writes this gate program, which runs `go test -coverprofile=coverage.out ./...` and fails below the thresholds in `.coverage-thresholds.json`)
   - cargo → `"cargo tarpaulin --fail-under <threshold>"`
 - `<platform>` is `codex`, `claude`, `gemini`, or `all`. Prefer:
   - `codex` when running in Codex (`PLUGIN_ROOT` or `CODEX_HOME` is present, or the user invoked `$setup`)
   - `claude` when running in Claude Code (`CLAUDE_PLUGIN_ROOT` is present, or the setup skill was invoked there)
   - `gemini` when running in Gemini (`extensionPath` is present, or the setup skill was invoked there)
   - `all` only when the user explicitly asks to configure every supported CLI
+- `--reconfigure`: add it only when the user chose "Re-run setup" at the Existing Profile Check. It updates an existing `.coverage-thresholds.json` to the new threshold, including a `--cov-fail-under`/`--fail-under` value in `enforcement.command`, and keeps every other setting. Without it an existing file is left unchanged.
 
 The script handles:
 1. **Instruction file** — `AGENTS.md` for Codex, `CLAUDE.md` for Claude, `GEMINI.md` for Gemini; appends metaswarm section (or writes new), skips if already present
-2. **`.coverage-thresholds.json`** — writes at project root with correct thresholds and command
+2. **`.coverage-thresholds.json`** — writes at project root with correct thresholds and command (with `--reconfigure`, updates an existing one). For Go it also writes `.metaswarm/go-coverage-gate.go`
 3. **Claude command shims** — for Claude/all only, writes `.claude/commands/start-task.md`, `prime.md`, `review-design.md`, `self-reflect.md`, `pr-shepherd.md`, `brainstorm.md`
 
-The script outputs JSON with what was created/skipped/errored. Check that `"status": "ok"`.
+The script outputs JSON with what was created/skipped/warned/errored. Check that `"status": "ok"`, and show the user every entry in `warnings` (for example an `enforcement.command` that still embeds the old threshold).
 
 **If the script is not available or fails**, fall back to writing these files manually with the Write tool. Do NOT skip them.
 </CRITICAL-REQUIREMENTS>
@@ -237,7 +238,7 @@ fi
 if [ -z "$PLUGIN_ROOT" ] && [ -f "$(pwd)/lib/setup-mandatory-files.sh" ]; then
   PLUGIN_ROOT="$(pwd)"
 fi
-bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform>
+bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" <threshold> "<coverage-command>" --platform <platform> [--reconfigure]
 ```
 
 Example for Codex with Python/pytest at 100%:
@@ -246,7 +247,7 @@ Example for Codex with Python/pytest at 100%:
 bash "${PLUGIN_ROOT}/lib/setup-mandatory-files.sh" "$(pwd)" 100 "pytest --cov --cov-fail-under=100" --platform codex
 ```
 
-Check the JSON output. If `"status": "ok"`, the 3 mandatory files are done. Report to the user what was created.
+Check the JSON output. If `"status": "ok"`, the 3 mandatory files are done. Report to the user what was created, and show them every entry in `warnings`.
 
 If the script fails or is not found, write the files manually (see CRITICAL-REQUIREMENTS above for what they are).
 
@@ -371,7 +372,7 @@ Command resolution reference:
 | jest | yarn | `yarn jest` | `yarn jest --coverage` |
 | mocha | any | `npx mocha` | `npx nyc mocha` |
 | pytest | -- | `pytest` | `pytest --cov --cov-fail-under={threshold}` |
-| go test | -- | `go test ./...` | `go test -coverprofile=coverage.out ./...` |
+| go test | -- | `go test ./...` | `go run .metaswarm/go-coverage-gate.go` |
 | cargo test | -- | `cargo test` | `cargo tarpaulin --fail-under {threshold}` |
 | mvn test | -- | `mvn test` | `mvn test jacoco:report` |
 | gradle test | -- | `gradle test` | `gradle test jacocoTestReport` |

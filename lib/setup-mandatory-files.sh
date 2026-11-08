@@ -3,13 +3,16 @@
 # Writes the 3 mandatory setup files that the agent keeps skipping.
 # Called by the setup skill after detection and user questions.
 #
-# Usage: setup-mandatory-files.sh <project-dir> <coverage-threshold> <coverage-command> [--platform claude|codex|gemini|all]
+# Usage: setup-mandatory-files.sh <project-dir> <coverage-threshold> <coverage-command> [--platform claude|codex|gemini|all] [--reconfigure]
 #
 # Arguments:
 #   project-dir       - Project root directory
 #   coverage-threshold - Coverage percentage (e.g., 100)
 #   coverage-command   - Coverage enforcement command (e.g., "pytest --cov --cov-fail-under=100")
 #   --platform        - Target platform(s): claude (default), codex, gemini, or all
+#   --reconfigure     - Explicit setup re-run: update an existing .coverage-thresholds.json
+#                       to the new threshold (other settings kept). Without it an existing
+#                       file is never changed (the session hook's self-heal omits it).
 #
 # Environment:
 #   CLAUDE_PLUGIN_ROOT - Plugin root directory (set by Claude Code)
@@ -23,6 +26,7 @@ COVERAGE_COMMAND="${3:?Missing coverage command}"
 
 # Parse optional --platform flag (default: claude)
 PLATFORM="claude"
+RECONFIGURE=false
 shift 3
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -32,6 +36,7 @@ while [ $# -gt 0 ]; do
         exit 1
       fi
       PLATFORM="$2"; shift 2 ;;
+    --reconfigure) RECONFIGURE=true; shift ;;
     *) shift ;;
   esac
 done
@@ -45,6 +50,7 @@ TEMPLATE_DIR="$PLUGIN_ROOT/skills/setup/templates"
 # Track what was done
 created=()
 skipped=()
+warnings=()
 errors=()
 
 # Helper: write instruction file for a given platform
@@ -97,32 +103,131 @@ case "$PLATFORM" in
 esac
 
 # --- File 2: .coverage-thresholds.json ---
+# New file: written from the template. Existing file: left alone, unless
+# --reconfigure (an explicit setup re-run) asks to update its thresholds and any
+# threshold embedded in enforcement.command; every other setting is kept. The
+# session hook's self-heal never passes --reconfigure, so it cannot overwrite
+# thresholds a user edited by hand.
 coverage_file="$PROJECT_DIR/.coverage-thresholds.json"
 coverage_template="$TEMPLATE_DIR/coverage-thresholds.json"
 
+# Quoted heredoc: the shell expands nothing inside the script.
+COVERAGE_JS=$(cat <<'JS'
+const fs = require('fs');
+const [mode, file, tmplPath, rawThreshold, cmd] = process.argv.slice(1);
+const say = (kind, msg) => console.log(kind + '\t' + msg);
+const t = Number(rawThreshold);
+const DIMS = ['lines', 'branches', 'functions', 'statements'];
+if (!/^\d+(\.\d+)?$/.test(rawThreshold) || t > 100) {
+  say('error', `.coverage-thresholds.json: coverage threshold '${rawThreshold}' is not a number from 0 to 100`);
+  process.exit(0);
+}
+if (mode === 'create') {
+  const tmpl = JSON.parse(fs.readFileSync(tmplPath, 'utf-8'));
+  for (const d of DIMS) tmpl.thresholds[d] = t;
+  tmpl.enforcement.command = cmd;
+  fs.writeFileSync(file, JSON.stringify(tmpl, null, 2) + '\n');
+  say('created', `.coverage-thresholds.json (threshold: ${t}%, command: ${cmd})`);
+  process.exit(0);
+}
+let cfg;
+try {
+  cfg = JSON.parse(fs.readFileSync(file, 'utf-8'));
+} catch (e) {
+  say('error', `.coverage-thresholds.json is not valid JSON, left unchanged: ${e.message}`);
+  process.exit(0);
+}
+if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) {
+  say('error', '.coverage-thresholds.json is not a JSON object, left unchanged');
+  process.exit(0);
+}
+cfg.thresholds = cfg.thresholds && typeof cfg.thresholds === 'object' ? cfg.thresholds : {};
+const old = DIMS.map((d) => cfg.thresholds[d]);
+const oldShown = [...new Set(old.map(String))].join('/');
+for (const d of DIMS) cfg.thresholds[d] = t;
+
+cfg.enforcement = cfg.enforcement && typeof cfg.enforcement === 'object' ? cfg.enforcement : {};
+const oldCmd = typeof cfg.enforcement.command === 'string' ? cfg.enforcement.command : '';
+let newCmd = oldCmd;
+if (!oldCmd) {
+  newCmd = cmd;
+} else {
+  // Known threshold flags: pytest-cov --cov-fail-under, tarpaulin/coverage.py --fail-under.
+  newCmd = oldCmd.replace(/(--(?:cov-)?fail-under)([= ])(\d+(?:\.\d+)?)(?![\d.])/g, (m, flag, sep) => flag + sep + t);
+}
+cfg.enforcement.command = newCmd;
+
+const thresholdsChanged = old.some((v) => v !== t);
+if (!thresholdsChanged && newCmd === oldCmd) {
+  say('skipped', `.coverage-thresholds.json (already at ${t}%)`);
+} else {
+  fs.writeFileSync(file, JSON.stringify(cfg, null, 2) + '\n');
+  say('created', `.coverage-thresholds.json (thresholds ${oldShown}% -> ${t}%)`);
+  if (newCmd !== oldCmd) say('created', `.coverage-thresholds.json enforcement.command updated to: ${newCmd}`);
+}
+// Any old threshold still written in the command, in a form not rewritten above.
+const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const stale = [...new Set(old.filter((v) => typeof v === 'number' && v !== t).map(String))]
+  .filter((v) => new RegExp('(^|[^\\d.])' + esc(v) + '(?![\\d.])').test(newCmd));
+if (stale.length) {
+  say('warning', `enforcement.command may embed the old threshold (${stale.join('/')}%): '${newCmd}'. Update it by hand to use ${t}%.`);
+}
+JS
+)
+
+coverage_mode=""
 if [ -f "$coverage_file" ]; then
-  skipped+=(".coverage-thresholds.json (already exists)")
-else
-  if [ ! -f "$coverage_template" ]; then
-    errors+=("coverage-thresholds.json template not found at $coverage_template")
+  if [ "$RECONFIGURE" = true ]; then
+    coverage_mode="reconfigure"
   else
-    # Read template and replace values
-    if command -v node >/dev/null 2>&1; then
-      node -e "
-        const fs = require('fs');
-        const tmpl = JSON.parse(fs.readFileSync(process.argv[1], 'utf-8'));
-        const threshold = parseInt(process.argv[2], 10);
-        const cmd = process.argv[3];
-        tmpl.thresholds.lines = threshold;
-        tmpl.thresholds.branches = threshold;
-        tmpl.thresholds.functions = threshold;
-        tmpl.thresholds.statements = threshold;
-        tmpl.enforcement.command = cmd;
-        fs.writeFileSync(process.argv[4], JSON.stringify(tmpl, null, 2) + '\n');
-      " "$coverage_template" "$COVERAGE_THRESHOLD" "$COVERAGE_COMMAND" "$coverage_file"
-      created+=(".coverage-thresholds.json (threshold: ${COVERAGE_THRESHOLD}%, command: ${COVERAGE_COMMAND})")
+    skipped+=(".coverage-thresholds.json (already exists)")
+  fi
+elif [ ! -f "$coverage_template" ]; then
+  errors+=("coverage-thresholds.json template not found at $coverage_template")
+else
+  coverage_mode="create"
+fi
+
+if [ -n "$coverage_mode" ]; then
+  if command -v node >/dev/null 2>&1; then
+    coverage_out="$(node -e "$COVERAGE_JS" "$coverage_mode" "$coverage_file" "$coverage_template" "$COVERAGE_THRESHOLD" "$COVERAGE_COMMAND" 2>&1)" \
+      || coverage_out="error	.coverage-thresholds.json: node failed: ${coverage_out//$'\n'/ }"
+    while IFS=$'\t' read -r kind msg; do
+      case "$kind" in
+        created) created+=("$msg") ;;
+        skipped) skipped+=("$msg") ;;
+        warning) warnings+=("$msg") ;;
+        error) errors+=("$msg") ;;
+        '') ;;
+        *) errors+=(".coverage-thresholds.json: unexpected output: $kind $msg") ;;
+      esac
+    done <<< "$coverage_out"
+  else
+    errors+=(".coverage-thresholds.json — node not available for JSON templating")
+  fi
+fi
+
+# --- File 2b: Go coverage gate (#78) ---
+# `go test` has no threshold flag, so Go projects use a gate program as their
+# enforcement command. Write it whenever the configured command runs it, and
+# refresh it on re-runs so plugin fixes reach the project.
+gate_rel=".metaswarm/go-coverage-gate.go"
+if [ -f "$coverage_file" ] && grep -qF "$gate_rel" "$coverage_file" 2>/dev/null; then
+  gate_template="$TEMPLATE_DIR/go-coverage-gate.go"
+  gate_target="$PROJECT_DIR/$gate_rel"
+  if [ ! -f "$gate_template" ]; then
+    errors+=("go-coverage-gate.go template not found at $gate_template")
+  elif [ -f "$gate_target" ] && cmp -s "$gate_template" "$gate_target"; then
+    skipped+=("$gate_rel (already current)")
+  else
+    existed=false
+    [ -f "$gate_target" ] && existed=true
+    mkdir -p "$PROJECT_DIR/.metaswarm"
+    cp "$gate_template" "$gate_target"
+    if [ "$existed" = true ]; then
+      created+=("$gate_rel (updated to the plugin's version)")
     else
-      errors+=(".coverage-thresholds.json — node not available for JSON templating")
+      created+=("$gate_rel (Go coverage gate)")
     fi
   fi
 fi
@@ -169,31 +274,35 @@ else
 fi
 
 # --- Output results as JSON ---
+# Messages can contain user commands, so escape them for JSON.
+json_str() {
+  local v="$1"
+  v="${v//\\/\\\\}"
+  v="${v//\"/\\\"}"
+  v="${v//$'\t'/\\t}"
+  v="${v//$'\n'/\\n}"
+  printf '"%s"' "$v"
+}
+
+# json_array NAME ITEMS... — print one array member of the result object.
+json_array() {
+  local name="$1"; shift
+  echo "  \"$name\": ["
+  local n=$# i=0 item comma
+  for item in "$@"; do
+    i=$((i + 1))
+    comma=""
+    [ "$i" -lt "$n" ] && comma=","
+    echo "    $(json_str "$item")$comma"
+  done
+  printf '  ]'
+}
+
 echo "{"
 echo "  \"status\": \"$([ ${#errors[@]} -eq 0 ] && echo "ok" || echo "errors")\","
-
-echo "  \"created\": ["
-for i in "${!created[@]}"; do
-  comma=""
-  [ "$i" -lt $(( ${#created[@]} - 1 )) ] && comma=","
-  echo "    \"${created[$i]}\"$comma"
-done
-echo "  ],"
-
-echo "  \"skipped\": ["
-for i in "${!skipped[@]}"; do
-  comma=""
-  [ "$i" -lt $(( ${#skipped[@]} - 1 )) ] && comma=","
-  echo "    \"${skipped[$i]}\"$comma"
-done
-echo "  ],"
-
-echo "  \"errors\": ["
-for i in "${!errors[@]}"; do
-  comma=""
-  [ "$i" -lt $(( ${#errors[@]} - 1 )) ] && comma=","
-  echo "    \"${errors[$i]}\"$comma"
-done
-echo "  ]"
-
+# ${arr[@]+...} keeps empty arrays safe under set -u on bash 3.2.
+json_array created ${created[@]+"${created[@]}"}; echo ","
+json_array skipped ${skipped[@]+"${skipped[@]}"}; echo ","
+json_array warnings ${warnings[@]+"${warnings[@]}"}; echo ","
+json_array errors ${errors[@]+"${errors[@]}"}; echo ""
 echo "}"

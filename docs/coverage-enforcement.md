@@ -78,7 +78,20 @@ Set `enforcement.command` to whatever your project uses:
 | TypeScript (Jest) | `npx jest --coverage` |
 | Python (pytest) | `pytest --cov --cov-fail-under=100` |
 | Rust | `cargo tarpaulin --fail-under 100` |
-| Go | `go test -cover ./...` |
+| Go | `go run .metaswarm/go-coverage-gate.go` |
+
+Commands with a threshold flag (`--cov-fail-under`, `--fail-under`) repeat the threshold. Re-running `/setup` with a new threshold updates both the `thresholds` values and that flag. Without a re-run, keep the two in step by hand.
+
+### Go
+
+`go test` has no coverage-threshold flag, so `go test -cover ./...` reports coverage but never fails. For Go projects `/setup` writes `.metaswarm/go-coverage-gate.go`, a standard-library-only program, and sets `enforcement.command` to `go run .metaswarm/go-coverage-gate.go`. Commit the file so CI can run it. The gate:
+
+- runs `go test -coverprofile=coverage.out ./...` (pass packages as arguments to narrow it) and fails if the tests fail
+- reads `.coverage-thresholds.json` on every run, so editing the thresholds takes effect without re-running setup
+- compares exact statement counts: `go tool cover -func` rounds to one decimal, so 2,499 of 2,500 statements would show as 100.0%
+- enforces `lines` and `statements` against Go's statement coverage, and reports `branches` and `functions` as not enforced, because Go doesn't measure them
+
+The leading dot in `.metaswarm` keeps the gate out of `go build ./...`, `go test ./...` and `go vet ./...`. The command starts with `go` and has no shell metacharacters, so it passes the command guard in the CI template.
 
 ## Reading Thresholds in Your Test Config
 

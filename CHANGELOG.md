@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **The Go coverage gate now fails below the threshold** (#78). `go test` has no threshold flag, so the `go test -coverprofile=coverage.out ./...` command that `/setup` wrote never failed. Setup now writes `.metaswarm/go-coverage-gate.go`, a standard-library Go program, and sets `enforcement.command` to `go run .metaswarm/go-coverage-gate.go`. It reads `.coverage-thresholds.json` on every run, compares exact statement counts (2,499 of 2,500 fails at 100%, though `go tool cover` shows 100.0%), enforces `lines` and `statements`, and reports `branches` and `functions` as not enforced. It passes the CI template's command guard. Existing Go projects: re-run `/setup` or set the command by hand (see `docs/coverage-enforcement.md`).
+- **Re-running `/setup` with a new threshold updates `.coverage-thresholds.json`** (#79). With the new `--reconfigure` flag, which setup passes only on an explicit re-run, `lib/setup-mandatory-files.sh` updates the four thresholds and a `--cov-fail-under`/`--fail-under` value in `enforcement.command`, and keeps every other setting. It warns when the command still embeds the old threshold in another form. The session hook's silent self-heal never changes an existing file. The script's JSON output gains a `warnings` array and escapes messages properly.
+- **Test suites with an EXIT trap fail when they abort** (#75). On macOS bash 3.2 a `set -u` abort exited with the trap's status 0, so a crashed suite looked like a pass.
+
 ## 0.14.0
 
 ### Added
