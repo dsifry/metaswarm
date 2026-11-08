@@ -130,10 +130,23 @@ for d in $DOCS; do
 done
 
 echo "Test: a model: outside adapters: does not trigger the legacy warning"
-mkdir -p "$TMP_BASE/scope/.metaswarm"; (cd "$TMP_BASE/scope" && git init -q)
-printf 'adapters:\n  codex:\n    enabled: true\nother:\n  codex:\n    model: z\n' > "$TMP_BASE/scope/.metaswarm/external-tools.yaml"
-ERR8="$(cd "$TMP_BASE/scope" && bash "$REPO_ROOT/skills/external-tools/adapters/codex.sh" health 2>&1 >/dev/null || true)"
-printf '%s' "$ERR8" | grep -q "no longer read" && fail "warns about a model: outside adapters:" || pass "no warning for a model: outside adapters:"
+new_proj none none
+printf 'adapters:\n  codex:\n    enabled: true\nother:\n  codex:\n    model: z\n' > "$P/.metaswarm/external-tools.yaml"
+run_adapter codex health
+[ "$RC" -eq 0 ]; check "outside adapters: health exits 0" "$?"
+[ "$(model_of)" = "gpt-5.3-codex" ]; check "outside adapters: built-in default reported (model: z not used)" "$?"
+printf '%s' "$ERR" | grep -q "no longer read" && fail "warns about a model: outside adapters:" || pass "no warning for a model: outside adapters:"
+
+echo "Test: no legacy warning without a legacy file, or without a model key for the tool"
+new_proj none none
+run_adapter codex health
+[ "$RC" -eq 0 ] && [ -n "$(model_of)" ]; check "no legacy file: health exits 0 with a model" "$?"
+printf '%s' "$ERR" | grep -q "no longer read" && fail "no legacy file: warns anyway" || pass "no legacy file: no warning"
+new_proj none none
+printf 'adapters:\n  codex:\n    enabled: true\n  gemini:\n    model: g\n' > "$P/.metaswarm/external-tools.yaml"
+run_adapter codex health
+[ "$RC" -eq 0 ] && [ "$(model_of)" = "gpt-5.3-codex" ]; check "model key only for another tool: codex health exits 0 with default" "$?"
+printf '%s' "$ERR" | grep -q "no longer read" && fail "model key only for another tool: codex warns anyway" || pass "model key only for another tool: no codex warning"
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
