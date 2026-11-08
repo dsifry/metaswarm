@@ -51,7 +51,7 @@ bd doctor         # Check system health
 | **CTO Agent**             | TDD readiness & plan review    | Design review gate (parallel)      |
 | **UX Reviewer**           | User flows, UI states, integration wiring | Design review gate (parallel); a `design-reviewer` role, no separate agent file |
 | **Coder Agent**           | TDD implementation             | Design review gate approved        |
-| **Code Review Agent**     | Internal code review           | Implementation complete            |
+| **Adversarial Reviewer**  | Internal code review           | Implementation complete            |
 | **Security Auditor**      | Security review (code)         | Implementation complete            |
 | **Release Engineer Agent** | Safe delivery from merge through production | QA approves PR, PR reaches merge readiness |
 | **PR Shepherd**           | PR lifecycle management        | PR created                         |
@@ -814,8 +814,8 @@ skills/start/                   # This skill (main orchestration)
 │   └── build-validation.md     # Pre-push checks, CI pipeline
 ├── rubrics/                    # Review rubrics
 │   ├── plan-review-rubric.md   # Used by CTO Agent
-│   ├── code-review-rubric.md   # Used by Code Review Agent (collaborative mode)
-│   ├── adversarial-review-rubric.md # Used by Code Review Agent (adversarial mode)
+│   ├── code-review-rubric.md   # Used by Adversarial Reviewer (collaborative mode)
+│   ├── adversarial-review-rubric.md # Used by Adversarial Reviewer (adversarial mode)
 │   ├── security-review-rubric.md # Used by Security Auditor Agent
 │   └── release-engineering-rubric.md # Used by Release Engineer Agent
 └── references/                 # Reference docs for other tools

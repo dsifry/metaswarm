@@ -1,6 +1,6 @@
 # Code Review Rubric
 
-**Used By**: Code Review Agent
+**Used By**: Adversarial Reviewer (collaborative mode)
 **Purpose**: Evaluate code changes before PR creation
 **Version**: 1.0
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>metaswarm - Multi-Agent Orchestration for Claude Code</title>
-  <meta name="description" content="A self-improving multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. 22 agents, 13 skills, 15 commands. TDD, cross-model adversarial review, spec-driven development. Production-proven.">
+  <meta name="description" content="A self-improving multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. 22 agents, 14 skills, 16 commands. TDD, cross-model adversarial review, spec-driven development. Production-proven.">
   <style>
     :root {
       --bg: #ffffff;
@@ -651,19 +651,19 @@ When all work units pass, create a PR.</code></pre>
     <div class="features">
       <div class="feature">
         <h4>22 Agents</h4>
-        <p>Researcher, Architect, PM, Designer, Security, CTO, Coder, Code Reviewer, Security Auditor, PR Shepherd, Test Automator, Knowledge Curator, and more. Each has a defined role, process, and output format.</p>
+        <p>Researcher, Planner, Architect, PM, Designer, Security, CTO, Design Reviewer, Plan Reviewer, Coder, Adversarial Reviewer, Security Auditor, PR Shepherd, Release Engineer, Test Automator, Knowledge Curator, and more. Each has a defined role, process, and output format.</p>
       </div>
       <div class="feature">
-        <h4>13 Orchestration Skills</h4>
-        <p>Orchestrated execution, design review gate, plan review gate, PR shepherd, PR comment handling, external AI tools delegation, visual review, brainstorming extension, issue creation, interactive setup, migration, status diagnostics, and the main start workflow.</p>
+        <h4>14 Orchestration Skills</h4>
+        <p>Orchestrated execution, design review gate, plan review gate, PR shepherd, PR comment handling, external AI tools delegation, visual review, brainstorming extension, issue creation, interactive setup, migration, status diagnostics, session handoff, and the main start workflow.</p>
       </div>
       <div class="feature">
-        <h4>15 Slash Commands</h4>
-        <p><code>/metaswarm:setup</code>, <code>/metaswarm:update</code>, <code>/metaswarm:status</code>, <code>/metaswarm:start-task</code>, <code>/metaswarm:start</code>, <code>/metaswarm:prime</code>, <code>/metaswarm:review-design</code>, <code>/metaswarm:brainstorm</code>, <code>/metaswarm:self-reflect</code>, <code>/metaswarm:pr-shepherd</code>, <code>/metaswarm:create-issue</code>, <code>/metaswarm:handle-pr-comments</code>, <code>/metaswarm:external-tools-health</code>.</p>
+        <h4>16 Slash Commands</h4>
+        <p><code>/metaswarm:setup</code>, <code>/metaswarm:update</code>, <code>/metaswarm:status</code>, <code>/metaswarm:start-task</code>, <code>/metaswarm:start</code>, <code>/metaswarm:prime</code>, <code>/metaswarm:review-design</code>, <code>/metaswarm:brainstorm</code>, <code>/metaswarm:self-reflect</code>, <code>/metaswarm:pr-shepherd</code>, <code>/metaswarm:create-issue</code>, <code>/metaswarm:handle-pr-comments</code>, <code>/metaswarm:external-tools-health</code>, <code>/metaswarm:handoff</code>, plus the deprecated aliases <code>/metaswarm:metaswarm-setup</code> and <code>/metaswarm:metaswarm-update-version</code>.</p>
       </div>
       <div class="feature">
-        <h4>8 Quality Rubrics</h4>
-        <p>Standardized review criteria for code, architecture, security, test coverage, implementation plans, adversarial plan review, adversarial spec compliance, and external tool review.</p>
+        <h4>9 Quality Rubrics</h4>
+        <p>Standardized review criteria for code, architecture, security, test coverage, implementation plans, adversarial plan review, adversarial spec compliance, external tool review, and release engineering.</p>
       </div>
       <div class="feature">
         <h4>Coverage Enforcement</h4>
@@ -694,8 +694,8 @@ When all work units pass, create a PR.</code></pre>
         <p>Run <code>/metaswarm:update</code> to check for new versions, view the changelog, update all component files, and re-detect your project context. User customizations are preserved.</p>
       </div>
       <div class="feature">
-        <h4>6 Development Guides</h4>
-        <p>Comprehensive reference guides for coding standards, testing patterns, git workflow, worktree development, build validation, and agent coordination. Agents load them automatically when relevant.</p>
+        <h4>8 Development Guides</h4>
+        <p>Comprehensive reference guides for coding standards, testing patterns, git workflow, worktree development, build validation, agent coordination, delivery scope (the review severity rule), and workflow enforcement. Agents load them automatically when relevant.</p>
       </div>
       <div class="feature">
         <h4>Workflow Enforcement</h4>
@@ -720,15 +720,19 @@ When all work units pass, create a PR.</code></pre>
         <tr><td>Swarm Coordinator</td><td>Meta</td><td>Assigns work to worktrees, manages parallel execution</td></tr>
         <tr><td>Issue Orchestrator</td><td>Meta</td><td>Decomposes issues into tasks, manages phase handoffs</td></tr>
         <tr><td>Researcher</td><td>Research</td><td>Explores codebase, discovers patterns and dependencies</td></tr>
+        <tr><td>Planner</td><td>Planning</td><td>Turns research into an implementation plan and work units</td></tr>
         <tr><td>Architect</td><td>Planning</td><td>Designs implementation plan and service structure</td></tr>
         <tr><td>Product Manager</td><td>Review</td><td>Validates use cases, scope, and user benefit</td></tr>
         <tr><td>Designer</td><td>Review</td><td>Reviews API/UX design and consistency</td></tr>
         <tr><td>Security Design</td><td>Review</td><td>Threat modeling, STRIDE analysis, auth review</td></tr>
         <tr><td>CTO</td><td>Review</td><td>TDD readiness, codebase alignment, final approval</td></tr>
+        <tr><td>Design Reviewer</td><td>Review</td><td>Runs each Design Review Gate role (PM, Architect, Designer, Security, UX Reviewer, CTO) from the prompt</td></tr>
+        <tr><td>Plan Reviewer</td><td>Review</td><td>Plan Review Gate reviewer: Feasibility, Completeness, Scope &amp; Alignment</td></tr>
         <tr><td>Coder</td><td>Implement</td><td>TDD implementation with 100% coverage</td></tr>
-        <tr><td>Code Reviewer</td><td>Review</td><td>Dual-mode: collaborative (suggestions) or adversarial (spec compliance)</td></tr>
+        <tr><td>Adversarial Reviewer</td><td>Review</td><td>Fresh-context review against the spec and rubrics: collaborative (suggestions) or adversarial (spec compliance)</td></tr>
         <tr><td>Security Auditor</td><td>Review</td><td>Vulnerability scanning, OWASP checks</td></tr>
         <tr><td>PR Shepherd</td><td>Delivery</td><td>CI monitoring, comment handling, thread resolution</td></tr>
+        <tr><td>Release Engineer</td><td>Delivery</td><td>Safe delivery from merge through production verification</td></tr>
         <tr><td>Knowledge Curator</td><td>Learning</td><td>Extracts learnings, updates knowledge base</td></tr>
         <tr><td>Test Automator</td><td>Implement</td><td>Test generation and coverage enforcement</td></tr>
         <tr><td>Metrics</td><td>Support</td><td>Analytics and weekly reports</td></tr>

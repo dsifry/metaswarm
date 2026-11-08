@@ -229,7 +229,7 @@ bd ready
 
 **Team Mode**: If multiple Claude Code sessions are active on the same repository, metaswarm automatically detects this and enables Team Mode with persistent teammates and direct inter-agent messaging. No configuration needed — see `guides/agent-coordination.md` for details.
 
-**Development Guides**: The `guides/` directory contains 6 reference guides covering coding standards, testing patterns, git workflow, worktree development, build validation, and agent coordination. Agents load these automatically when relevant.
+**Development Guides**: The `guides/` directory contains 8 reference guides covering coding standards, testing patterns, git workflow, worktree development, build validation, agent coordination, delivery scope (the review severity rule), and workflow enforcement. Agents load these automatically when relevant.
 
 ## Step 4: Try the Design Review Gate
 

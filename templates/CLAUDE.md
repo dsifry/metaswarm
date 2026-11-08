@@ -39,7 +39,7 @@ This triggers the full pipeline: Research → Plan → Design Review Gate → Wo
 | `/external-tools-health` | Check status of external AI tools (Codex, Gemini) |
 | `/setup` | Interactive guided setup — detects project, configures metaswarm |
 | `/update` | Update metaswarm to latest version |
-| `/status` | Run diagnostic checks on your installation |
+| `/metaswarm:status` | Run diagnostic checks on your installation (plain `/status` is Claude Code's built-in) |
 | `/start` | Alias for `/start-task` |
 
 ### Visual Review
