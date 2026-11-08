@@ -79,8 +79,8 @@ parse_args() {
 #   Prints the explicitly configured model for an adapter, or "" if none. Order:
 #     1. .metaswarm/models.yaml roles.<role>.<tool> (via the metaswarm-agents.sh
 #        resolve process; only when a role is given)
-#     2. legacy .metaswarm/external-tools.yaml adapters.<tool>.model (deprecated,
-#        warns on stderr)
+#   The legacy .metaswarm/external-tools.yaml adapters.<tool>.model was removed in
+#   0.14.0: it's ignored, with a warning on stderr if still present.
 #   resolve_model() wraps this and falls back to the adapter's DEFAULT_MODEL.
 #   Usage: configured_model <tool> [role]   (prints "" when nothing is configured)
 #   Prints the model. Returns 2 (message on stderr) for an unknown role.
@@ -118,23 +118,20 @@ configured_model() {
   fi
 
   if [[ -z "$model" ]]; then
+    # adapters.<tool>.model in .metaswarm/external-tools.yaml was removed in 0.14.0 (deprecated in
+    # 0.13.0). It's no longer read; warn if it's still present so a model choice isn't lost silently.
     local project legacy_file
     project="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
     legacy_file="${project}/.metaswarm/external-tools.yaml"
-    if [[ -f "$legacy_file" ]]; then
-      model="$(awk -v t="$tool" '
+    if [[ -f "$legacy_file" ]] && awk -v t="$tool" '
         /^adapters:/ { a = 1; next }
-        a && /^[^ #]/ { a = 0 }
+        /^[^ #]/ { a = 0; s = 0 }
         a && $0 ~ "^  " t ":" { s = 1; next }
         a && /^  [A-Za-z]/ { s = 0 }
-        s && /^    model:/ {
-          sub(/^    model:[ ]*/, ""); sub(/[ ]*#.*$/, ""); gsub(/["\047]/, ""); sub(/[ ]*$/, "")
-          print; exit
-        }' "$legacy_file")"
-      if [[ -n "$model" ]]; then
-        printf 'Warning: adapters.%s.model in .metaswarm/external-tools.yaml is deprecated and will be removed in 0.14.0; set roles.<role>.%s in .metaswarm/models.yaml instead\n' \
-          "$tool" "$tool" >&2
-      fi
+        a && s && /^    model:/ { found = 1; exit }
+        END { exit found ? 0 : 1 }' "$legacy_file"; then
+      printf 'Warning: adapters.%s.model in .metaswarm/external-tools.yaml is no longer read (removed in 0.14.0); set roles.<role>.%s in .metaswarm/models.yaml instead\n' \
+        "$tool" "$tool" >&2
     fi
   fi
 

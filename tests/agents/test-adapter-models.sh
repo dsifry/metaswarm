@@ -61,9 +61,9 @@ for tool in codex gemini; do
 
   new_proj none legacy-external-tools.yaml
   run_adapter "$tool" health --role coder
-  [ "$(model_of)" = "$LEG" ]; check "$tool: legacy adapters.$tool.model used without models.yaml" "$?"
-  printf '%s' "$ERR" | grep -q "deprecated" && printf '%s' "$ERR" | grep -q ".metaswarm/models.yaml"
-  check "$tool: legacy model warns on stderr naming .metaswarm/models.yaml" "$?"
+  [ "$(model_of)" = "$DEF" ]; check "$tool: legacy adapters.$tool.model is no longer read (0.14.0), built-in default used" "$?"
+  printf '%s' "$ERR" | grep -q "no longer read" && printf '%s' "$ERR" | grep -q ".metaswarm/models.yaml"
+  check "$tool: legacy model key warns it is no longer read, naming .metaswarm/models.yaml" "$?"
 
   new_proj adapter-models.yaml legacy-external-tools.yaml
   run_adapter "$tool" health --role coder
@@ -117,6 +117,36 @@ COPY="$TMP_BASE/copy/external-tools"; mkdir -p "$(dirname "$COPY")"; cp -R "$REP
 new_proj adapter-models.yaml none
 RC=0; OUT="$(cd "$P" && PATH="/usr/bin:/bin" bash "$COPY/adapters/codex.sh" health --role coder 2>"$TMP_BASE/err")" || RC=$?
 grep -q -i "metaswarm-agents.sh" "$TMP_BASE/err" && pass "warns when resolver missing" || fail "no warning when resolver missing"
+
+echo "Test: docs match the 0.14.0 removal of adapters.<tool>.model"
+DOCS="skills/external-tools/SKILL.md templates/external-tools-setup.md skills/setup/templates/external-tools-setup.md commands/external-tools-health.md .claude/commands/external-tools-health.md"
+for d in $DOCS; do
+  if grep -qiE 'still works|deprecated, warns|with a deprecation warning|model` if one is still set|as deprecated' "$REPO_ROOT/$d"; then
+    fail "$d still describes the legacy adapters.<tool>.model as read"
+  else
+    pass "$d does not describe the legacy model key as read"
+  fi
+  grep -qF -e 'no longer read' "$REPO_ROOT/$d" && pass "$d says the legacy key is no longer read" || fail "$d says the legacy key is no longer read"
+done
+
+echo "Test: a model: outside adapters: does not trigger the legacy warning"
+new_proj none none
+printf 'adapters:\n  codex:\n    enabled: true\nother:\n  codex:\n    model: z\n' > "$P/.metaswarm/external-tools.yaml"
+run_adapter codex health
+[ "$RC" -eq 0 ]; check "outside adapters: health exits 0" "$?"
+[ "$(model_of)" = "gpt-5.3-codex" ]; check "outside adapters: built-in default reported (model: z not used)" "$?"
+printf '%s' "$ERR" | grep -q "no longer read" && fail "warns about a model: outside adapters:" || pass "no warning for a model: outside adapters:"
+
+echo "Test: no legacy warning without a legacy file, or without a model key for the tool"
+new_proj none none
+run_adapter codex health
+[ "$RC" -eq 0 ] && [ -n "$(model_of)" ]; check "no legacy file: health exits 0 with a model" "$?"
+printf '%s' "$ERR" | grep -q "no longer read" && fail "no legacy file: warns anyway" || pass "no legacy file: no warning"
+new_proj none none
+printf 'adapters:\n  codex:\n    enabled: true\n  gemini:\n    model: g\n' > "$P/.metaswarm/external-tools.yaml"
+run_adapter codex health
+[ "$RC" -eq 0 ] && [ "$(model_of)" = "gpt-5.3-codex" ]; check "model key only for another tool: codex health exits 0 with default" "$?"
+printf '%s' "$ERR" | grep -q "no longer read" && fail "model key only for another tool: codex warns anyway" || pass "model key only for another tool: no codex warning"
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"

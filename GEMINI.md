@@ -1,6 +1,6 @@
 # metaswarm
 
-Multi-agent orchestration framework for software development. 22 agents (+3 deprecated), 14 skills, quality gates, TDD enforcement.
+Multi-agent orchestration framework for software development. 22 agents, 14 skills, quality gates, TDD enforcement.
 
 ## Getting Started
 

@@ -24,7 +24,7 @@ Check the status of external AI tools (Codex CLI, Gemini CLI) and their configur
    A `"status":"error"` row means the adapter itself failed (for example, Gemini can exit non-zero while resolving its model). Report it as an adapter error and show the adapter's stderr. Don't infer that the CLI is missing or logged out.
    To see the model for a specific role, add `--role <role>`. Models come from `.metaswarm/models.yaml` (`roles.<role>.codex|gemini`).
 
-3. **Check configuration.** Read `.metaswarm/external-tools.yaml` if it exists, and report which adapters are enabled or disabled. Report a legacy `adapters.<tool>.model` in `external-tools.yaml` as deprecated.
+3. **Check configuration.** Read `.metaswarm/external-tools.yaml` if it exists, and report which adapters are enabled or disabled. If `external-tools.yaml` still has an `adapters.<tool>.model`, report that it is no longer read (removed in 0.14.0) and that the model belongs in `.metaswarm/models.yaml` `roles.<role>.<tool>`.
 
 4. **Report status.** Show a summary table with one row per tool: `status`, `version`, `auth_valid`, `model`, and whether it's enabled in the config. Give each tool that isn't `ready` the remedy that matches its state:
    - For a `"status":"error"` row (the adapter itself failed, e.g. model resolution): show the adapter's stderr and fix that cause. Don't suggest install or login.

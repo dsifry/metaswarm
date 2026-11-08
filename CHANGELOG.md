@@ -15,6 +15,11 @@
 - **`/metaswarm-setup` and `/metaswarm-update-version` are now short deprecated aliases** for `/setup` and `/update` (#64). Their old npm-era bodies called CLI commands that don't exist (`install`, `changelog`), set the version even when agent regeneration failed, offered CI creation they never performed, and had a Go coverage gate that never failed.
 - **`/external-tools-health` runs each adapter's `health` check** (#64) and reports `status`, `version`, `auth_valid` and `model`. It no longer relies on `command -v` and the repo's own self-test script.
 
+### Removed
+
+- **Deprecated agent stubs `coder-agent`, `researcher-agent` and `code-review-agent`** (deprecated in 0.13.0) are removed from `agents/` and `skills/start/agents/`. Use `metaswarm:coder`, `metaswarm:researcher` and `metaswarm:adversarial-reviewer`. `bin/metaswarm-usage` still recognises the old names in historical transcripts.
+- **Legacy `adapters.<tool>.model` in `.metaswarm/external-tools.yaml`** (deprecated in 0.13.0) is no longer read. The adapters warn if it's still present; set `roles.<role>.codex|gemini` in `.metaswarm/models.yaml` instead.
+
 ### Upgrade note
 
 Neither `/update` (marketplace plugin update) nor `npx metaswarm setup` (skips an instruction file that already mentions metaswarm) rewrites a project's own CLAUDE.md, AGENTS.md or GEMINI.md. Projects that already copied metaswarm's CLAUDE.md, AGENTS.md or GEMINI.md templates (or their `-append` variants) should refresh the "Workflow Enforcement" and "Quality Gates" sections from the new templates by hand.
