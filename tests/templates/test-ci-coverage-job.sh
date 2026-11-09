@@ -53,6 +53,7 @@ for job in coverage-simple coverage-merge; do
     for f in $files; do
       case "$f" in
         berry:*) printf '__metadata:\n  version: 8\n' > "$P/${f#berry:}" ;;
+        package.json) printf '{"name":"x"}\n' > "$P/$f" ;;
         *) : > "$P/$f" ;;
       esac
     done
@@ -81,6 +82,11 @@ CASES
   rc=0; (cd "$P" && PATH="$TMP/bin:$PATH" bash -c "set -e; $body") >"$P/out" 2>&1 || rc=$?
   [ "$rc" -eq 0 ] && grep -qF 'npm install -g bun@1.1.38' "$LOG" && pass "$job: bun installs the packageManager version" \
     || fail "$job: bun ignored packageManager (rc=$rc): $(tr '\n' ' ' < "$LOG") $(tr '\n' ' ' < "$P/out")"
+  P="$TMP/$job-bunbad"; mkdir -p "$P"; : > "$P/bun.lock"; printf '{"name": "x",\n' > "$P/package.json"
+  export LOG="$P/log"; : > "$LOG"
+  rc=0; (cd "$P" && PATH="$TMP/bin:$PATH" bash -c "set -e; $body") >"$P/out" 2>&1 || rc=$?
+  [ "$rc" -ne 0 ] && ! grep -q 'install -g bun' "$LOG" && grep -qi 'package.json' "$P/out" \
+    && pass "$job: a malformed package.json stops the bun install with its error" || fail "$job: malformed package.json still installed bun (rc=$rc): $(tr '\n' ' ' < "$LOG")"
   grep -q 'corepack enable' <<<"$body" && pass "$job: pnpm and yarn come from corepack" || fail "$job: no corepack enable for pnpm/yarn"
 
   # Not a JavaScript project: the step must fail and say what to do.

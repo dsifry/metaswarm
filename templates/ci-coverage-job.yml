@@ -70,7 +70,8 @@ coverage-simple:
           fi
         elif [ -f bun.lockb ] || [ -f bun.lock ]; then
           # Install the bun version pinned in package.json's packageManager, if any.
-          BUN_VERSION=$(node -e "try { const m = /^bun@(.+)$/.exec(require(require('path').resolve('package.json')).packageManager || ''); console.log(m ? m[1] : 'latest'); } catch { console.log('latest'); }")
+          # A package.json that can't be read fails the step with node's error.
+          BUN_VERSION=$(node -e "const m = /^bun@(.+)$/.exec(require(require('path').resolve('package.json')).packageManager || ''); console.log(m ? m[1] : 'latest')")
           npm install -g "bun@$BUN_VERSION" && bun install --frozen-lockfile
         elif [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
           npm ci
@@ -165,7 +166,8 @@ coverage-merge:
           fi
         elif [ -f bun.lockb ] || [ -f bun.lock ]; then
           # Install the bun version pinned in package.json's packageManager, if any.
-          BUN_VERSION=$(node -e "try { const m = /^bun@(.+)$/.exec(require(require('path').resolve('package.json')).packageManager || ''); console.log(m ? m[1] : 'latest'); } catch { console.log('latest'); }")
+          # A package.json that can't be read fails the step with node's error.
+          BUN_VERSION=$(node -e "const m = /^bun@(.+)$/.exec(require(require('path').resolve('package.json')).packageManager || ''); console.log(m ? m[1] : 'latest')")
           npm install -g "bun@$BUN_VERSION" && bun install --frozen-lockfile
         elif [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
           npm ci
