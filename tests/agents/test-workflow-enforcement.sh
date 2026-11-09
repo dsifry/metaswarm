@@ -377,9 +377,11 @@ rm -rf "${NEG:?}"; NEG=""
 # be prose, so only the #73 regex judges it (an adjacent "plan, design review");
 # "Plan validation: checks (a, b, c) before design review" is fine.
 # The #73 regex also runs on every line, so the guard is never weaker than it.
-# #94 added ➡, ──►, plain ──, > and ;.
-ORDER_SEP='──►|──→|──|➡|→|⇒|⟶|➜|➔|—>|->|=>|>|;'
-ORDER_LEGACY='plan(ning)?[ \t]*(→|->|──→|,)[ \t]*design review'
+# #94 added ➡, ⮕, ⟹, ──►, ─►, plain ── and a spaced " > ". A ";" is a
+# sentence break as often as a separator, so it is judged like a comma: only
+# an adjacent "plan; design review" (the legacy regex) is flagged.
+ORDER_SEP='──►|─►|──→|──|➡|⮕|⟹|→|⇒|⟶|➜|➔|—>|->|=>| > '
+ORDER_LEGACY='plan(ning|s)?[ \t]*(→|->|──→|,|;)[ \t]*design review'
 IFS= read -r -d '' ORDER_AWK <<'AWK' || true
 {
   line = $0
@@ -399,7 +401,7 @@ IFS= read -r -d '' ORDER_AWK <<'AWK' || true
     isplan = (!isreview && !isdesign && t !~ /writing-plans/ && (t ~ /^plan(ning|s)?([^a-z]|$)/ || t ~ /(^|[^a-z])plan(ning|s)?$/))
     # A brainstorming step starts the brainstorming path; a later plan step
     # means the line has moved on to full orchestration.
-    if ((t ~ /^brainstorm/ || (k == 1 && t ~ /(^|[^a-z])start-task$/)) && brain == 0) brain = 1
+    if ((t ~ /^brainstorm/ || (k == 1 && t ~ /^start-task([^a-z-]|$)/)) && brain == 0) brain = 1
     if (isplan && brain == 1) { brain = 0; pending = 0 }
     # "Plan Review Gate / Design Review Gate" in one step: the review came first.
     if (isdesign && isreview && match(s, /plan[- ]review/) < match(s, /design[- ]review|review-design/)) {
@@ -461,6 +463,10 @@ ORDER_BAD=(
   'Research; Plan; Design Review Gate; PR'
   'Research ── Plan ── Design Review Gate ── PR'
   'Research → Plans → Design Review Gate → PR'
+  'Research → Plan ─► Design Review Gate'
+  'Research ⟹ Plan ⟹ Design Review Gate'
+  'Research ⮕ Plan ⮕ Design Review Gate'
+  '/start-task (complexity assessment) → Plan Review Gate → Design Review Gate'
 )
 ORDER_OK=(
   'Research → Plan → Plan Review Gate → Design Review Gate (reviews the plan)'
@@ -482,6 +488,10 @@ ORDER_OK=(
   'Research; Plan; Plan Review Gate; Design Review Gate'
   '> The Design Review Gate reviews the plan after the Plan Review Gate'
   '<td>Plan Review Gate</td><td>Design Review Gate</td>'
+  '<td>Plan</td><td>Design Review Gate</td>'
+  'We revised the plan; the Design Review Gate then approved it.'
+  'Plans>3 files go to the Design Review Gate'
+  'Use /start-task instead of EnterPlanMode → Plan Review Gate → Design Review Gate'
 )
 ONEG="$(mktemp -d)"
 git -C "$ONEG" init -q
