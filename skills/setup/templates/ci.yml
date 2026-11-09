@@ -59,9 +59,10 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-          # Install the project itself only when pyproject.toml defines one; many
-          # keep only [tool.*] settings there and list dependencies in requirements.
-          if [ -f pyproject.toml ] && grep -qE '^\[(project|build-system)\]' pyproject.toml; then
+          # Install the project itself when setup.py or pyproject.toml defines one;
+          # many keep only [tool.*] settings in pyproject.toml and list
+          # dependencies in requirements files.
+          if [ -f setup.py ] || { [ -f pyproject.toml ] && grep -qE '^\[(project|build-system)\]' pyproject.toml; }; then
             pip install -e ".[dev]" || pip install -e .
           fi
           pip install pytest pytest-cov
