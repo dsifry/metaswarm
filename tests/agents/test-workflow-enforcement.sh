@@ -364,10 +364,12 @@ rm -rf "${NEG:?}"; NEG=""
 # Design Review Gate (in any separator style) has dropped the Plan Review Gate.
 # #89: a regex can't see an intermediate step or the reverse mistake, so each
 # candidate line is split into steps on its separators and classified:
-#   plan step    "Plan", "Planning", "the plan" (not a Plan Review Gate)
+#   plan step    "Plan", "Plans", "Planning", "the plan" (not a Plan Review
+#                Gate, and not writing-plans, the brainstorming path's step)
 #   plan review  "Plan Review Gate", "plan-review-gate"
 #   design       "Design Review Gate", "design-review-gate", "/review-design"
-#   brainstorm   "brainstorming"
+#   brainstorm   "brainstorming", or a leading "/start-task" (#94: /start-task
+#                is the brainstorming path's entry point)
 # Flagged: a plan step reaches a design step with no plan review in between
 # (skip), or after brainstorming a plan review comes before the first design
 # step (reverse: the brainstorming path reviews the design doc first).
@@ -375,7 +377,8 @@ rm -rf "${NEG:?}"; NEG=""
 # be prose, so only the #73 regex judges it (an adjacent "plan, design review");
 # "Plan validation: checks (a, b, c) before design review" is fine.
 # The #73 regex also runs on every line, so the guard is never weaker than it.
-ORDER_SEP='──→|→|⇒|⟶|➜|➔|—>|->|=>'
+# #94 added ➡, ──►, plain ──, > and ;.
+ORDER_SEP='──►|──→|──|➡|→|⇒|⟶|➜|➔|—>|->|=>|>|;'
 ORDER_LEGACY='plan(ning)?[ \t]*(→|->|──→|,)[ \t]*design review'
 IFS= read -r -d '' ORDER_AWK <<'AWK' || true
 {
@@ -393,10 +396,10 @@ IFS= read -r -d '' ORDER_AWK <<'AWK' || true
     isdesign = (s ~ /design[- ]review|review-design/)
     isreview = (s ~ /plan[- ]review/)
     t = s; gsub(/^[^a-z]+|[^a-z]+$/, "", t)
-    isplan = (!isreview && !isdesign && (t ~ /^plan(ning)?([^a-z]|$)/ || t ~ /(^|[^a-z])plan(ning)?$/))
+    isplan = (!isreview && !isdesign && t !~ /writing-plans/ && (t ~ /^plan(ning|s)?([^a-z]|$)/ || t ~ /(^|[^a-z])plan(ning|s)?$/))
     # A brainstorming step starts the brainstorming path; a later plan step
     # means the line has moved on to full orchestration.
-    if (t ~ /^brainstorm/ && brain == 0) brain = 1
+    if ((t ~ /^brainstorm/ || (k == 1 && t ~ /(^|[^a-z])start-task$/)) && brain == 0) brain = 1
     if (isplan && brain == 1) { brain = 0; pending = 0 }
     # "Plan Review Gate / Design Review Gate" in one step: the review came first.
     if (isdesign && isreview && match(s, /plan[- ]review/) < match(s, /design[- ]review|review-design/)) {
@@ -449,6 +452,15 @@ ORDER_BAD=(
   # An arrow elsewhere on the line must not hide the #73 comma form.
   'Research → plan, design review → PR'
   'Two pipelines (research, plan, design review gate) → PR'
+  # #94: a leading /start-task is the brainstorming path; more separators;
+  # "Plans" is a plan step.
+  '/start-task → Plan Review Gate → Design Review Gate → execution'
+  'Research ➡ Plan ➡ Design Review Gate ➡ PR'
+  'Research ──► Plan ──► Design Review Gate ──► PR'
+  'Research > Plan > Design Review Gate > PR'
+  'Research; Plan; Design Review Gate; PR'
+  'Research ── Plan ── Design Review Gate ── PR'
+  'Research → Plans → Design Review Gate → PR'
 )
 ORDER_OK=(
   'Research → Plan → Plan Review Gate → Design Review Gate (reviews the plan)'
@@ -464,6 +476,12 @@ ORDER_OK=(
   'Plan → Plan Review Gate. Design Review Gate (reviews the plan)'
   'After brainstorming, the plan goes to the Plan Review Gate → Design Review Gate in full orchestration'
   'brainstorming (optional) → Plan → Plan Review Gate → Design Review Gate'
+  '/start-task → Design Review Gate (project-sized design doc only) → writing-plans → Plan Review Gate'
+  '/start-task → Research → Plan → Plan Review Gate → Design Review Gate'
+  'Research ➡ Plans ➡ Plan Review Gate ➡ Design Review Gate'
+  'Research; Plan; Plan Review Gate; Design Review Gate'
+  '> The Design Review Gate reviews the plan after the Plan Review Gate'
+  '<td>Plan Review Gate</td><td>Design Review Gate</td>'
 )
 ONEG="$(mktemp -d)"
 git -C "$ONEG" init -q
@@ -505,6 +523,19 @@ for orch in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.
     pass "$orch Phase 2 re-runs the Plan Review Gate on a plan the design review changed"
   else
     fail "$orch Phase 2 lets a plan changed by the Design Review Gate skip the Plan Review Gate"
+  fi
+done
+
+# #94: the re-run policy is stated in the guide and the design-review-gate
+# skill, not only in the orchestrator: a plan the Design Review Gate revises
+# goes back through the Plan Review Gate; on the brainstorming path the gate
+# revises the design doc and the Plan Review Gate still runs on the plan later.
+for f in guides/workflow-enforcement.md skills/design-review-gate/SKILL.md; do
+  if grep -qi 'design review gate revises the plan.*run the plan review gate again' "$REPO_ROOT/$f" \
+    && grep -qi 'brainstorming path.*revis.*design doc.*plan review gate' "$REPO_ROOT/$f"; then
+    pass "$f states when a revision goes back through the Plan Review Gate"
+  else
+    fail "$f does not state the Plan Review Gate re-run policy after a Design Review Gate revision"
   fi
 done
 
