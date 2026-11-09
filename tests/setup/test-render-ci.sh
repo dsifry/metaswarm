@@ -48,6 +48,10 @@ if [ -f "$RENDER" ]; then
     else
       grep -q 'npm ' "$out" && fail "$stack: still runs npm" || pass "$stack: does not run npm"
     fi
+    if command -v actionlint >/dev/null 2>&1; then
+      al="$(actionlint "$out" 2>&1 || true)"
+      [ -z "$al" ] && pass "$stack: actionlint (with shellcheck) is clean" || fail "$stack: actionlint: $(printf '%s' "$al" | head -2 | tr '\n' ' ')"
+    fi
     if command -v python3 >/dev/null 2>&1 && python3 -c 'import yaml' >/dev/null 2>&1; then
       python3 -c 'import sys, yaml; d = yaml.safe_load(open(sys.argv[1])); assert d["jobs"]["ci"]["steps"]' "$out" \
         && pass "$stack: output is valid YAML with steps" || fail "$stack: output is not valid YAML"
@@ -163,6 +167,13 @@ printf '%s\n' "$CI_SECTION" | grep -qi 'through a PR\|through a pull request' &&
   && pass "after a Yes, the setup commit lands through a PR" || fail "/setup doesn't say to land the setup commit through a PR once the check is required"
 printf '%s\n' "$CI_SECTION" | grep -qi 'poetry' && printf '%s\n' "$CI_SECTION" | grep -qi 'bun' \
   && pass "Poetry/uv/Pipenv and bun projects are sent to the fallback job" || fail "/setup 5.4 doesn't route Poetry/uv/Pipenv or bun projects"
+
+Q4="$(grep -n '^4\. \*\*CI pipeline\*\*' "$SETUP" || true)"
+if printf '%s\n' "$Q4" | grep -q 'ci-coverage-job.yml' && printf '%s\n' "$Q4" | grep -qi 'pnpm\|no toolchain\|other stack'; then
+  pass "the CI question is worded differently for stacks that get no ci.yml"
+else
+  fail "the CI question promises a pipeline to stacks that only get a note: $Q4"
+fi
 
 echo "Template and its setup mirror"
 cmp -s "$REPO_ROOT/templates/ci.yml" "$REPO_ROOT/skills/setup/templates/ci.yml" && pass "skills/setup/templates/ci.yml mirrors templates/ci.yml" || fail "ci.yml mirror differs"

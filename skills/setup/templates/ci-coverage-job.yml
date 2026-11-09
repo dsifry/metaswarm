@@ -15,6 +15,21 @@
 # In both cases, add the job key you used ("coverage-simple" or
 # "coverage-merge") to the `needs:` array of your merge-gating job
 # so PRs cannot merge until thresholds pass.
+#
+# Adapting the install step
+#   The "Install dependencies" step handles JavaScript projects (pnpm, yarn,
+#   bun or npm, picked from the lockfile) and fails for anything else. For
+#   other stacks, replace it with your toolchain's setup action and install
+#   command. Keep actions/setup-node: the next step reads
+#   .coverage-thresholds.json with node. For example:
+#     Poetry:  pipx install poetry && poetry install --with dev
+#              (after actions/setup-python)
+#     uv:      astral-sh/setup-uv, then `uv sync --all-groups`
+#     Pipenv:  pip install pipenv && pipenv install --dev
+#     Java:    actions/setup-java, then let mvn/gradle fetch dependencies
+#   If the coverage command runs through the tool (e.g. `poetry run pytest`),
+#   note that the CI template's runner allowlist doesn't apply here: this job
+#   runs enforcement.command as written.
 
 # ──────────────────────────────────────────────────────
 # Strategy A: Simple (single job, runs all tests with coverage)
@@ -31,7 +46,25 @@ coverage-simple:
         node-version: "22"
 
     - name: Install dependencies
-      run: npm ci
+      # JavaScript projects: picks the package manager from the lockfile.
+      # Other stacks: replace this step with your toolchain's setup and install
+      # steps (see "Adapting the install step" at the top of this file).
+      run: |
+        if [ ! -f package.json ]; then
+          echo "No package.json: replace this step with your project's toolchain and install steps (see the top of ci-coverage-job.yml)" >&2
+          exit 1
+        elif [ -f pnpm-lock.yaml ]; then
+          corepack enable && pnpm install --frozen-lockfile
+        elif [ -f yarn.lock ]; then
+          corepack enable
+          if [ -f .yarnrc.yml ]; then yarn install --immutable; else yarn install --frozen-lockfile; fi
+        elif [ -f bun.lockb ] || [ -f bun.lock ]; then
+          npm install -g bun && bun install --frozen-lockfile
+        elif [ -f package-lock.json ]; then
+          npm ci
+        else
+          npm install
+        fi
 
     - name: Read coverage command from .coverage-thresholds.json
       id: read-cmd
@@ -101,7 +134,25 @@ coverage-merge:
         node-version: "22"
 
     - name: Install dependencies
-      run: npm ci
+      # JavaScript projects: picks the package manager from the lockfile.
+      # Other stacks: replace this step with your toolchain's setup and install
+      # steps (see "Adapting the install step" at the top of this file).
+      run: |
+        if [ ! -f package.json ]; then
+          echo "No package.json: replace this step with your project's toolchain and install steps (see the top of ci-coverage-job.yml)" >&2
+          exit 1
+        elif [ -f pnpm-lock.yaml ]; then
+          corepack enable && pnpm install --frozen-lockfile
+        elif [ -f yarn.lock ]; then
+          corepack enable
+          if [ -f .yarnrc.yml ]; then yarn install --immutable; else yarn install --frozen-lockfile; fi
+        elif [ -f bun.lockb ] || [ -f bun.lock ]; then
+          npm install -g bun && bun install --frozen-lockfile
+        elif [ -f package-lock.json ]; then
+          npm ci
+        else
+          npm install
+        fi
 
     - name: Download coverage from all shards
       uses: actions/download-artifact@v4
