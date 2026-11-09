@@ -13,7 +13,7 @@ metaswarm has two entry points, and the Design Review Gate reviews a different a
 
 The sections below describe the brainstorming path's triggers. In full orchestration, both gates always run, in the order shown.
 
-**After a Design Review Gate revision.** In full orchestration, the gate reviews the plan. If the Design Review Gate revises the plan, run the Plan Review Gate again on the revised plan (fresh reviewers) before presenting it; a revision that fails it goes back through both gates. On the brainstorming path a Design Review Gate revision changes the design doc, not a plan, so nothing re-runs: the Plan Review Gate still runs on the plan writing-plans writes from the approved design doc.
+**After a Design Review Gate revision.** In full orchestration, the gate reviews the plan. If the Design Review Gate revises the plan, run the Plan Review Gate again on the revised plan (fresh reviewers) before presenting it; a revision that fails it goes back through both gates. On the brainstorming path a Design Review Gate revision changes the design doc, not a plan: the Design Review Gate re-reviews the revised design doc in its usual fresh round, and the Plan Review Gate does not run an extra time; it runs once, on the plan writing-plans writes from the approved design doc.
 
 ## Supported superpowers versions
 

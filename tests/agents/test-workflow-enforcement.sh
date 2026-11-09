@@ -381,7 +381,7 @@ rm -rf "${NEG:?}"; NEG=""
 # sentence break as often as a separator, so it is judged like a comma: only
 # an adjacent "plan; design review" (the legacy regex) is flagged.
 ORDER_SEP='──►|─►|──→|──|➡|⮕|⟹|→|⇒|⟶|➜|➔|—>|->|=>| > '
-ORDER_LEGACY='plan(ning|s)?[ \t]*(→|->|──→|,|;)[ \t]*design review'
+ORDER_LEGACY='plan(ning|s)?[ \t]*(→|->|──→|,|;)[ \t*_`/]*(design[- ]review|review-design)'
 IFS= read -r -d '' ORDER_AWK <<'AWK' || true
 {
   line = $0
@@ -467,6 +467,9 @@ ORDER_BAD=(
   'Research ⟹ Plan ⟹ Design Review Gate'
   'Research ⮕ Plan ⮕ Design Review Gate'
   '/start-task (complexity assessment) → Plan Review Gate → Design Review Gate'
+  'Research; Plan; **Design Review Gate**; PR'
+  'Plan; design-review-gate'
+  'Research, Plan, `/review-design`, PR'
 )
 ORDER_OK=(
   'Research → Plan → Plan Review Gate → Design Review Gate (reviews the plan)'
@@ -542,7 +545,7 @@ done
 # revises the design doc and the Plan Review Gate still runs on the plan later.
 for f in guides/workflow-enforcement.md skills/design-review-gate/SKILL.md; do
   if grep -qi 'design review gate revises the plan.*run the plan review gate again' "$REPO_ROOT/$f" \
-    && grep -qi 'brainstorming path.*revis.*design doc.*plan review gate' "$REPO_ROOT/$f"; then
+    && grep -qi 'brainstorming path.*revis.*design doc.*design review gate re-reviews the revised design doc.*plan review gate' "$REPO_ROOT/$f"; then
     pass "$f states when a revision goes back through the Plan Review Gate"
   else
     fail "$f does not state the Plan Review Gate re-run policy after a Design Review Gate revision"
