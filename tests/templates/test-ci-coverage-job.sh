@@ -71,6 +71,7 @@ package.json berry:yarn.lock|yarn install --immutable
 package.json bun.lockb|bun install --frozen-lockfile
 package.json bun.lock|bun install --frozen-lockfile
 package.json package-lock.json|npm ci
+package.json npm-shrinkwrap.json|npm ci
 package.json|npm install
 CASES
   grep -q 'corepack enable' <<<"$body" && pass "$job: pnpm and yarn come from corepack" || fail "$job: no corepack enable for pnpm/yarn"

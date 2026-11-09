@@ -70,7 +70,7 @@ coverage-simple:
           fi
         elif [ -f bun.lockb ] || [ -f bun.lock ]; then
           npm install -g bun && bun install --frozen-lockfile
-        elif [ -f package-lock.json ]; then
+        elif [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
           npm ci
         else
           npm install
@@ -163,7 +163,7 @@ coverage-merge:
           fi
         elif [ -f bun.lockb ] || [ -f bun.lock ]; then
           npm install -g bun && bun install --frozen-lockfile
-        elif [ -f package-lock.json ]; then
+        elif [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
           npm ci
         else
           npm install
