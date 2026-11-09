@@ -17,7 +17,7 @@ pkill -f jest 2>/dev/null || true
 # defined, or no package.json/node) or 2 (package.json can't be parsed).
 has_script() {
   [ -f package.json ] && command -v node >/dev/null 2>&1 || return 1
-  node -e "let p; try { p = JSON.parse(require('fs').readFileSync('package.json', 'utf-8')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" "$1"
+  node -e "let p; try { p = require(require('path').resolve('package.json')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" "$1"
 }
 run_script() {
   if command -v pnpm >/dev/null 2>&1 && [ -f pnpm-lock.yaml ]; then

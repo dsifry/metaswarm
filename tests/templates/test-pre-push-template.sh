@@ -65,6 +65,11 @@ if command -v dash >/dev/null 2>&1 && command -v node >/dev/null 2>&1; then
   run_hook '{"lint":"true","typecheck":"exit 3"}'
   [ "$HOOK_RC" -ne 0 ] && grep -qF '✓ typecheck' <<<"$HOOK_OUT" && ! grep -qxF 'COVERAGE_RAN' <<<"$HOOK_OUT" \
     && pass "a failing typecheck script fails the hook at the typecheck step" || fail "a failing typecheck script passed the hook (rc=$HOOK_RC): $(printf '%s' "$HOOK_OUT" | tail -3 | tr '\n' ' ')"
+  # A UTF-8 byte-order mark (some Windows editors add one) is still a valid package.json.
+  printf '\357\273\277{"name":"x","version":"1.0.0","scripts":{"lint":"exit 3"}}\n' > "$P/package.json"
+  HOOK_RC=0; HOOK_OUT="$(cd "$P" && PATH="$TMP/bin" "$DASH" "$REPO_ROOT/templates/pre-push" 2>&1)" || HOOK_RC=$?
+  [ "$HOOK_RC" -ne 0 ] && grep -qF '✓ lint' <<<"$HOOK_OUT" \
+    && pass "a package.json with a BOM is read (its lint script runs)" || fail "a BOM package.json was rejected (rc=$HOOK_RC): $(printf '%s' "$HOOK_OUT" | tail -3 | tr '\n' ' ')"
   # A package.json node can't parse must not read as "no script".
   printf '{"name": "x", "scripts": {\n' > "$P/package.json"
   HOOK_RC=0; HOOK_OUT="$(cd "$P" && PATH="$TMP/bin" "$DASH" "$REPO_ROOT/templates/pre-push" 2>&1)" || HOOK_RC=$?

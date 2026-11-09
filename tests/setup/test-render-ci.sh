@@ -101,6 +101,9 @@ if [ -f "$RENDER" ]; then
     printf '{"name":"x","scripts":{"%s":"exit 3"}}\n' "$script" > "$P/package.json"
     rc=0; (cd "$P" && bash -c "set -e; $body") >"$P/out" 2>&1 || rc=$?
     [ "$rc" -ne 0 ] && pass "node $step: a failing script fails the step" || fail "node $step: a failing script passed"
+    printf '\357\273\277{"name":"x","scripts":{}}\n' > "$P/package.json"
+    rc=0; (cd "$P" && bash -c "set -e; $body") >"$P/out" 2>&1 || rc=$?
+    [ "$rc" -eq 0 ] && grep -qi 'skip' "$P/out" && pass "node $step: a package.json with a BOM is read" || fail "node $step: BOM package.json rejected (rc=$rc): $(cat "$P/out")"
     printf '{"name": "x", "scripts": {\n' > "$P/package.json"
     rc=0; (cd "$P" && bash -c "set -e; $body") >"$P/out" 2>&1 || rc=$?
     [ "$rc" -ne 0 ] && ! grep -qi 'skipping' "$P/out" && pass "node $step: a malformed package.json fails the step" || fail "node $step: malformed package.json skipped (rc=$rc): $(cat "$P/out")"

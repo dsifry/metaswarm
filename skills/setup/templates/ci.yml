@@ -35,7 +35,7 @@ jobs:
       # that can't be parsed fails the step.
       - name: Lint
         run: |
-          rc=0; node -e "let p; try { p = JSON.parse(require('fs').readFileSync('package.json', 'utf-8')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" lint || rc=$?
+          rc=0; node -e "let p; try { p = require(require('path').resolve('package.json')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" lint || rc=$?
           if [ "$rc" -eq 0 ]; then
             npm run lint
           elif [ "$rc" -eq 1 ]; then
@@ -46,7 +46,7 @@ jobs:
 
       - name: Typecheck
         run: |
-          rc=0; node -e "let p; try { p = JSON.parse(require('fs').readFileSync('package.json', 'utf-8')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" typecheck || rc=$?
+          rc=0; node -e "let p; try { p = require(require('path').resolve('package.json')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" typecheck || rc=$?
           if [ "$rc" -eq 0 ]; then
             npm run typecheck
           elif [ "$rc" -eq 1 ]; then
