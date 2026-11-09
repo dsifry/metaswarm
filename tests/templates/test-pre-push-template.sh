@@ -47,6 +47,34 @@ if command -v dash >/dev/null 2>&1 && command -v node >/dev/null 2>&1; then
   else
     fail "under dash without jq/pnpm, the hook runs enforcement.command (rc=$rc): $(printf '%s' "$out" | tail -3 | tr '\n' ' ')"
   fi
+  # #83: lint and typecheck run only when package.json defines them, and a
+  # failing script fails the hook (typecheck failures used to be ignored).
+  run_hook() { # <package.json scripts JSON> -> sets HOOK_RC, HOOK_OUT
+    printf '{"name":"x","version":"1.0.0","scripts":%s}\n' "$1" > "$P/package.json"
+    HOOK_RC=0; HOOK_OUT="$(cd "$P" && PATH="$TMP/bin" "$DASH" "$REPO_ROOT/templates/pre-push" 2>&1)" || HOOK_RC=$?
+  }
+  run_hook '{}'
+  if [ "$HOOK_RC" -eq 0 ] && grep -qxF -e 'COVERAGE_RAN' <<<"$HOOK_OUT"; then
+    pass "with no lint or typecheck script, the hook skips them and still runs coverage"
+  else
+    fail "missing lint/typecheck scripts broke the hook (rc=$HOOK_RC): $(printf '%s' "$HOOK_OUT" | tail -3 | tr '\n' ' ')"
+  fi
+  run_hook '{"lint":"exit 3","typecheck":"true"}'
+  [ "$HOOK_RC" -ne 0 ] && grep -qF '✓ lint' <<<"$HOOK_OUT" && ! grep -qxF 'COVERAGE_RAN' <<<"$HOOK_OUT" \
+    && pass "a failing lint script fails the hook at the lint step" || fail "a failing lint script passed the hook (rc=$HOOK_RC): $(printf '%s' "$HOOK_OUT" | tail -3 | tr '\n' ' ')"
+  run_hook '{"lint":"true","typecheck":"exit 3"}'
+  [ "$HOOK_RC" -ne 0 ] && grep -qF '✓ typecheck' <<<"$HOOK_OUT" && ! grep -qxF 'COVERAGE_RAN' <<<"$HOOK_OUT" \
+    && pass "a failing typecheck script fails the hook at the typecheck step" || fail "a failing typecheck script passed the hook (rc=$HOOK_RC): $(printf '%s' "$HOOK_OUT" | tail -3 | tr '\n' ' ')"
+  # A UTF-8 byte-order mark (some Windows editors add one) is still a valid package.json.
+  printf '\357\273\277{"name":"x","version":"1.0.0","scripts":{"lint":"exit 3"}}\n' > "$P/package.json"
+  HOOK_RC=0; HOOK_OUT="$(cd "$P" && PATH="$TMP/bin" "$DASH" "$REPO_ROOT/templates/pre-push" 2>&1)" || HOOK_RC=$?
+  [ "$HOOK_RC" -ne 0 ] && grep -qF '✓ lint' <<<"$HOOK_OUT" \
+    && pass "a package.json with a BOM is read (its lint script runs)" || fail "a BOM package.json was rejected (rc=$HOOK_RC): $(printf '%s' "$HOOK_OUT" | tail -3 | tr '\n' ' ')"
+  # A package.json node can't parse must not read as "no script".
+  printf '{"name": "x", "scripts": {\n' > "$P/package.json"
+  HOOK_RC=0; HOOK_OUT="$(cd "$P" && PATH="$TMP/bin" "$DASH" "$REPO_ROOT/templates/pre-push" 2>&1)" || HOOK_RC=$?
+  [ "$HOOK_RC" -ne 0 ] && grep -qi 'package.json' <<<"$HOOK_OUT" && ! grep -q 'skipping' <<<"$HOOK_OUT" \
+    && pass "a malformed package.json fails the hook instead of skipping lint" || fail "a malformed package.json was skipped (rc=$HOOK_RC): $(printf '%s' "$HOOK_OUT" | tail -3 | tr '\n' ' ')"
 else
   echo "  SKIP: dash or node not installed (behaviour not exercised)"
 fi

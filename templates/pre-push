@@ -11,21 +11,33 @@ echo "  ✓ Kill stale test runners"
 pkill -f vitest 2>/dev/null || true
 pkill -f jest 2>/dev/null || true
 
-# --- Lint ---
-echo "  ✓ Lint"
-if command -v pnpm >/dev/null 2>&1 && [ -f package.json ]; then
-  pnpm lint 2>/dev/null || npm run lint
-elif command -v npm >/dev/null 2>&1 && [ -f package.json ]; then
-  npm run lint
-fi
-
-# --- Typecheck ---
-echo "  ✓ Typecheck"
-if command -v pnpm >/dev/null 2>&1 && [ -f package.json ]; then
-  pnpm typecheck 2>/dev/null || npm run typecheck 2>/dev/null || true
-elif command -v npm >/dev/null 2>&1 && [ -f package.json ]; then
-  npm run typecheck 2>/dev/null || true
-fi
+# --- Lint and typecheck ---
+# Each runs only when package.json defines the script, and a failure blocks the
+# push. A missing script is skipped. has_script returns 0 (defined), 1 (not
+# defined, or no package.json/node) or 2 (package.json can't be parsed).
+has_script() {
+  [ -f package.json ] && command -v node >/dev/null 2>&1 || return 1
+  node -e "let p; try { p = require(require('path').resolve('package.json')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" "$1"
+}
+run_script() {
+  if command -v pnpm >/dev/null 2>&1 && [ -f pnpm-lock.yaml ]; then
+    pnpm run "$1"
+  else
+    npm run "$1"
+  fi
+}
+for script in lint typecheck; do
+  rc=0; has_script "$script" || rc=$?
+  if [ "$rc" -eq 0 ]; then
+    echo "  ✓ $script"
+    run_script "$script"
+  elif [ "$rc" -eq 1 ]; then
+    echo "  · No $script script in package.json — skipping"
+  else
+    echo "  ✗ package.json could not be parsed; fix it before pushing" >&2
+    exit 1
+  fi
+done
 
 # --- Format ---
 echo "  ✓ Format check"

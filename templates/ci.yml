@@ -1,33 +1,96 @@
-# CI Pipeline — lint, typecheck, test, coverage
-# Scaffolded by metaswarm init. Customize for your project.
+# CI Pipeline — toolchain, (Node: lint, typecheck), test with coverage
+# Scaffolded by metaswarm /setup. Customize for your project.
+#~
+#~ This is a template. /setup renders it with lib/render-ci.sh, which keeps the
+#~ toolchain block for your stack (between "# @toolchain <stack>" and "# @end"),
+#~ drops the other blocks, the markers and these "#~" lines, and writes your
+#~ repo's default branch into push.branches. If you copy it by hand, do the same.
 
 name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main] # @branch
+  # Every pull request is checked, whatever branch it targets.
   pull_request:
-    branches: [main]
 
 jobs:
   ci:
-    name: Lint, Test & Coverage
+    name: CI checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      # @toolchain node
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
+      # Lint and typecheck run when package.json defines the script, and fail
+      # the build when it fails. A missing script is skipped; a package.json
+      # that can't be parsed fails the step.
       - name: Lint
-        run: npm run lint
+        run: |
+          rc=0; node -e "let p; try { p = require(require('path').resolve('package.json')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" lint || rc=$?
+          if [ "$rc" -eq 0 ]; then
+            npm run lint
+          elif [ "$rc" -eq 1 ]; then
+            echo "No lint script in package.json; skipping"
+          else
+            exit "$rc"   # package.json could not be parsed
+          fi
 
       - name: Typecheck
-        run: npm run typecheck
+        run: |
+          rc=0; node -e "let p; try { p = require(require('path').resolve('package.json')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" typecheck || rc=$?
+          if [ "$rc" -eq 0 ]; then
+            npm run typecheck
+          elif [ "$rc" -eq 1 ]; then
+            echo "No typecheck script in package.json; skipping"
+          else
+            exit "$rc"   # package.json could not be parsed
+          fi
+      # @end
+
+      # @toolchain python
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          # Install the project itself when setup.py or pyproject.toml defines one;
+          # many keep only [tool.*] settings in pyproject.toml and list
+          # dependencies in requirements files.
+          if [ -f setup.py ] || { [ -f pyproject.toml ] && grep -qE '^\[(project|build-system)\]' pyproject.toml; }; then
+            pip install -e ".[dev]" || pip install -e .
+          fi
+          pip install pytest pytest-cov
+      # @end
+
+      # @toolchain go
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Download modules
+        run: go mod download
+      # @end
+
+      # @toolchain rust
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-tarpaulin
+      # @end
 
       - name: Test with coverage
         run: |
@@ -50,5 +113,6 @@ jobs:
             # Execute as array — prevents all shell metacharacter interpretation
             "${CMD_ARRAY[@]}"
           else
-            npm test
+            echo "Error: no .coverage-thresholds.json; run /setup to create it"
+            exit 1
           fi
