@@ -39,7 +39,7 @@ The CI job reads the command dynamically — if you change `enforcement.command`
 
 **Before you rely on these gates:**
 
-- For Node projects, `templates/ci.yml` and `templates/pre-push` run your `lint` and `typecheck` scripts when `package.json` defines them, and skip a missing one. A script that fails fails the build and blocks the push.
+- For Node projects, `templates/ci.yml` and `templates/pre-push` run your `lint` and `typecheck` scripts when `package.json` defines them, and skip a missing one. A script that fails, or a `package.json` that can't be parsed, fails the build and blocks the push.
 - A CI check blocks merges only if the branch requires it. When `/setup` writes the workflow, it offers to run `lib/require-ci-check.sh`, which adds a ruleset requiring `CI checks` on the default branch (admin rights needed; existing protection is left alone). Otherwise, add the coverage job (or the CI workflow's job) as a required status check in a branch protection rule or ruleset for your merge branch. If you merge into a branch other than the default, add it to the workflow's `push` filter too.
 
 ### Gate 2: Pre-Push Hook (Husky)

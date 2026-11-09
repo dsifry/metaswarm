@@ -31,21 +31,28 @@ jobs:
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
       # Lint and typecheck run when package.json defines the script, and fail
-      # the build when it fails. A missing script is skipped.
+      # the build when it fails. A missing script is skipped; a package.json
+      # that can't be parsed fails the step.
       - name: Lint
         run: |
-          if node -e "process.exit(require('./package.json').scripts?.lint ? 0 : 1)"; then
+          rc=0; node -e "let p; try { p = JSON.parse(require('fs').readFileSync('package.json', 'utf-8')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" lint || rc=$?
+          if [ "$rc" -eq 0 ]; then
             npm run lint
-          else
+          elif [ "$rc" -eq 1 ]; then
             echo "No lint script in package.json; skipping"
+          else
+            exit "$rc"   # package.json could not be parsed
           fi
 
       - name: Typecheck
         run: |
-          if node -e "process.exit(require('./package.json').scripts?.typecheck ? 0 : 1)"; then
+          rc=0; node -e "let p; try { p = JSON.parse(require('fs').readFileSync('package.json', 'utf-8')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" typecheck || rc=$?
+          if [ "$rc" -eq 0 ]; then
             npm run typecheck
-          else
+          elif [ "$rc" -eq 1 ]; then
             echo "No typecheck script in package.json; skipping"
+          else
+            exit "$rc"   # package.json could not be parsed
           fi
       # @end
 

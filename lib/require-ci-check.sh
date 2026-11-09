@@ -27,9 +27,10 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# The check name goes into a JSON string; keep it to plain printable text.
+# The check name goes into a JSON string; keep it to plain printable text
+# (no quotes, backslashes or control characters such as tabs and newlines).
 case "$check" in
-  *'"'*|*'\'*|"") echo "require-ci-check: unsupported check name: $check" >&2; exit 1 ;;
+  *'"'*|*'\'*|*[[:cntrl:]]*|"") echo "require-ci-check: unsupported check name: $check" >&2; exit 1 ;;
 esac
 
 ruleset_json() {

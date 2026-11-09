@@ -86,6 +86,9 @@ if [ -f "$SCRIPT" ]; then
   run --check 'bad"name'
   [ "$RC" -ne 0 ] && [ ! -f "$STUB_PAYLOAD" ] && pass "rejects a check name that would break the JSON" || fail "accepted a JSON-breaking check name"
 
+  run --check "$(printf 'CI\tchecks')"
+  [ "$RC" -ne 0 ] && [ ! -f "$STUB_PAYLOAD" ] && pass "rejects a check name with control characters" || fail "accepted a tab in the check name"
+
   echo "Idempotent"
   STUB_EXISTING="7" run
   [ "$RC" -eq 0 ] && [ ! -f "$STUB_PAYLOAD" ] && printf '%s' "$OUT" | grep -qi 'already' \

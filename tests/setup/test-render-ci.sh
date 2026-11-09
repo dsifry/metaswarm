@@ -101,6 +101,9 @@ if [ -f "$RENDER" ]; then
     printf '{"name":"x","scripts":{"%s":"exit 3"}}\n' "$script" > "$P/package.json"
     rc=0; (cd "$P" && bash -c "set -e; $body") >"$P/out" 2>&1 || rc=$?
     [ "$rc" -ne 0 ] && pass "node $step: a failing script fails the step" || fail "node $step: a failing script passed"
+    printf '{"name": "x", "scripts": {\n' > "$P/package.json"
+    rc=0; (cd "$P" && bash -c "set -e; $body") >"$P/out" 2>&1 || rc=$?
+    [ "$rc" -ne 0 ] && ! grep -qi 'skipping' "$P/out" && pass "node $step: a malformed package.json fails the step" || fail "node $step: malformed package.json skipped (rc=$rc): $(cat "$P/out")"
   done
 
   echo "Python installs the project only when pyproject.toml defines one"
@@ -126,11 +129,11 @@ if [ -f "$RENDER" ]; then
       grep -q 'install -e' "$PIPLOG" && pass "python ($kind): the project is installed" || fail "python ($kind): project not installed: $(tr '\n' ' ' < "$PIPLOG")"
     fi
   done
-fi
 
   INSTALL="$(run_step "$TMP/ci-node.yml" "Install dependencies")"
   printf '%s\n' "$INSTALL" | grep -q 'package-lock.json' && printf '%s\n' "$INSTALL" | grep -q 'npm install' \
     && pass "node: npm ci with a lockfile, npm install without" || fail "node: npm ci runs even with no package-lock.json: $INSTALL"
+fi
 
 echo "/setup wires the renderer and the required-check offer"
 SETUP="$REPO_ROOT/skills/setup/SKILL.md"
