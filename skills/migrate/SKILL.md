@@ -21,7 +21,7 @@ Before presenting any migration preview or file list, ALWAYS lead with this fram
 >
 > **Nothing is lost**: Your project-specific files (CLAUDE.md, .coverage-thresholds.json, .beads/, bin/, scripts/) are NEVER touched. Only duplicate metaswarm framework files are removed.
 >
-> **Reversible**: Removals of git-tracked files are staged with `git rm` (not permanently deleted). Before you commit:
+> **Reversible**: Removals of git-tracked files are staged with `git rm` (not permanently deleted). Untracked copies, which git can't restore, are moved to `.metaswarm/migrate-backup-<timestamp>/` instead of being deleted. Before you commit:
 > - Undo the removals: see [Rollback](#rollback-nothing-is-permanent) (it restores only the files this migration removed, not other changes)
 > - After committing: `git revert HEAD`
 >
@@ -112,6 +112,9 @@ These are unmodified copies that the plugin now provides directly:
 - 6 command shims in .claude/commands/ (thin wrappers that route to plugin commands)
 - .metaswarm/project-profile.json updated with "distribution": "plugin"
 
+### Untracked copies (moved, not deleted)
+- <each confirmed untracked file> → .metaswarm/migrate-backup-<timestamp>/
+
 ### How to undo (before committing)
 git diff --cached --name-only -z --diff-filter=D -- .claude/plugins/metaswarm .claude/rubrics .claude/guides .claude/commands/metaswarm-setup.md .claude/commands/metaswarm-update-version.md | xargs -0 git restore --staged --worktree --
 ```
@@ -153,7 +156,28 @@ git rm .claude/commands/metaswarm-update-version.md
 
 **After running**: Reassure: "Done — XX files staged for removal. These are only staged, not committed. Run `git status` to see the staged changes; the Rollback section below shows how to undo just these removals."
 
-**Untracked files** -- use `rm -f` (unlikely but handle gracefully).
+**Untracked files** -- move them to a timestamped backup folder, not `rm` (unlikely, but git can't restore them). List the confirmed untracked files in `UNTRACKED` (find them with `git ls-files --others -- .claude/plugins/metaswarm .claude/rubrics .claude/guides .claude/commands`, then keep only the confirmed ones; skip this step when there are none):
+```bash
+UNTRACKED=(<each confirmed untracked file>)
+BACKUP=".metaswarm/migrate-backup-$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$BACKUP"
+printf '*\n' > "$BACKUP/.gitignore"   # keeps the backup out of commits
+moved=0; failed=0
+for f in "${UNTRACKED[@]}"; do
+  if mkdir -p "$BACKUP/$(dirname "$f")" && mv -- "$f" "$BACKUP/$f"; then
+    moved=$((moved + 1))
+  else
+    echo "NOT moved: $f" >&2; failed=$((failed + 1))
+  fi
+done
+echo "Moved $moved untracked file(s) to $BACKUP/"
+if [ "$failed" -ne 0 ]; then
+  echo "$failed file(s) were NOT moved (see above) and are still at their legacy paths" >&2
+  false
+fi
+```
+
+If any file is reported as NOT moved, stop and tell the user before continuing; don't report the cleanup as complete. The backup keeps each file at its original path inside the folder, and its own `.gitignore` keeps git from listing or committing it. Delete the folder once you're happy with the migration. Name it in the Step 10 summary.
 
 **Empty directories** -- remove `.claude/rubrics/` and `.claude/guides/` if empty after cleanup. Do NOT remove `.claude/commands/` (shims remain).
 
@@ -206,6 +230,7 @@ Your project files (CLAUDE.md, .coverage-thresholds.json, .beads/, etc.) were no
 
 ### What changed
 - Removed XX redundant framework copies (now served by plugin)
+- Moved N untracked copies to .metaswarm/migrate-backup-<timestamp>/ (git ignores it; delete it once you're satisfied)
 - Added 6 command shims to .claude/commands/
 - Updated project profile to "distribution": "plugin"
 
@@ -217,7 +242,7 @@ Your project files (CLAUDE.md, .coverage-thresholds.json, .beads/, etc.) were no
 ### If anything seems wrong
 - Undo before committing: `git diff --cached --name-only -z --diff-filter=D -- .claude/plugins/metaswarm .claude/rubrics .claude/guides .claude/commands/metaswarm-setup.md .claude/commands/metaswarm-update-version.md | xargs -0 git restore --staged --worktree --` restores only deletions under the legacy paths Step 7 removes from, leaving your other changes (including other staged deletions) alone
 - Undo after committing: `git revert HEAD`
-- Bring the old files back: undoing as above restores the git-tracked ones. Untracked files removed in Step 7 were never in git and can't be restored this way. There is no command that re-creates the old npm-copied layout: today `npx metaswarm init` installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
+- Bring the old files back: undoing as above restores the git-tracked ones. Untracked ones are in .metaswarm/migrate-backup-<timestamp>/; the Rollback section shows how to copy them back. There is no command that re-creates the old npm-copied layout: today `npx metaswarm init` installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
 ```
 
 ---
@@ -234,12 +259,40 @@ Your project files (CLAUDE.md, .coverage-thresholds.json, .beads/, etc.) were no
 
 ## Rollback (Nothing Is Permanent)
 
-All removals use `git rm`, which only stages changes — files are NOT deleted from git history. The migration never auto-commits, so the user always has a chance to review and undo:
+Removals of tracked files use `git rm`, which only stages changes — files are NOT deleted from git history. Untracked files are moved to a backup folder, not deleted. The migration never auto-commits, so the user always has a chance to review and undo:
 
 - **Before committing** (undo the migration only): `git diff --cached --name-only -z --diff-filter=D -- .claude/plugins/metaswarm .claude/rubrics .claude/guides .claude/commands/metaswarm-setup.md .claude/commands/metaswarm-update-version.md | xargs -0 git restore --staged --worktree --`. It restores only staged deletions under the legacy paths Step 7 removes from, so unrelated work, including other staged deletions, is kept. The shims and profile changes from Steps 8 and 9 stay; delete or `git restore -- <path>` them by path
 - **After committing** (full undo): `git revert HEAD`
 - **Single file recovery**: `git checkout HEAD~1 -- <path>`
-- **Untracked files** removed with `rm -f` in Step 7 are not in git, so none of the above brings them back
+- **Untracked files** moved to the backup folder in Step 7 aren't in git, so the commands above don't bring them back. Restore them from the folder:
+
+**Restore untracked files** (use the folder Step 7 printed):
+```bash
+BACKUP=".metaswarm/migrate-backup-<timestamp>"
+# Copies each file (and symbolic link, as a link) back to its original path.
+# A path that already holds the same file counts as restored, so it is safe to
+# run again. A path that holds something different is never overwritten: it is
+# reported, and the backup is kept until you resolve it and run this again. A
+# file that can't be copied is reported too. The backup's .gitignore stays put.
+if find "$BACKUP" \( -type f -o -type l \) ! -path "$BACKUP/.gitignore" -exec sh -c '
+  b=$1; shift; rc=0
+  for src; do
+    dst=${src#"$b"/}
+    if [ -e "$dst" ] || [ -L "$dst" ]; then
+      if [ -L "$src" ] && [ -L "$dst" ] && [ "$(readlink "$src")" = "$(readlink "$dst")" ]; then :
+      elif [ ! -L "$src" ] && [ ! -L "$dst" ] && cmp -s "$src" "$dst"; then :
+      else echo "NOT restored (a different file is there now): $dst" >&2; rc=1
+      fi
+    elif ! { mkdir -p "$(dirname "$dst")" && cp -RPp "$src" "$dst"; }; then
+      echo "NOT restored: $dst" >&2; rc=1
+    fi
+  done
+  exit $rc' sh "$BACKUP" {} +; then
+  echo "Restored the files in $BACKUP; delete the folder once you've checked them"
+else
+  echo "Some files were NOT restored (see above). Resolve them and run this again; keep $BACKUP until then." >&2
+fi
+```
 - **Old npm-copied layout**: restore its git-tracked files with the commands above. No current command re-creates it: `npx metaswarm init` now installs the marketplace plugin, and `npx metaswarm setup` writes only the project's instruction files and `.coverage-thresholds.json`
 
 ---
@@ -263,6 +316,7 @@ All removals use `git rm`, which only stages changes — files are NOT deleted f
 | Auto-deleting modified files | Flag and ask explicitly |
 | Deleting before confirming plugin works | Pre-flight check first |
 | Using `rm -rf` on tracked files | Use `git rm` (reversible) |
+| Using `rm -f` on untracked files | Move them to `.metaswarm/migrate-backup-<timestamp>/` (git can't restore them) |
 | Skipping dry run preview | Always show full preview |
 | Removing project-local files | Never touch CLAUDE.md, .beads/, bin/, scripts/ |
 | Saying "deleting XX files" or "removing XX files" | Say "cleaning up XX redundant copies" |
