@@ -403,13 +403,15 @@ The Node pre-push hook runs `lint` and `typecheck` only when `package.json` defi
 
 ### 5.4 CI (if enabled)
 
+Run these with the `PLUGIN_ROOT` resolved in Phase 3 Step 1 (shell variables don't carry between calls, so repeat that resolution block or use the path it found).
+
 1. Render the workflow for the detected stack. `--stack` is `node` (JavaScript/TypeScript installed with npm), `python` (pip with `requirements*.txt` or a `pyproject.toml` package), `go` or `rust`. A project on pnpm, yarn or bun, or a Python project managed by Poetry, uv or Pipenv, gets the same treatment as a stack with no toolchain (exit 2 below), because the template's install steps don't fit it:
 
    ```bash
    bash "${PLUGIN_ROOT}/lib/render-ci.sh" --stack <stack> --out .github/workflows/ci.yml
    ```
 
-   It keeps that stack's toolchain steps, and points `push` at the repo's default branch (from `origin/HEAD`, else `gh repo view`). Pull requests into any branch are checked. Node's lint and typecheck steps skip a script that `package.json` doesn't define, and fail the build when one fails. Exit 1 means it couldn't render, for example because the branch name has characters a workflow file can't hold. Show the user its message, and run it again with `--branch <name>` once they give a branch to use. Exit 2 means the stack has no toolchain in the template (Java, Ruby, and so on). Don't write `ci.yml` then. Tell the user to add the coverage job from `./templates/ci-coverage-job.yml` to their CI, after the steps that install their toolchain.
+   It keeps that stack's toolchain steps, and points `push` at the repo's default branch (from `origin/HEAD`, else `gh repo view`). Pull requests into any branch are checked. Node's lint and typecheck steps skip a script that `package.json` doesn't define, and fail the build when one fails. If it prints a warning that it guessed `main` for the branch, tell the user and re-run with `--branch <name>` if their default branch differs. Exit 1 means it couldn't render, for example because the branch name has characters a workflow file can't hold. Show the user its message, and run it again with `--branch <name>` once they give a branch to use. Exit 2 means the stack has no toolchain in the template (Java, Ruby, and so on). Don't write `ci.yml` then. Tell the user to add the coverage job from `./templates/ci-coverage-job.yml` to their CI, after the steps that install their toolchain.
 
 2. Do this step and the next only if step 1 wrote `.github/workflows/ci.yml` (exit 0). With no `ci.yml`, the `CI checks` job never runs, so requiring it would block every PR. In that case, add a tip to the summary instead: once the user's own CI runs the coverage job, require that job's check (its `name:`, `Coverage Enforcement` in `ci-coverage-job.yml`).
 
@@ -421,7 +423,7 @@ The Node pre-push hook runs `lint` and `typecheck` only when `package.json` defi
    bash "${PLUGIN_ROOT}/lib/require-ci-check.sh"
    ```
 
-   It adds a ruleset named `metaswarm: required CI check` and does nothing if that ruleset already exists. Once it succeeds, the default branch takes no direct pushes, so tell the user to land the setup files through a PR: commit them on a branch and open one, which is also the first run of the new check. If it exits 1 (no `gh`, not logged in, or no admin rights), show the user the manual steps it printed. On No, put those steps in the summary tips: Settings → Rules → Rulesets, target the default branch, and require the status check `CI checks`.
+   It adds a ruleset named `metaswarm: required CI check` and does nothing if that ruleset already exists. Once it succeeds, the default branch takes no direct pushes, so tell the user to land the setup files through a PR: commit them on a branch and open one, which is also the first run of the new check. If it exits 1 (no `gh`, not logged in, or no admin rights), show the user the manual steps it printed. A private repo on GitHub Free can't use rulesets or branch protection at all; say so if GitHub's error mentions the plan. On No, put those steps in the summary tips: Settings → Rules → Rulesets, target the default branch, and require the status check `CI checks`.
 
 ---
 

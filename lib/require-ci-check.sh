@@ -60,6 +60,7 @@ To require it by hand: in the repository's Settings → Rules → Rulesets, add 
 branch ruleset that targets the default branch, turn on "Require status checks
 to pass", and add the check "$check". Or save this as ruleset.json and run,
 with admin rights:  gh api -X POST repos/<owner>/<repo>/rulesets --input ruleset.json
+(Private repos need a paid GitHub plan for rulesets and branch protection.)
 EOF
     ruleset_json
   } >&2
