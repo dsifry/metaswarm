@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.15.0
 
 ### Fixed
 
@@ -24,6 +24,7 @@
   - `/setup` asks those stacks whether to add the coverage job, not whether to "create a CI pipeline" it won't write.
   - The pre-push hook stops the push when a project has a `package.json` but `node` isn't on PATH, instead of skipping lint and typecheck. Its format step uses pnpm only with a `pnpm-lock.yaml`, like lint and typecheck.
   - The rendered `ci.yml` passes actionlint with shellcheck (the coverage step's literal `$` pattern is annotated).
+- **A plan revised in design review goes back through the Plan Review Gate** (#94). `guides/workflow-enforcement.md` and the design-review-gate skill now state what the issue-orchestrator already does: in full orchestration, a plan the Design Review Gate revises gets a fresh Plan Review Gate round, and a revision that fails it goes back through both gates. On the brainstorming path the Design Review Gate re-reviews a revised design doc in its usual fresh round, and the Plan Review Gate runs once, on the plan writing-plans writes. The order guard now treats a leading `/start-task` as the brainstorming path, splits chains on `➡`, `⮕`, `⟹`, `──►`, `─►`, plain `──` and a spaced ` > `, counts "Plans" as a plan step, and sees formatted gate names after an adjacent comma or semicolon. Prose with `;`, HTML, and `writing-plans` are not flagged. Each form has a self-test fixture.
 - **Session start restores a missing Go coverage gate** (#87). When `.coverage-thresholds.json` runs `.metaswarm/go-coverage-gate.go` and the file is gone, the session hook's self-heal now writes it back from the plugin. When the gate is the only thing missing, it copies the file back without the full setup run, so customized command shims, the thresholds and the enforcement command are left as they are.
 
 ## 0.14.0
