@@ -36,7 +36,7 @@ for script in lint typecheck; do
   elif [ "$rc" -eq 1 ]; then
     echo "  · No $script script in package.json — skipping"
   elif [ "$rc" -eq 3 ]; then
-    echo "  ✗ node is not on PATH, so package.json scripts can't be checked; install Node.js before pushing" >&2
+    echo "  ✗ node is not on PATH, so package.json scripts can't be checked. Install Node.js, or, if it comes from nvm and you push from a GUI client, load it in ~/.config/husky/init.sh" >&2
     exit 1
   else
     echo "  ✗ package.json could not be parsed; fix it before pushing" >&2

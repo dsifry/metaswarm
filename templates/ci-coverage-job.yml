@@ -27,6 +27,11 @@
 #     uv:      astral-sh/setup-uv, then `uv sync --all-groups`
 #     Pipenv:  pip install pipenv && pipenv install --dev
 #     Java:    actions/setup-java, then let mvn/gradle fetch dependencies
+#   pnpm and yarn come from corepack: pin the version with a "packageManager"
+#   field in package.json, or corepack picks its default, which may not read
+#   an older lockfile. A project that is both JavaScript and Python (say,
+#   Poetry plus a package.json) keeps this step and adds its Python setup and
+#   install steps after it, instead of replacing it.
 #   If the coverage command runs through the tool (e.g. `poetry run pytest`),
 #   note that the CI template's runner allowlist doesn't apply here: this job
 #   runs enforcement.command as written.
@@ -57,7 +62,12 @@ coverage-simple:
           corepack enable && pnpm install --frozen-lockfile
         elif [ -f yarn.lock ]; then
           corepack enable
-          if [ -f .yarnrc.yml ]; then yarn install --immutable; else yarn install --frozen-lockfile; fi
+          # Yarn Berry (2+) writes __metadata into yarn.lock; classic doesn't.
+          if [ -f .yarnrc.yml ] || grep -q '^__metadata:' yarn.lock; then
+            yarn install --immutable
+          else
+            yarn install --frozen-lockfile
+          fi
         elif [ -f bun.lockb ] || [ -f bun.lock ]; then
           npm install -g bun && bun install --frozen-lockfile
         elif [ -f package-lock.json ]; then
@@ -145,7 +155,12 @@ coverage-merge:
           corepack enable && pnpm install --frozen-lockfile
         elif [ -f yarn.lock ]; then
           corepack enable
-          if [ -f .yarnrc.yml ]; then yarn install --immutable; else yarn install --frozen-lockfile; fi
+          # Yarn Berry (2+) writes __metadata into yarn.lock; classic doesn't.
+          if [ -f .yarnrc.yml ] || grep -q '^__metadata:' yarn.lock; then
+            yarn install --immutable
+          else
+            yarn install --frozen-lockfile
+          fi
         elif [ -f bun.lockb ] || [ -f bun.lock ]; then
           npm install -g bun && bun install --frozen-lockfile
         elif [ -f package-lock.json ]; then

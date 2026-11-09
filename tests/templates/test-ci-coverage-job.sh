@@ -50,7 +50,12 @@ for job in coverage-simple coverage-merge; do
   # case: files to create | command the step must run
   while IFS='|' read -r files want; do
     P="$TMP/$job-$(echo "$files" | tr ' ./' '___')"; mkdir -p "$P"
-    for f in $files; do : > "$P/$f"; done
+    for f in $files; do
+      case "$f" in
+        berry:*) printf '__metadata:\n  version: 8\n' > "$P/${f#berry:}" ;;
+        *) : > "$P/$f" ;;
+      esac
+    done
     export LOG="$P/log"; : > "$LOG"
     rc=0; (cd "$P" && PATH="$TMP/bin:$PATH" bash -c "set -e; $body") >"$P/out" 2>&1 || rc=$?
     if [ "$rc" -eq 0 ] && grep -qF "$want" "$LOG"; then
@@ -62,6 +67,7 @@ for job in coverage-simple coverage-merge; do
 package.json pnpm-lock.yaml|pnpm install --frozen-lockfile
 package.json yarn.lock|yarn install --frozen-lockfile
 package.json yarn.lock .yarnrc.yml|yarn install --immutable
+package.json berry:yarn.lock|yarn install --immutable
 package.json bun.lockb|bun install --frozen-lockfile
 package.json bun.lock|bun install --frozen-lockfile
 package.json package-lock.json|npm ci

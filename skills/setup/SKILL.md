@@ -309,7 +309,7 @@ Write them to `scripts/` in the project. Skip any that already exist.
 
 | Condition | Source | Destination |
 |---|---|---|
-| User chose YES for CI | `./templates/ci.yml`, rendered (see 5.4) | `.github/workflows/ci.yml` |
+| User chose YES for CI | `./templates/ci.yml`, rendered (see 5.4); other stacks get the `ci-coverage-job.yml` note instead | `.github/workflows/ci.yml` |
 | User chose YES for git hooks AND Husky detected or Node.js project | `./templates/pre-push` | `.husky/pre-push` (chmod +x) |
 | User chose YES for external tools | `./templates/external-tools.yaml` | `.metaswarm/external-tools.yaml` |
 | Always | `./templates/.env.example` | `.env.example` |
@@ -411,7 +411,7 @@ Run these with the `PLUGIN_ROOT` resolved in Phase 3 Step 1 (shell variables don
    bash "${PLUGIN_ROOT}/lib/render-ci.sh" --stack <stack> --out .github/workflows/ci.yml
    ```
 
-   It keeps that stack's toolchain steps, and points `push` at the repo's default branch (from `origin/HEAD`, else `gh repo view`). Pull requests into any branch are checked. Node's lint and typecheck steps skip a script that `package.json` doesn't define, and fail the build when one fails. If it prints a warning that it guessed `main` for the branch, tell the user and re-run with `--branch <name>` if their default branch differs. Exit 1 means it couldn't render, for example because the branch name has characters a workflow file can't hold. Show the user its message, and run it again with `--branch <name>` once they give a branch to use. Exit 2 means the stack has no toolchain in the template (Java, Ruby, and so on). Don't write `ci.yml` then. Show the user the `coverage-simple` job from `./templates/ci-coverage-job.yml` to add to their workflow. Its install step already handles pnpm, yarn and bun from the lockfile; for any other stack, tell them to replace that step with their toolchain's setup and install steps (the file's header has Poetry, uv, Pipenv and Java examples).
+   It keeps that stack's toolchain steps, and points `push` at the repo's default branch (from `origin/HEAD`, else `gh repo view`). Pull requests into any branch are checked. Node's lint and typecheck steps skip a script that `package.json` doesn't define, and fail the build when one fails. If it prints a warning that it guessed `main` for the branch, tell the user and re-run with `--branch <name>` if their default branch differs. Exit 1 means it couldn't render, for example because the branch name has characters a workflow file can't hold. Show the user its message, and run it again with `--branch <name>` once they give a branch to use. Exit 2 means the stack has no toolchain in the template (Java, Ruby, and so on). Don't write `ci.yml` then. Show the user the `coverage-simple` job from `./templates/ci-coverage-job.yml` to add to their workflow. Its install step already handles pnpm, yarn and bun from the lockfile; for any other stack, tell them to replace that step with their toolchain's setup and install steps (the file's header has Poetry, uv, Pipenv and Java examples). A project that is both JavaScript and Python keeps the step and adds its Python steps after it.
 
 2. Do this step and the next only if step 1 wrote `.github/workflows/ci.yml` (exit 0). With no `ci.yml`, the `CI checks` job never runs, so requiring it would block every PR. In that case, add a tip to the summary instead: once the user's own CI runs the coverage job, require that job's check (its `name:`, `Coverage Enforcement` in `ci-coverage-job.yml`).
 
