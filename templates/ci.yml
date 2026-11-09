@@ -28,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then npm ci; else npm install; fi
 
       # Lint and typecheck run when package.json defines the script, and fail
       # the build when it fails. A missing script is skipped; a package.json
@@ -105,7 +105,9 @@ jobs:
               npm|pnpm|yarn|npx|bun|cargo|pytest|go|make) ;;
               *) echo "Error: enforcement command must start with a known package manager/runner"; exit 1 ;;
             esac
-            # Reject shell metacharacters in the full command string
+            # Reject shell metacharacters in the full command string. The $ and
+            # backtick in the pattern are literal characters to reject.
+            # shellcheck disable=SC2016
             if echo "$CMD" | grep -qE '[;|&`$(){}<>\\]'; then
               echo "Error: enforcement command contains disallowed shell metacharacters"
               exit 1

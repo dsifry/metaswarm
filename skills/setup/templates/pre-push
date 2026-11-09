@@ -14,9 +14,11 @@ pkill -f jest 2>/dev/null || true
 # --- Lint and typecheck ---
 # Each runs only when package.json defines the script, and a failure blocks the
 # push. A missing script is skipped. has_script returns 0 (defined), 1 (not
-# defined, or no package.json/node) or 2 (package.json can't be parsed).
+# defined, or no package.json), 2 (package.json can't be parsed) or 3 (node is
+# not installed, so package.json can't be read).
 has_script() {
-  [ -f package.json ] && command -v node >/dev/null 2>&1 || return 1
+  [ -f package.json ] || return 1
+  command -v node >/dev/null 2>&1 || return 3
   node -e "let p; try { p = require(require('path').resolve('package.json')); } catch (e) { console.error('package.json: ' + e.message); process.exit(2); } process.exit(p.scripts?.[process.argv[1]] ? 0 : 1)" "$1"
 }
 run_script() {
@@ -33,6 +35,9 @@ for script in lint typecheck; do
     run_script "$script"
   elif [ "$rc" -eq 1 ]; then
     echo "  · No $script script in package.json — skipping"
+  elif [ "$rc" -eq 3 ]; then
+    echo "  ✗ node is not on PATH, so package.json scripts can't be checked. Install Node.js, or, if it comes from nvm and you push from a GUI client, load it in ~/.config/husky/init.sh" >&2
+    exit 1
   else
     echo "  ✗ package.json could not be parsed; fix it before pushing" >&2
     exit 1
@@ -41,7 +46,8 @@ done
 
 # --- Format ---
 echo "  ✓ Format check"
-if command -v pnpm >/dev/null 2>&1 && [ -f package.json ]; then
+# pnpm only when the project uses it, as for lint and typecheck above.
+if command -v pnpm >/dev/null 2>&1 && [ -f package.json ] && [ -f pnpm-lock.yaml ]; then
   pnpm format:check 2>/dev/null || pnpm prettier --check . 2>/dev/null || true
 elif command -v npm >/dev/null 2>&1 && [ -f package.json ]; then
   npm run format:check 2>/dev/null || npx prettier --check . 2>/dev/null || true
