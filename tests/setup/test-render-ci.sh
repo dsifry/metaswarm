@@ -140,7 +140,10 @@ if [ -f "$RENDER" ]; then
   INSTALL="$(run_step "$TMP/ci-node.yml" "Install dependencies")"
   printf '%s\n' "$INSTALL" | grep -q 'package-lock.json' && printf '%s\n' "$INSTALL" | grep -q 'npm install' \
     && pass "node: npm ci with a lockfile, npm install without" || fail "node: npm ci runs even with no package-lock.json: $INSTALL"
-  printf '%s\n' "$INSTALL" | grep -q 'npm-shrinkwrap.json' && pass "node: npm-shrinkwrap.json also gets npm ci" || fail "node: a shrinkwrap-only project isn't frozen: $INSTALL"
+  SW="$TMP/shrinkwrap"; mkdir -p "$SW/bin"; : > "$SW/npm-shrinkwrap.json"; printf '{"name":"x"}\n' > "$SW/package.json"
+  printf '#!/bin/sh\necho "npm $*" >> "%s"\n' "$SW/log" > "$SW/bin/npm"; chmod +x "$SW/bin/npm"; : > "$SW/log"
+  rc=0; (cd "$SW" && PATH="$SW/bin:$PATH" bash -c "set -e; $INSTALL") >/dev/null 2>&1 || rc=$?
+  [ "$rc" -eq 0 ] && grep -qx 'npm ci' "$SW/log" && pass "node: a shrinkwrap-only project runs npm ci" || fail "node: shrinkwrap-only project ran: $(tr '\n' ' ' < "$SW/log")"
 fi
 
 echo "/setup wires the renderer and the required-check offer"

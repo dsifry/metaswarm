@@ -74,6 +74,13 @@ package.json package-lock.json|npm ci
 package.json npm-shrinkwrap.json|npm ci
 package.json|npm install
 CASES
+  # Bun follows a packageManager pin, like pnpm and yarn through corepack.
+  P="$TMP/$job-bunpin"; mkdir -p "$P"; : > "$P/bun.lock"
+  printf '{"name":"x","packageManager":"bun@1.1.38"}\n' > "$P/package.json"
+  export LOG="$P/log"; : > "$LOG"
+  rc=0; (cd "$P" && PATH="$TMP/bin:$PATH" bash -c "set -e; $body") >"$P/out" 2>&1 || rc=$?
+  [ "$rc" -eq 0 ] && grep -qF 'npm install -g bun@1.1.38' "$LOG" && pass "$job: bun installs the packageManager version" \
+    || fail "$job: bun ignored packageManager (rc=$rc): $(tr '\n' ' ' < "$LOG") $(tr '\n' ' ' < "$P/out")"
   grep -q 'corepack enable' <<<"$body" && pass "$job: pnpm and yarn come from corepack" || fail "$job: no corepack enable for pnpm/yarn"
 
   # Not a JavaScript project: the step must fail and say what to do.
