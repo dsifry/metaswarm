@@ -111,7 +111,7 @@ after each review round (round = 1, 2, ...):
 Line 2 fires when any of C1–C4 holds. They are evaluated per gate occurrence, after each round, on the last round's blockers. They count **distinct blockers**: after each round the orchestrator merges duplicates (the same canonical theme and the same defect, even when the evidence is worded differently) and records `mergedInto: <kept id>` on each duplicate. A merged blocker still counts once per reviewer for divergence, and C1 scans every blocker.
 
 - **C1** (needs the user). A blocker has `needs_user: yes`, or `origin: assumption` with an `assumption` that is not in the ledger's Confirmed list. An `origin: assumption` blocker with no id counts as unconfirmed.
-- **C2** (not converging). Total distinct blockers are non-decreasing over the last three rounds since `windowStart`, that is t[r] ≥ t[r-1] ≥ t[r-2] (three rounds since the window start are needed), or, for gates with ≥2 reviewers, divergence: in one round one reviewer reports no blockers while another reviewer's count is higher than its own count in the previous round. A single-reviewer gate never diverges. Divergence needs at least 2 rounds inside the window, so after option 2 it cannot fire until two new rounds exist.
+- **C2** (not converging). Total distinct blockers are non-decreasing over the last three rounds since `windowStart`, that is t[r] ≥ t[r-1] ≥ t[r-2] (three rounds since the window start are needed), or, for gates with ≥2 reviewers, divergence: this round's total distinct blockers did not fall (it is ≥ the previous in-window round's total), and one reviewer reports no blockers while another reviewer's count is higher than its own count in the previous round. A falling total never counts as divergence. A single-reviewer gate never diverges. Divergence needs at least 2 rounds inside the window, so after option 2 it cannot fire until two new rounds exist.
 - **C3** (fix-induced). At least 2 distinct blockers in the round have `fix_induced: yes`. It applies only to rounds at or after `windowStart`.
 - **C4** (recurring theme). One canonical theme that is not in `ackThemes` appears among the blockers of at least three rounds of the occurrence. The rounds do not need to be consecutive. `windowStart` does not reset C4; only `ackThemes` does. A blocker with no theme counts toward no theme.
 
@@ -158,7 +158,8 @@ The orchestrator keeps the round history and writes it after every round, one fi
 `lib/review-rule.js` applies the rule to a history file, so the orchestrator does not do the signal arithmetic by hand:
 
 ```bash
-RR="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh 2>/dev/null)")")}/lib/review-rule.js"; [ -f "$RR" ] || RR=lib/review-rule.js; node "$RR" <history.json>
+# HISTORY is the path of the review-history file, e.g. HISTORY=.beads/context/review-history/<file>.json
+RR=lib/review-rule.js; { [ -f ./lib/review-rule.js ] && grep -q '"name": *"metaswarm"' package.json 2>/dev/null; } || { RR="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh 2>/dev/null)")")}/lib/review-rule.js"; [ -f "$RR" ] || RR=lib/review-rule.js; }; node "$RR" "$HISTORY"
 ```
 
 It prints `{line, action, signals, capHit}` and exits 0. `signals` is a list of `{id, detail}`. It computes PASS (line 1), clarify (line 2, from C1–C4), the cap (line 3) and the iterate lines (6 and 7). Recurring or disputed (line 4) and overengineering (line 5) need judgement, so they arrive as the per-round booleans. A `closed` file returns `action: closed` with no rule evaluation, and `clarify-pending` returns `action: re-ask` with `line` 2 and the current signals. `capHit` is true when the round is 10 or later, whichever line wins.
@@ -185,7 +186,7 @@ The helper exits 2 on bad input:
 
 Omit a field you do not know rather than writing `null`: `null` fails validation for the validated fields, and only `mergedInto` and `pendingClarify` accept it. On exit 2, fix the history file and run the helper again. Apply the rule by hand only if the helper cannot run.
 
-This guide's rule block is authoritative and the helper implements it; a test compares the guide's rule block with the helper's exported `RULE_LINES`. A disagreement is a bug to fix, not a tie for the orchestrator to break. The command takes the plugin root from `CLAUDE_PLUGIN_ROOT` if it is set, otherwise from `metaswarm-agents.sh` on PATH (the plugin `bin/`), and falls back to `lib/review-rule.js` in the current repo, for example when developing metaswarm itself. If neither file exists or Node is unavailable (a Codex symlink install has no `lib/`), the orchestrator applies the rule by hand.
+This guide's rule block is authoritative and the helper implements it; a test compares the guide's rule block with the helper's exported `RULE_LINES`. A disagreement is a bug to fix, not a tie for the orchestrator to break. The command uses `lib/review-rule.js` in the current repo when that repo is metaswarm (`./lib/review-rule.js` exists and `package.json` is named `metaswarm`), so developing metaswarm never runs an older installed copy. Otherwise it takes the plugin root from `CLAUDE_PLUGIN_ROOT` if it is set, or from `metaswarm-agents.sh` on PATH (the plugin `bin/`), and falls back to `lib/review-rule.js` in the current repo. If neither file exists or Node is unavailable (a Codex symlink install has no `lib/`), the orchestrator applies the rule by hand.
 
 ## Follow-ups
 

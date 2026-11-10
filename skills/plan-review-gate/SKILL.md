@@ -164,7 +164,7 @@ after each review round (round = 1, 2, ...):
 - **Round history.** Keep the round history and write it after every round to `.beads/context/review-history/plan-review-gate-<slug>-<occurrence>.json` (the format, the `status` lifecycle and `pendingClarify` are in the guide's Round history section). `<occurrence>` is the next free integer for that gate and slug, starting at 1. The slug is derived from the plan path. Store the artifact path (the plan file) in the file, set `reviewers` to 3, and use stable role names as reviewer labels.
 - **After each round, before the rule.** First set `fix_induced` on each new blocker that matches the `lastFix` stored before this round's review (the changes made since the previous review). Then map each blocker's `theme` to a `canonicalTheme`, and merge duplicate blockers (the same canonical theme and the same defect) by setting `mergedInto` on each duplicate. Run the rule. When you then fix the blockers, overwrite `lastFix` with that fix before the next review.
 - **Themes.** From round 2 on, give each fresh reviewer the earlier canonical theme labels (labels only, never the findings) and ask it to reuse one when it fits.
-- **Helper.** Run the rule with `RR="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh 2>/dev/null)")")}/lib/review-rule.js"; [ -f "$RR" ] || RR=lib/review-rule.js; node "$RR" <history.json>`. It prints `{line, action, signals, capHit}`. Recurring or disputed (line 4) and overengineering (line 5) need your judgement, so set the round's `recurring`, `disputed` and `overengineering` flags first. If the path does not resolve or Node is unavailable, apply the rule by hand. On exit 2, fix the history file and run it again.
+- **Helper.** Set `HISTORY` to the review-history file path, then run the rule with `RR=lib/review-rule.js; { [ -f ./lib/review-rule.js ] && grep -q '"name": *"metaswarm"' package.json 2>/dev/null; } || { RR="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh 2>/dev/null)")")}/lib/review-rule.js"; [ -f "$RR" ] || RR=lib/review-rule.js; }; node "$RR" "$HISTORY"` (HISTORY is the path of the review-history file, for example `HISTORY=.beads/context/review-history/<file>.json`). It prints `{line, action, signals, capHit}`. Recurring or disputed (line 4) and overengineering (line 5) need your judgement, so set the round's `recurring`, `disputed` and `overengineering` flags first. If the path does not resolve or Node is unavailable, apply the rule by hand. On exit 2, fix the history file and run it again.
 
 **Follow-ups.** Minor/nit findings never block. When `bd` is available, file each as a BEADS task (`bd create --type task`), linked to the epic if one exists. Otherwise, or if `bd create` fails, list them under a `### Follow-ups` heading in the gate output, so the plan and later the PR body carry them.
 
@@ -196,9 +196,9 @@ When the severity rule says clarify (line 2), use the Clarification report from 
 ### Round history
 | Round | Feasibility | Completeness | Scope & Alignment | Blockers (critical/major) | Fixed this round | Signals (C1–C4) | Themes | Rule decision |
 |-------|-------------|--------------|-------------------|---------------------------|------------------|-----------------|--------|---------------|
-| 1     | FAIL        | PASS         | FAIL              | 0 / 2                     | —                | —               | <theme> | 6: iterate    |
-| 2     | PASS        | PASS         | FAIL              | 0 / 1                     | 0 / 2            | —               | <theme> | 6: iterate    |
-| 3     | PASS        | PASS         | FAIL              | 0 / 1                     | 0 / 0            | —               | <theme> | 4: escalate (recurring) |
+| 1     | FAIL        | PASS         | FAIL              | 0 / 2                     | —                | —               | <theme-a> | 6: iterate    |
+| 2     | PASS        | PASS         | FAIL              | 0 / 1                     | 0 / 2            | —               | <theme-b> | 6: iterate    |
+| 3     | PASS        | PASS         | FAIL              | 0 / 1                     | 0 / 0            | —               | <theme-a>, <theme-c> | 4: escalate (recurring) |
 
 ### Follow-ups
 - <minor/nit findings, or the BEADS task IDs filed for them>

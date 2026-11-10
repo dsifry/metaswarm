@@ -220,6 +220,9 @@ assert_in "guide: helper usage notes" "$G" \
   'Apply the rule by hand only if the helper cannot run' \
   '`action: re-ask` with `line` 2 and the current signals' \
   'Divergence needs at least 2 rounds inside the window' \
+  'this round'"'"'s total distinct blockers did not fall' \
+  'A falling total never counts as divergence' \
+  'HISTORY is the path of the review-history file' \
   'until two new rounds exist'
 assert_in "guide: ackFindings key matches the helper" "$G" \
   '`<theme>:<assumption id>` whenever `assumption` is set, whatever the origin, and `<theme>:needs_user` otherwise' \
@@ -495,9 +498,10 @@ RULE_BLOCK="$(awk '/^## Iteration rule/{h=1} h&&/^```text/{on=1;next} on&&/^```/
 # The helper invocation: the one-line `RR=...` command in the guide's helper block.
 HELPER_CMD="$(awk '/^### The helper/{h=1} h&&/^RR=/{print; exit}' "$GUIDE")"
 case "$HELPER_CMD" in
-  *'metaswarm-agents.sh'*'<history.json>'*) pass "guide: helper command resolves the plugin root from metaswarm-agents.sh" ;;
+  *'metaswarm-agents.sh'*'node "$RR" "$HISTORY"') pass "guide: helper command resolves the plugin root from metaswarm-agents.sh" ;;
   *) fail "guide: helper command resolves the plugin root from metaswarm-agents.sh"; HELPER_CMD='RR=missing' ;;
 esac
+assert_not_in "guide: helper command has no <history.json> redirect lookalike" "$HELPER_CMD" '<history.json>'
 assert_not_in "guide: helper command does not rely on empty plugin-root variables alone" "$HELPER_CMD" '${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/lib'
 
 # Execute the guide's snippet the way a plugin install runs it: both root variables unset, the plugin bin/ on PATH.
@@ -507,8 +511,8 @@ printf '#!/bin/sh\n' > "$HFIX/plugin/bin/metaswarm-agents.sh"; chmod +x "$HFIX/p
 printf 'console.log("PLUGIN " + process.argv[2]);\n' > "$HFIX/plugin/lib/review-rule.js"
 printf 'console.log("LOCAL " + process.argv[2]);\n' > "$HFIX/work-lib/lib/review-rule.js"
 run_helper() { # <cwd> <PATH-prefix or empty>
-  local cmd="${HELPER_CMD//<history.json>/h.json}"
-  (cd "$1" && env -u CLAUDE_PLUGIN_ROOT -u PLUGIN_ROOT PATH="${2:+$2:}/usr/bin:/bin:$(dirname "$(command -v node)")" bash -c "$cmd" 2>&1) || true
+  local cmd="$HELPER_CMD"
+  (cd "$1" && env -u CLAUDE_PLUGIN_ROOT -u PLUGIN_ROOT HISTORY=h.json PATH="${2:+$2:}/usr/bin:/bin:$(dirname "$(command -v node)")" bash -c "$cmd" 2>&1) || true
 }
 GOT_PLUGIN="$(run_helper "$HFIX/work" "$HFIX/plugin/bin")"
 [ "$GOT_PLUGIN" = "PLUGIN h.json" ] \
@@ -538,6 +542,7 @@ for g in "${GATES[@]}"; do
     'canonical theme labels' 'labels only' 'reuse one when it fits'
   assert_in "$g: runs the helper and falls back to the rule by hand" "$T" \
     "$HELPER_CMD" \
+    'Set `HISTORY` to the review-history file path' \
     'apply the rule by hand'
   assert_in "$g: line 2 routes to the misunderstanding analysis and the Clarification report" "$T" \
     'misunderstanding analysis' 'Clarification report' './guides/delivery-scope.md#clarify' \
@@ -896,6 +901,50 @@ assert_not_in "docs/index.html: reviewer disagreement is not attributed to Clari
 for pat in 'severity rule decide' 'design review gate iterates'; do
   assert_in "docs/index.html: '$pat' paragraph names clarify" "$(grep -i "$pat" <<<"$DOC" | tr 'A-Z' 'a-z')" 'clarif'
 done
+
+# ---------------------------------------------------------------------------
+echo "WU5: helper resolution order, example tables, brainstorm fallback"
+# ---------------------------------------------------------------------------
+HFIX2="$(mktemp -d)"
+mkdir -p "$HFIX2/plugin/bin" "$HFIX2/plugin/lib" "$HFIX2/self/lib" "$HFIX2/other/lib" "$HFIX2/bare"
+printf '#!/bin/sh\n' > "$HFIX2/plugin/bin/metaswarm-agents.sh"; chmod +x "$HFIX2/plugin/bin/metaswarm-agents.sh"
+printf 'console.log("PLUGIN " + process.argv[2]);\n' > "$HFIX2/plugin/lib/review-rule.js"
+printf 'console.log("LOCAL " + process.argv[2]);\n' > "$HFIX2/self/lib/review-rule.js"
+printf 'console.log("LOCAL " + process.argv[2]);\n' > "$HFIX2/other/lib/review-rule.js"
+printf '{\n  "name": "metaswarm",\n  "version": "1.0.0"\n}\n' > "$HFIX2/self/package.json"
+printf '{\n  "name": "someapp"\n}\n' > "$HFIX2/other/package.json"
+run_helper2() { # <cwd> <PATH-prefix or empty>
+  local cmd="$HELPER_CMD"
+  (cd "$1" && env -u CLAUDE_PLUGIN_ROOT -u PLUGIN_ROOT HISTORY=h.json PATH="${2:+$2:}/usr/bin:/bin:$(dirname "$(command -v node)")" bash -c "$cmd" 2>&1) || true
+}
+GOT="$(run_helper2 "$HFIX2/self" "$HFIX2/plugin/bin")"
+[ "$GOT" = "LOCAL h.json" ] && pass "helper: the metaswarm repo uses its local copy even with a plugin on PATH" \
+  || fail "helper: the metaswarm repo uses its local copy even with a plugin on PATH: $GOT"
+GOT="$(run_helper2 "$HFIX2/other" "$HFIX2/plugin/bin")"
+[ "$GOT" = "PLUGIN h.json" ] && pass "helper: a non-metaswarm project with a plugin on PATH uses the plugin" \
+  || fail "helper: a non-metaswarm project with a plugin on PATH uses the plugin: $GOT"
+GOT="$(run_helper2 "$HFIX2/bare" "")"
+case "$GOT" in
+  *"lib/review-rule.js"*) pass "helper: with nothing available it falls back to lib/review-rule.js" ;;
+  *) fail "helper: with nothing available it falls back to lib/review-rule.js: $GOT" ;;
+esac
+rm -rf "${HFIX2:?}"
+assert_in "guide: helper command prefers the local copy in the metaswarm repo" "$HELPER_CMD" '"name": *"metaswarm"' './lib/review-rule.js'
+
+# No example round-history table repeats one theme placeholder across 3 or more rows.
+for f in guides/delivery-scope.md "${GATES[@]}"; do
+  REPEATS="$(readf "$f" | grep -E '^\| [0-9]+ ' | grep -oE '<theme[^>]*>' | sort | uniq -c | awk '$1>=3' || true)"
+  [ -z "$REPEATS" ] && pass "$f: no example table repeats one theme placeholder in 3 rows" \
+    || fail "$f: an example table repeats one theme placeholder in 3 rows: $REPEATS"
+done
+for f in "${GATES[@]}"; do
+  assert_in "$f: example table uses distinct theme placeholders" "$(readf "$f")" '<theme-a>' '<theme-b>' '<theme-c>'
+done
+
+BS="$(readf commands/brainstorm.md)"
+FALLBACK="$(awk '/If superpowers is not installed/{on=1} on' <<<"$BS")"
+assert_in "commands/brainstorm.md: the no-superpowers fallback applies the ledger, confirmation rule and checklist" "$FALLBACK" \
+  'metaswarm:brainstorming-extension' 'assumption ledger' 'confirmation rule' 'Common misreadings'
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"

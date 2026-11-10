@@ -77,6 +77,53 @@ test('divergence: unseen reviewer counts as zero; needs a previous round; needs 
   assert.deepEqual(ids(rule.evaluate(absent)), ['C2']);
 });
 
+const many = (spec) => Object.entries(spec).flatMap(([rev, n]) => blockers(n, rev));
+
+test('divergence needs the total not to fall: 6 reviewers, totals 10, 4, 1, a different one rising each round', () => {
+  const six = { reviewers: 6 };
+  const r1 = many({ R1: 2, R2: 2, R3: 2, R4: 2, R5: 1, R6: 1 });
+  const r2 = many({ R1: 3, R2: 1 }); // R1 rose 2 -> 3, R3-R6 at 0, total 4
+  const r3 = many({ R4: 1 }); // R4 rose 0 -> 1, the rest at 0, total 1
+  const two = rule.evaluate(hist([rnd(1, r1), rnd(2, r2)], six));
+  assert.deepEqual(two.signals, []);
+  assert.equal(two.line, 6);
+  const three = rule.evaluate(hist([rnd(1, r1), rnd(2, r2), rnd(3, r3)], six));
+  assert.deepEqual(three.signals, []);
+  assert.ok([6, 7].includes(three.line)); // round 3 has a single reporting reviewer
+});
+
+test('divergence: a flat total with one reviewer at 0 and another rising still fires (PM drops, Designer rises)', () => {
+  const h = hist([
+    rnd(1, many({ PM: 3, Designer: 1, Architect: 1 })),
+    rnd(2, many({ PM: 0, Designer: 3, Architect: 2 })),
+  ], { reviewers: 3 });
+  const out = rule.evaluate(h);
+  assert.deepEqual(ids(out), ['C2']);
+  assert.match(out.signals[0].detail, /diverg/i);
+});
+
+test('divergence: a falling total never fires, even with a zero reviewer and a rising one', () => {
+  const h = hist([
+    rnd(1, many({ A: 4, B: 3 })),
+    rnd(2, many({ A: 5 })), // total 7 -> 5, B at 0, A rose
+  ], { reviewers: 2 });
+  assert.deepEqual(rule.evaluate(h).signals, []);
+});
+
+test('divergence: a flat total with a reviewer at 0 but nobody rising does not fire', () => {
+  const h = hist([rnd(1, many({ A: 3 })), rnd(2, many({ A: 3 }))], { reviewers: 2 });
+  assert.deepEqual(rule.evaluate(h).signals, []);
+});
+
+test('divergence: a rising total with no reviewer at 0 is not divergence (non-convergence may still apply)', () => {
+  const rounds = [rnd(1, many({ A: 1, B: 1 })), rnd(2, many({ A: 2, B: 1 })), rnd(3, many({ A: 3, B: 1 }))];
+  const two = rule.evaluate(hist(rounds.slice(0, 2), { reviewers: 2 }));
+  assert.deepEqual(two.signals, []);
+  const three = rule.evaluate(hist(rounds, { reviewers: 2 }));
+  assert.deepEqual(ids(three), ['C2']);
+  assert.match(three.signals[0].detail, /not converging/i);
+});
+
 test('single reviewer never fires divergence', () => {
   const h = hist([rnd(1, blockers(2)), rnd(2, blockers(7))]);
   assert.deepEqual(rule.evaluate(h).signals, []);
