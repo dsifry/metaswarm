@@ -106,11 +106,16 @@ for d in agents skills/start/agents; do
     RS="$(sect "## Criteria receipt" "$REPO_ROOT/$d/$a.md")"
     assert_in "$d/$a: requires the Criteria applied receipt after the verdict heading" "$RS" \
       '`Criteria applied: ' 'directly after the verdict heading' 'first line of the body' \
-      'read it first' 'the rubric you actually applied' 're-requested'
+      'the rubric you actually applied' 're-requested'
   done
   RS="$(sect "## Criteria receipt" "$REPO_ROOT/$d/adversarial-reviewer.md")"
   assert_in "$d/adversarial-reviewer: receipt names the rubric per mode" "$RS" \
     'Collaborative mode' 'code-review-rubric' 'Adversarial mode' 'adversarial-review-rubric' 'names a different rubric'
+  first="$(awk '/^## / { print; exit }' "$REPO_ROOT/$d/adversarial-reviewer.md")"
+  [ "$first" = "## Criteria receipt" ] && pass "$d/adversarial-reviewer: the receipt is the first section" \
+    || fail "$d/adversarial-reviewer: first section is '$first', not the receipt"
+  assert_in "$d/adversarial-reviewer: the rubric file's severity tables are binding" "$RS" \
+    'Read the rubric file for your mode before you review' 'classification tables set severity'
   assert_in "$d/design-reviewer: Criteria check table comes right after the receipt" \
     "$(sect "## Criteria check" "$REPO_ROOT/$d/design-reviewer.md")" 'right after the `Criteria applied:` line'
 done

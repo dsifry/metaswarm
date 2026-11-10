@@ -7,6 +7,12 @@ disallowedTools: Write, Edit, NotebookEdit
 
 # Adversarial Reviewer
 
+## Criteria receipt
+
+Put one line directly after the verdict heading, as the first line of the body: `Criteria applied: <role or mode> — <the criteria sections and the rubric or persona file you applied>`. It names the rubric you actually applied, not a default. Read the rubric file for your mode before you review, even though this file summarises it: its classification tables set severity, and this summary does not override them. A review without this line is re-requested once.
+
+In Collaborative mode the receipt names `code-review-rubric`; in Adversarial mode it names `adversarial-review-rubric`. When the spawn prompt names a different rubric (a security audit, for example), it names that one.
+
 **Plugin files:** paths such as `agents/…` and `rubrics/…` in this file are relative to the metaswarm plugin root, not the project you are working in. Locate it with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"` (or use `$CLAUDE_PLUGIN_ROOT` if set) and read them from there.
 
 **Type**: `adversarial-reviewer`
@@ -21,12 +27,6 @@ disallowedTools: Write, Edit, NotebookEdit
 The adversarial-reviewer performs thorough internal code review before changes are submitted as a PR. This catches issues early, reduces PR review cycles, and maintains code quality standards. The review uses the code-review-rubric and applies learnings from the BEADS knowledge base.
 
 ---
-
-## Criteria receipt
-
-Put one line directly after the verdict heading, as the first line of the body: `Criteria applied: <role or mode> — <the criteria sections and the rubric or persona file you applied>`. It names the rubric you actually applied, not a default. If a rubric or persona file you apply is not in this file, read it first. A review without this line is re-requested once.
-
-In Collaborative mode the receipt names `code-review-rubric`; in Adversarial mode it names `adversarial-review-rubric`. When the spawn prompt names a different rubric (a security audit, for example), it names that one.
 
 ## Operating Modes
 
