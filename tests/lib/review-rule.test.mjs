@@ -203,10 +203,10 @@ test('acknowledgement: new needs_user still fires; acknowledged finding key does
   assert.deepEqual(rule.evaluate(hist([rnd(1, [f()])], { ackFindings: ['t:needs_user'] })).signals, []);
   const asm = { reviewer: 'A', blocker: 'yes', id: 'z', theme: 'tt', origin: 'assumption', assumption: 'as1' };
   assert.deepEqual(rule.evaluate(hist([rnd(1, [asm])], { ackFindings: ['tt:as1'] })).signals, []);
-  // no theme: key is ":needs_user"; a themed key does not match it
+  // no theme: a themed key does not match, and the empty-theme key never counts as acknowledged
   const bare = { reviewer: 'A', blocker: 'yes', id: 'q', needs_user: 'yes' };
   assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [bare])], { ackFindings: ['t:needs_user'] }))), ['C1']);
-  assert.deepEqual(rule.evaluate(hist([rnd(1, [bare])], { ackFindings: [':needs_user'] })).signals, []);
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [bare])], { ackFindings: [':needs_user'] }))), ['C1']);
 });
 
 test('acknowledgement: key is theme:needs_user, independent of finding id and round', () => {
@@ -353,9 +353,9 @@ test('precedence: pass beats clarify when a signal is active and the last round 
 });
 
 test('line 1 never passes while any blocker exists, merged duplicates included', () => {
-  // a and b merge into each other: no distinct blocker remains, but two blockers do.
+  // a is merged into b: one distinct blocker remains, and two blockers exist.
   const a = { reviewer: 'A', blocker: 'yes', id: 'a', mergedInto: 'b' };
-  const b = { reviewer: 'A', blocker: 'yes', id: 'b', mergedInto: 'a' };
+  const b = { reviewer: 'A', blocker: 'yes', id: 'b' };
   const out = rule.evaluate(hist([rnd(1, [a, b])]));
   assert.notEqual(out.line, 1);
   assert.equal(out.action, 'iterate');
@@ -460,6 +460,46 @@ function run(args) {
   return { code, out, err };
 }
 
+test('validate: tightened optional fields exit 2 when malformed', () => {
+  const bad = [
+    { reviewers: 0 }, { reviewers: 1.5 }, { reviewers: '2' },
+    { windowStart: 0 }, { windowStart: 'x' }, { windowStart: 1.2 },
+    { status: 'open' }, { status: 3 },
+  ];
+  for (const extra of bad) {
+    assert.throws(() => rule.evaluate(hist(totals([1]), extra)), /must be/, JSON.stringify(extra));
+  }
+  for (const f of [{ origin: 'guess' }, { reviewer: 7 }]) {
+    const h = hist([rnd(1, [{ blocker: 'yes', id: 'x', reviewer: 'A', ...f }])]);
+    assert.throws(() => rule.evaluate(h), /must be/, JSON.stringify(f));
+  }
+});
+
+test('validate: accepted values for the tightened fields', () => {
+  for (const status of ['active', 'clarify-pending', 'closed']) {
+    assert.doesNotThrow(() => rule.evaluate(hist(totals([1]), { status, reviewers: 2, windowStart: 1 })));
+  }
+  for (const origin of ['implementation', 'requirement', 'assumption']) {
+    const h = hist([rnd(1, [{ blocker: 'yes', id: 'x', reviewer: 'PM', origin, assumption: 'A1' }])]);
+    assert.doesNotThrow(() => rule.evaluate(h));
+  }
+});
+
+test('mergedInto: null is treated as unmerged', () => {
+  const f = [
+    { reviewer: 'A', blocker: 'yes', id: 'a', fix_induced: 'yes', mergedInto: null },
+    { reviewer: 'B', blocker: 'yes', id: 'b', fix_induced: 'yes', mergedInto: null },
+  ];
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, f)], { reviewers: 2 }))), ['C3']);
+});
+
+test('reviewers: 1 with findings from two reviewer names never reports divergence', () => {
+  const r1 = [...blockers(2, 'PM'), ...blockers(2, 'Architect')];
+  const r2 = [...blockers(3, 'PM')];
+  const out = rule.evaluate(hist([rnd(1, r1), rnd(2, r2)], { reviewers: 1 }));
+  assert.ok(!ids(out).includes('C2'));
+});
+
 test('main: prints JSON and exits 0', () => {
   const p = tmpFile(JSON.stringify(hist(totals([10, 4, 5, 6]))));
   const r = run([p]);
@@ -494,4 +534,185 @@ test('main: default io writes to process streams (spawnSync)', () => {
   const bad = spawnSync(process.execPath, [SCRIPT, '/no/such.json'], { encoding: 'utf8' });
   assert.equal(bad.status, 2);
   assert.match(bad.stderr, /cannot read/i);
+});
+
+// Guide parity: the guide's rule block and the helper's RULE_LINES must agree.
+const GUIDE_KEYWORDS = {
+  pass: /PASS/,
+  clarify: /Clarify/,
+  cap: /SAFETY_CAP/,
+  'recurring-or-disputed': /recurs/,
+  overengineering: /overengineering signal/,
+  'iterate-fixed-or-multi': /≥2 independent/,
+  iterate: /otherwise/,
+};
+
+function guideRuleLines() {
+  const guide = fs.readFileSync(path.join(here, '..', '..', 'guides', 'delivery-scope.md'), 'utf8');
+  const block = guide.match(/```text\n(after each review round[\s\S]*?)```/);
+  assert.ok(block, 'guide has the iteration rule block');
+  // A rule line starts with "  N. "; continuation lines are indented further and belong to it.
+  const lines = [];
+  for (const raw of block[1].split('\n')) {
+    const m = raw.match(/^ {2}(\d)\. (.*)$/);
+    if (m) lines.push({ line: Number(m[1]), text: m[2] });
+    else if (lines.length && /^ {3,}\S/.test(raw)) lines[lines.length - 1].text += ` ${raw.trim()}`;
+  }
+  return lines;
+}
+
+test('guide parity: the rule block matches RULE_LINES (numbers, order, names)', () => {
+  const parsed = guideRuleLines();
+  assert.deepEqual(parsed.map((l) => l.line), rule.RULE_LINES.map((l) => l.line));
+  for (const [i, def] of rule.RULE_LINES.entries()) {
+    assert.match(parsed[i].text, GUIDE_KEYWORDS[def.name], `guide line ${def.line} should be "${def.name}"`);
+  }
+});
+
+test('guide parity: line actions agree with the helper actions', () => {
+  const parsed = guideRuleLines();
+  const text = (n) => parsed.find((l) => l.line === n).text;
+  assert.match(text(1), /PASS/);
+  assert.match(text(2), /stop/i);
+  assert.match(text(3), /escalate/);
+  assert.match(text(4), /escalate/);
+  assert.match(text(5), /escalate|downgrade/);
+  assert.match(text(6), /FRESH review/);
+  assert.match(text(7), /FRESH review/);
+  assert.match(text(2), /Clarification report/);
+});
+
+test('guide parity: documented helper actions equal the actions the helper can emit', () => {
+  const guide = fs.readFileSync(path.join(here, '..', '..', 'guides', 'delivery-scope.md'), 'utf8');
+  const para = guide.split('\n').find((l) => l.startsWith('The actions are'));
+  assert.ok(para, 'guide lists the actions');
+  const documented = [...para.matchAll(/`([a-z-]+)` \(/g)].map((m) => m[1]).sort();
+  const src = fs.readFileSync(SCRIPT, 'utf8');
+  const emitted = new Set([...src.matchAll(/(?:pick\(\d, |action: )'([a-z-]+)'/g)].map((m) => m[1]));
+  assert.deepEqual(documented, [...emitted].sort());
+  // and each one is actually reachable
+  const seen = new Set([
+    rule.evaluate(hist(totals([0]))).action,
+    rule.evaluate(hist([rnd(1, blockers(1, 'A', { needs_user: 'yes' }))])).action,
+    rule.evaluate(hist([rnd(10, blockers(1))])).action,
+    rule.evaluate(hist([rnd(1, blockers(1), { overengineering: 'yes' })])).action,
+    rule.evaluate(hist(totals([1]))).action,
+    rule.evaluate(hist(totals([1]), { status: 'clarify-pending' })).action,
+    rule.evaluate(hist(totals([1]), { status: 'closed' })).action,
+  ]);
+  assert.deepEqual([...seen].sort(), documented);
+});
+
+test('ackFindings key: assumption id whenever assumption is set, whatever the origin', () => {
+  const f = { reviewer: 'A', blocker: 'yes', id: 'x', theme: 'T', origin: 'implementation', assumption: 'A9', needs_user: 'yes' };
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [f])]))), ['C1']);
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [f])], { ackFindings: ['T:A9'] }))), []);
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [f])], { ackFindings: ['T:needs_user'] }))), ['C1']);
+  const bare = { reviewer: 'A', blocker: 'yes', id: 'y', needs_user: 'yes' };
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [bare])], { ackFindings: [':needs_user'] }))), ['C1']);
+});
+
+test('ack granularity: an acknowledged needs_user key clears only re-raises of the same question', () => {
+  const ack = { ackFindings: ['auth:needs_user'] };
+  const same = { reviewer: 'A', blocker: 'yes', id: 'a', canonicalTheme: 'auth', needs_user: 'yes', title: 'which IdP?' };
+  const newQuestion = { ...same, id: 'b', canonicalTheme: 'auth-idp' };
+  const r1 = rnd(1, blockers(1, 'A', { needs_user: 'yes', canonicalTheme: 'auth' }));
+  assert.deepEqual(ids(rule.evaluate(hist([r1, rnd(2, [same])], ack))), []);
+  assert.deepEqual(ids(rule.evaluate(hist([r1, rnd(2, [newQuestion])], ack))), ['C1']);
+  // a new assumption id under an acknowledged theme also fires
+  const asm = { reviewer: 'A', blocker: 'yes', id: 'c', canonicalTheme: 'auth', origin: 'assumption', assumption: 'A7' };
+  assert.deepEqual(ids(rule.evaluate(hist([r1, rnd(2, [asm])], { ackFindings: ['auth:A6'] }))), ['C1']);
+  assert.deepEqual(ids(rule.evaluate(hist([r1, rnd(2, [asm])], { ackFindings: ['auth:A7'] }))), []);
+});
+
+test('re-ask returns line 2 with the current signals; divergence needs 2 rounds in the window', () => {
+  const f = blockers(1, 'A', { needs_user: 'yes' });
+  const out = rule.evaluate(hist([rnd(1, f)], { status: 'clarify-pending' }));
+  assert.equal(out.line, 2);
+  assert.deepEqual(ids(out), ['C1']);
+  // After option 2 moves the window to round 3, a divergent round 3 alone cannot fire C2.
+  const r = [rnd(1, blockers(1, 'A')), rnd(2, blockers(1, 'A')), rnd(3, [...blockers(2, 'A'), ...blockers(0, 'B')])];
+  assert.ok(!ids(rule.evaluate(hist(r, { reviewers: 2, windowStart: 3 }))).includes('C2'));
+});
+
+test('option 2 re-entry: line 2 holds until every fired C1 key is answered or acknowledged', () => {
+  const trust = { reviewer: 'A', blocker: 'yes', id: 't', canonicalTheme: 'trust', needs_user: 'yes' };
+  const rounds = [rnd(1, blockers(2)), rnd(2, blockers(2)), rnd(3, [trust, ...blockers(1)])];
+  // windowStart moved to the next round (4) by the acknowledgement of C2; C1 key still unanswered.
+  const before = rule.evaluate(hist(rounds, { windowStart: 4, ackFindings: [] }));
+  assert.equal(before.line, 2);
+  assert.equal(before.action, 'clarify');
+  assert.deepEqual(ids(before), ['C1']);
+  // Once the key is acknowledged and nothing else fires, review continues past line 2.
+  const after = rule.evaluate(hist(rounds, { windowStart: 4, ackFindings: ['trust:needs_user'] }));
+  assert.ok([6, 7].includes(after.line), `line ${after.line}`);
+  assert.deepEqual(ids(after), []);
+  // An unacknowledged C4 theme also keeps line 2 until it is in ackThemes.
+  const t = (n) => rnd(n, blockers(1, 'A', { canonicalTheme: 'perf' }));
+  const c4 = [t(1), t(2), t(3)];
+  assert.deepEqual(ids(rule.evaluate(hist(c4, { windowStart: 4 }))), ['C4']);
+  assert.deepEqual(ids(rule.evaluate(hist(c4, { windowStart: 4, ackThemes: ['perf'] }))), []);
+});
+
+test('validate: merge cycles, empty assumption', () => {
+  const chain = [
+    { reviewer: 'A', blocker: 'yes', id: 'a', mergedInto: 'b' },
+    { reviewer: 'B', blocker: 'yes', id: 'b', mergedInto: 'c' },
+    { reviewer: 'C', blocker: 'yes', id: 'c' },
+  ];
+  assert.throws(() => rule.evaluate(hist([rnd(1, chain)])), /mergedInto/);
+  const cycle = [
+    { reviewer: 'A', blocker: 'yes', id: 'a', mergedInto: 'b' },
+    { reviewer: 'B', blocker: 'yes', id: 'b', mergedInto: 'a' },
+  ];
+  assert.throws(() => rule.evaluate(hist([rnd(1, cycle)])), /mergedInto/);
+  const empty = [{ reviewer: 'A', blocker: 'yes', id: 'a', origin: 'assumption', assumption: '' }];
+  assert.throws(() => rule.evaluate(hist([rnd(1, empty)])), /assumption/);
+});
+
+test('validate: windowStart beyond the last round is accepted', () => {
+  assert.doesNotThrow(() => rule.evaluate(hist(totals([1, 1]), { windowStart: 9 })));
+});
+
+test('guide parity: action-to-line mapping equals the helper pick() calls', () => {
+  const guide = fs.readFileSync(path.join(here, '..', '..', 'guides', 'delivery-scope.md'), 'utf8');
+  const para = guide.split('\n').find((l) => l.startsWith('The actions are'));
+  const documented = {};
+  for (const m of para.matchAll(/`([a-z-]+)` \(lines? (\d+)(?: and (\d+))?\)/g)) {
+    documented[m[1]] = [Number(m[2]), ...(m[3] ? [Number(m[3])] : [])].sort();
+  }
+  const src = fs.readFileSync(SCRIPT, 'utf8');
+  const emitted = {};
+  for (const m of src.matchAll(/pick\((\d), '([a-z-]+)'\)/g)) {
+    (emitted[m[2]] ||= []).push(Number(m[1]));
+  }
+  for (const k of Object.keys(emitted)) emitted[k].sort();
+  assert.deepEqual(documented, emitted);
+});
+
+test('needs_user with a confirmed assumption id still fires; only ackFindings clears it', () => {
+  const nu = { reviewer: 'A', blocker: 'yes', id: 'n', canonicalTheme: 'idp', needs_user: 'yes', origin: 'assumption', assumption: 'A1' };
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [nu])], { confirmed: ['A1'] }))), ['C1']);
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [nu])], { confirmed: ['A1'], ackFindings: ['idp:A1'] }))), []);
+  // confirmed clears an assumption blocker that does not need the user
+  const plain = { reviewer: 'A', blocker: 'yes', id: 'p', canonicalTheme: 'idp', origin: 'assumption', assumption: 'A1' };
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [plain])], { confirmed: ['A1'] }))), []);
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [plain])], { confirmed: [] }))), ['C1']);
+});
+
+test('empty-theme backstop: an empty-theme key never counts as acknowledged', () => {
+  const noTheme = { reviewer: 'A', blocker: 'yes', id: 'n', needs_user: 'yes' };
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [noTheme])], { ackFindings: [':needs_user'] }))), ['C1']);
+  const noThemeAsm = { reviewer: 'A', blocker: 'yes', id: 'm', origin: 'assumption', assumption: 'A2' };
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [noThemeAsm])], { ackFindings: [':A2'] }))), ['C1']);
+  // with a theme the same acknowledgement sticks
+  const themed = { ...noThemeAsm, theme: 'x' };
+  assert.deepEqual(ids(rule.evaluate(hist([rnd(1, [themed])], { ackFindings: ['x:A2'] }))), []);
+});
+
+test('validate: assumption must be a non-empty string; null exits 2', () => {
+  for (const assumption of [null, '', 7]) {
+    const f = [{ reviewer: 'A', blocker: 'yes', id: 'a', origin: 'assumption', assumption }];
+    assert.throws(() => rule.evaluate(hist([rnd(1, f)])), /assumption/, String(assumption));
+  }
 });

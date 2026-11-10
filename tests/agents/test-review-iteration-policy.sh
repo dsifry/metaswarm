@@ -98,14 +98,15 @@ assert_in "guide: ordered iteration rule" "$G" \
   'SAFETY_CAP = 10' \
   'file every minor/nit finding as a follow-up' \
   '1. no blocker: yes findings            → PASS, advance' \
-  '2. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal' \
-  '3. the same critical/major finding recurs after a fix attempt for it,' \
+  '2. a Clarify signal (C1–C4) fires' \
+  '3. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal' \
+  '4. the same critical/major finding recurs after a fix attempt for it,' \
   'or two reviewers rate the same finding blocker vs. non-blocker   → escalate' \
-  '4. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers' \
   '5. an overengineering signal is present → restate the DoD and re-classify each blocker against the policy;' \
   'any still names a credible scenario → escalate with a recommendation;' \
   'otherwise downgrade them to follow-ups and advance' \
-  '6. otherwise                           → fix blockers, re-validate, FRESH review' \
+  '6. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers' \
+  '7. otherwise                           → fix blockers, re-validate, FRESH review' \
   '10 rounds'
 assert_in "guide: single-reviewer note (per work unit)" "$G" \
   'Single-reviewer gates' \
@@ -120,7 +121,7 @@ assert_in "guide: 'this round fixed', round counting, re-validate notes" "$G" \
   'Team Mode' \
   '"Re-validate"' \
   'running VALIDATE again'
-# Rule line 3 deliberately narrows issue #54's "reviewers disagree on severity" to
+# Rule line 4 deliberately narrows issue #54's "reviewers disagree on severity" to
 # disagreement that changes blocker; the guide must say why.
 assert_in "guide: severity-disagreement note (only a blocker split escalates)" "$G" \
   '**Severity disagreement.**' \
@@ -136,7 +137,7 @@ assert_in "guide: follow-up rule" "$G" \
 assert_in "guide: escalation template" "$G" \
   'Critical' 'Major' 'Minor' 'Nit' \
   'Round history' \
-  '**Recommendation**: <revise|narrow scope|defer|cancel> — <reason'
+  '**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason'
 
 # DoD 1.2: mirrors exist and sync check passes
 MIRRORS=(
@@ -940,6 +941,8 @@ echo "Issue #68: escalation never approves; no Override with open blockers"
 # A gate is approved only when a review round has no `blocker: yes` finding (or via rule line 5).
 # Escalating to the human never approves: there is no option that advances with open blockers.
 ESC_OPTIONS=('**Revise**' '**Narrow scope**' '**Defer**' '**Cancel**')
+# The canonical guide's template also offers the fifth option and its recommendation enum (issue #103).
+GUIDE_ESC_OPTIONS=("${ESC_OPTIONS[@]}" '**Clarify the requirement / re-brainstorm**' '<revise|clarify|narrow scope|defer|cancel>')
 for f in guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-scope.md \
          skills/plan-review-gate/guides/delivery-scope.md skills/design-review-gate/guides/delivery-scope.md \
          skills/start/guides/delivery-scope.md skills/external-tools/guides/delivery-scope.md; do
@@ -947,7 +950,7 @@ for f in guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-
   assert_in "$f: states escalation never approves" "$T" \
     '**Escalation never approves.**' 'fresh review round' 'no option that advances with open blockers'
   assert_in "$f: escalation template lists the standard options" "$(section "$REPO_ROOT/$f" '^## Escalation template')" \
-    "${ESC_OPTIONS[@]}"
+    "${GUIDE_ESC_OPTIONS[@]}"
 done
 for f in skills/plan-review-gate/SKILL.md skills/design-review-gate/SKILL.md skills/orchestrated-execution/SKILL.md; do
   assert_in "$f: escalation Options are the standard four" "$(section "$REPO_ROOT/$f" '^### Options')" "${ESC_OPTIONS[@]}"
