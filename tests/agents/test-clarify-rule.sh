@@ -567,6 +567,21 @@ for g in "$PRG" "$DRG"; do
     '.beads/context/review-history/' 'non-closed' 'stored `artifact` path' \
     'clarify-pending' '`pendingClarify`' 'do not iterate'
 done
+# Recovery after an escalation re-sends the report instead of starting a round (PR #104 review).
+for g in "$PRG" "$DRG"; do
+  assert_in "$g: recovery re-sends a pending escalation" "$(section "$REPO_ROOT/$g" '^### Recovery')" \
+    'run the helper on the history' 're-send the escalation report' "wait for the user's choice" 'only `iterate` continues at the next round'
+done
+assert_in "$OE: recovery re-sends a pending escalation" "$OE_REC" \
+  'run the helper on the history' 're-send the escalation report' "wait for the user's choice" 'only `iterate` continues at the next round'
+assert_in "guide: recovery re-sends a pending escalation" "$(readf guides/delivery-scope.md)" \
+  're-sends the escalation report' "waits for the user's choice"
+assert_in "start-task: recovery re-sends a pending escalation" "$(readf commands/start-task.md)" \
+  're-send the escalation report'
+# Fresh reviewers get the confirmed answers (PR #104 review).
+for f in "$OE" agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  assert_in "$f: reviewer template passes the Confirmed answers" "$(readf "$f")" '## Confirmed Answers' '${confirmedAnswers}'
+done
 
 # Escalation trigger lists name Clarify.
 assert_in "$PRG: trigger list at the workflow end names Clarify" "$(section "$REPO_ROOT/$PRG" '^## Workflow')" \
@@ -740,7 +755,9 @@ assert_in "$BX: checklist seeded with the 4 patterns" "$CM" \
   'Level mismatch' 'Over-reading scope' 'A proposal read as a decision' 'one-word acknowledgement taken as approval of a message with several parts'
 assert_in "$BX: checklist runs before commit or presentation" "$CM" 'before the design is committed or presented'
 assert_in "$BX: checklist loads the project's misunderstanding gotchas from the KB" "$CM" \
-  ".beads/knowledge/*.jsonl" 'index("misunderstanding")' '| .fact' 'Skip this step'
+  'find .beads/knowledge' "-name '*.jsonl'" '"misunderstanding"' 'fromjson?' 'index("misunderstanding")' '.fact' 'Skip this step'
+assert_not_in "$BX: lookup works without jq and survives zsh no-match" "$CM" \
+  "grep -hv '^#' .beads/knowledge/*.jsonl" 'or `jq` is missing'
 assert_in "$BX: learned patterns are per project, with opt-in upstream" "$CM" \
   "each project's knowledge base" '`gotcha`' 'tagged `misunderstanding`' 'offers, without doing it automatically' 'dsifry/metaswarm' 'only when the current repo is metaswarm itself'
 assert_not_in "$BX: no unconditional append-to-this-list instruction" "$CM" 'Append new patterns to this list'

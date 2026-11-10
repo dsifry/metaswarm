@@ -151,7 +151,7 @@ The orchestrator keeps the round history and writes it after every round, one fi
   - At an escalation, "Clarify the requirement / re-brainstorm" is handled like a Clarify answer. "Revise" keeps the same occurrence, so the round count and cap continue. "Narrow scope" closes the file and starts a new occurrence on the narrowed artifact.
   - Defer, cancel and PASS set `closed`.
   - Starting a new occurrence for the same gate and artifact while an older file is not closed abandons the old one: it is set to `closed`. If several non-closed files exist for one gate and artifact, recovery uses the newest and closes the rest.
-- **Recovery.** On start or resume, a gate loads only the non-closed file whose stored artifact path matches. If its status is `clarify-pending`, it re-asks the pending questions and does not iterate.
+- **Recovery.** On start or resume, a gate loads only the non-closed file whose stored artifact path matches. If its status is `clarify-pending`, it re-asks the pending questions and does not iterate. Otherwise it runs the helper: when the last recorded round's result is `escalate` or `overengineering-check`, the gate was waiting at an escalation, so it re-sends the escalation report and waits for the user's choice. Only `iterate` continues at the next round.
 
 ### The helper
 

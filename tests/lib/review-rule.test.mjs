@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -14,9 +15,10 @@ const rule = require('../../lib/review-rule.js');
 const SCRIPT = path.join(here, '..', '..', 'lib', 'review-rule.js');
 
 // n distinct blockers from reviewer `rev`, with unique ids and optional overrides.
-let seq = 0;
+// Ids come from randomUUID, so no test depends on shared mutable state or test order.
+const uid = (prefix) => `${prefix}-${randomUUID()}`;
 const blockers = (n, rev = 'A', extra = {}) =>
-  Array.from({ length: n }, () => ({ reviewer: rev, blocker: 'yes', id: `f${++seq}`, ...extra }));
+  Array.from({ length: n }, () => ({ reviewer: rev, blocker: 'yes', id: uid('f'), ...extra }));
 const rnd = (round, findings, extra = {}) => ({ round, findings, ...extra });
 const hist = (rounds, extra = {}) => ({ gate: 'plan', reviewers: 1, rounds, ...extra });
 const ids = (out) => out.signals.map((s) => s.id).sort();
@@ -375,7 +377,7 @@ test('C2: flat totals (6, 6, 6) and plateaus at either end fire (<=, not <)', ()
 });
 
 test('C2: a merged duplicate counts once (distinct 3,2,1 converges although totals are 3,3,3)', () => {
-  const dupes = (n, to) => Array.from({ length: n }, () => ({ reviewer: 'A', blocker: 'yes', id: `d${++seq}`, mergedInto: to }));
+  const dupes = (n, to) => Array.from({ length: n }, () => ({ reviewer: 'A', blocker: 'yes', id: uid('d'), mergedInto: to }));
   const round = (n, distinct) => {
     const kept = blockers(distinct);
     return rnd(n, [...kept, ...dupes(3 - distinct, kept[0].id)]);
@@ -762,4 +764,59 @@ test('validate: assumption must be a non-empty string; null exits 2', () => {
     const f = [{ reviewer: 'A', blocker: 'yes', id: 'a', origin: 'assumption', assumption }];
     assert.throws(() => rule.evaluate(hist([rnd(1, f)])), /assumption/, String(assumption));
   }
+});
+
+test('fixtures: no module-wide mutable id counter', () => {
+  const src = fs.readFileSync(fileURLToPath(import.meta.url), 'utf8');
+  assert.ok(!/^let /m.test(src), 'no top-level let in the test module');
+});
+
+test('C2 divergence: a merged duplicate counts once per reviewer (no false divergence)', () => {
+  const a1 = { reviewer: 'A', blocker: 'yes', id: 'a1' };
+  const b1 = { reviewer: 'B', blocker: 'yes', id: 'b1' };
+  const r1 = rnd(1, [a1, b1]);
+  const r2 = rnd(2, [{ ...a1 }, { ...b1 }, { reviewer: 'A', blocker: 'yes', id: 'a1dup', mergedInto: 'a1' }]);
+  const out = rule.evaluate(hist([r1, r2], { reviewers: 3 }));
+  assert.deepEqual(out.signals, []);
+  assert.equal(out.line, 6);
+});
+
+test('C2 divergence: a reviewer whose blocker merged into another reviewer still counts that defect', () => {
+  // B reports the same defect as A (merged), so B still has 1 distinct defect: B is not at zero.
+  const r1 = rnd(1, [{ reviewer: 'A', blocker: 'yes', id: 'a1' }, { reviewer: 'B', blocker: 'yes', id: 'b1' }]);
+  const r2 = rnd(2, [
+    { reviewer: 'A', blocker: 'yes', id: 'a2' },
+    { reviewer: 'B', blocker: 'yes', id: 'b2', mergedInto: 'a2' },
+    { reviewer: 'A', blocker: 'yes', id: 'a3' },
+  ]);
+  const out = rule.evaluate(hist([r1, r2], { reviewers: 2 }));
+  assert.deepEqual(out.signals, []);
+});
+
+test('ReviewHistoryError: bad history throws the exported domain error', () => {
+  assert.equal(typeof rule.ReviewHistoryError, 'function');
+  assert.throws(() => rule.evaluate({ rounds: [] }), (e) => e instanceof rule.ReviewHistoryError && e.name === 'ReviewHistoryError');
+  assert.throws(() => rule.evaluate(hist(totals([1]), { status: 'open' })), rule.ReviewHistoryError);
+});
+
+test('main: an unexpected error is not reported as bad input', () => {
+  const io = { out: () => { throw new TypeError('boom'); }, err: () => {}, readFile: () => JSON.stringify(hist(totals([1]))) };
+  assert.throws(() => rule.main(['h.json'], io), /boom/);
+});
+
+test('main: file access goes through the injected reader', () => {
+  let out = '';
+  const seen = [];
+  const io = {
+    out: (s) => { out += s; },
+    err: () => {},
+    readFile: (p) => { seen.push(p); return JSON.stringify(hist(totals([0]))); },
+  };
+  assert.equal(rule.main(['virtual.json'], io), 0);
+  assert.deepEqual(seen, ['virtual.json']);
+  assert.equal(JSON.parse(out).action, 'pass');
+  let err = '';
+  const failing = { out: () => {}, err: (s) => { err += s; }, readFile: () => { throw new Error('nope'); } };
+  assert.equal(rule.main(['missing.json'], failing), 2);
+  assert.match(err, /cannot read missing\.json: nope/);
 });

@@ -307,7 +307,11 @@ Also report the signal fields (the guide defines them):
 ${themeLabels}
 (Round 1: none. From round 2 on these are the canonical theme labels from earlier rounds, labels only. Reuse one in `theme` when it fits; otherwise use a new short label.)
 
-Do not mark a question `needs_user` when the Confirmed section of the design or plan already answers it.
+## Confirmed Answers
+${confirmedAnswers}
+(The current Confirmed list and open Assumptions (ids A1, A2, ...) from the design or plan's assumption ledger, copied verbatim. Use these ids in `assumption`.)
+
+Do not mark a question `needs_user` when the Confirmed Answers above already answer it.
 
 ## Rules
 - Check EACH DoD item. Cite file:line evidence for PASS or expected-vs-found for FAIL.

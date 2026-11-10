@@ -44,10 +44,11 @@ Run this checklist before the design is committed or presented. For each pattern
 **Load the project's learned patterns first.** They are facts in the project's knowledge base, type `gotcha`, tagged `misunderstanding`:
 
 ```bash
-grep -hv '^#' .beads/knowledge/*.jsonl | jq -r 'select((.tags // []) | index("misunderstanding")) | .fact'
+[ -d .beads/knowledge ] && find .beads/knowledge -maxdepth 1 -name '*.jsonl' -exec grep -h '"misunderstanding"' {} + |
+  if command -v jq >/dev/null 2>&1; then jq -Rr 'fromjson? | select((.tags // []) | index("misunderstanding")) | .fact'; else cat; fi
 ```
 
-Skip this step when `.beads/knowledge/` or `jq` is missing. Treat each fact it prints as one more item on the checklist.
+Skip this step when `.beads/knowledge/` is missing. `find` avoids a shell error when no `.jsonl` file exists, and `fromjson?` skips a malformed line instead of dropping every fact after it. Without `jq` the command prints the matching JSON lines: read the `fact` value of each. Treat each fact as one more item on the checklist.
 
 1. **Level mismatch (what vs. how).** The request is about *what* (a decision service), but the design reads it as *where or how* (every surface becomes a signing path).
 2. **Over-reading scope.** "Any surface" read as "every surface fully featured", or one issue bundled into three.
