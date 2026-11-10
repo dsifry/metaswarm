@@ -766,9 +766,11 @@ test('validate: assumption must be a non-empty string; null exits 2', () => {
   }
 });
 
-test('fixtures: no module-wide mutable id counter', () => {
-  const src = fs.readFileSync(fileURLToPath(import.meta.url), 'utf8');
-  assert.ok(!/^let /m.test(src), 'no top-level let in the test module');
+test('C2 divergence: blockers without ids still count separately', () => {
+  const b = (reviewer) => ({ reviewer, blocker: 'yes' });
+  const out = rule.evaluate(hist([rnd(1, [b('A'), b('B')]), rnd(2, [b('A'), b('A')])], { reviewers: 2 }));
+  assert.equal(out.line, 2);
+  assert.deepEqual(ids(out), ['C2']);
 });
 
 test('C2 divergence: a merged duplicate counts once per reviewer (no false divergence)', () => {

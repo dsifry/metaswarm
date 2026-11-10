@@ -576,6 +576,10 @@ assert_in "$OE: recovery re-sends a pending escalation" "$OE_REC" \
   'run the helper on the history' 're-send the escalation report' "wait for the user's choice" 'only `iterate` continues at the next round'
 assert_in "guide: recovery re-sends a pending escalation" "$(readf guides/delivery-scope.md)" \
   're-sends the escalation report' "waits for the user's choice"
+for g in guides/delivery-scope.md "$PRG" "$DRG" "$OE"; do
+  assert_in "$g: recovery redoes the line-5 check before escalating" "$(readf "$g")" \
+    'redo the line-5 check' 'only if a blocker still names a credible scenario'
+done
 assert_in "start-task: recovery re-sends a pending escalation" "$(readf commands/start-task.md)" \
   're-send the escalation report'
 # Fresh reviewers get the confirmed answers (PR #104 review).
