@@ -215,7 +215,7 @@ This means the knowledge base can grow to hundreds or thousands of entries witho
 6. **BEADS as Source of Truth** — All task state lives in BEADS; agents coordinate via database, not messages
 7. **Test-First Always** — TDD is mandatory, not optional. Coverage thresholds are enforced as a blocking gate before PR creation via `.coverage-thresholds.json`
 8. **Git-Native Everything** — Issues, knowledge, specs all in version control
-9. **Human-in-the-Loop** — Proactive checkpoints at planned review points, plus automatic escalation when the severity rule says so (a recurring or disputed blocker, or the 10-round cap) or on ambiguous decisions
+9. **Human-in-the-Loop** — Proactive checkpoints at planned review points, plus automatic escalation or a Clarify stop when the severity rule says so (a recurring or disputed blocker, the 10-round cap, or a signal that the user is needed) or on ambiguous decisions
 
 ## Supported Platforms
 

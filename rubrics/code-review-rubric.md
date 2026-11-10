@@ -327,6 +327,8 @@ There is no fixed round count. Whether another round runs, the work advances, or
 
 Collaborative findings map onto the finding contract, each with a title and description, as CRITICAL → critical, HIGH → major, MEDIUM → minor, LOW → nit. A CRITICAL or HIGH finding is a blocker (`blocker: yes`) only if it names the user scenario or requirement it protects; otherwise it is advisory and becomes a follow-up.
 
+Every finding also carries a `theme` (a short label; reuse an earlier theme label when one fits). Each blocker also carries `needs_user` (yes | no, only if just the user can answer it), `origin` (implementation | requirement | assumption) and, for an assumption, `assumption`. See "Signal fields" in the guide.
+
 ---
 
 ## Common Patterns to Flag

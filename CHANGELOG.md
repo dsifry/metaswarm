@@ -1,5 +1,33 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- **Reviews now stop and ask when the requirement is the problem** (#103). The review iteration rule gains a Clarify line (line 2, after the clean pass). It fires on four signals:
+  - C1: a blocker needs the user (`needs_user`) or rests on an unconfirmed assumption;
+  - C2: blocker totals are not converging over three rounds, or reviewers diverge (the total did not fall, one reviewer dropped to no blockers and another rose; a falling total never counts);
+  - C3: fixes keep causing new blockers;
+  - C4: the same theme recurs across rounds.
+  Instead of a plain escalation, the gate writes a Clarification report with a misunderstanding analysis and five options. There is no approve or override option. "Keep going" never defaults a `needs_user` question. The escalation lines (3-5) gain a "Clarify the requirement / re-brainstorm" option, and the rule lines are now numbered 1 to 7 (they ran 1 to 6).
+- **A deterministic helper applies the rule** (#103). `lib/review-rule.js` reads a per-gate review-history file under `.beads/context/review-history/` and prints the rule line, action and signals, so the orchestrator no longer does the signal arithmetic by hand. In the metaswarm repo it runs the working copy, elsewhere the installed plugin's copy.
+- **Reviewers report signal fields** (#103). Every finding carries `theme`. Blockers also carry `needs_user`, `origin` (implementation, requirement or assumption) and, when the blocker rests on an assumption, the ledger id. Only blockers feed the signals.
+- **Brainstorming keeps an assumption ledger** (#103). `brainstorming-extension` loads at the start of every brainstorming session with an assumption ledger, a confirmation rule and a Common misreadings checklist. The no-superpowers `/brainstorm` fallback applies them too.
+- **Misreadings are learned per project** (#103). A confirmed misunderstanding is stored in the project's knowledge base as a gotcha tagged `misunderstanding`, with an opt-in upstream issue.
+- **Review history is recovered on resume** (#103). `/prime`, `/start-task`, `/start` and `/handoff` read `.beads/context/review-history/` so a clarify-pending gate re-asks its questions after compaction or in a new session, and the handoff names the open history files.
+
+### Changed
+
+- **The overengineering check now comes before the "two or more reviewers, so iterate" line** (#103). The rule is: pass, clarify, cap, recurring or disputed, overengineering, then iterate (line 6 for a fixed critical/major finding or two or more reviewers, line 7 otherwise). Before, a round with blockers from two or more reviewers iterated before the overengineering check could run. This is a behaviour change: a round flagged `overengineering` now gets the check first.
+
+### Upgrading
+
+`/setup` skips instruction files (CLAUDE.md, AGENTS.md, GEMINI.md) that already have a metaswarm section, and `/update` does not rewrite them. Re-running `/setup` will not do it either. Existing projects must update their instruction file by hand from the new templates (`templates/CLAUDE.md`, `templates/AGENTS.md` and `templates/GEMINI.md` in the metaswarm plugin):
+
+1. Replace "Delivery Scope & Review Iteration": the new bullet order, with Clarify after the clean pass.
+2. Add the new "During Brainstorming" section: it loads the brainstorming extension at the start of every session.
+3. CLAUDE.md only: replace the Context Recovery line, which now names the review history and `clarify-pending`.
+
 ## 0.15.0
 
 ### Fixed

@@ -36,6 +36,17 @@ The policy, the finding contract and the iteration rule live in `guides/delivery
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
 ```
 
+Signal fields (see "Signal fields" in the guide) are added to the six core fields. Every finding carries `theme`; each `blocker: yes` finding also carries `needs_user`, `origin` and, when the origin is an assumption, `assumption`:
+
+```text
+- theme: <short label>       # on every finding; reuse an earlier theme label when one fits
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- origin: implementation | requirement | assumption   # blockers only
+- assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
+```
+
+Do not mark a question `needs_user` when the design's Confirmed section already answers it.
+
 - **`protects:` is required for critical and major findings.** It names the credible user scenario, explicit requirement or DoD item the finding protects.
 - **Blocker definition.** A finding is a blocker (`blocker: yes`) only if its severity is critical or major AND `protects` is non-empty. Minor and nit findings are never blockers.
 - **Unjustified findings are advisory.** A critical or major finding that cannot name what it protects is advisory, not a blocker. It becomes a follow-up and does not cause FAIL.
@@ -82,6 +93,8 @@ Every finding, whatever its severity, MUST include the six contract fields:
 - **evidence**: file and line reference (`src/auth/login.ts:42`) and what is wrong, as expected-vs-found
 - **blocker**: yes | no (yes only for critical/major with `protects`)
 
+Signal fields: **theme** on every finding; on each blocker also **needs_user** (yes | no), **origin** (implementation | requirement | assumption) and, for an assumption, **assumption** (a ledger id such as A3, or a quoted decision).
+
 ## Output Format
 
 The reviewer should produce output in this format:
@@ -105,4 +118,8 @@ FAIL only if at least one finding below has `blocker: yes`.
    - protects: "[quoted criterion]" (required for critical/major)
    - evidence: `file:line` — expected [X], found [Y]
    - blocker: yes | no
+   - theme: <short label>
+   - needs_user: yes | no   (blockers only)
+   - origin: implementation | requirement | assumption   (blockers only)
+   - assumption: <ledger id such as A3, or a quoted decision>   (when origin is assumption)
 ```

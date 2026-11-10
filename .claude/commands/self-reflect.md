@@ -59,6 +59,16 @@ For each potential learning, ask:
 5. **Can an agent act on this?** If not actionable, skip it.
 6. **Would this confuse a naive agent?** If a future agent without context wouldn't benefit, skip it.
 
+## Misreading Capture (always runs)
+
+This step always runs, in every self-reflection. It is not filtered by "codebase-specific": misreadings are about the user and the request, not the code.
+
+Look for places where the work rested on a misreading: a Clarify that fired, a user correction ("that's not what I meant"), a blocker whose theme disappeared once the user answered. For each pattern:
+
+1. Record it in this project's knowledge base as a fact in `.beads/knowledge/gotchas.jsonl`: type `gotcha`, tag `misunderstanding`, worded as the pattern (for example: "a request about what was read as where or how"), not as the one case. Skip it if an existing `misunderstanding` fact or a built-in pattern already covers it. Brainstorming loads these facts into its "Common misreadings" checklist.
+2. Offer to file a metaswarm GitHub issue on `dsifry/metaswarm` so a general pattern can join the built-in list. Make the offer without doing it automatically: file it only if the user says yes.
+3. Edit `skills/brainstorming-extension/SKILL.md` directly only when the current repo is metaswarm itself. Never edit the plugin's files in any other project.
+
 ## Phase B: Conversation & Session Mining (Optional)
 
 Analyze current context window and optionally historical sessions for implicit insights:

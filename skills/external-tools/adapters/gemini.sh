@@ -310,6 +310,10 @@ ${diff_content}
    - protects: the credible user scenario, explicit requirement or DoD item the issue protects (required for critical/major)
    - evidence: file:line citation, or expected-vs-found
    - blocker: yes | no (yes only if severity is critical or major AND protects is non-empty)
+   - theme: <short label> (every finding)
+   - needs_user: yes | no (blockers only: yes only if just the user can answer it)
+   - origin: implementation | requirement | assumption (blockers only)
+   - assumption: <ledger id such as A3, or a quoted decision> (when origin is assumption)
    A critical or major issue without protects is advisory: report it with blocker: no.
 3. Provide a final verdict: PASS or FAIL
    - FAIL only if at least one finding has blocker: yes
@@ -327,7 +331,11 @@ Respond in JSON format:
       "severity": "critical|major|minor|nit",
       "protects": "credible user scenario, explicit requirement or DoD item (required for critical/major)",
       "evidence": "file:line or expected-vs-found",
-      "blocker": "yes|no"
+      "blocker": "yes|no",
+      "theme": "<short label>",
+      "needs_user": "yes|no",
+      "origin": "implementation|requirement|assumption",
+      "assumption": "<ledger id such as A3, when origin is assumption>"
     }
   ],
   "summary": "Brief overall assessment"

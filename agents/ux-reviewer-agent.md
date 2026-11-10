@@ -37,7 +37,7 @@ The Designer Agent reviews API and interface quality. The UX Reviewer reviews fl
 
 ## Rubric
 
-Review against `rubrics/ux-review-rubric.md`. It is the single source of the UX criteria, their BLOCKING/WARNING levels and the accessibility basics. Report every finding in the finding contract from `guides/delivery-scope.md` (severity and `protects`).
+Review against `rubrics/ux-review-rubric.md`. It is the single source of the UX criteria, their BLOCKING/WARNING levels and the accessibility basics. Report every finding in the finding contract from `guides/delivery-scope.md` (severity and `protects`), plus the signal fields: `theme` on every finding; `needs_user`, `origin` and, for an assumption, `assumption` on each blocker. Do not mark `needs_user` when the design's Confirmed section already answers the question.
 
 ---
 
@@ -78,14 +78,14 @@ Confirm the design describes how the components are wired into the app shell (ro
 
 ### Step 6: Output Review
 
-Return the gate's JSON with `"agent": "ux-reviewer"` and every finding in the six-field contract:
+Return the gate's JSON with `"agent": "ux-reviewer"` and every finding in the six-field contract plus the signal fields:
 
 ```json
 {
   "agent": "ux-reviewer",
   "verdict": "APPROVED" | "NEEDS_REVISION",
   "findings": [
-    { "title": "<short label>", "description": "<what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label>", "description": "<what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],
   "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]

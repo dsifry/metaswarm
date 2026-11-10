@@ -40,7 +40,7 @@ The adversarial-reviewer operates in one of two modes, determined by the orchest
 - **Rubric**: `rubrics/adversarial-review-rubric.md`
 - **Verdict**: PASS / FAIL (binary)
 - **Purpose**: Verify implementation meets its spec contract (DoD items)
-- **Finding fields**: title / description / severity / protects / evidence / blocker (see Finding Contract below)
+- **Finding fields**: title / description / severity / protects / evidence / blocker, plus the signal fields theme / needs_user / origin / assumption (see Finding Contract below)
 - **Re-review**: Fresh reviewer instance REQUIRED (no memory of previous review)
 - **When used**: Phase 3 of the orchestrated execution loop (`orchestrated-execution` skill)
 
@@ -69,6 +69,17 @@ In adversarial mode, findings use the finding contract. The policy and the contr
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
 ```
+
+Signal fields (see "Signal fields" in the guide) are added to the six core fields. Every finding carries `theme`; each `blocker: yes` finding also carries `needs_user`, `origin` and, when the origin is an assumption, `assumption`:
+
+```text
+- theme: <short label>       # on every finding; reuse an earlier theme label when one fits
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- origin: implementation | requirement | assumption   # blockers only
+- assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
+```
+
+Do not mark a question `needs_user` when the design's Confirmed section already answers it.
 
 - `protects:` is required for critical and major findings.
 - A critical or major finding without `protects` is advisory (`blocker: no`); it becomes a follow-up, not a blocker.
@@ -391,12 +402,16 @@ FAIL only if at least one finding below has `blocker: yes`.
    - protects: DoD #2 "<item text>"
    - evidence: `file:line` — expected <X>, found <Y>
    - blocker: yes
+   - theme: <short label>
+   - needs_user: no
+   - origin: implementation
 2. - title: <minor concern, ≤ ~80 chars>
    - description: <1-3 sentences: what is wrong and why it matters>
    - severity: minor
    - protects: —
    - evidence: `file:line`
    - blocker: no
+   - theme: <short label>
 
 ### Files Reviewed
 

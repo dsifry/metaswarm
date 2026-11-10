@@ -16,7 +16,7 @@ triggers:
 
 ## Purpose
 
-This skill automatically activates once an implementation plan is written, before writing-plans presents the plan (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). It spawns three independent adversarial reviewers in parallel — Feasibility, Completeness, and Scope & Alignment — each as a fresh `Task()` instance. ALL three must PASS. On failure, the planner incorporates feedback and resubmits to entirely fresh reviewer instances. After each round the gate applies the severity rule from [`./guides/delivery-scope.md`](./guides/delivery-scope.md) (at most 10 rounds) to advance, iterate or escalate.
+This skill automatically activates once an implementation plan is written, before writing-plans presents the plan (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)). It spawns three independent adversarial reviewers in parallel — Feasibility, Completeness, and Scope & Alignment — each as a fresh `Task()` instance. ALL three must PASS. On failure, the planner incorporates feedback and resubmits to entirely fresh reviewer instances. After each round the gate applies the severity rule from [`./guides/delivery-scope.md`](./guides/delivery-scope.md) (at most 10 rounds) to advance, iterate, clarify or escalate.
 
 ---
 
@@ -35,7 +35,7 @@ This skill auto-activates when:
 
 ## The 3 Adversarial Reviewers
 
-Each reviewer is a fresh `Task()` instance with read-only access to the codebase. Reviewers report every finding in the 6-field contract (`title`, `description`, `severity`, `protects`, `evidence`, `blocker`) from `./guides/delivery-scope.md`, and return PASS/FAIL: FAIL only if at least one finding has `blocker: yes`.
+Each reviewer is a fresh `Task()` instance with read-only access to the codebase. Reviewers report every finding in the 6-field contract (`title`, `description`, `severity`, `protects`, `evidence`, `blocker`) plus the signal fields (`theme` on every finding; `needs_user`, `origin` and `assumption` on blockers) from `./guides/delivery-scope.md`, and return PASS/FAIL: FAIL only if at least one finding has `blocker: yes`.
 
 **Reading the check tables.** The tables below keep their wording and map onto the contract:
 
@@ -98,7 +98,7 @@ These rules are **mandatory**. Violating any of them invalidates the review.
 
 ```text
 1. Plan drafted by planner/explorer/orchestrator
-2. Spawn 3 adversarial reviewers in PARALLEL (fresh Task() instances, role type `roleType("plan-reviewer")`)
+2. Spawn 3 adversarial reviewers in PARALLEL (fresh Task() instances, role type `roleType("plan-reviewer")`; from round 2 on, pass the canonical theme labels)
 3. Collect all 3 verdicts
 4. IF all PASS (or rule line 5 downgraded every remaining blocker) --> present plan to user with gate approval summary
 5. IF any FAIL --> apply the severity rule (Phase 2). When it says iterate:
@@ -106,7 +106,9 @@ These rules are **mandatory**. Violating any of them invalidates the review.
    b. Planner fixes each blocker OR documents why it doesn't apply; minor/nit findings become follow-ups
    c. Spawn 3 NEW reviewer instances (role type `roleType("plan-reviewer")`; never reuse -- prevents anchoring)
    d. Repeat from step 3
-6. The severity rule escalates (recurring/disputed blocker, overengineering signal, or the 10-round cap)
+6. The severity rule says clarify (a Clarify signal fires)
+   --> run the misunderstanding analysis and send the Clarification report (Phase 4), then wait for the user
+7. The severity rule escalates (recurring/disputed blocker, overengineering signal, or the 10-round cap)
    --> present the plan with the Phase 4 escalation report for user decision
 ```
 
@@ -120,17 +122,17 @@ const [feasibilityResult, completenessResult, scopeResult] = await Promise.all([
   Task({
     subagent_type: roleType("plan-reviewer"),
     description: "Feasibility review",
-    prompt: feasibilityReviewPrompt(planText, userRequest),
+    prompt: feasibilityReviewPrompt(planText, userRequest, themeLabels),
   }),
   Task({
     subagent_type: roleType("plan-reviewer"),
     description: "Completeness review",
-    prompt: completenessReviewPrompt(planText, userRequest),
+    prompt: completenessReviewPrompt(planText, userRequest, themeLabels),
   }),
   Task({
     subagent_type: roleType("plan-reviewer"),
     description: "Scope & Alignment review",
-    prompt: scopeAlignmentReviewPrompt(planText, userRequest),
+    prompt: scopeAlignmentReviewPrompt(planText, userRequest, themeLabels),
   }),
 ]);
 ```
@@ -143,20 +145,26 @@ The orchestrator, not the reviewers, decides what happens after each round. It a
 after each review round (round = 1, 2, ...):
   file every minor/nit finding as a follow-up (see Follow-ups)
   1. no blocker: yes findings            → PASS, advance
-  2. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal
-  3. the same critical/major finding recurs after a fix attempt for it,
+  2. a Clarify signal (C1–C4) fires      → stop: misunderstanding analysis, Clarification report, wait for the user
+  3. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal
+  4. the same critical/major finding recurs after a fix attempt for it,
      or two reviewers rate the same finding blocker vs. non-blocker   → escalate
-  4. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers
-                                         → fix blockers, re-validate, FRESH review
   5. an overengineering signal is present → restate the DoD and re-classify each blocker against the policy;
                                            any still names a credible scenario → escalate with a recommendation;
                                            otherwise downgrade them to follow-ups and advance
-  6. otherwise                           → fix blockers, re-validate, FRESH review
+  6. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers
+                                         → fix blockers, re-validate, FRESH review
+  7. otherwise                           → fix blockers, re-validate, FRESH review
 ```
 
 - **PASS, advance** means GATE APPROVED: present the plan to the user. Line 5's downgrade-and-advance counts the same, with the downgraded items listed as follow-ups.
 - **Overengineering check (line 5).** Signals include repeated review/fix cycles without a new user-visible risk, and blockers that protect only theoretical states. Restate the user's request and DoD, re-classify each open blocker, and escalate only if one still names a credible scenario.
-- **Malformed output.** A FAIL whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as PASS.
+- **Malformed output.** A FAIL whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as PASS. A blocker that lacks `needs_user` or `origin` gets one re-request too; if they are still missing they are treated as unknown, which triggers nothing.
+- **Clarify (line 2).** A Clarify signal (C1–C4, see [Clarify signals](./guides/delivery-scope.md#clarify-signals)) is a stop, not an escalation. Run the misunderstanding analysis and send the Clarification report from the [Clarify section](./guides/delivery-scope.md#clarify) of the guide, then wait for the user. Mark the BEADS task for this work waiting on the user (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), and set `status: clarify-pending` with `pendingClarify` in the history file. Line 2 never uses the escalation report; the Clarification report's options are in the guide and none of them approves.
+- **Round history.** Keep the round history and write it after every round to `.beads/context/review-history/plan-review-gate-<slug>-<occurrence>.json` (the format, the `status` lifecycle and `pendingClarify` are in the guide's Round history section). `<occurrence>` is the next free integer for that gate and slug, starting at 1. The slug is derived from the plan path. Store the artifact path (the plan file) in the file, set `reviewers` to 3, and use stable role names as reviewer labels.
+- **After each round, before the rule.** First set `fix_induced` on each new blocker that matches the `lastFix` stored before this round's review (the changes made since the previous review). Then map each blocker's `theme` to a `canonicalTheme`, and merge duplicate blockers (the same canonical theme and the same defect) by setting `mergedInto` on each duplicate. Run the rule. When you then fix the blockers, overwrite `lastFix` with that fix before the next review.
+- **Themes.** From round 2 on, give each fresh reviewer the earlier canonical theme labels (labels only, never the findings) and ask it to reuse one when it fits.
+- **Helper.** Set `HISTORY` to the review-history file path, then run the rule with `RR=lib/review-rule.js; { [ -f ./lib/review-rule.js ] && grep -q '"name": *"metaswarm"' package.json 2>/dev/null; } || { RR="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh 2>/dev/null)")")}/lib/review-rule.js"; [ -f "$RR" ] || RR=lib/review-rule.js; }; node "$RR" "$HISTORY"` (HISTORY is the path of the review-history file, for example `HISTORY=.beads/context/review-history/<file>.json`). It prints `{line, action, signals, capHit}`. Recurring or disputed (line 4) and overengineering (line 5) need your judgement, so set the round's `recurring`, `disputed` and `overengineering` flags first. If the path does not resolve or Node is unavailable, apply the rule by hand. On exit 2, fix the history file and run it again.
 
 **Follow-ups.** Minor/nit findings never block. When `bd` is available, file each as a BEADS task (`bd create --type task`), linked to the epic if one exists. Otherwise, or if `bd create` fails, list them under a `### Follow-ups` heading in the gate output, so the plan and later the PR body carry them.
 
@@ -172,12 +180,12 @@ after each review round (round = 1, 2, ...):
 
 ### Phase 4: Escalation
 
-When the severity rule says escalate (line 2, 3 or 5):
+When the severity rule says clarify (line 2), use the Clarification report from the [Clarify section](./guides/delivery-scope.md#clarify) of the guide, not this one. When it says escalate (lines 3, 4 or 5):
 
 ```markdown
 ## Review Escalation: Plan Review Gate — <plan name>
 
-**Rule line**: <2 cap hit | 3 recurring/disputed | 5 overengineering signal>
+**Rule line**: <3 cap hit | 4 recurring/disputed | 5 overengineering signal>
 
 ### Remaining findings
 - **Critical**: [Feasibility] <title>: <description> — protects: <...> — evidence: <...>
@@ -186,11 +194,11 @@ When the severity rule says escalate (line 2, 3 or 5):
 - **Nit**: [Feasibility] <title> (follow-up filed)
 
 ### Round history
-| Round | Feasibility | Completeness | Scope & Alignment | Blockers (critical/major) | Fixed this round | Rule decision |
-|-------|-------------|--------------|-------------------|---------------------------|------------------|---------------|
-| 1     | FAIL        | PASS         | FAIL              | 0 / 2                     | —                | 4: iterate    |
-| 2     | PASS        | PASS         | FAIL              | 0 / 1                     | 0 / 2            | 4: iterate    |
-| 3     | PASS        | PASS         | FAIL              | 0 / 1                     | 0 / 0            | 3: escalate   |
+| Round | Feasibility | Completeness | Scope & Alignment | Blockers (critical/major) | Fixed this round | Signals (C1–C4) | Themes | Rule decision |
+|-------|-------------|--------------|-------------------|---------------------------|------------------|-----------------|--------|---------------|
+| 1     | FAIL        | PASS         | FAIL              | 0 / 2                     | —                | —               | <theme-a> | 6: iterate    |
+| 2     | PASS        | PASS         | FAIL              | 0 / 1                     | 0 / 2            | —               | <theme-b> | 6: iterate    |
+| 3     | PASS        | PASS         | FAIL              | 0 / 1                     | 0 / 0            | —               | <theme-a>, <theme-c> | 4: escalate (recurring) |
 
 ### Follow-ups
 - <minor/nit findings, or the BEADS task IDs filed for them>
@@ -200,9 +208,14 @@ When the severity rule says escalate (line 2, 3 or 5):
 2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
 3. **Defer** — shelve this work for later; nothing advances
 4. **Cancel** — abandon this work
+5. **Clarify the requirement / re-brainstorm** — answer the open questions about the requirement; a new gate occurrence starts
 
-**Recommendation**: <revise|narrow scope|defer|cancel> — <reason from the rule>
+**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason from the rule>
 ```
+
+### Recovery
+
+On start or resume, list `.beads/context/review-history/plan-review-gate-*.json` and load only the non-closed file whose stored `artifact` path matches this plan. If several non-closed files match, use the newest and set the rest to `closed`. If its `status` is `clarify-pending`, re-ask the `pendingClarify` questions with the Clarification report and do not iterate. Otherwise run the helper on the history and act on its result for the last recorded round: on `escalate`, re-send the escalation report and wait for the user's choice (if that choice is already recorded in the BEADS task or the conversation, apply it); on `overengineering-check`, redo the line-5 check first and re-send the escalation report only if a blocker still names a credible scenario, otherwise downgrade the blockers to follow-ups and advance; only `iterate` continues at the next round. The gate has no execution-state pointer, so the stored artifact path is the key.
 
 ---
 
@@ -241,12 +254,21 @@ Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+- theme: <short label>       # on every finding; reuse an earlier theme label when one fits
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- origin: implementation | requirement | assumption   # blockers only
+- assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
+
+## Earlier Theme Labels
+${themeLabels}
+(Round 1: none. From round 2 on these are the canonical theme labels from earlier rounds, labels only. Reuse one in `theme` when it fits; otherwise use a new short label.)
 
 ## Rules
 - Check EACH criterion. Cite file:line or glob results as evidence for PASS, or specific gaps for FAIL.
 - Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
 - Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.
+- Do not mark `needs_user` when the design's Confirmed section already answers the question. Add `theme` to every finding and the other signal fields to each blocker.
 - Do NOT consider other reviewers. You are independent.
 
 ## Output Format
@@ -287,12 +309,21 @@ Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+- theme: <short label>       # on every finding; reuse an earlier theme label when one fits
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- origin: implementation | requirement | assumption   # blockers only
+- assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
+
+## Earlier Theme Labels
+${themeLabels}
+(Round 1: none. From round 2 on these are the canonical theme labels from earlier rounds, labels only. Reuse one in `theme` when it fits; otherwise use a new short label.)
 
 ## Rules
 - Check EACH criterion. Cite specific user requirements and plan items as evidence.
 - Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
 - Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.
+- Do not mark `needs_user` when the design's Confirmed section already answers the question. Add `theme` to every finding and the other signal fields to each blocker.
 - Do NOT consider other reviewers. You are independent.
 
 ## Output Format
@@ -333,12 +364,21 @@ Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+- theme: <short label>       # on every finding; reuse an earlier theme label when one fits
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- origin: implementation | requirement | assumption   # blockers only
+- assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
+
+## Earlier Theme Labels
+${themeLabels}
+(Round 1: none. From round 2 on these are the canonical theme labels from earlier rounds, labels only. Reuse one in `theme` when it fits; otherwise use a new short label.)
 
 ## Rules
 - Check EACH criterion. Cite the user's request and plan scope as evidence.
 - Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
 - Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.
+- Do not mark `needs_user` when the design's Confirmed section already answers the question. Add `theme` to every finding and the other signal fields to each blocker.
 - Do NOT consider other reviewers. You are independent.
 
 ## Output Format
@@ -363,6 +403,10 @@ Each reviewer produces output in this exact format:
    - protects: <credible user scenario | explicit requirement | DoD item>   (required for critical/major)
    - evidence: <file:line reference, glob result, or expected-vs-found>
    - blocker: yes | no
+   - theme: <short label>
+   - needs_user: yes | no   (blockers only)
+   - origin: implementation | requirement | assumption   (blockers only)
+   - assumption: <ledger id such as A3, or a quoted decision>   (when origin is assumption)
 
 ### Verdict
 [FAIL: at least one `blocker: yes` finding — list their numbers]
@@ -404,9 +448,9 @@ Plan is ready for user review.
 - none
 
 #### Major
-1. [Completeness] **Missing requirement mapping**: User asked for X but no plan item addresses it — protects: requirement "X" — evidence: no WU mentions X
-2. [Completeness] **No verification for WU-003**: Plan item has no test or assertion defined — protects: WU-003 DoD — evidence: WU-003 has no Verification line
-3. [Scope & Alignment] **Scope creep**: WU-005 adds caching layer not requested by user — protects: the user's request — evidence: WU-005
+1. [Completeness] **Missing requirement mapping**: User asked for X but no plan item addresses it — protects: requirement "X" — evidence: no WU mentions X — theme: requirement coverage — needs_user: yes — origin: assumption — assumption: A2
+2. [Completeness] **No verification for WU-003**: Plan item has no test or assertion defined — protects: WU-003 DoD — evidence: WU-003 has no Verification line — theme: verification — needs_user: no — origin: implementation
+3. [Scope & Alignment] **Scope creep**: WU-005 adds caching layer not requested by user — protects: the user's request — evidence: WU-005 — theme: scope creep — needs_user: no — origin: implementation
 
 ### Follow-ups
 - [Feasibility] minor: <title> (bd-124)
@@ -415,8 +459,8 @@ Plan is ready for user review.
 ---
 
 **Round**: N (cap 10)
-**Rule decision**: 4: iterate — ≥2 independent reviewers reported blockers
-**Action Required**: Planner must address every blocker above and resubmit to fresh reviewers.
+**Rule decision**: 2: clarify (C1) — blocker 1 needs the user (unconfirmed assumption A2); without it the rule would read 6: iterate
+**Action Required**: Run the misunderstanding analysis and send the Clarification report (see the Clarify section of `./guides/delivery-scope.md`), then wait for the user. Do not revise or re-review until the user answers.
 ```
 
 ---

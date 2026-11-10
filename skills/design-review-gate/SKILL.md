@@ -86,7 +86,7 @@ const [pmResult, architectResult, designerResult, securityResult, uxResult, ctoR
 
 ### Phase 2: Aggregate Results
 
-Each agent returns a structured review. Every finding uses the 6-field contract from [`./guides/delivery-scope.md`](./guides/delivery-scope.md):
+Each agent returns a structured review. Every finding uses the 6-field contract from [`./guides/delivery-scope.md`](./guides/delivery-scope.md) plus the signal fields:
 
 ```typescript
 interface Finding {
@@ -96,6 +96,10 @@ interface Finding {
   protects: string; // credible user scenario | explicit requirement | DoD item; required for critical/major
   evidence: string; // design doc section, file:line, or expected-vs-found
   blocker: "yes" | "no"; // yes only if severity ∈ {critical, major} AND protects is non-empty
+  theme: string; // short label on every finding; reuse an earlier theme label when one fits
+  needs_user?: "yes" | "no"; // blockers only: yes only if just the user can answer it
+  origin?: "implementation" | "requirement" | "assumption"; // blockers only
+  assumption?: string; // ledger id (A3) or a quoted decision; required when origin is "assumption"
 }
 
 interface ReviewResult {
@@ -120,7 +124,7 @@ interface ReviewResult {
 }
 ```
 
-A NEEDS_REVISION without any `blocker: yes` finding is read as APPROVED, and its findings become follow-ups. A NEEDS_REVISION whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as APPROVED.
+A NEEDS_REVISION without any `blocker: yes` finding is read as APPROVED, and its findings become follow-ups. A NEEDS_REVISION whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as APPROVED. A blocker that lacks `needs_user` or `origin` gets one re-request too; if they are still missing they are treated as unknown, which triggers nothing.
 
 ### Phase 3: Check Gate
 
@@ -130,15 +134,16 @@ The orchestrator, not the reviewers, decides what happens after each round. It a
 after each review round (round = 1, 2, ...):
   file every minor/nit finding as a follow-up (see Follow-ups)
   1. no blocker: yes findings            → PASS, advance
-  2. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal
-  3. the same critical/major finding recurs after a fix attempt for it,
+  2. a Clarify signal (C1–C4) fires      → stop: misunderstanding analysis, Clarification report, wait for the user
+  3. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal
+  4. the same critical/major finding recurs after a fix attempt for it,
      or two reviewers rate the same finding blocker vs. non-blocker   → escalate
-  4. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers
-                                         → fix blockers, re-validate, FRESH review
   5. an overengineering signal is present → restate the DoD and re-classify each blocker against the policy;
                                            any still names a credible scenario → escalate with a recommendation;
                                            otherwise downgrade them to follow-ups and advance
-  6. otherwise                           → fix blockers, re-validate, FRESH review
+  6. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers
+                                         → fix blockers, re-validate, FRESH review
+  7. otherwise                           → fix blockers, re-validate, FRESH review
 ```
 
 - **PASS, advance**: all six agents are APPROVED (no `blocker: yes` finding). Proceed to implementation and create the epic with the approved design. Line 5's downgrade-and-advance counts the same, with the downgraded items listed as follow-ups.
@@ -146,12 +151,17 @@ after each review round (round = 1, 2, ...):
 - **A revised plan (full orchestration)**: here the gate reviews the plan. If the Design Review Gate revises the plan, run the Plan Review Gate again on the revised plan (fresh reviewers) before presenting it; a revision that fails it goes back through both gates. On the brainstorming path a Design Review Gate revision changes the design doc, not a plan: the Design Review Gate re-reviews the revised design doc in its usual fresh round, and the Plan Review Gate does not run an extra time; it runs once, on the plan writing-plans writes from the approved design doc. See [two pipelines](./guides/workflow-enforcement.md#two-pipelines).
 - **Overengineering check (line 5).** Signals include repeated review/fix cycles without a new user-visible risk, and blockers that protect only theoretical states. Restate the design's goals and DoD, re-classify each open blocker, and escalate only if one still names a credible scenario.
 - **Rounds.** Every re-review is one round. In Team Mode the persistent reviewers re-review, and that still counts as a round.
+- **Clarify (line 2).** A Clarify signal (C1–C4, see [Clarify signals](./guides/delivery-scope.md#clarify-signals)) is a stop, not an escalation. Run the misunderstanding analysis and send the Clarification report from the [Clarify section](./guides/delivery-scope.md#clarify) of the guide, then wait for the user. Mark the BEADS task for this work waiting on the user (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), and set `status: clarify-pending` with `pendingClarify` in the history file. Line 2 never uses the escalation report; the Clarification report's options are in the guide and none of them approves.
+- **Round history.** Keep the round history and write it after every round to `.beads/context/review-history/design-review-gate-<slug>-<occurrence>.json` (the format, the `status` lifecycle and `pendingClarify` are in the guide's Round history section). `<occurrence>` is the next free integer for that gate and slug, starting at 1. The slug is derived from the design doc path (or the plan path in full orchestration). Store the artifact path (the design doc or plan) in the file, set `reviewers` to 6, and use stable role names as reviewer labels.
+- **After each round, before the rule.** First set `fix_induced` on each new blocker that matches the `lastFix` stored before this round's review (the changes made since the previous review). Then map each blocker's `theme` to a `canonicalTheme`, and merge duplicate blockers (the same canonical theme and the same defect) by setting `mergedInto` on each duplicate. Run the rule. When you then fix the blockers, overwrite `lastFix` with that fix before the next review.
+- **Themes.** From round 2 on, give each fresh reviewer the earlier canonical theme labels (labels only, never the findings) and ask it to reuse one when it fits. In Team Mode, send the labels to the persistent reviewers with the revised design.
+- **Helper.** Set `HISTORY` to the review-history file path, then run the rule with `RR=lib/review-rule.js; { [ -f ./lib/review-rule.js ] && grep -q '"name": *"metaswarm"' package.json 2>/dev/null; } || { RR="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh 2>/dev/null)")")}/lib/review-rule.js"; [ -f "$RR" ] || RR=lib/review-rule.js; }; node "$RR" "$HISTORY"` (HISTORY is the path of the review-history file, for example `HISTORY=.beads/context/review-history/<file>.json`). It prints `{line, action, signals, capHit}`. Recurring or disputed (line 4) and overengineering (line 5) need your judgement, so set the round's `recurring`, `disputed` and `overengineering` flags first. If the path does not resolve or Node is unavailable, apply the rule by hand. On exit 2, fix the history file and run it again.
 
 **Follow-ups.** Minor/nit findings never block. When `bd` is available, file each as a BEADS task (`bd create --type task`), linked to the epic if one exists. Otherwise, or if `bd create` fails, list them under a `### Follow-ups` heading in the gate output.
 
 ### Phase 4: Human Escalation
 
-When the severity rule says escalate (line 2, 3 or 5), present the escalation report in [Escalation](#escalation) and ask the human to decide: revise, narrow scope, defer or cancel. Escalation never approves (see `./guides/delivery-scope.md`): a revised or narrowed design gets a fresh review round and passes only by that round.
+When the severity rule says clarify (line 2), send the Clarification report from the [Clarify section](./guides/delivery-scope.md#clarify) of the guide and wait for the user. When it says escalate (lines 3, 4 or 5), present the escalation report in [Escalation](#escalation) and ask the human to decide: revise, clarify the requirement, narrow scope, defer or cancel. Escalation never approves (see `./guides/delivery-scope.md`): a revised or narrowed design gets a fresh review round and passes only by that round.
 
 ---
 
@@ -159,7 +169,7 @@ When the severity rule says escalate (line 2, 3 or 5), present the escalation re
 
 ### Shared Finding Rules (inserted into every prompt)
 
-Every persona prompt below contains `${sharedFindingRules}`, which the orchestrator replaces with this block:
+Every persona prompt below contains `${sharedFindingRules}`, which the orchestrator replaces with this block (and it fills `${themeLabels}`, empty in round 1):
 
 ````markdown
 ## Findings
@@ -172,9 +182,16 @@ Use your persona checklist for criteria only. Report every finding with the 6 fi
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+- theme: <short label>       # on every finding; reuse an earlier theme label when one fits
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- origin: implementation | requirement | assumption   # blockers only
+- assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
+
+Earlier theme labels (round 2 on, labels only): ${themeLabels}. Reuse one in `theme` when it fits; otherwise use a new short label.
 
 Rules:
 
+- Do not mark `needs_user` when the design's Confirmed section already answers the question. `theme` goes on every finding; the other signal fields go on each blocker.
 - `protects:` is required for critical and major findings. A critical or major finding without `protects` is advisory (`blocker: no`).
 - Verdict: NEEDS_REVISION only if at least one finding has `blocker: yes`; otherwise APPROVED.
 - Minor/nit findings are recorded as follow-ups, not blockers. Put notes that are not findings in `suggestions` and `questions`.
@@ -240,7 +257,7 @@ Return JSON:
     "missing_scenarios": ["list of gaps"]
   },
   "findings": [
-    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],
   "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
@@ -288,7 +305,7 @@ Return JSON:
   "agent": "architect",
   "verdict": "APPROVED" | "NEEDS_REVISION",
   "findings": [
-    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],
   "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
@@ -342,7 +359,7 @@ Return JSON:
   "agent": "designer",
   "verdict": "APPROVED" | "NEEDS_REVISION",
   "findings": [
-    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],
   "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
@@ -415,7 +432,7 @@ Return JSON:
     "mitigations_required": ["security controls needed"]
   },
   "findings": [
-    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],
   "suggestions": ["security notes that are not findings"],
   "questions": ["security clarifications needed"]
@@ -468,7 +485,7 @@ Return JSON:
   "agent": "ux-reviewer",
   "verdict": "APPROVED" | "NEEDS_REVISION",
   "findings": [
-    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],
   "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
@@ -529,7 +546,7 @@ Return JSON:
   "agent": "cto",
   "verdict": "APPROVED" | "NEEDS_REVISION",
   "findings": [
-    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],
   "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]
@@ -553,16 +570,20 @@ Return JSON:
 1. Present consolidated blockers to the human
 2. Human revises the design document
 3. Re-run all six agents on the updated doc (a new round)
-4. Apply the severity rule again: advance, iterate, or escalate
+4. Apply the severity rule again: advance, iterate, clarify or escalate
+
+### Recovery
+
+On start or resume, list `.beads/context/review-history/design-review-gate-*.json` and load only the non-closed file whose stored `artifact` path matches this design doc (or plan, in full orchestration). If several non-closed files match, use the newest and set the rest to `closed`. If its `status` is `clarify-pending`, re-ask the `pendingClarify` questions with the Clarification report and do not iterate. Otherwise run the helper on the history and act on its result for the last recorded round: on `escalate`, re-send the escalation report and wait for the user's choice (if that choice is already recorded in the BEADS task or the conversation, apply it); on `overengineering-check`, redo the line-5 check first and re-send the escalation report only if a blocker still names a credible scenario, otherwise downgrade the blockers to follow-ups and advance; only `iterate` continues at the next round. The gate has no execution-state pointer, so the stored artifact path is the key.
 
 ### Escalation
 
-When the severity rule says escalate (cap hit, a recurring or disputed blocker, or a blocker that survives the overengineering check):
+When the severity rule says clarify (line 2), use the Clarification report from the [Clarify section](./guides/delivery-scope.md#clarify) of the guide instead of this report. When it says escalate (cap hit, a recurring or disputed blocker, or a blocker that survives the overengineering check):
 
 ```markdown
 ## Review Escalation: Design Review Gate — <design doc>
 
-**Rule line**: <2 cap hit | 3 recurring/disputed | 5 overengineering signal>
+**Rule line**: <3 cap hit | 4 recurring/disputed | 5 overengineering signal>
 
 ### Remaining findings
 - **Critical**: [Security Design] <title>: <description> — protects: <...> — evidence: <...>
@@ -572,11 +593,11 @@ When the severity rule says escalate (cap hit, a recurring or disputed blocker, 
 - **Nit**: [CTO] <title> (follow-up filed)
 
 ### Round history
-| Round | Verdicts (APPROVED / NEEDS_REVISION) | Blockers (critical/major) | Fixed this round | Rule decision |
-|-------|--------------------------------------|---------------------------|------------------|---------------|
-| 1     | 3 / 3                                | 1 / 4                     | —                | 4: iterate    |
-| 2     | 5 / 1                                | 0 / 2                     | 1 / 2            | 4: iterate    |
-| 3     | 5 / 1                                | 0 / 2                     | 0 / 0            | 3: escalate   |
+| Round | Verdicts (APPROVED / NEEDS_REVISION) | Blockers (critical/major) | Fixed this round | Signals (C1–C4) | Themes | Rule decision |
+|-------|--------------------------------------|---------------------------|------------------|-----------------|--------|---------------|
+| 1     | 3 / 3                                | 1 / 4                     | —                | —               | <theme-a> | 6: iterate    |
+| 2     | 5 / 1                                | 0 / 2                     | 1 / 2            | —               | <theme-b> | 6: iterate    |
+| 3     | 5 / 1                                | 0 / 2                     | 0 / 0            | —               | <theme-a>, <theme-c> | 4: escalate (recurring) |
 
 ### Follow-ups
 - <minor/nit findings, or the BEADS task IDs filed for them>
@@ -586,8 +607,9 @@ When the severity rule says escalate (cap hit, a recurring or disputed blocker, 
 2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
 3. **Defer** — shelve this work for later; nothing advances
 4. **Cancel** — abandon this work
+5. **Clarify the requirement / re-brainstorm** — answer the open questions about the requirement; a new gate occurrence starts
 
-**Recommendation**: <revise|narrow scope|defer|cancel> — <reason from the rule>
+**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason from the rule>
 ```
 
 ---
@@ -675,15 +697,15 @@ One or more reviewers reported a `blocker: yes` finding.
 
 #### Critical
 
-1. [Security Design] **userId trust boundary** - Design shows userId passed to tools, but userId MUST come from server session only. Model could be jailbroken to output arbitrary userIds. — protects: no user can access other users' data — evidence: design §Tools passes `userId` from model output
+1. [Security Design] **userId trust boundary** - Design shows userId passed to tools, but userId MUST come from server session only. Model could be jailbroken to output arbitrary userIds. — protects: no user can access other users' data — evidence: design §Tools passes `userId` from model output — theme: trust boundary — needs_user: no — origin: implementation
 
 #### Major
 
-1. [Designer] **Missing error states** - The design doesn't specify what happens when search returns 0 results — protects: the search happy path's empty result — evidence: §Search has no empty state
-2. [Designer] **Inconsistent API naming** - `get_contact_details` uses underscore but existing APIs use camelCase — protects: requirement "match existing API conventions" — evidence: §API vs. existing `getContact`
-3. [Security Design] **Missing rate limits** - AI endpoints are expensive and must have rate limiting to prevent abuse — protects: credible abuse of a paid endpoint in normal use — evidence: §API has no rate limit
-4. [CTO] **Missing TDD specs** - No RED-GREEN-REFACTOR cycles documented — protects: DoD "TDD specs present" — evidence: no Test Plan section
-5. [CTO] **Missing edge cases** - Need systematic enumeration per method — protects: DoD "edge cases enumerated" — evidence: §Methods
+1. [Designer] **Missing error states** - The design doesn't specify what happens when search returns 0 results — protects: the search happy path's empty result — evidence: §Search has no empty state — theme: error states — needs_user: no — origin: implementation
+2. [Designer] **Inconsistent API naming** - `get_contact_details` uses underscore but existing APIs use camelCase — protects: requirement "match existing API conventions" — evidence: §API vs. existing `getContact` — theme: API conventions — needs_user: no — origin: implementation
+3. [Security Design] **Missing rate limits** - AI endpoints are expensive and must have rate limiting to prevent abuse — protects: credible abuse of a paid endpoint in normal use — evidence: §API has no rate limit — theme: abuse protection — needs_user: yes — origin: assumption — assumption: A2
+4. [CTO] **Missing TDD specs** - No RED-GREEN-REFACTOR cycles documented — protects: DoD "TDD specs present" — evidence: no Test Plan section — theme: TDD readiness — needs_user: no — origin: implementation
+5. [CTO] **Missing edge cases** - Need systematic enumeration per method — protects: DoD "edge cases enumerated" — evidence: §Methods — theme: edge cases — needs_user: no — origin: implementation
 
 ### Follow-ups
 
@@ -707,8 +729,8 @@ One or more reviewers reported a `blocker: yes` finding.
 ---
 
 **Round**: 1 (cap 10)
-**Rule decision**: 4: iterate — ≥2 independent reviewers reported blockers
-**Action Required**: Please revise the design document to address every blocker above.
+**Rule decision**: 2: clarify (C1) — blocker 3 needs the user (unconfirmed assumption A2); without it the rule would read 6: iterate
+**Action Required**: Run the misunderstanding analysis and send the Clarification report (see the Clarify section of `./guides/delivery-scope.md`), then wait for the user. Do not revise or re-review until the user answers.
 ```
 
 ---

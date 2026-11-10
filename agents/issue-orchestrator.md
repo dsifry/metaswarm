@@ -127,6 +127,8 @@ bd create "Create implementation plan" --type task --parent <epic-id>
 bd dep add <plan-task> <research-task>
 
 # 7. Spawn Architect Agent for planning (role type roleType("planner"))
+#    The plan must carry an "Assumptions (unconfirmed)" section (ids A1, A2, ...) and a "Confirmed" section
+#    (what the user confirmed, in the user's words). Never label an agent proposal as a user decision.
 # Wait for plan output
 
 # 8. Plan Review Gate (blocked by planning): run the plan-review-gate skill
@@ -295,6 +297,21 @@ Report every finding with the 6 fields defined in `guides/delivery-scope.md`:
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+Also report the signal fields (the guide defines them):
+- theme: <short label>       # on every finding; reuse an earlier theme label when one fits
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- origin: implementation | requirement | assumption   # blockers only
+- assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
+
+## Earlier Theme Labels
+${themeLabels}
+(Round 1: none. From round 2 on these are the canonical theme labels from earlier rounds, labels only. Reuse one in `theme` when it fits; otherwise use a new short label.)
+
+## Confirmed Answers
+${confirmedAnswers}
+(The current Confirmed list and open Assumptions (ids A1, A2, ...) from the design or plan's assumption ledger, copied verbatim. Use these ids in `assumption`.)
+
+Do not mark a question `needs_user` when the Confirmed Answers above already answer it.
 
 ## Rules
 - Check EACH DoD item. Cite file:line evidence for PASS or expected-vs-found for FAIL.
@@ -307,7 +324,7 @@ Report every finding with the 6 fields defined in `guides/delivery-scope.md`:
 
 1. **Never trust self-reports**: Run tsc, eslint, vitest YOURSELF — do not ask the coder
 2. **Fresh reviewer on re-review**: Spawn a NEW adversarial reviewer (role type roleType("adversarial-reviewer")) after each FAIL
-3. **Severity-gated iteration on review FAIL**: After each review round, apply the severity rule (cap 10 rounds; see `guides/delivery-scope.md` and the `orchestrated-execution` skill's On FAIL protocol). It decides whether to iterate, advance or escalate. Minor/nit findings become follow-ups
+3. **Severity-gated iteration on review FAIL**: After each review round, apply the severity rule (cap 10 rounds; see `guides/delivery-scope.md` and the `orchestrated-execution` skill's On FAIL protocol). It decides whether to iterate, advance, clarify or escalate. Minor/nit findings become follow-ups
 4. **Respect file scope**: Verify with `git diff --name-only` after each implementation
 5. **Parallel where possible**: Independent work units can run Phase 3.1 simultaneously
 6. **Maintain project context**: After each work unit COMMIT, update the project context document with:
@@ -556,11 +573,21 @@ Escalate to human when:
 4. **Scope Creep**: Work expanding beyond original Issue
 5. **Blocked > 1 Hour**: External dependency or access needed
 
+Stop for the user (not an escalation) when:
+
+1. **Clarify Signal**: the severity rule's line 2 fires (the user is needed or the reviews are not converging); stop and send the Clarification report
+
 ### Escalation Format
 
-**Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), still mark the task waiting (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), then post the Review Escalation report from the Escalation template in `guides/delivery-scope.md` instead. Its options are **Revise**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. There is no `@beads approve` for an escalated review gate: escalation never approves.
+**Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), still mark the task waiting (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), then post the Review Escalation report from the Escalation template in `guides/delivery-scope.md` instead. Its options are **Revise**, **Clarify the requirement / re-brainstorm**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. There is no `@beads approve` for an escalated review gate: escalation never approves.
 
-For the triggers above:
+**A Clarify signal (rule line 2) is a stop, not an escalation.** Run the misunderstanding analysis, post the Clarification report from the Clarify section of `guides/delivery-scope.md`, mark the task waiting the same way, and wait for the user.
+
+- **Standing instructions.** "Keep going", "use your judgment" and similar instructions never acknowledge a signal, answer a question or default a `needs_user` question. Only an answer to the specific question counts. While you wait, keep working on parts the questions do not affect.
+- **Restate the answers.** When the user answers, restate the user's answer in your own words and get it confirmed before it goes in the Confirmed list. A one-word acknowledgement of a message with several parts confirms nothing.
+- **Keep the ledger.** When the work has no brainstorming, keep the assumption ledger yourself in the plan's Assumptions section: an "Assumptions (unconfirmed)" list with ids A1, A2, ... and a "Confirmed" list. Never label your own proposal as a user decision.
+
+For triggers 1-5 above (Clarify uses the Clarification report and is never approved with `@beads approve`):
 
 ```bash
 # Mark task as waiting for human
@@ -627,7 +654,7 @@ During the 4-phase execution loop, follow the structured recovery protocol defin
 1. **DIAGNOSE**: Identify which phase failed and gather evidence
 2. **CLASSIFY**: Fixable (clear error) / Ambiguous (unclear cause) / External (dependency issue)
 3. **RETRY**: VALIDATE failures (tests, coverage, lint, typecheck) get up to 3 attempts per work unit, with escalating approaches. VALIDATE attempts count consecutive failed VALIDATE runs for the work unit; a VALIDATE PASS resets the count to 0, so each review round's re-validation starts fresh. The number of review rounds is governed separately by the severity rule and its 10-round cap. Review FAILs follow severity-gated iteration instead (cap 10 rounds; see `guides/delivery-scope.md`)
-4. **ESCALATE**: After 3 VALIDATE failures, or when the severity rule escalates, escalate to human with full failure history
+4. **ESCALATE**: After 3 VALIDATE failures, or when the severity rule says escalate, escalate to human with full failure history; when it says clarify, stop for the user with the Clarification report (a Clarify stop is not an escalation)
 
 Track VALIDATE attempts with labels, and remove the `retry:N` label when VALIDATE passes (review rounds are tracked in `.beads/context/execution-state.md`, not labels):
 

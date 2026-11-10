@@ -93,13 +93,14 @@ One or more agents found blocking issues. Output includes:
 - List of blocking issues by agent
 - Questions requiring clarification
 - Round count (severity-gated iteration, cap 10 rounds; see the metaswarm plugin's `guides/delivery-scope.md`)
+- When a Clarify signal fires (a blocker only the user can answer, no convergence, fix-induced blockers or a recurring theme), the gate stops and posts a Clarification report instead of iterating
 
 ### ESCALATED
 
 Reached via the severity rule: an escalate condition (a recurring or disputed blocker, or a blocker that survives the overengineering check) or the 10-round cap:
 
 - Summary of remaining blockers
-- Options: Revise / Narrow scope / Defer / Cancel. Escalation never approves: a revised or narrowed design gets a fresh review round
+- Options: Revise / Clarify the requirement / re-brainstorm / Narrow scope / Defer / Cancel. Escalation never approves: a revised or narrowed design gets a fresh review round
 
 ## Integration
 
@@ -208,7 +209,7 @@ Individual agents have 3-minute timeout. If timeout occurs:
 
 ### "Stuck in review loop"
 
-On any escalation (including the 10-round cap), the human chooses Revise, Narrow scope, Defer or Cancel. There is no way to advance with open blockers: a revised or narrowed design gets a fresh review round and passes only by that round.
+On any escalation (including the 10-round cap), the human chooses Revise, Clarify the requirement / re-brainstorm, Narrow scope, Defer or Cancel. When a Clarify signal fires first, the gate stops with a Clarification report and waits for your answer. There is no way to advance with open blockers: a revised or narrowed design gets a fresh review round and passes only by that round.
 
 ## Related Commands
 

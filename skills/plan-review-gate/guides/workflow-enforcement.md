@@ -33,6 +33,10 @@ Brainstorming sizes its output to the work. Only project-sized work reaches the 
 
 "Project-sized" means brainstorming sized the work as a project (the Architectural path in 6.4.x, "a project" in 7.x) and committed its design doc. Committing a doc alone is not enough, because 7.0.1+ also commits short docs for small changes.
 
+## Brainstorming start intercept
+
+Load `metaswarm:brainstorming-extension` at the start of brainstorming, not only after the design doc is committed. It supplies the assumption ledger, the confirmation rule and the Common misreadings checklist (the 4 built-in patterns plus the project's `misunderstanding` gotchas). They apply to every brainstorming session regardless of size, including quick tasks, chat-only designs and short design docs, before any design is presented or committed.
+
 ## Design Review Gate trigger
 
 Run the Design Review Gate only for project-sized work: brainstorming sized the work as a project (superpowers 6.4.x Architectural path; 7.x "a project", the full written design) and committed its design doc. Quick tasks, chat-only designs and short design docs for small changes (superpowers 7.0.1+) skip the gate.

@@ -53,6 +53,17 @@ Report every finding in this contract, whatever the persona file says about outp
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
 ```
 
+Signal fields (see "Signal fields" in the guide) are added to the six core fields. Every finding carries `theme`; each `blocker: yes` finding also carries `needs_user`, `origin` and, when the origin is an assumption, `assumption`:
+
+```text
+- theme: <short label>       # on every finding; reuse an earlier theme label when one fits
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- origin: implementation | requirement | assumption   # blockers only
+- assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
+```
+
+Do not mark a question `needs_user` when the design's Confirmed section already answers it.
+
 - `protects:` is required for critical and major findings.
 - A critical or major finding without `protects` is advisory (`blocker: no`); it becomes a follow-up, not a blocker.
 - Rubric checks marked "BLOCKING if …" produce critical or major findings; "WARNING" checks produce minor findings.

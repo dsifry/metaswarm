@@ -69,7 +69,7 @@ metaswarm ships 8 development guides in the `guides/` directory. These are refer
 | **Coding Standards** | `guides/coding-standards.md` | Language idioms, naming conventions, error handling, code organization |
 | **Worktree Development** | `guides/worktree-development.md` | Parallel development with git worktrees, port allocation, conflict detection |
 | **Build Validation** | `guides/build-validation.md` | Pre-push checks, CI pipeline, build verification, release readiness |
-| **Delivery Scope** | `guides/delivery-scope.md` | Review severity rule: the finding contract, what blocks delivery, when to iterate, advance or escalate |
+| **Delivery Scope** | `guides/delivery-scope.md` | Review severity rule: the finding contract, what blocks delivery, when to iterate, advance, clarify or escalate |
 | **Workflow Enforcement** | `guides/workflow-enforcement.md` | When the Design and Plan Review Gates trigger, the execution method choice, superpowers version support |
 
 ## Choosing a Workflow
@@ -122,7 +122,7 @@ The 4-phase execution loop for rigorous, spec-driven implementation. Decomposes 
 - **Project context document**: Maintained by orchestrator, passed to each coder subagent to prevent context loss
 - **Service inventory tracking**: `SERVICE-INVENTORY.md` updated after each commit to track services, factories, and shared modules
 - **Final comprehensive review**: Cross-unit integration check after all units pass
-- **Recovery protocol**: DIAGNOSE → CLASSIFY → RETRY (VALIDATE: up to 3 attempts; review: severity-gated, cap 10 rounds) → ESCALATE with failure history
+- **Recovery protocol**: DIAGNOSE → CLASSIFY → RETRY (VALIDATE: up to 3 attempts; review: severity-gated, cap 10 rounds) → ESCALATE with failure history, or CLARIFY with the user when the severity rule says so
 
 Uses the `adversarial-review-rubric.md` for reviews (distinct from the collaborative `code-review-rubric.md`).
 
@@ -138,7 +138,7 @@ Spawns 6 agents in parallel to review a design document:
 
 - PM, Architect, Designer, Security, UX Reviewer, CTO review simultaneously
 - All 6 must APPROVE
-- Severity-gated iteration: only `blocker: yes` findings re-run the gate, cap 10 rounds before human escalation
+- Severity-gated iteration: only `blocker: yes` findings re-run the gate, cap 10 rounds before human escalation; a Clarify signal stops it earlier to ask you
 - Catches architectural issues before implementation begins
 
 ### PR Shepherd

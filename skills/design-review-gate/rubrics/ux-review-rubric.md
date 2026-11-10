@@ -27,6 +27,17 @@ The policy, the finding contract and the iteration rule live in `guides/delivery
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
 ```
 
+Signal fields (see "Signal fields" in the guide) are added to the six core fields. Every finding carries `theme`; each `blocker: yes` finding also carries `needs_user`, `origin` and, when the origin is an assumption, `assumption`:
+
+```text
+- theme: <short label>       # on every finding; reuse an earlier theme label when one fits
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- origin: implementation | requirement | assumption   # blockers only
+- assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
+```
+
+Do not mark a question `needs_user` when the design's Confirmed section already answers it.
+
 - **`protects:` is required for critical and major findings.** It names the credible user scenario, explicit requirement or DoD item the finding protects, for example "a user can add a todo from the main screen".
 - **Blocker definition.** A finding is a blocker (`blocker: yes`) only if its severity is critical or major AND `protects` is non-empty. Minor and nit findings are never blockers.
 - **Unjustified findings are advisory.** A critical or major finding that cannot name what it protects is advisory, not a blocker. It becomes a follow-up and does not cause NEEDS_REVISION.
@@ -142,7 +153,7 @@ Return the gate's JSON (`"agent": "ux-reviewer"`), with every finding in the con
   "agent": "ux-reviewer",
   "verdict": "APPROVED" | "NEEDS_REVISION",
   "findings": [
-    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no" }
+    { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],
   "suggestions": ["notes that are not findings"],
   "questions": ["clarifications needed"]

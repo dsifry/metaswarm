@@ -92,6 +92,8 @@ Project-Sized Design Doc Committed
 
 ### Triggering the Design Review Gate
 
+Load the `brainstorming-extension` skill at the start of brainstorming, not only after the commit: its assumption ledger, confirmation rule and Common misreadings checklist apply to every brainstorming session regardless of size, before any design is presented or committed.
+
 The gate is automatically triggered when brainstorming writes and commits a project-sized design doc (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)):
 
 - A project-sized design doc is committed to `docs/plans/*-design.md` or `docs/superpowers/specs/*-design.md`
@@ -110,9 +112,9 @@ The gate is automatically triggered when brainstorming writes and commits a proj
 
 ### Iteration Protocol
 
-- **Severity-gated iteration** (cap 10 rounds; see `./guides/delivery-scope.md`): only `blocker: yes` findings keep the loop going; minor/nit findings become follow-ups
+- **Severity-gated iteration** (cap 10 rounds; see `./guides/delivery-scope.md`): only `blocker: yes` findings keep the loop going; minor/nit findings become follow-ups. A Clarify signal (the user is needed or the reviews are not converging) stops the loop for a Clarification report
 - Each iteration: revise design → re-run all reviewers
-- Escalation options: Revise / Narrow scope / Defer / Cancel. Escalation never approves: a revised design gets a fresh review round
+- Escalation options: Revise / Clarify the requirement / re-brainstorm / Narrow scope / Defer / Cancel. A Clarification report offers Answer / Keep iterating / Narrow scope / Defer / Cancel. Neither approves: a revised design gets a fresh review round
 
 See the `design-review-gate` skill for full details.
 
@@ -535,10 +537,11 @@ Follow the workflow phases exactly as specified.`,
 3. **Risk Decision**: Security or data concerns
 4. **Blocked > 1 Hour**: External dependency needed
 5. **Severity Rule Escalates**: Review cap of 10 rounds hit, or a blocker recurs or is disputed (see `./guides/delivery-scope.md`)
+6. **Clarify Signal**: the severity rule's line 2 fires (the user is needed or the reviews are not converging); this is a stop for the user, not an escalation
 
 ### How to Escalate
 
-**Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), still mark the task waiting (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), then post the Review Escalation report from the Escalation template in `./guides/delivery-scope.md` instead. Its options are **Revise**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. There is no `@beads approve` for an escalated review gate: escalation never approves.
+**Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), still mark the task waiting (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), then post the Review Escalation report from the Escalation template in `./guides/delivery-scope.md` instead. Its options are **Revise**, **Clarify the requirement / re-brainstorm**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. A Clarify signal (rule line 2) uses the Clarification report from the Clarify section of the same guide instead: run the misunderstanding analysis first, then wait for the user's answer. "Keep going" never defaults a `needs_user` question. There is no `@beads approve` for an escalated review gate: escalation never approves, and a Clarification never approves either.
 
 For triggers 1-4:
 
@@ -654,7 +657,7 @@ See `commands/prime.md` for the exact `jq` filters. `/prime` reports the relevan
 
 ### Context Recovery
 
-After compaction or in a new session with an active plan: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge.
+After compaction or in a new session with an active plan: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge. Also check `.beads/context/review-history/` for a non-closed file: it is an interrupted review gate. Resume that gate at its next round, and if its `status` is `clarify-pending`, re-ask the pending questions instead of iterating.
 
 ### After Completing Work
 

@@ -98,14 +98,15 @@ assert_in "guide: ordered iteration rule" "$G" \
   'SAFETY_CAP = 10' \
   'file every minor/nit finding as a follow-up' \
   '1. no blocker: yes findings            → PASS, advance' \
-  '2. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal' \
-  '3. the same critical/major finding recurs after a fix attempt for it,' \
+  '2. a Clarify signal (C1–C4) fires' \
+  '3. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal' \
+  '4. the same critical/major finding recurs after a fix attempt for it,' \
   'or two reviewers rate the same finding blocker vs. non-blocker   → escalate' \
-  '4. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers' \
   '5. an overengineering signal is present → restate the DoD and re-classify each blocker against the policy;' \
   'any still names a credible scenario → escalate with a recommendation;' \
   'otherwise downgrade them to follow-ups and advance' \
-  '6. otherwise                           → fix blockers, re-validate, FRESH review' \
+  '6. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers' \
+  '7. otherwise                           → fix blockers, re-validate, FRESH review' \
   '10 rounds'
 assert_in "guide: single-reviewer note (per work unit)" "$G" \
   'Single-reviewer gates' \
@@ -120,7 +121,7 @@ assert_in "guide: 'this round fixed', round counting, re-validate notes" "$G" \
   'Team Mode' \
   '"Re-validate"' \
   'running VALIDATE again'
-# Rule line 3 deliberately narrows issue #54's "reviewers disagree on severity" to
+# Rule line 4 deliberately narrows issue #54's "reviewers disagree on severity" to
 # disagreement that changes blocker; the guide must say why.
 assert_in "guide: severity-disagreement note (only a blocker split escalates)" "$G" \
   '**Severity disagreement.**' \
@@ -136,7 +137,7 @@ assert_in "guide: follow-up rule" "$G" \
 assert_in "guide: escalation template" "$G" \
   'Critical' 'Major' 'Minor' 'Nit' \
   'Round history' \
-  '**Recommendation**: <revise|narrow scope|defer|cancel> — <reason'
+  '**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason'
 
 # DoD 1.2: mirrors exist and sync check passes
 MIRRORS=(
@@ -178,11 +179,11 @@ for f in "${INSTRUCTION_FILES[@]}"; do
     templates/*) assert_in "$f: says the guide lives in the metaswarm plugin" "$S" 'metaswarm plugin' ;;
   esac
   # The inline bullets are read in order, so they must follow the guide's rule order:
-  # PASS (1), escalate (2-3), iterate (4), stop and advance (5).
-  order="$(grep -nE '^- \*\*(No `blocker: yes` findings|Escalate to the human|Iterate|Overengineering signal)\*\*' <<<"$S" | sed -E 's/^[0-9]+:- \*\*([A-Za-z]+).*/\1/' | tr '\n' ' ')"
-  if [ "$order" = "No Escalate Iterate Overengineering " ]; then pass "$f: inline bullets follow the guide's rule order"
+  # No blockers (1), Clarify (2), Escalate (3-4), Overengineering (5), Iterate (6-7).
+  order="$(grep -nE '^- \*\*(No `blocker: yes` findings|Clarify|Escalate to the human|Iterate|Overengineering signal)\*\*' <<<"$S" | sed -E 's/^[0-9]+:- \*\*([A-Za-z]+).*/\1/' | tr '\n' ' ')"
+  if [ "$order" = "No Clarify Escalate Overengineering Iterate " ]; then pass "$f: inline bullets follow the guide's rule order"
   else fail "$f: inline bullets follow the guide's rule order (got: $order)"; fi
-  # The copied conditions match the guide: blocker-vs-non-blocker disagreement (line 3)
+  # The copied conditions match the guide: blocker-vs-non-blocker disagreement (line 4)
   # and line 5's escalate-or-downgrade outcome.
   assert_in "$f: inline escalate/overengineering conditions match the guide" "$S" \
     'rate the same finding blocker vs. non-blocker' 'escalate if any still names a credible scenario'
@@ -350,28 +351,29 @@ between() {
 RULE_LINES=(
   'file every minor/nit finding as a follow-up'
   '1. no blocker: yes findings            → PASS, advance'
-  '2. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal'
-  '3. the same critical/major finding recurs after a fix attempt for it,'
+  '2. a Clarify signal (C1–C4) fires      → stop: misunderstanding analysis, Clarification report, wait for the user'
+  '3. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal'
+  '4. the same critical/major finding recurs after a fix attempt for it,'
   'or two reviewers rate the same finding blocker vs. non-blocker   → escalate'
-  '4. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers'
   '5. an overengineering signal is present → restate the DoD and re-classify each blocker against the policy;'
   'any still names a credible scenario → escalate with a recommendation;'
   'otherwise downgrade them to follow-ups and advance'
-  '6. otherwise                           → fix blockers, re-validate, FRESH review'
+  '6. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers'
+  '7. otherwise                           → fix blockers, re-validate, FRESH review'
 )
-RECOMMENDATION='**Recommendation**: <revise|narrow scope|defer|cancel> — <reason from the rule>'
+RECOMMENDATION='**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason from the rule>'
 
 for g in "${GATES[@]}"; do
   T="$(readf "$g")"
   # DoD 3.1: the ordered rule, the cap, the overengineering check, the guide reference
-  assert_in "$g: repeats the ordered decision lines 1-6" "$T" "${RULE_LINES[@]}"
+  assert_in "$g: repeats the ordered decision lines 1-7" "$T" "${RULE_LINES[@]}"
   order_ok=1; prev=0
-  for n in '1. no blocker: yes' '2. round >= 10' '3. the same critical/major' '4. this round fixed' '5. an overengineering signal' '6. otherwise'; do
+  for n in '1. no blocker: yes' '2. a Clarify signal' '3. round >= 10' '4. the same critical/major' '5. an overengineering signal' '6. this round fixed' '7. otherwise'; do
     ln="$(grep -nF -- "$n" "$REPO_ROOT/$g" | head -1 | cut -d: -f1 || true)"
     if [ -z "$ln" ] || [ "$ln" -le "$prev" ]; then order_ok=0; break; fi
     prev="$ln"
   done
-  [ "$order_ok" -eq 1 ] && pass "$g: decision lines appear in order 1-6" || fail "$g: decision lines appear in order 1-6"
+  [ "$order_ok" -eq 1 ] && pass "$g: decision lines appear in order 1-7" || fail "$g: decision lines appear in order 1-7"
   assert_in "$g: 10-round cap, overengineering check, guide reference" "$T" \
     'SAFETY_CAP' '10 rounds' 'overengineering signal' 'restate the DoD' '`./guides/delivery-scope.md`'
   # DoD 3.3: escalation template grouped by severity with round history and recommendation
@@ -562,7 +564,7 @@ done
 # ---------------------------------------------------------------------------
 echo "PR #57 review fixes"
 
-# Rule line 3 needs finding history across compaction: execution state keeps open
+# Rule line 4 (recurring) needs finding history across compaction: execution state keeps open
 # findings and fix attempts for the orchestrator only.
 OE="$REPO_ROOT/skills/orchestrated-execution/SKILL.md"
 STATE="$(awk '/cat > .beads\/context\/execution-state.md/{on=1} on{print} on&&/^STATE_EOF$/{exit}' "$OE")"
@@ -570,7 +572,7 @@ assert_in "orchestrated-execution: execution state records open findings and fix
   '## Open Findings' 'Description' 'Evidence' 'Severity' 'Protects' 'Fix attempts' 'never passed to reviewers'
 RECOVERY="$(section "$OE" '^### Context Recovery Protocol')"
 assert_in "orchestrated-execution: recovery reloads open findings for the orchestrator only" "$RECOVERY" \
-  'Open Findings' 'rule line 3' 'never pass them to a fresh reviewer' \
+  'Open Findings' 'rule line 4' 'never pass them to a fresh reviewer' \
   'match each fresh finding by its title/description and protects' \
   'use evidence only as a secondary signal'
 assert_not_in "orchestrated-execution: Open Findings example avoids line-number evidence" "$STATE" '<file:line evidence>'
@@ -651,7 +653,7 @@ for a in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md;
   assert_in "$a: VALIDATE gets 3 attempts; review follows the severity rule" "$RP" \
     'VALIDATE failures (tests, coverage, lint, typecheck) get up to 3 attempts per work unit' \
     'Review FAILs follow severity-gated iteration instead (cap 10 rounds' \
-    'After 3 VALIDATE failures, or when the severity rule escalates'
+    'After 3 VALIDATE failures, or when the severity rule says escalate'
 done
 
 echo ""
@@ -822,7 +824,7 @@ assert_in "$OE_R: recovery step c reloads and matches on title/description and p
   'match each fresh finding by its title/description and protects' \
   'use evidence only as a secondary signal' \
   'A saved finding without a title (written before this change) falls back to description plus protects' \
-  'rule line 3' 'never pass them to a fresh reviewer' 'legacy `Retries` column'
+  'rule line 4' 'never pass them to a fresh reviewer' 'legacy `Retries` column'
 
 # DoD 4.5: render, escalation and follow-up lines use <title> (and <description> on critical/major)
 assert_in "$OE_R: escalation lines use <title>/<description>" "$(readf "$OE_R")" \
@@ -865,7 +867,7 @@ GM="$(readf "$GEMINI_A")"
 # DoD 5.1: codex footer asks for title/description, JSON keys include both, explanation gone
 assert_in "$CODEX_A: footer asks for title and description" "$CX" "${TITLE_DESC[@]}"
 assert_in "$CODEX_A: JSON keys list carries title and description first" "$CX" \
-  '(array of objects with keys "title", "description", "severity", "protects", "evidence", "blocker")'
+  '(array of objects with keys "title", "description", "severity", "protects", "evidence", "blocker", "theme", plus "needs_user", "origin" and "assumption" on blockers)'
 assert_not_in "$CODEX_A: no explanation field" "$CX" '"explanation"' 'explanation:'
 CX_FIELDS="$(grep -E '^   - (title|description|severity|protects|evidence|blocker):' <<<"$CX" | head -2 | sed -E 's/^   - //' || true)"
 assert_in "$CODEX_A: title and description are the first two fields" "$CX_FIELDS" "${TITLE_DESC[@]}"
@@ -940,6 +942,8 @@ echo "Issue #68: escalation never approves; no Override with open blockers"
 # A gate is approved only when a review round has no `blocker: yes` finding (or via rule line 5).
 # Escalating to the human never approves: there is no option that advances with open blockers.
 ESC_OPTIONS=('**Revise**' '**Narrow scope**' '**Defer**' '**Cancel**')
+# The canonical guide's template also offers the fifth option and its recommendation enum (issue #103).
+GUIDE_ESC_OPTIONS=("${ESC_OPTIONS[@]}" '**Clarify the requirement / re-brainstorm**' '<revise|clarify|narrow scope|defer|cancel>')
 for f in guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-scope.md \
          skills/plan-review-gate/guides/delivery-scope.md skills/design-review-gate/guides/delivery-scope.md \
          skills/start/guides/delivery-scope.md skills/external-tools/guides/delivery-scope.md; do
@@ -947,10 +951,10 @@ for f in guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-
   assert_in "$f: states escalation never approves" "$T" \
     '**Escalation never approves.**' 'fresh review round' 'no option that advances with open blockers'
   assert_in "$f: escalation template lists the standard options" "$(section "$REPO_ROOT/$f" '^## Escalation template')" \
-    "${ESC_OPTIONS[@]}"
+    "${GUIDE_ESC_OPTIONS[@]}"
 done
 for f in skills/plan-review-gate/SKILL.md skills/design-review-gate/SKILL.md skills/orchestrated-execution/SKILL.md; do
-  assert_in "$f: escalation Options are the standard four" "$(section "$REPO_ROOT/$f" '^### Options')" "${ESC_OPTIONS[@]}"
+  assert_in "$f: escalation Options are the standard five" "$(section "$REPO_ROOT/$f" '^### Options')" "${ESC_OPTIONS[@]}" '**Clarify the requirement / re-brainstorm**'
 done
 for f in skills/plan-review-gate/SKILL.md skills/design-review-gate/SKILL.md commands/review-design.md \
          .claude/commands/review-design.md skills/brainstorming-extension/SKILL.md skills/start/SKILL.md \

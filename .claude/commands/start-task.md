@@ -20,6 +20,7 @@ Before starting any new task:
 
 **Context Recovery Check**:
 
+- [ ] Check for a non-closed file in `.beads/context/review-history/` (even when there is no active plan): it means an interrupted review gate. If its `status` is `clarify-pending`, re-ask the pending questions instead of iterating; if the helper's result for its last round is an escalation, re-send the escalation report and wait for the user's choice; otherwise resume it at its next round
 - [ ] Check if `.beads/plans/active-plan.md` exists with `status: in-progress`
 - [ ] If YES: An interrupted execution exists. Ask user: "There's an active plan from a previous session. Resume it or start fresh?"
   - Resume → if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge; then pick up where execution stopped
@@ -117,7 +118,7 @@ If the issue lacks DoD items or clear scope, ask the user to clarify before proc
 
 **If the problem is unclear:**
 
-- Route to `superpowers:brainstorming` first to refine the idea into a design
+- Route to `superpowers:brainstorming` first to refine the idea into a design, and load `metaswarm:brainstorming-extension` at the start of brainstorming (not only after the commit) for its assumption ledger and Common misreadings checklist, which apply to every brainstorming session regardless of size
 - **Design Review Gate (project-sized designs only)**: When brainstorming writes and commits a project-sized design doc (see the metaswarm plugin's `guides/workflow-enforcement.md`), you MUST:
   1. STOP — do NOT proceed directly to `writing-plans` or implementation
   2. Run the Design Review Gate (`/review-design` or invoke the `design-review-gate` skill)

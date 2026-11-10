@@ -312,11 +312,15 @@ PROMPT_TEMPLATE
    - protects: the credible user scenario, explicit requirement or DoD item the finding protects (required for critical/major)
    - evidence: file:line reference(s), or expected-vs-found
    - blocker: yes | no (yes only if severity is critical or major AND protects is non-empty)
+   - theme: <short label> (every finding)
+   - needs_user: yes | no (blockers only: yes only if just the user can answer it)
+   - origin: implementation | requirement | assumption (blockers only)
+   - assumption: <ledger id such as A3, or a quoted decision> (when origin is assumption)
    A critical or major finding without protects is advisory: report it with blocker: no.
 3. At the end, provide an overall verdict: PASS or FAIL.
    - FAIL only if at least one finding has blocker: yes.
    - Otherwise PASS, including when there are minor, nit or advisory findings.
-4. Output your review as structured JSON with keys: "verdict", "findings" (array of objects with keys "title", "description", "severity", "protects", "evidence", "blocker"), "summary".
+4. Output your review as structured JSON with keys: "verdict", "findings" (array of objects with keys "title", "description", "severity", "protects", "evidence", "blocker", "theme", plus "needs_user", "origin" and "assumption" on blockers), "summary".
 PROMPT_FOOTER
 )"
 
