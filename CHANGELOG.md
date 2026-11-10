@@ -16,6 +16,15 @@
 - **Misreadings are learned per project** (#103). A confirmed misunderstanding is stored in the project's knowledge base as a gotcha tagged `misunderstanding`, with an opt-in upstream issue.
 - **Review history is recovered on resume** (#103). `/prime`, `/start-task`, `/start` and `/handoff` read `.beads/context/review-history/` so a clarify-pending gate re-asks its questions after compaction or in a new session, and the handoff names the open history files.
 
+### Fixed
+
+- **Reviewers get their criteria even when the orchestrator paraphrases the prompt** (#105). Orchestrators often summarise the gate templates, or send "read this brief and follow it exactly", and reviewers then skipped their rubric. In one session only 1 of 73 design reviewers opened theirs.
+  - `design-reviewer` now carries every role's Review Criteria checklist and fills in a `### Criteria check` table, one row per item.
+  - `plan-reviewer` carries the adversarial plan rubric's Review Categories.
+  - All three reviewer types put a `Criteria applied:` line right after the verdict heading, naming the rubric they applied. A review without it is re-requested once, then accepted with a follow-up, so it never blocks a gate.
+  - A test fails when an embedded checklist drifts from its source.
+  - `evals/reviewer-rubric/` holds the eval behind the change. It runs by hand, never in CI. With planted defects, the missing test plan went from 0/3 to 3/3 caught, the missing API contract from 0/3 to 3/3, and the `any` type rated as the rubric requires from 0/3 to 3/3.
+
 ### Changed
 
 - **The overengineering check now comes before the "two or more reviewers, so iterate" line** (#103). The rule is: pass, clarify, cap, recurring or disputed, overengineering, then iterate (line 6 for a fixed critical/major finding or two or more reviewers, line 7 otherwise). Before, a round with blockers from two or more reviewers iterated before the overengineering check could run. This is a behaviour change: a round flagged `overengineering` now gets the check first.
@@ -27,6 +36,8 @@
 1. Replace "Delivery Scope & Review Iteration": the new bullet order, with Clarify after the clean pass.
 2. Add the new "During Brainstorming" section: it loads the brainstorming extension at the start of every session.
 3. CLAUDE.md only: replace the Context Recovery line, which now names the review history and `clarify-pending`.
+
+Projects that generated phase agents (`.claude/agents/metaswarm-*.md`, from `/setup` or `metaswarm-agents.sh generate`) must run `/update`, or `metaswarm-agents.sh generate`, to pick up the reviewer criteria and the `Criteria applied:` receipt (#105). Role-type resolution uses those local copies first. Until they are regenerated, each review is re-requested once for the missing receipt. `metaswarm-agents.sh check` reports the copies as stale.
 
 ## 0.15.0
 
