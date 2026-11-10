@@ -22,6 +22,12 @@ The adversarial-reviewer performs thorough internal code review before changes a
 
 ---
 
+## Criteria receipt
+
+Put one line directly after the verdict heading, as the first line of the body: `Criteria applied: <role or mode> — <the criteria sections and the rubric or persona file you applied>`. It names the rubric you actually applied, not a default. If a rubric or persona file you apply is not in this file, read it first. A review without this line is re-requested once.
+
+In Collaborative mode the receipt names `code-review-rubric`; in Adversarial mode it names `adversarial-review-rubric`. When the spawn prompt names a different rubric (a security audit, for example), it names that one.
+
 ## Operating Modes
 
 The adversarial-reviewer operates in one of two modes, determined by the orchestrator at spawn time:

@@ -99,6 +99,30 @@ for d in agents skills/start/agents; do
     '### Criteria check' 'one row per checklist item' 'PASS / FAIL / N/A' 'one line of evidence'
 done
 
+echo "Criteria receipt (fix 3)"
+sect() { awk -v h="$1" '$0 == h { on = 1; next } on && /^## / { exit } on { print }' "$2"; }
+for d in agents skills/start/agents; do
+  for a in design-reviewer plan-reviewer adversarial-reviewer; do
+    RS="$(sect "## Criteria receipt" "$REPO_ROOT/$d/$a.md")"
+    assert_in "$d/$a: requires the Criteria applied receipt after the verdict heading" "$RS" \
+      '`Criteria applied: ' 'directly after the verdict heading' 'first line of the body' \
+      'read it first' 'the rubric you actually applied' 're-requested'
+  done
+  RS="$(sect "## Criteria receipt" "$REPO_ROOT/$d/adversarial-reviewer.md")"
+  assert_in "$d/adversarial-reviewer: receipt names the rubric per mode" "$RS" \
+    'Collaborative mode' 'code-review-rubric' 'Adversarial mode' 'adversarial-review-rubric' 'names a different rubric'
+  assert_in "$d/design-reviewer: Criteria check table comes right after the receipt" \
+    "$(sect "## Criteria check" "$REPO_ROOT/$d/design-reviewer.md")" 'right after the `Criteria applied:` line'
+done
+GUIDE_RULE="$(grep -F 'Missing criteria receipt' "$REPO_ROOT/guides/delivery-scope.md" || true)"
+assert_in "guide: missing receipt is re-requested once, then accepted as a follow-up" "$GUIDE_RULE" \
+  '`Criteria applied:`' 'any verdict' 're-requested once' 'accepted' 'follow-up' 'never blocks' \
+  'Codex' 'Gemini' 'in-session'
+for g in skills/plan-review-gate/SKILL.md skills/design-review-gate/SKILL.md skills/orchestrated-execution/SKILL.md; do
+  assert_in "$g: malformed-output rule covers a missing receipt" "$(grep -F 'is re-requested once in the contract format' "$REPO_ROOT/$g")" \
+    'without a `Criteria applied:` line' 're-requested once' 'never blocks'
+done
+
 echo "Self-test: drift is detected"
 NEG="$(mktemp -d)"
 cp "$REPO_ROOT/agents/design-reviewer.md" "$NEG/d.md"

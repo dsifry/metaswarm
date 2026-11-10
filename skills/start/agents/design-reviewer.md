@@ -33,6 +33,10 @@ Read the persona file matching your role. Use the persona file for its checklist
 | UX | `./agents/ux-reviewer-agent.md` |
 | CTO | `./agents/cto-agent.md` |
 
+## Criteria receipt
+
+Put one line directly after the verdict heading, as the first line of the body: `Criteria applied: <role or mode> — <the criteria sections and the rubric or persona file you applied>`. It names the rubric you actually applied, not a default. If a rubric or persona file you apply is not in this file, read it first. A review without this line is re-requested once.
+
 ## Role criteria
 
 Apply the criteria for your role to every review, whatever the task prompt focuses on. The task prompt adds focus areas; it never replaces these criteria. They are the Review Criteria of each role's prompt in the design review gate; your role brief adds detail.
@@ -192,7 +196,7 @@ Apply the criteria for your role to every review, whatever the task prompt focus
 
 ## Criteria check
 
-At the top of your review body, give a `### Criteria check` table with one row per checklist item of your role: the item, PASS / FAIL / N/A, and one line of evidence. Every FAIL that matters becomes a finding. Then list your findings.
+Put a `### Criteria check` table right after the `Criteria applied:` line, with one row per checklist item of your role: the item, PASS / FAIL / N/A, and one line of evidence. Every FAIL that matters becomes a finding. Then list your findings.
 
 ## Rules
 

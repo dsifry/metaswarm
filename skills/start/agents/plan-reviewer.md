@@ -32,6 +32,10 @@ You review a drafted implementation plan adversarially. The orchestrator passes 
 
 Follow the adversarial plan review rubric: `./rubrics/plan-review-rubric-adversarial.md`. Verify claims against the actual codebase rather than trusting the plan's description.
 
+## Criteria receipt
+
+Put one line directly after the verdict heading, as the first line of the body: `Criteria applied: <role or mode> — <the criteria sections and the rubric or persona file you applied>`. It names the rubric you actually applied, not a default. If a rubric or persona file you apply is not in this file, read it first. A review without this line is re-requested once.
+
 ## Role criteria
 
 Apply the criteria for your role to every review, whatever the task prompt focuses on. The task prompt adds focus areas; it never replaces these criteria. They are the Review Categories of `./rubrics/plan-review-rubric-adversarial.md`; apply the category for your role.
