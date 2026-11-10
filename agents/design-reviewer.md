@@ -35,7 +35,7 @@ Read the persona file matching your role. Use the persona file for its checklist
 
 ## Criteria receipt
 
-Put one line directly after the verdict heading, as the first line of the body: `Criteria applied: <role or mode> — <the criteria sections and the rubric or persona file you applied>`. It names the rubric you actually applied, not a default. If a rubric or persona file you apply is not in this file, read it first. A review without this line is re-requested once.
+Put one line directly after the verdict heading, as the first line of the body: `Criteria applied: <role or mode> — <the criteria sections and the rubric or persona file you applied>`. It names the rubric you actually applied, not a default. If a rubric or persona file you apply is not in this file, read it first. A review without this line is re-requested once. When the task asks for JSON, put the receipt in the `criteria_applied` field instead of a line.
 
 ## Role criteria
 
@@ -196,7 +196,7 @@ Apply the criteria for your role to every review, whatever the task prompt focus
 
 ## Criteria check
 
-Put a `### Criteria check` table right after the `Criteria applied:` line, with one row per checklist item of your role: the item, PASS / FAIL / N/A, and one line of evidence. Every FAIL that matters becomes a finding. Then list your findings.
+Put a `### Criteria check` table right after the `Criteria applied:` line, with one row per checklist item of your role: the item, PASS / FAIL / N/A, and one line of evidence. Every FAIL that matters becomes a finding. Then list your findings. When the task asks for JSON, give the table as the `criteria_check` array instead.
 
 ## Rules
 

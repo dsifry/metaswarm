@@ -60,7 +60,7 @@ Every review finding carries six core fields (the signal fields below are added 
   - "BLOCKING if …" checks produce critical or major findings. They block only with `protects`.
   - "WARNING" checks produce minor findings.
 - **Malformed or legacy output.** If a review's findings lack the contract fields (for example a FAIL in the old BLOCKING/WARNING shape, an external CLI that ignores the format, or a finding missing `title` or `description`, such as old-format output with a Codex `explanation` key and no title), the orchestrator re-requests the review once in the contract format, escalates with the raw output if it is still malformed, and never treats such a FAIL as PASS.
-- **Missing criteria receipt.** A review of any verdict without a `Criteria applied:` line after its verdict heading is re-requested once. If it is still missing, the review is accepted as it is, and the gap is noted in the round report and becomes a follow-up: a missing receipt never blocks a gate. External CLI reviews (the Codex and Gemini adapters, which put the rubric in the prompt) and in-session reviews on hosts without subagents (Gemini) are exempt.
+- **Missing criteria receipt.** A review of any verdict without a `Criteria applied:` line after its verdict heading (or, for a JSON reply, a `criteria_applied` field) is re-requested once. If it is still missing, the review is accepted as it is, and the gap is noted in the round report and becomes a follow-up: a missing receipt never blocks a gate. External CLI reviews (the Codex and Gemini adapters, which put the rubric in the prompt) and in-session reviews on hosts without subagents (Gemini) are exempt.
 
 ### Signal fields
 

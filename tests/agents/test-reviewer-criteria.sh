@@ -123,6 +123,21 @@ for g in skills/plan-review-gate/SKILL.md skills/design-review-gate/SKILL.md ski
     'without a `Criteria applied:` line' 're-requested once' 'never blocks'
 done
 
+echo "JSON replies carry the receipt and the criteria check (design gate)"
+IFACE="$(awk '/^interface ReviewResult/ { on = 1 } on { print } on && /^}/ { exit }' "$DRG")"
+assert_in "$DRG: ReviewResult has criteria_applied and criteria_check" "$IFACE" \
+  'criteria_applied: string' 'criteria_check: { item: string; result: "PASS" | "FAIL" | "N/A"; evidence: string }[]'
+n="$(grep -c '"criteria_applied": "<role> — <criteria sections and rubric or persona file applied>",' "$DRG" || true)"
+[ "$n" -eq 6 ] && pass "$DRG: all 6 role JSON examples carry criteria_applied" || fail "$DRG: $n of 6 role JSON examples carry criteria_applied"
+n="$(grep -c '"criteria_check": \[{ "item": "<checklist item>", "result": "PASS|FAIL|N/A", "evidence": "<one line>" }\],' "$DRG" || true)"
+[ "$n" -eq 6 ] && pass "$DRG: all 6 role JSON examples carry criteria_check" || fail "$DRG: $n of 6 role JSON examples carry criteria_check"
+for d in agents skills/start/agents; do
+  assert_in "$d/design-reviewer: a JSON reply carries the receipt and table as fields" \
+    "$(sect "## Criteria receipt" "$REPO_ROOT/$d/design-reviewer.md")$(sect "## Criteria check" "$REPO_ROOT/$d/design-reviewer.md")" \
+    'When the task asks for JSON' '`criteria_applied`' '`criteria_check`'
+done
+assert_in "guide: a JSON reply's criteria_applied field counts as the receipt" "$GUIDE_RULE" '`criteria_applied` field'
+
 echo "Self-test: drift is detected"
 NEG="$(mktemp -d)"
 cp "$REPO_ROOT/agents/design-reviewer.md" "$NEG/d.md"
