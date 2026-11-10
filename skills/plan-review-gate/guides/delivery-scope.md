@@ -158,7 +158,7 @@ The orchestrator keeps the round history and writes it after every round, one fi
 `lib/review-rule.js` applies the rule to a history file, so the orchestrator does not do the signal arithmetic by hand:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/lib/review-rule.js" <history.json>
+RR="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh 2>/dev/null)")")}/lib/review-rule.js"; [ -f "$RR" ] || RR=lib/review-rule.js; node "$RR" <history.json>
 ```
 
 It prints `{line, action, signals, capHit}` and exits 0. `signals` is a list of `{id, detail}`. It computes PASS (line 1), clarify (line 2, from C1–C4), the cap (line 3) and the iterate lines (6 and 7). Recurring or disputed (line 4) and overengineering (line 5) need judgement, so they arrive as the per-round booleans. A `closed` file returns `action: closed` with no rule evaluation, and `clarify-pending` returns `action: re-ask` with `line` 2 and the current signals. `capHit` is true when the round is 10 or later, whichever line wins.
@@ -185,7 +185,7 @@ The helper exits 2 on bad input:
 
 Omit a field you do not know rather than writing `null`: `null` fails validation for the validated fields, and only `mergedInto` and `pendingClarify` accept it. On exit 2, fix the history file and run the helper again. Apply the rule by hand only if the helper cannot run.
 
-This guide's rule block is authoritative and the helper implements it; a test compares the guide's rule block with the helper's exported `RULE_LINES`. A disagreement is a bug to fix, not a tie for the orchestrator to break. If the helper path does not resolve or Node is unavailable (a Codex symlink install has no `lib/`), the orchestrator applies the rule by hand.
+This guide's rule block is authoritative and the helper implements it; a test compares the guide's rule block with the helper's exported `RULE_LINES`. A disagreement is a bug to fix, not a tie for the orchestrator to break. The command takes the plugin root from `CLAUDE_PLUGIN_ROOT` if it is set, otherwise from `metaswarm-agents.sh` on PATH (the plugin `bin/`), and falls back to `lib/review-rule.js` in the current repo, for example when developing metaswarm itself. If neither file exists or Node is unavailable (a Codex symlink install has no `lib/`), the orchestrator applies the rule by hand.
 
 ## Follow-ups
 

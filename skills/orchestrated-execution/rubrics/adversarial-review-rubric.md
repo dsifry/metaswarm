@@ -44,6 +44,17 @@ The policy, the finding contract and the iteration rule live in `guides/delivery
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
 ```
 
+Signal fields (see "Signal fields" in the guide) are added to the six core fields. Every finding carries `theme`; each `blocker: yes` finding also carries `needs_user`, `origin` and, when the origin is an assumption, `assumption`:
+
+```text
+- theme: <short label>       # on every finding; reuse an earlier theme label when one fits
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- origin: implementation | requirement | assumption   # blockers only
+- assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
+```
+
+Do not mark a question `needs_user` when the design's Confirmed section already answers it.
+
 - **`protects:` is required for critical and major findings.** It names the credible user scenario, explicit requirement or DoD item the finding protects.
 - **Blocker definition.** A finding is a blocker (`blocker: yes`) only if its severity is critical or major AND `protects` is non-empty. Minor and nit findings are never blockers.
 - **Unjustified findings are advisory.** A critical or major finding that cannot name what it protects is advisory, not a blocker. It becomes a follow-up and does not cause FAIL.
@@ -79,6 +90,9 @@ Every finding — whether PASS or FAIL — requires **cited evidence**. Assertio
 - protects: DoD #3 "Rate limiting returns 429 after 10 requests per minute"
 - evidence: `src/middleware/rate-limit.ts:12` — expected a 10 requests/minute threshold, found `const MAX_REQUESTS = 100`; no test verifies the 10-request threshold
 - blocker: yes
+- theme: rate limiting
+- needs_user: no
+- origin: implementation
 ```
 
 ### Invalid Evidence (will be rejected)
@@ -183,18 +197,25 @@ FAIL only if at least one finding below has `blocker: yes`.
    - protects: DoD #2 "<item text>"
    - evidence: `file:line` — expected <X>, found <Y>
    - blocker: yes
+   - theme: <short label>
+   - needs_user: no
+   - origin: implementation
 2. - title: `any` type introduced
    - description: <1-3 sentences: what is wrong and why it matters>
    - severity: major
    - protects: <explicit requirement, e.g. "TypeScript strict mode, no `any` types">
    - evidence: `src/services/foo.ts:45` — `const data: any = ...`
    - blocker: yes
+   - theme: <short label>
+   - needs_user: no
+   - origin: implementation
 3. - title: <minor concern, ≤ ~80 chars>
    - description: <1-3 sentences: what is wrong and why it matters>
    - severity: minor
    - protects: —
    - evidence: `file:line`
    - blocker: no
+   - theme: <short label>
 
 ### Files Reviewed
 

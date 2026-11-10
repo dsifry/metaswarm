@@ -3,6 +3,7 @@
 # Issue #103: Clarify rule, misunderstanding analysis, signal fields, round history.
 # Each work unit appends the files it changes to the stale-reference list.
 # WU2: guides/delivery-scope.md and its mirrors.
+# WU3: the three gates, rubrics, reviewer agents and external-tool adapters.
 
 set -euo pipefail
 
@@ -267,7 +268,7 @@ assert_not_in "guide: no stale 'four options'" "$ET" 'four options'
 # ---------------------------------------------------------------------------
 echo "Stale rule-line references"
 # ---------------------------------------------------------------------------
-# Files scanned (.md only). WU3 adds the gates, rubrics and agents; WU4 the instruction files.
+# Files scanned (.md only). WU3 added the gates, rubrics and agents; WU4 adds the instruction files.
 STALE_FILES=(
   guides/delivery-scope.md
   skills/orchestrated-execution/guides/delivery-scope.md
@@ -275,6 +276,32 @@ STALE_FILES=(
   skills/design-review-gate/guides/delivery-scope.md
   skills/start/guides/delivery-scope.md
   skills/external-tools/guides/delivery-scope.md
+  skills/orchestrated-execution/SKILL.md
+  skills/plan-review-gate/SKILL.md
+  skills/design-review-gate/SKILL.md
+  rubrics/adversarial-review-rubric.md
+  rubrics/plan-review-rubric-adversarial.md
+  rubrics/external-tool-review-rubric.md
+  rubrics/code-review-rubric.md
+  rubrics/ux-review-rubric.md
+  skills/orchestrated-execution/rubrics/adversarial-review-rubric.md
+  skills/plan-review-gate/rubrics/plan-review-rubric-adversarial.md
+  skills/external-tools/rubrics/external-tool-review-rubric.md
+  skills/design-review-gate/rubrics/ux-review-rubric.md
+  skills/start/rubrics/adversarial-review-rubric.md
+  skills/start/rubrics/plan-review-rubric-adversarial.md
+  skills/start/rubrics/code-review-rubric.md
+  skills/start/rubrics/ux-review-rubric.md
+  agents/adversarial-reviewer.md
+  agents/plan-reviewer.md
+  agents/design-reviewer.md
+  agents/ux-reviewer-agent.md
+  agents/issue-orchestrator.md
+  skills/start/agents/adversarial-reviewer.md
+  skills/start/agents/plan-reviewer.md
+  skills/start/agents/design-reviewer.md
+  skills/start/agents/ux-reviewer-agent.md
+  skills/start/agents/issue-orchestrator.md
 )
 # keyword (ERE, case-insensitive) that must appear on a line naming rule line N
 kw() {
@@ -425,6 +452,246 @@ printf '%s\n' 'Only disagreement that changes blocker escalates (rule line 4).' 
   || fail "self-test: valid prose escalation references pass"
 [ -z "$(escalate_row_problems "$FIX/valid.md")" ] && pass "self-test: valid escalate rows pass" \
   || fail "self-test: valid escalate rows pass"
+
+# ---------------------------------------------------------------------------
+echo "WU3: gates carry the seven-line rule, history, helper and Clarify routing"
+# ---------------------------------------------------------------------------
+readf() { [ -f "$REPO_ROOT/$1" ] && cat "$REPO_ROOT/$1" || true; }
+OE=skills/orchestrated-execution/SKILL.md
+PRG=skills/plan-review-gate/SKILL.md
+DRG=skills/design-review-gate/SKILL.md
+GATES=("$OE" "$PRG" "$DRG")
+SIG=('theme: <short label>' 'needs_user: yes | no' 'origin: implementation | requirement | assumption' 'assumption: <ledger id')
+
+# The guide's rule block: the first ```text fence under "## Iteration rule".
+RULE_BLOCK="$(awk '/^## Iteration rule/{h=1} h&&/^```text/{on=1;next} on&&/^```/{exit} on' "$GUIDE")"
+[ "$(wc -l <<<"$RULE_BLOCK")" -ge 10 ] && pass "guide: rule block extracted" || fail "guide: rule block extracted"
+
+# The helper invocation: the one-line `RR=...` command in the guide's helper block.
+HELPER_CMD="$(awk '/^### The helper/{h=1} h&&/^RR=/{print; exit}' "$GUIDE")"
+case "$HELPER_CMD" in
+  *'metaswarm-agents.sh'*'<history.json>'*) pass "guide: helper command resolves the plugin root from metaswarm-agents.sh" ;;
+  *) fail "guide: helper command resolves the plugin root from metaswarm-agents.sh"; HELPER_CMD='RR=missing' ;;
+esac
+assert_not_in "guide: helper command does not rely on empty plugin-root variables alone" "$HELPER_CMD" '${CLAUDE_PLUGIN_ROOT:-$PLUGIN_ROOT}/lib'
+
+# Execute the guide's snippet the way a plugin install runs it: both root variables unset, the plugin bin/ on PATH.
+HFIX="$(mktemp -d)"
+mkdir -p "$HFIX/plugin/bin" "$HFIX/plugin/lib" "$HFIX/work" "$HFIX/work-lib/lib"
+printf '#!/bin/sh\n' > "$HFIX/plugin/bin/metaswarm-agents.sh"; chmod +x "$HFIX/plugin/bin/metaswarm-agents.sh"
+printf 'console.log("PLUGIN " + process.argv[2]);\n' > "$HFIX/plugin/lib/review-rule.js"
+printf 'console.log("LOCAL " + process.argv[2]);\n' > "$HFIX/work-lib/lib/review-rule.js"
+run_helper() { # <cwd> <PATH-prefix or empty>
+  local cmd="${HELPER_CMD//<history.json>/h.json}"
+  (cd "$1" && env -u CLAUDE_PLUGIN_ROOT -u PLUGIN_ROOT PATH="${2:+$2:}/usr/bin:/bin:$(dirname "$(command -v node)")" bash -c "$cmd" 2>&1) || true
+}
+GOT_PLUGIN="$(run_helper "$HFIX/work" "$HFIX/plugin/bin")"
+[ "$GOT_PLUGIN" = "PLUGIN h.json" ] \
+  && pass "helper command resolves lib/review-rule.js next to the plugin bin/ on PATH (variables unset)" \
+  || fail "helper command resolves lib/review-rule.js next to the plugin bin/ on PATH (variables unset): $GOT_PLUGIN"
+GOT_LOCAL="$(run_helper "$HFIX/work-lib" "")"
+[ "$GOT_LOCAL" = "LOCAL h.json" ] \
+  && pass "helper command falls back to lib/review-rule.js in the current repo" \
+  || fail "helper command falls back to lib/review-rule.js in the current repo: $GOT_LOCAL"
+rm -rf "${HFIX:?}"
+
+for g in "${GATES[@]}"; do
+  T="$(readf "$g")"
+  assert_in "$g: carries the same helper command as the guide" "$T" "$HELPER_CMD"
+  assert_in "$g: says how <occurrence> is chosen" "$T" '`<occurrence>` is the next free integer for that gate and slug, starting at 1'
+  assert_in "$g: sets fix_induced from the stored lastFix, then overwrites lastFix" "$T" \
+    'matches the `lastFix` stored before this round' 'overwrite `lastFix`'
+  if [[ "$T" == *"$RULE_BLOCK"* ]]; then pass "$g: carries the guide's rule block verbatim"
+  else fail "$g: carries the guide's rule block verbatim"; fi
+  gate_name="$(basename "$(dirname "$g")")"
+  assert_in "$g: persists the round history" "$T" \
+    ".beads/context/review-history/${gate_name}-" 'status: clarify-pending' '`pendingClarify`' \
+    '`reviewers`' 'stable role names'
+  assert_in "$g: records lastFix, fix_induced, canonicalTheme and mergedInto after each round" "$T" \
+    '`lastFix`' '`fix_induced`' '`canonicalTheme`' '`mergedInto`'
+  assert_in "$g: gives reviewers the canonical theme labels (labels only)" "$T" \
+    'canonical theme labels' 'labels only' 'reuse one when it fits'
+  assert_in "$g: runs the helper and falls back to the rule by hand" "$T" \
+    "$HELPER_CMD" \
+    'apply the rule by hand'
+  assert_in "$g: line 2 routes to the misunderstanding analysis and the Clarification report" "$T" \
+    'misunderstanding analysis' 'Clarification report' './guides/delivery-scope.md#clarify' \
+    'bd label add <task-id> waiting:human' 'never uses the escalation report'
+  assert_not_in "$g: no stale six-line wording" "$T" \
+    'line 2, 3 or 5' 'Severity rule line 6' '<2 cap hit' '| 3 recurring/disputed'
+  assert_in "$g: escalation Rule line is lines 3-5 only" "$T" \
+    '**Rule line**: <3 cap hit | 4 recurring/disputed | 5 overengineering signal>'
+  ESCT="$(awk '/\*\*Rule line\*\*/{on=1} on' <<<"$T")"
+  assert_in "$g: escalation round history has Signals and Themes columns" "$ESCT" 'Signals (C1–C4)' 'Themes'
+done
+
+# Recovery.
+OE_REC="$(section "$REPO_ROOT/$OE" '^### Context Recovery Protocol')"
+assert_in "$OE: recovery reads the history file and re-asks a pending Clarify" "$OE_REC" \
+  '.beads/context/review-history/' 'clarify-pending' '`pendingClarify`' 'do not iterate'
+OE_STATE="$(awk '/cat > .beads\/context\/execution-state.md/{on=1} on{print} on&&/^STATE_EOF$/{exit}' "$REPO_ROOT/$OE")"
+assert_in "$OE: execution-state template points at the active history file" "$OE_STATE" '- Review history:' 'review-history'
+for g in "$PRG" "$DRG"; do
+  REC="$(section "$REPO_ROOT/$g" '^### Recovery')"
+  assert_in "$g: recovery step reloads the history including pendingClarify" "$REC" \
+    '.beads/context/review-history/' 'non-closed' 'stored `artifact` path' \
+    'clarify-pending' '`pendingClarify`' 'do not iterate'
+done
+
+# Escalation trigger lists name Clarify.
+assert_in "$PRG: trigger list at the workflow end names Clarify" "$(section "$REPO_ROOT/$PRG" '^## Workflow')" \
+  'says clarify' 'Clarification report'
+assert_in "$DRG: escalation trigger list names Clarify" "$(section "$REPO_ROOT/$DRG" '^### Escalation')" \
+  'says clarify' 'Clarification report'
+for a in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  assert_in "$a: escalate trigger separates a Clarify stop from an escalation" "$(grep -F '4. **ESCALATE**' "$REPO_ROOT/$a")" \
+    'when the severity rule says escalate' 'when it says clarify, stop for the user with the Clarification report'
+done
+assert_in "$PRG: Phase 4 splits clarify (line 2) from escalate (lines 3, 4 or 5)" "$(section "$REPO_ROOT/$PRG" '^### Phase 4')" \
+  'When the severity rule says clarify (line 2)' 'escalate (lines 3, 4 or 5)'
+assert_in "$DRG: Phase 4 splits clarify (line 2) from escalate (lines 3, 4 or 5)" "$(section "$REPO_ROOT/$DRG" '^### Phase 4')" \
+  'When the severity rule says clarify (line 2)' 'escalate (lines 3, 4 or 5)'
+
+# Combined FAIL / Needs Revision output shows each blocker's theme, needs_user and assumption.
+CF="$(section "$REPO_ROOT/$PRG" '^### Consolidated Gate Output .Any FAIL.')"
+NRV="$(section "$REPO_ROOT/$DRG" '^### Needs Revision')"
+assert_in "$PRG: combined FAIL output shows theme, needs_user and assumption" "$CF" 'theme:' 'needs_user: yes' 'assumption: A'
+assert_in "$DRG: Needs Revision template shows theme, needs_user and assumption" "$NRV" 'theme:' 'needs_user: yes' 'assumption: A'
+
+assert_in "$DRG: Later Rounds names clarify" "$(awk '/^### Later Rounds/{on=1} on&&/^### Escalation/{exit} on' "$REPO_ROOT/$DRG")" 'advance, iterate, clarify or escalate'
+assert_in "$OE: history file is keyed by the plan slug and the work unit" "$(readf "$OE")" \
+  'orchestrated-execution-<plan-slug>-<wu-id>-<occurrence>.json' 'plan-slug' \
+  'orchestrated-execution-<plan-slug>-<wu-id>-*.json'
+assert_not_in "$OE: no history name without the plan slug" "$(readf "$OE")" 'orchestrated-execution-<wu-id>'
+
+# An example block that shows needs_user: yes (or an unconfirmed assumption origin) must decide on rule line 2.
+example_problems() { # <text>: blocker lines vs the Rule decision line
+  local t="$1" decision
+  if grep -qE 'needs_user: yes|origin: assumption' <<<"$t"; then
+    decision="$(grep -F 'Rule decision**:' <<<"$t" | head -1)"
+    grep -qE 'Rule decision\*\*: 2: clarify' <<<"$decision" || echo "needs_user example decides: $decision"
+  fi
+}
+for pair in "$PRG:$CF" "$DRG:$NRV"; do
+  f="${pair%%:*}"; blk="${pair#*:}"
+  [ -z "$(example_problems "$blk")" ] && pass "$f: FAIL example with needs_user decides on rule line 2" \
+    || fail "$f: FAIL example with needs_user decides on rule line 2: $(example_problems "$blk")"
+  assert_in "$f: FAIL example blockers show origin and point to the Clarification report" "$blk" 'origin:' '2: clarify (C1)' 'Clarification report'
+done
+printf '%s\n' '1. [X] **a** — needs_user: yes — origin: assumption' '**Rule decision**: 6: iterate — x' > "$FIX/ex-bad.md"
+printf '%s\n' '1. [X] **a** — needs_user: yes — origin: assumption' '**Rule decision**: 2: clarify (C1) — x' > "$FIX/ex-ok.md"
+[ -n "$(example_problems "$(cat "$FIX/ex-bad.md")")" ] && [ -z "$(example_problems "$(cat "$FIX/ex-ok.md")")" ] \
+  && pass "self-test: needs_user example with a non-2 decision is flagged" || fail "self-test: needs_user example with a non-2 decision is flagged"
+
+# ---------------------------------------------------------------------------
+echo "WU3: escalation templates offer exactly five options and never approve"
+# ---------------------------------------------------------------------------
+# options_of <text>: the numbered options between "### Options" and "**Recommendation**".
+options_of() { awk '/^### Options/{on=1;next} on&&/^\*\*Recommendation\*\*/{exit} on&&/^[0-9]+\. \*\*/' <<<"$1"; }
+names_of() { sed -E 's/^([0-9]+)\. \*\*([^*]+)\*\*.*/\1 \2/' <<<"$1" | tr '\n' '|'; }
+WANT_ESC="1 Revise|2 Narrow scope|3 Defer|4 Cancel|5 Clarify the requirement / re-brainstorm|"
+GUIDE_COPIES=(guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-scope.md
+  skills/plan-review-gate/guides/delivery-scope.md skills/design-review-gate/guides/delivery-scope.md
+  skills/start/guides/delivery-scope.md skills/external-tools/guides/delivery-scope.md)
+for f in "${GUIDE_COPIES[@]}" "${GATES[@]}"; do
+  case "$f" in
+    */SKILL.md) ET_TEXT="$(readf "$f")" ;;
+    *) ET_TEXT="$(section "$REPO_ROOT/$f" '^## Escalation template')" ;;
+  esac
+  OPTS="$(options_of "$ET_TEXT")"
+  got="$(names_of "$OPTS")"
+  [ "$got" = "$WANT_ESC" ] && pass "$f: escalation template lists exactly the five options" \
+                          || fail "$f: escalation template lists exactly the five options (got: $got)"
+  if grep -qiE 'approv|overrid|proceed|accept|advance (with|despite|anyway)|continue anyway' <<<"$OPTS"; then
+    fail "$f: escalation options offer no approve, override or advance option"
+  else
+    pass "$f: escalation options offer no approve, override or advance option"
+  fi
+done
+# Self-test: a sixth, approving option is caught.
+printf '%s\n' '### Options' '1. **Revise** — x' '2. **Narrow scope** — x' '3. **Defer** — x' '4. **Cancel** — x' \
+  '5. **Clarify the requirement / re-brainstorm** — x' '6. **Approve with open blockers** — x' '**Recommendation**: x' > "$FIX/opts-bad.md"
+[ "$(names_of "$(options_of "$(cat "$FIX/opts-bad.md")")")" != "$WANT_ESC" ] && pass "self-test: a sixth approve option is flagged" \
+  || fail "self-test: a sixth approve option is flagged"
+
+# ---------------------------------------------------------------------------
+echo "WU3: reviewer prompts, schemas, rubrics, agents and adapters ask for the signal fields"
+# ---------------------------------------------------------------------------
+# Every "Report every finding with the 6 fields defined in" prompt must list the signal fields within 14 lines.
+prompt_problems() {
+  awk '
+    index($0, "Report every finding with the 6 fields defined in") { n++; seen_t = 0; seen_n = 0; seen_o = 0; seen_a = 0; start = FNR; open = 1 }
+    open && FNR - start <= 14 {
+      if (index($0, "theme: <short label>")) seen_t = 1
+      if (index($0, "needs_user: yes | no")) seen_n = 1
+      if (index($0, "origin: implementation | requirement | assumption")) seen_o = 1
+      if (index($0, "assumption: <ledger id")) seen_a = 1
+    }
+    open && FNR - start == 14 { if (!(seen_t && seen_n && seen_o && seen_a)) printf "[%s:%d] ", FILENAME, start; open = 0 }
+  ' "$1"
+}
+for f in $(cd "$REPO_ROOT" && git grep -lF 'Report every finding with the 6 fields defined in' -- 'skills/*/SKILL.md' 'agents/*.md' 'skills/start/agents/*.md' | grep -v issue-orchestrator); do
+  bad="$(prompt_problems "$REPO_ROOT/$f")"
+  [ -z "$bad" ] && pass "$f: every 6-field prompt also asks for the signal fields" || fail "$f: 6-field prompt lacks signal fields: $bad"
+done
+n="$(grep -cF 'Report every finding with the 6 fields defined in' "$REPO_ROOT/$PRG" || true)"
+[ "$n" -eq 3 ] && pass "$PRG: three reviewer prompts carry the 6-field phrase" || fail "$PRG: three reviewer prompts carry the 6-field phrase (found $n)"
+for p in 'Feasibility Reviewer Prompt' 'Completeness Reviewer Prompt' 'Scope & Alignment Reviewer Prompt'; do
+  P="$(section "$REPO_ROOT/$PRG" "^### $p")"
+  assert_in "$PRG $p: asks for signal fields, theme labels and the Confirmed rule" "$P" "${SIG[@]}" 'Earlier Theme Labels' '${themeLabels}' 'Confirmed section'
+done
+RS="$(awk 'index($0, "**Reviewer spawn template**"){on=1} on&&index($0, "**Phase 3 outcomes:**"){exit} on' "$REPO_ROOT/$OE")"
+assert_in "$OE: reviewer spawn template asks for signal fields and theme labels" "$RS" "${SIG[@]}" 'Earlier Theme Labels' 'Confirmed section'
+PRO="$(section "$REPO_ROOT/$PRG" '^### Per-Reviewer Output')"
+assert_in "$PRG: Per-Reviewer Output lists the signal fields" "$PRO" '   - theme:' '   - needs_user:' '   - origin:' '   - assumption:'
+SFR="$(section "$REPO_ROOT/$DRG" '^### Shared Finding Rules')"
+assert_in "$DRG: shared finding rules ask for signal fields and theme labels" "$SFR" "${SIG[@]}" '${themeLabels}' 'Confirmed section'
+IF="$(awk 'index($0, "interface Finding {"){on=1} on&&index($0, "interface ReviewResult"){exit} on' "$REPO_ROOT/$DRG")"
+assert_in "$DRG: interface Finding carries the signal fields" "$IF" 'theme: string;' 'needs_user?: "yes" | "no";' \
+  'origin?: "implementation" | "requirement" | "assumption";' 'assumption?: string;'
+for key in '"theme": "<short label>"' '"needs_user": "yes|no"' '"origin": "implementation|requirement|assumption"' '"assumption": "<ledger id'; do
+  n="$(grep -cF -- "$key" "$REPO_ROOT/$DRG" || true)"
+  [ "$n" -eq 6 ] && pass "$DRG: 6 persona JSON findings carry $key" || fail "$DRG: 6 persona JSON findings carry $key (found $n)"
+done
+assert_in "$DRG: Phase 2 names the signal fields" "$(readf "$DRG")" 'plus the signal fields'
+
+# Rubrics (with mirrors) and reviewer agents (with twins): signal block in the contract, fields in the output template.
+SIGNAL_DOC=('Signal fields' '`theme`' '`needs_user`' '`origin`' '`assumption`' 'Confirmed section' "${SIG[@]}")
+for r in rubrics/adversarial-review-rubric.md skills/orchestrated-execution/rubrics/adversarial-review-rubric.md skills/start/rubrics/adversarial-review-rubric.md \
+         rubrics/plan-review-rubric-adversarial.md skills/plan-review-gate/rubrics/plan-review-rubric-adversarial.md skills/start/rubrics/plan-review-rubric-adversarial.md \
+         rubrics/external-tool-review-rubric.md skills/external-tools/rubrics/external-tool-review-rubric.md \
+         rubrics/ux-review-rubric.md skills/design-review-gate/rubrics/ux-review-rubric.md skills/start/rubrics/ux-review-rubric.md; do
+  T="$(readf "$r")"
+  assert_in "$r: Finding Contract lists the signal fields" "$T" "${SIGNAL_DOC[@]}"
+  case "$r" in
+    *ux-review-rubric.md)
+      assert_in "$r: JSON output example carries the signal fields" "$(section "$REPO_ROOT/$r" '^## Output Format')" '"theme"' '"needs_user"' '"origin"' '"assumption"' ;;
+    *)
+      assert_in "$r: Output Format template lists the signal fields" "$(section "$REPO_ROOT/$r" '^## Output Format')" '   - theme:' '   - needs_user:' '   - origin:' ;;
+  esac
+done
+for r in rubrics/code-review-rubric.md skills/start/rubrics/code-review-rubric.md; do
+  assert_in "$r: collaborative mapping carries the signal fields" "$(readf "$r")" '`theme`' '`needs_user`' '`origin`'
+done
+for dir in agents skills/start/agents; do
+  for ag in adversarial-reviewer plan-reviewer design-reviewer; do
+    f="$dir/$ag.md"
+    assert_in "$f: Finding Contract lists the signal fields" "$(readf "$f")" "${SIGNAL_DOC[@]}"
+  done
+  assert_in "$dir/adversarial-reviewer.md: Step A5 template lists the signal fields" \
+    "$(section "$REPO_ROOT/$dir/adversarial-reviewer.md" '^### Step A5')" '   - theme:' '   - needs_user:' '   - origin:'
+  assert_in "$dir/ux-reviewer-agent.md: names the signal fields and carries them in the JSON" "$(readf "$dir/ux-reviewer-agent.md")" \
+    '`theme`' '`needs_user`' '"theme"' '"needs_user"' '"origin"' '"assumption"'
+done
+
+# External-tool adapters.
+for a in skills/external-tools/adapters/codex.sh skills/external-tools/adapters/gemini.sh; do
+  assert_in "$a: footer asks for the signal fields" "$(readf "$a")" "${SIG[@]}"
+done
+assert_in "gemini.sh: JSON example carries the signal fields" "$(readf skills/external-tools/adapters/gemini.sh)" \
+  '"theme":' '"needs_user":' '"origin":' '"assumption":'
+assert_in "codex.sh: JSON keys carry the signal fields" "$(readf skills/external-tools/adapters/codex.sh)" \
+  '"theme", plus "needs_user", "origin" and "assumption" on blockers'
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"

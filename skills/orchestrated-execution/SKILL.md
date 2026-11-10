@@ -318,18 +318,27 @@ Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
 - protects: <credible user scenario | explicit requirement | DoD item>   # required for critical/major
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
+- theme: <short label>       # on every finding; reuse an earlier theme label when one fits
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- origin: implementation | requirement | assumption   # blockers only
+- assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
+
+## Earlier Theme Labels
+${themeLabels}
+(Round 1: none. From round 2 on these are the canonical theme labels from earlier rounds, labels only. Reuse one in `theme` when it fits; otherwise use a new short label.)
 
 ## Rules
 - Check EACH DoD item. Cite file:line evidence for PASS or expected-vs-found for FAIL.
 - Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
 - Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.
+- Do not mark `needs_user` when the design's Confirmed section already answers the question. Add `theme` to every finding and the other signal fields to each blocker.
 ```
 
 **Phase 3 outcomes:**
 
 - **PASS** (no `blocker: yes` finding) → proceed to Phase 4; file any minor/nit findings as follow-ups
-- **FAIL** (at least one `blocker: yes` finding) → apply the severity rule in [On FAIL](#on-fail-mandatory-re-review-protocol): iterate (return to Phase 1 with the failure report) or escalate
+- **FAIL** (at least one `blocker: yes` finding) → apply the severity rule in [On FAIL](#on-fail-mandatory-re-review-protocol): iterate (return to Phase 1 with the failure report), clarify (stop and ask the user) or escalate
 
 **Fresh reviewer rule:** On re-review after FAIL, the orchestrator MUST spawn a **new** review subagent (role type `roleType("adversarial-reviewer")`). Never pass previous findings to the new reviewer. Never reuse the same reviewer instance. This prevents anchoring bias and ensures independent verification.
 
@@ -405,21 +414,27 @@ A review FAIL (at least one `blocker: yes` finding) is not retried on a fixed co
 after each review round (round = 1, 2, ...):
   file every minor/nit finding as a follow-up (see Follow-ups)
   1. no blocker: yes findings            → PASS, advance
-  2. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal
-  3. the same critical/major finding recurs after a fix attempt for it,
+  2. a Clarify signal (C1–C4) fires      → stop: misunderstanding analysis, Clarification report, wait for the user
+  3. round >= 10 (SAFETY_CAP)            → escalate; report "cap hit" as an overengineering signal
+  4. the same critical/major finding recurs after a fix attempt for it,
      or two reviewers rate the same finding blocker vs. non-blocker   → escalate
-  4. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers
-                                         → fix blockers, re-validate, FRESH review
   5. an overengineering signal is present → restate the DoD and re-classify each blocker against the policy;
                                            any still names a credible scenario → escalate with a recommendation;
                                            otherwise downgrade them to follow-ups and advance
-  6. otherwise                           → fix blockers, re-validate, FRESH review
+  6. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers
+                                         → fix blockers, re-validate, FRESH review
+  7. otherwise                           → fix blockers, re-validate, FRESH review
 ```
 
 - **Single reviewer.** Phase 3 has one reviewer per work unit, so "≥2 independent reviewers" is false. Reviewers of other work units running in parallel don't count.
 - **Overengineering check (line 5).** Signals include repeated review/fix cycles without a new user-visible risk, tests for states the real storage or API cannot produce, and validation growing faster than the feature. Restate the work unit's DoD, re-classify each open blocker, and escalate only if one still names a credible scenario; otherwise downgrade them to follow-ups and commit.
-- **Malformed output.** A FAIL whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as PASS.
+- **Malformed output.** A FAIL whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as PASS. A blocker that lacks `needs_user` or `origin` gets one re-request too; if they are still missing they are treated as unknown, which triggers nothing.
 - **Follow-ups.** Minor/nit findings never block. When `bd` is available, file each as a BEADS task (`bd create --type task`) linked to the work unit. Otherwise, or if `bd create` fails, list them under a `### Follow-ups` heading in the work unit's report; the PR body carries them (see 8.5).
+- **Clarify (line 2).** A Clarify signal (C1–C4, see [Clarify signals](./guides/delivery-scope.md#clarify-signals)) is a stop, not an escalation. Run the misunderstanding analysis and send the Clarification report from the [Clarify section](./guides/delivery-scope.md#clarify) of the guide, then wait for the user. Mark the BEADS task for this work waiting on the user (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), and set `status: clarify-pending` with `pendingClarify` in the history file. Line 2 never uses the escalation report; the Clarification report's options are in the guide and none of them approves.
+- **Round history.** Keep the round history and write it after every round to `.beads/context/review-history/orchestrated-execution-<slug>-<occurrence>.json` (the format, the `status` lifecycle and `pendingClarify` are in the guide's Round history section). `<occurrence>` is the next free integer for that gate and slug, starting at 1. For this gate the slug is `<plan-slug>-<wu-id>`, so the file is `orchestrated-execution-<plan-slug>-<wu-id>-<occurrence>.json`. `<plan-slug>` is the issue number or a short slug of the title in the `# Plan:` heading of `.beads/plans/active-plan.md` (for example `103`), so different issues do not collide. Store the artifact path (here `.beads/plans/active-plan.md#<wu-id>`) in the file, set `reviewers` to 1, and use stable role names as reviewer labels.
+- **After each round, before the rule.** First set `fix_induced` on each new blocker that matches the `lastFix` stored before this round's review (the changes made since the previous review). Then map each blocker's `theme` to a `canonicalTheme`, and merge duplicate blockers (the same canonical theme and the same defect) by setting `mergedInto` on each duplicate. Run the rule. When you then fix the blockers, overwrite `lastFix` with that fix before the next review.
+- **Themes.** From round 2 on, give each fresh reviewer the earlier canonical theme labels (labels only, never the findings) and ask it to reuse one when it fits.
+- **Helper.** Run the rule with `RR="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh 2>/dev/null)")")}/lib/review-rule.js"; [ -f "$RR" ] || RR=lib/review-rule.js; node "$RR" <history.json>`. It prints `{line, action, signals, capHit}`. Recurring or disputed (line 4) and overengineering (line 5) need your judgement, so set the round's `recurring`, `disputed` and `overengineering` flags first. If the path does not resolve or Node is unavailable, apply the rule by hand. On exit 2, fix the history file and run it again.
 
 When the rule says iterate:
 
@@ -427,17 +442,17 @@ When the rule says iterate:
 2. Re-run Phase 2 (VALIDATE) — ALL quality gates, not just the one that failed
 3. **MANDATORY**: Spawn a NEW adversarial reviewer (role type `roleType("adversarial-reviewer")`, fresh instance, no memory of previous review)
 4. Only COMMIT after the fresh reviewer returns PASS, or rule line 5 downgraded every remaining blocker to a follow-up
-5. Apply the severity rule after every round; ESCALATE to human when it says escalate (at most 10 rounds)
+5. Apply the severity rule after every round; stop and Clarify when it says clarify, and ESCALATE to human when it says escalate (at most 10 rounds)
 6. **Coder model escalation**: after `escalation.coder.after_failures` failed VALIDATE attempts (default 2, read from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default (the `coder` role's `sonnet`).
 
 Track each round visibly: "Review round 1/10", "Review round 2/10", etc.
 
-When the rule says escalate, report:
+When the rule says clarify (line 2), use the Clarification report from the [Clarify section](./guides/delivery-scope.md#clarify) of the guide, not this one. When it says escalate (lines 3, 4 or 5), report:
 
 ```markdown
 ## Review Escalation: Phase 3 ADVERSARIAL REVIEW — WU-<id>
 
-**Rule line**: <2 cap hit | 3 recurring/disputed | 5 overengineering signal>
+**Rule line**: <3 cap hit | 4 recurring/disputed | 5 overengineering signal>
 
 ### Remaining findings
 - **Critical**: <title>: <description> — protects: <...> — evidence: <...>
@@ -446,19 +461,20 @@ When the rule says escalate, report:
 - **Nit**: <title> (follow-up filed)
 
 ### Round history
-| Round | Verdict | Blockers (critical/major) | Fixed this round | Rule decision |
-|-------|---------|---------------------------|------------------|---------------|
-| 1     | FAIL    | 0 / 2                     | —                | 6: iterate    |
-| 2     | FAIL    | 0 / 1                     | 0 / 2            | 4: iterate    |
-| 3     | FAIL    | 0 / 1                     | 0 / 0            | 3: escalate   |
+| Round | Verdict | Blockers (critical/major) | Fixed this round | Signals (C1–C4) | Themes | Rule decision |
+|-------|---------|---------------------------|------------------|-----------------|--------|---------------|
+| 1     | FAIL    | 0 / 2                     | —                | —               | <theme> | 7: iterate    |
+| 2     | FAIL    | 0 / 1                     | 0 / 2            | —               | <theme> | 6: iterate    |
+| 3     | FAIL    | 0 / 1                     | 0 / 0            | —               | <theme> | 4: escalate (recurring) |
 
 ### Options
 1. **Revise** — fix the remaining blockers (or the requirement they protect), then run a fresh review round
 2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
 3. **Defer** — shelve this work for later; nothing advances
 4. **Cancel** — abandon this work
+5. **Clarify the requirement / re-brainstorm** — answer the open questions about the requirement; a new gate occurrence starts
 
-**Recommendation**: <revise|narrow scope|defer|cancel> — <reason from the rule>
+**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason from the rule>
 ```
 
 ### What the Orchestrator MUST NOT Do
@@ -472,8 +488,9 @@ When the rule says escalate, report:
 ### What the Orchestrator MUST Do
 
 - "VALIDATION FAIL: coverage at 87%, threshold is 100%. Returning to IMPLEMENT."
-- "ADVERSARIAL REVIEW FAIL: 2 `blocker: yes` findings. Severity rule line 6: fixing, re-validating, spawning fresh reviewer. Review round 2/10."
-- "Severity rule line 3: the same major finding recurred after a fix attempt for WU-004. Escalating to human with round history and a recommendation."
+- "ADVERSARIAL REVIEW FAIL: 2 `blocker: yes` findings. Severity rule line 7: fixing, re-validating, spawning fresh reviewer. Review round 2/10."
+- "Severity rule line 4: the same major finding recurred after a fix attempt for WU-004. Escalating to human with round history and a recommendation."
+- "Severity rule line 2: a blocker needs the user's answer (C1). Stopping: running the misunderstanding analysis, sending the Clarification report, marking WU-004 waiting on the user."
 - "Review PASS: no `blocker: yes` findings. 1 minor finding filed as a follow-up. Committing."
 - "Fix applied. Re-running validation. Re-running adversarial review with FRESH reviewer."
 
@@ -574,6 +591,7 @@ Approved plans and execution state are persisted to `.beads/` so agents can reco
 | `.beads/plans/active-plan.md` | The adversarially-reviewed, user-approved implementation plan | After plan review gate PASS + user approval |
 | `.beads/context/project-context.md` | Project Context Document (tooling, completed WUs, patterns) | After each Phase 4 COMMIT |
 | `.beads/context/execution-state.md` | Current work unit, phase, VALIDATE attempts, review round | After each phase transition |
+| `.beads/context/review-history/orchestrated-execution-<plan-slug>-<wu-id>-<occurrence>.json` | Review round history for the work unit's Phase 3 (format in `./guides/delivery-scope.md`) | After every review round |
 
 ### Writing the Approved Plan
 
@@ -608,6 +626,7 @@ cat > .beads/context/execution-state.md << 'STATE_EOF'
 - Current phase: <IMPLEMENT|VALIDATE|REVIEW|COMMIT>
 - VALIDATE attempts: <0-3> (consecutive failed VALIDATE runs; resets to 0 on PASS)
 - Review round: <1-10>
+- Review history: <.beads/context/review-history/orchestrated-execution-<plan-slug>-<wu-id>-<occurrence>.json, or none>
 
 ## Work Unit Status
 | WU | Status | Phase | VALIDATE attempts (0-3) | Review rounds (0-10) |
@@ -638,10 +657,11 @@ When the orchestrator detects it has lost context (after compaction or in a new 
 2. Recovery steps:
    a. Read `.beads/plans/active-plan.md` — reload the approved plan
    b. Read `.beads/context/project-context.md` — reload completed work and patterns
-   c. Read `.beads/context/execution-state.md` — find where execution stopped, and reload its Open Findings table (title, description, evidence, severity, protects, fix attempts) so rule line 3 can still detect a recurring blocker — match each fresh finding by its title/description and protects, and use evidence only as a secondary signal, because a fix can move file:line references. A saved finding without a title (written before this change) falls back to description plus protects; this history is for the orchestrator only — never pass them to a fresh reviewer. A state file written before the column split has a single legacy `Retries` column: read that value as VALIDATE attempts, and take the review round from the Current Position `Review round` line
-   d. Run `/prime` (metaswarm knowledge priming) for the current work unit — reload relevant knowledge base facts.
+   c. Read `.beads/context/execution-state.md` — find where execution stopped, and reload its Open Findings table (title, description, evidence, severity, protects, fix attempts) so rule line 4 can still detect a recurring blocker — match each fresh finding by its title/description and protects, and use evidence only as a secondary signal, because a fix can move file:line references. A saved finding without a title (written before this change) falls back to description plus protects; this history is for the orchestrator only — never pass them to a fresh reviewer. A state file written before the column split has a single legacy `Retries` column: read that value as VALIDATE attempts, and take the review round from the Current Position `Review round` line
+   d. Read the review history file named by the `Review history` line (the non-closed `.beads/context/review-history/orchestrated-execution-<plan-slug>-<wu-id>-*.json`; if several are non-closed, use the newest and set the rest to `closed`). If its `status` is `clarify-pending`, re-ask the `pendingClarify` questions with the Clarification report and do not iterate. Otherwise continue at the next round. See the Round history section of `./guides/delivery-scope.md`.
+   e. Run `/prime` (metaswarm knowledge priming) for the current work unit — reload relevant knowledge base facts.
       The full recovery order is: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge.
-   e. Resume from the current work unit and phase
+   f. Resume from the current work unit and phase
 
 3. Announce recovery to user:
    "Recovered execution context from BEADS. Resuming from WU-<id>, Phase <phase>."
