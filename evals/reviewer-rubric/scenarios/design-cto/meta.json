@@ -1,0 +1,8 @@
+{
+  "agent": "metaswarm:design-reviewer",
+  "rubric": "cto-agent",
+  "checks": {
+    "noTestPlan": ["(?i)(test (plan|strateg|spec)|TDD|no tests?\\b|testing (is|section)|untested)"],
+    "vagueSuccess": ["(?i)(measurable|metric|KPI|vague|not measurable|unmeasurable)"]
+  }
+}

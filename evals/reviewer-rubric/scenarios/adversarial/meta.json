@@ -1,0 +1,17 @@
+{
+  "agent": "metaswarm:adversarial-reviewer",
+  "rubric": "adversarial-review-rubric",
+  "checks": {
+    "scope": [
+      "config\\.ts",
+      "(?i)scope"
+    ],
+    "untested": [
+      "(?i)(\\[\\]|empty)",
+      "(?i)(untested|no test|not tested|missing test|without a test|lacks? (a )?test|nothing (in the tests )?(tests|checks))"
+    ],
+    "anyBlocker": [
+      "(?i)title:[^\\n]*`?\\bany\\b`?[^\\n]*\\n(?:(?!title:)[\\s\\S])*?blocker: yes"
+    ]
+  }
+}

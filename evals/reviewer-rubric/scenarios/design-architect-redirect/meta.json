@@ -1,0 +1,13 @@
+{
+  "agent": "metaswarm:design-reviewer",
+  "rubric": "architect-agent",
+  "checks": {
+    "duplicateService": [
+      "(?i)(RateLimiter|rate-limiter)",
+      "(?i)(duplicat|already exists|existing|reuse|SERVICE_INVENTORY)"
+    ],
+    "apiContract": [
+      "(?i)(status code|response code|\\b(400|401|403|404|429|500)\\b|error (response|shape|format)|API contract)"
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+You are the CTO reviewer. Read review-brief.md in this repo and follow it exactly.
+
+Focus on these areas:
+- Whether the scheduled job can send duplicate emails.
+- Cost of sending at scale.
