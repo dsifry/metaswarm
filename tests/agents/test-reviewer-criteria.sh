@@ -97,6 +97,10 @@ for d in agents skills/start/agents; do
   CC="$(awk '$0 == "## Criteria check" { on = 1; next } on && /^## / { exit } on { print }' "$REPO_ROOT/$d/design-reviewer.md")"
   assert_in "$d/design-reviewer: requires a Criteria check table" "$CC" \
     '### Criteria check' 'one row per checklist item' 'PASS / FAIL / N/A' 'one line of evidence'
+  CC="$(awk '$0 == "## Criteria check" { on = 1; next } on && /^## / { exit } on { print }' "$REPO_ROOT/$d/plan-reviewer.md")"
+  assert_in "$d/plan-reviewer: requires a Criteria check table over its category's checks" "$CC" \
+    '### Criteria check' "one row per check in your role's category table" 'PASS / FAIL / N/A' 'one line of evidence' \
+    'right after the `Criteria applied:` line'
 done
 
 echo "Criteria receipt (fix 3)"

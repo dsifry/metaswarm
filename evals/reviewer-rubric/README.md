@@ -74,4 +74,18 @@ What the results show:
 - **The criteria table** stops a single checklist item being skipped under a redirect brief.
 - **Not tested:** fix 2 (mandatory templates on the orchestrator) and a hook. The prompts used here, paraphrases and redirects that name no rubric, are the cases fix 2 would guard against, and the shipped variant handles them.
 
+## Branch validation (2026-11-10)
+
+The branch as shipped, 3 trials per cell (6 where a cell was re-run):
+
+| Scenario | Defect checks | Notes |
+|---|---|---|
+| adversarial | scope 3/3, untested 3/3, `any` blocker 3/3 | The first branch run scored 0/3 on the `any` check. The receipt said "read the rubric if it is not in this file", and the definition summarises the rubric, so reviewers skipped it. The receipt now comes first and says the rubric file's classification tables set severity (re-run 3/3). |
+| design Architect, plain / redirect | duplicate service 3/3 / 3/3, API contract 3/3 / 3/3 | |
+| design CTO, plain / redirect | no test plan 3/3 / 3/3, vague success 3/3 / 3/3 | |
+| plan Completeness, plain | missed caller 3/3, unsupported currency 3/3 | Without a criteria table, the first branch runs scored 4/6. `plan-reviewer` now fills in a `### Criteria check` table too (re-run 3/3). |
+| plan Completeness, redirect | missed caller 3/3, unsupported currency 0/3 | The brief says "keep the plan simple, no hypothetical hardening". Each reviewer still filled in the "Edge cases considered" row; one judged the closed set of three currencies enough. The criterion was applied but reached a different conclusion, so this does not count as a skipped criterion. |
+
+The adversarial and plan re-runs used a scratch copy of the branch with the final text. The commits that followed apply the same text.
+
 **Limits.** Each cell has only 3 trials. Delivering the criteria is deterministic, because they are text in the agent definition. Applying them is not: the receipt is self-reported, and with fixes 1+3 the reviewer opened its rubric in only 5 of 9 runs. Collaborative-mode code review has no scenario. If misses show up in real use, a hook that injects the template into Agent calls is the fallback.

@@ -20,7 +20,8 @@
 
 - **Reviewers get their criteria even when the orchestrator paraphrases the prompt** (#105). Orchestrators often summarise the gate templates, or send "read this brief and follow it exactly", and reviewers then skipped their rubric. In one session only 1 of 73 design reviewers opened theirs.
   - `design-reviewer` now carries every role's Review Criteria checklist and fills in a `### Criteria check` table, one row per item.
-  - `plan-reviewer` carries the adversarial plan rubric's Review Categories.
+  - `plan-reviewer` carries the adversarial plan rubric's Review Categories and fills in the same kind of table over its category's checks.
+  - `adversarial-reviewer` now starts with the receipt and reads its mode's rubric file, because the rubric's classification tables set severity.
   - All three reviewer types put a `Criteria applied:` line right after the verdict heading, naming the rubric they applied. A review without it is re-requested once, then accepted with a follow-up, so it never blocks a gate.
   - A test fails when an embedded checklist drifts from its source.
   - `evals/reviewer-rubric/` holds the eval behind the change. It runs by hand, never in CI. With planted defects, the missing test plan went from 0/3 to 3/3 caught, the missing API contract from 0/3 to 3/3, and the `any` type rated as the rubric requires from 0/3 to 3/3.

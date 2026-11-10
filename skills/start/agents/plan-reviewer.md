@@ -99,6 +99,10 @@ Is the plan right-sized for what the user actually asked?
 3. Items that cannot be traced = scope creep
 4. Read the user request for implied work that the plan omits
 
+## Criteria check
+
+Put a `### Criteria check` table right after the `Criteria applied:` line, with one row per check in your role's category table: the check, PASS / FAIL / N/A, and one line of evidence. Every FAIL that matters becomes a finding. Then list your findings.
+
 ## Rules
 
 1. Review only from your assigned role.
