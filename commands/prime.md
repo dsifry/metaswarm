@@ -188,14 +188,15 @@ Avoid these known issues:
 
 ## Context Recovery
 
-When an orchestrator detects it lost context (after compaction or in a new session), recover in this order: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge.
+When an orchestrator detects it lost context (after compaction or in a new session), recover in this order: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge. Also check `.beads/context/review-history/` for a non-closed file: it is an interrupted review gate. Resume it at its next round, and if its `status` is `clarify-pending`, re-ask the pending questions instead of iterating.
 
 ### What Gets Read
 
 1. **Active Plan**: `.beads/plans/active-plan.md`, resumed only if it has `status: in-progress`
 2. **Project Context**: `.beads/context/project-context.md` (completed work units, established patterns, tooling)
 3. **Execution State**: `.beads/context/execution-state.md` (current work unit, phase, VALIDATE attempts, review round)
-4. **Standard Knowledge**: the MUST FOLLOW, GOTCHAS, PATTERNS and DECISIONS facts that `/prime` filters for the resumed work
+4. **Review History**: any non-closed `.beads/context/review-history/*.json` (an interrupted gate; `clarify-pending` means re-ask the pending questions, do not iterate)
+5. **Standard Knowledge**: the MUST FOLLOW, GOTCHAS, PATTERNS and DECISIONS facts that `/prime` filters for the resumed work
 
 ### Recovery Flow
 

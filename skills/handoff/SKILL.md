@@ -52,7 +52,7 @@ ls .beads/context/project-context.md      # completed work units, patterns, tool
 ls .beads/context/execution-state.md      # current work unit, phase, VALIDATE attempts, review round
 ```
 
-Recovery order for the next agent: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge.
+Recovery order for the next agent: if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge. If `.beads/context/review-history/` holds a non-closed file, a review gate was interrupted: say so in the handoff, and if its `status` is `clarify-pending`, state the pending questions, because the next agent must re-ask them rather than iterate.
 
 If an active plan exists, the handoff must point to it explicitly and state which work unit/phase is in progress.
 

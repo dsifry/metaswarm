@@ -63,6 +63,10 @@ If a GitHub Issue specifies different coverage requirements, update `.coverage-t
 
 These rules override any conflicting instructions. They ensure the full metaswarm pipeline is followed.
 
+### During Brainstorming (every session)
+
+When brainstorming starts, load the `brainstorming-extension` skill at the start of brainstorming, not only after the commit. It supplies the assumption ledger, the confirmation rule and the Common misreadings checklist -- they apply to every brainstorming session regardless of size, before any design is presented or committed. In every session, never label your own proposal as a user decision, and restate an answer that changes the design and get it confirmed before relying on it.
+
 ### After a Project-Sized Design Doc Is Committed
 
 When brainstorming writes and commits a project-sized design doc (see the metaswarm plugin's `guides/workflow-enforcement.md`):
@@ -101,14 +105,15 @@ When writing-plans has written a plan, run the Plan Review Gate before writing-p
 
 ### Delivery Scope & Review Iteration
 
-Block delivery only for a credible normal-usage failure, a missing or contradictory requirement, a broken key happy path, or an important error or recovery-path failure. Every review finding carries a `severity` (critical/major/minor/nit); to block, a critical/major finding must also name what it `protects` (a user scenario, requirement or DoD item). Findings without `protects` are advisory, not blockers. After each review round the orchestrator decides whether to iterate, advance or escalate:
+Block delivery only for a credible normal-usage failure, a missing or contradictory requirement, a broken key happy path, or an important error or recovery-path failure. Every review finding carries a `severity` (critical/major/minor/nit); to block, a critical/major finding must also name what it `protects` (a user scenario, requirement or DoD item). Findings without `protects` are advisory, not blockers. After each review round the orchestrator decides whether to iterate, advance, clarify or escalate:
 
 - **No `blocker: yes` findings** -> PASS, advance. Minor/nit findings become follow-ups (a BEADS task, or a GitHub issue if over a day).
-- **Escalate to the human** -> the same critical/major finding recurs after a fix attempt for it, two reviewers rate the same finding blocker vs. non-blocker, or the safety cap of 10 rounds is hit.
-- **Iterate** (fix, re-validate, fresh review) -> this round fixed a critical/major finding, or 2+ independent reviewers reported blockers.
+- **Clarify** -> a Clarify signal fires: C1 a blocker only the user can answer or that rests on an unconfirmed assumption, C2 blockers not converging, C3 two or more fix-induced blockers, C4 one theme recurring across 3 rounds. Stop, run the misunderstanding analysis, and send the Clarification report. A standing instruction such as "keep going" never defaults a `needs_user` question; only the user's answer does. Clarifying never approves.
+- **Escalate to the human** -> the same critical/major finding recurs after a fix attempt for it, two reviewers rate the same finding blocker vs. non-blocker, or the safety cap of 10 rounds is hit. The options include clarifying the requirement.
 - **Overengineering signal** -> restate the DoD and re-classify each blocker against the policy; escalate if any still names a credible scenario, otherwise downgrade them to follow-ups and advance.
+- **Iterate** (fix, re-validate, fresh review) -> this round fixed a critical/major finding, or 2+ independent reviewers reported blockers.
 
-These rules apply in order, top to bottom (escalation is checked before iteration). A round that still has a blocker and matches none of them also iterates. If `bd` is unavailable, list follow-ups in a `### Follow-ups` section.
+These rules apply in order, top to bottom (Clarify is checked before escalation, and escalation before iteration). A round that still has a blocker and matches none of them also iterates. If `bd` is unavailable, list follow-ups in a `### Follow-ups` section.
 
 Full policy, finding contract and ordered rule: `guides/delivery-scope.md` in the metaswarm plugin.
 

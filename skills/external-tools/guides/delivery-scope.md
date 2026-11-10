@@ -272,7 +272,7 @@ Clarification never approves. There is no option that advances with open blocker
 ### Feed it back
 
 - **Now.** The analysis and the user's answers go into the re-brainstorm, so the revised design states the confirmed reading in its Confirmed section.
-- **For next time.** Append the misreading pattern to the "Common misreadings" checklist in `skills/brainstorming-extension/SKILL.md`. Also record it in the knowledge base through `/self-reflect` (type `gotcha`, tag `misunderstanding`). Brainstorming checks that list before it closes, so later sessions ask the question up front.
+- **For next time.** Record the pattern in each project's knowledge base through `/self-reflect` (type `gotcha`, tag `misunderstanding`), so it survives sessions and `/update`. Brainstorming loads those facts into its "Common misreadings" checklist (see `skills/brainstorming-extension/SKILL.md`) alongside the built-in patterns and checks them before it closes, so later sessions ask the question up front. `/self-reflect` also offers, without doing it automatically, to file a metaswarm GitHub issue so a general pattern can join the built-in list. Edit the built-in list only when the current repo is metaswarm itself.
 
 ## Escalation template
 

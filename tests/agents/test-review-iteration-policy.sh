@@ -179,11 +179,11 @@ for f in "${INSTRUCTION_FILES[@]}"; do
     templates/*) assert_in "$f: says the guide lives in the metaswarm plugin" "$S" 'metaswarm plugin' ;;
   esac
   # The inline bullets are read in order, so they must follow the guide's rule order:
-  # PASS (1), escalate (2-3), iterate (4), stop and advance (5).
-  order="$(grep -nE '^- \*\*(No `blocker: yes` findings|Escalate to the human|Iterate|Overengineering signal)\*\*' <<<"$S" | sed -E 's/^[0-9]+:- \*\*([A-Za-z]+).*/\1/' | tr '\n' ' ')"
-  if [ "$order" = "No Escalate Iterate Overengineering " ]; then pass "$f: inline bullets follow the guide's rule order"
+  # No blockers (1), Clarify (2), Escalate (3-4), Overengineering (5), Iterate (6-7).
+  order="$(grep -nE '^- \*\*(No `blocker: yes` findings|Clarify|Escalate to the human|Iterate|Overengineering signal)\*\*' <<<"$S" | sed -E 's/^[0-9]+:- \*\*([A-Za-z]+).*/\1/' | tr '\n' ' ')"
+  if [ "$order" = "No Clarify Escalate Overengineering Iterate " ]; then pass "$f: inline bullets follow the guide's rule order"
   else fail "$f: inline bullets follow the guide's rule order (got: $order)"; fi
-  # The copied conditions match the guide: blocker-vs-non-blocker disagreement (line 3)
+  # The copied conditions match the guide: blocker-vs-non-blocker disagreement (line 4)
   # and line 5's escalate-or-downgrade outcome.
   assert_in "$f: inline escalate/overengineering conditions match the guide" "$S" \
     'rate the same finding blocker vs. non-blocker' 'escalate if any still names a credible scenario'

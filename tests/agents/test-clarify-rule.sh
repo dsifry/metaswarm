@@ -4,6 +4,7 @@
 # Each work unit appends the files it changes to the stale-reference list.
 # WU2: guides/delivery-scope.md and its mirrors.
 # WU3: the three gates, rubrics, reviewer agents and external-tool adapters.
+# WU4: brainstorming, orchestrator, self-reflect, commands, instruction files, docs.
 
 set -euo pipefail
 
@@ -149,7 +150,8 @@ assert_in "guide: standing instructions rule" "$CL" \
 FB="$(section "$GUIDE" '^### Feed it back')"
 assert_in "guide: feed it back" "$FB" \
   'Now' 're-brainstorm' 'Common misreadings' 'skills/brainstorming-extension/SKILL.md' \
-  '/self-reflect' '`gotcha`' '`misunderstanding`'
+  '/self-reflect' '`gotcha`' '`misunderstanding`' "each project's knowledge base" 'only when the current repo is metaswarm itself'
+assert_not_in "guide: feed it back does not tell agents to append to the plugin checklist everywhere" "$FB" 'Append the misreading pattern to the'
 assert_in "guide: option 2 re-entry is conditional on no remaining signal" "$RE" \
   'After the acknowledgement, re-run the helper on the same round' \
   'only when no signal remains' \
@@ -302,6 +304,29 @@ STALE_FILES=(
   skills/start/agents/design-reviewer.md
   skills/start/agents/ux-reviewer-agent.md
   skills/start/agents/issue-orchestrator.md
+  skills/brainstorming-extension/SKILL.md
+  skills/start/SKILL.md
+  skills/handoff/SKILL.md
+  commands/review-design.md
+  .claude/commands/review-design.md
+  commands/self-reflect.md
+  .claude/commands/self-reflect.md
+  commands/prime.md
+  .claude/commands/prime.md
+  commands/start-task.md
+  .claude/commands/start-task.md
+  CLAUDE.md
+  AGENTS.md
+  GEMINI.md
+  templates/CLAUDE.md
+  templates/CLAUDE-append.md
+  templates/AGENTS.md
+  templates/AGENTS-append.md
+  templates/GEMINI.md
+  templates/GEMINI-append.md
+  README.md
+  GETTING_STARTED.md
+  USAGE.md
 )
 # keyword (ERE, case-insensitive) that must appear on a line naming rule line N
 kw() {
@@ -692,6 +717,185 @@ assert_in "gemini.sh: JSON example carries the signal fields" "$(readf skills/ex
   '"theme":' '"needs_user":' '"origin":' '"assumption":'
 assert_in "codex.sh: JSON keys carry the signal fields" "$(readf skills/external-tools/adapters/codex.sh)" \
   '"theme", plus "needs_user", "origin" and "assumption" on blockers'
+
+# ---------------------------------------------------------------------------
+echo "WU4: brainstorming-extension"
+# ---------------------------------------------------------------------------
+BX=skills/brainstorming-extension/SKILL.md
+BXT="$(readf "$BX")"
+assert_in "$BX: assumption ledger sections" "$BXT" \
+  'Assumptions (unconfirmed)' 'Confirmed' 'A1' 'design doc'
+assert_in "$BX: confirmation rule" "$BXT" \
+  'one-word acknowledgement of a message with several parts confirms nothing' \
+  'restate any answer that changes the design' \
+  'never label an agent proposal as a user decision'
+CM="$(section "$REPO_ROOT/$BX" '^### Common misreadings')"
+[ -n "$CM" ] && pass "$BX: has a Common misreadings section" || fail "$BX: has a Common misreadings section"
+assert_in "$BX: checklist seeded with the 4 patterns" "$CM" \
+  'Level mismatch' 'Over-reading scope' 'A proposal read as a decision' 'one-word acknowledgement taken as approval of a message with several parts'
+assert_in "$BX: checklist runs before commit or presentation" "$CM" 'before the design is committed or presented'
+assert_in "$BX: checklist loads the project's misunderstanding gotchas from the KB" "$CM" \
+  ".beads/knowledge/*.jsonl" 'index("misunderstanding")' '| .fact' 'Skip this step'
+assert_in "$BX: learned patterns are per project, with opt-in upstream" "$CM" \
+  "each project's knowledge base" '`gotcha`' 'tagged `misunderstanding`' 'offers, without doing it automatically' 'dsifry/metaswarm' 'only when the current repo is metaswarm itself'
+assert_not_in "$BX: no unconditional append-to-this-list instruction" "$CM" 'Append new patterns to this list'
+RB="$(section "$REPO_ROOT/$BX" '^### Re-brainstorm after a Clarification')"
+assert_in "$BX: re-brainstorm input" "$RB" \
+  'Clarification report' "user's answers" "design's Confirmed section"
+assert_in "$BX: ledger location for chat-only designs" "$BXT" 'chat-only' 'in the conversation' 'in the plan when one exists'
+assert_in "$BX: Step 4 re-brainstorm applies to option 1 only" "$BXT" 'option 1 (Answer)' 'option 2'
+DB_LINE="$(grep -n '^## During brainstorming (every session)' "$REPO_ROOT/$BX" | cut -d: -f1 | head -1 || true)"
+PROC_LINE="$(grep -n '^## Procedure: After' "$REPO_ROOT/$BX" | cut -d: -f1 | head -1 || true)"
+if [ -n "$DB_LINE" ] && [ -n "$PROC_LINE" ] && [ "$DB_LINE" -lt "$PROC_LINE" ]; then pass "$BX: During-brainstorming section comes before the post-commit procedure"
+else fail "$BX: During-brainstorming section comes before the post-commit procedure"; fi
+DB="$(section "$REPO_ROOT/$BX" '^## During brainstorming')"
+assert_in "$BX: During-brainstorming section holds the ledger, rule, checklist and re-brainstorm input" "$DB" \
+  'Assumptions (unconfirmed)' 'confirms nothing' 'Common misreadings' 'Clarification report' 'regardless of size'
+FM="$(awk 'NR==1{next} /^---$/{exit} {print}' "$REPO_ROOT/$BX")"
+assert_in "$BX: frontmatter applies at the start of brainstorming and keeps the gate trigger" "$FM" \
+  'start of brainstorming' 'project-sized design doc committed'
+assert_in "$BX: How Enforcement Works mentions start-of-brainstorming loading" "$(section "$REPO_ROOT/$BX" '^## How Enforcement Works')" \
+  'start of brainstorming' 'routing lines'
+assert_not_in "$BX: no doubled rule" "$(awk 'prev=="---" && $0=="" {getline n; if (n=="---") print "dup"} {prev=$0}' "$REPO_ROOT/$BX")" 'dup'
+assert_in "$BX: re-brainstorm cross-reference matches the heading" "$BXT" 'see Re-brainstorm after a Clarification'
+assert_in "$BX: Step 4 names clarify" "$(section "$REPO_ROOT/$BX" '^### Step 4')" \
+  'Clarify the requirement / re-brainstorm' 'Clarification report'
+
+# ---------------------------------------------------------------------------
+echo "WU4: routing loads the extension at the start of brainstorming"
+# ---------------------------------------------------------------------------
+for f in commands/start-task.md .claude/commands/start-task.md commands/brainstorm.md .claude/commands/brainstorm.md skills/start/SKILL.md \
+         CLAUDE.md AGENTS.md GEMINI.md templates/CLAUDE.md templates/AGENTS.md templates/GEMINI.md \
+         templates/CLAUDE-append.md templates/AGENTS-append.md templates/GEMINI-append.md \
+         skills/setup/templates/CLAUDE-append.md skills/setup/templates/AGENTS-append.md skills/setup/templates/GEMINI-append.md; do
+  assert_in "$f: loads brainstorming-extension at the start of brainstorming" "$(readf "$f")" \
+    'at the start of brainstorming' 'brainstorming-extension' 'misreadings'
+done
+
+# The 9 instruction files: assumption discipline in the workflow enforcement text.
+for f in CLAUDE.md AGENTS.md GEMINI.md templates/CLAUDE.md templates/CLAUDE-append.md templates/AGENTS.md templates/AGENTS-append.md templates/GEMINI.md templates/GEMINI-append.md; do
+  assert_in "$f: never label your own proposal as a user decision; restate an answer that changes the design" "$(readf "$f")" \
+    'never label your own proposal as a user decision' 'restate an answer that changes the design'
+done
+
+# No doc lists the four-option escalation without clarify.
+for f in README.md GETTING_STARTED.md USAGE.md skills/start/SKILL.md agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md \
+         commands/review-design.md .claude/commands/review-design.md skills/brainstorming-extension/SKILL.md; do
+  BAD="$(readf "$f" | grep -E 'Revise' | grep -E 'Cancel' | grep -vi 'clarif' || true)"
+  [ -z "$BAD" ] && pass "$f: no four-option escalation list without clarify" || fail "$f: four-option escalation list without clarify: $BAD"
+  BAD="$(readf "$f" | grep -iE 'iterate, advance,? or escalate' | grep -vi 'clarif' || true)"
+  [ -z "$BAD" ] && pass "$f: 'iterate, advance or escalate' summaries name clarify" || fail "$f: summary without clarify: $BAD"
+done
+assert_in "USAGE.md: Delivery Scope summary names clarify" "$(readf USAGE.md | grep 'Delivery Scope' | tr 'A-Z' 'a-z')" 'clarif'
+
+for g in guides/workflow-enforcement.md skills/brainstorming-extension/guides/workflow-enforcement.md skills/start/guides/workflow-enforcement.md; do
+  assert_in "$g: start-of-brainstorming intercept" "$(readf "$g")" \
+    '## Brainstorming start intercept' 'at the start of brainstorming' 'brainstorming-extension' 'Common misreadings'
+done
+
+# ---------------------------------------------------------------------------
+echo "WU4: issue-orchestrator twins"
+# ---------------------------------------------------------------------------
+for o in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do
+  T="$(readf "$o")"
+  assert_in "$o: keeps the ledger in the plan's Assumptions section" "$T" 'Assumptions (unconfirmed)' "plan's Assumptions section"
+  assert_in "$o: standing-instructions rule" "$T" \
+    '"Keep going"' 'never acknowledge a signal, answer a question or default a `needs_user` question'
+  assert_in "$o: restates the user's answers" "$T" "restate the user's answer" 'Confirmed'
+  assert_in "$o: reviewer prompt asks for signal fields" "$T" "${SIG[@]}" 'Earlier Theme Labels'
+  assert_in "$o: escalation options list clarify" "$T" 'Clarify the requirement / re-brainstorm'
+  P7="$(awk '/^# 7\. Spawn Architect Agent/{on=1} on&&/^# 8\./{exit} on' "$REPO_ROOT/$o")"
+  assert_in "$o: planner spawn step requires the plan's ledger sections" "$P7" \
+    'Assumptions (unconfirmed)' 'Confirmed' 'Never label' 'user decision'
+  assert_in "$o: Agent Request template is scoped to the non-Clarify triggers and never approves a Clarify" "$T" \
+    'For triggers 1-5' 'Clarify uses the Clarification report and is never approved'
+  assert_in "$o: Clarify is a stop, not an escalation" "$T" 'a stop, not an escalation'
+  assert_in "$o: Clarify sits in its own stop-for-the-user list, not under Escalate" "$T" 'Stop for the user (not an escalation) when:'
+  assert_not_in "$o: Clarify is not listed under Escalate to human" "$(section "$REPO_ROOT/$o" '^## Human Escalation' | sed -n '/^Escalate to human when:/,/^Stop for the user/p')" 'Clarify Signal'
+  assert_not_in "$o: no four-option escalation list" "$T" '**Revise**, **Narrow scope**, **Defer** and **Cancel**'
+done
+norm() { sed -E 's#(\.\./|\./|\.claude/)(guides|rubrics)/#\2/#g' "$1"; }
+TWIN_DIFF="$(diff <(norm "$REPO_ROOT/skills/start/agents/issue-orchestrator.md") <(norm "$REPO_ROOT/agents/issue-orchestrator.md") || true)"
+if [ -n "$TWIN_DIFF" ]; then fail "orchestrator twins differ beyond path prefixes"
+else pass "orchestrator twins differ only in path prefixes"; fi
+
+# ---------------------------------------------------------------------------
+echo "WU4: escalation summaries and trigger lists name clarify"
+# ---------------------------------------------------------------------------
+SS="$(readf skills/start/SKILL.md)"
+assert_in "skills/start/SKILL.md: design gate escalation options name clarify" "$(grep -n 'Escalation options' <<<"$SS")" 'Clarify'
+assert_in "skills/start/SKILL.md: escalation trigger list names Clarify" "$(section "$REPO_ROOT/skills/start/SKILL.md" '^### When to Escalate')" 'Clarify'
+assert_in "skills/start/SKILL.md: Clarify is a stop, not an escalation" "$SS" 'a stop for the user, not an escalation'
+assert_in "skills/start/SKILL.md: escalation template options name clarify" "$(section "$REPO_ROOT/skills/start/SKILL.md" '^### How to Escalate')" \
+  'Clarify the requirement / re-brainstorm' 'Clarification report'
+for rd in commands/review-design.md .claude/commands/review-design.md; do
+  T="$(readf "$rd")"
+  assert_in "$rd: iteration, escalated and stuck text name clarify" "$T" 'Clarif'
+  [ "$(grep -c -i 'clarif' <<<"$T")" -ge 3 ] && pass "$rd: clarify named in all three places" || fail "$rd: clarify named in all three places"
+  assert_not_in "$rd: no four-option escalation list" "$T" 'Revise / Narrow scope / Defer / Cancel' 'chooses Revise, Narrow scope, Defer or Cancel'
+done
+for d in README.md GETTING_STARTED.md USAGE.md; do
+  assert_in "$d: escalation text names clarify" "$(readf "$d" | tr 'A-Z' 'a-z')" 'clarif'
+done
+KBF="$(grep -F '"id": "decision-ms-escalation-never-approves"' "$REPO_ROOT/.beads/knowledge/decisions.jsonl" || true)"
+assert_in "KB fact decision-ms-escalation-never-approves lists the clarify option" "$KBF" 'Clarify the requirement / re-brainstorm'
+if node -e "require('fs').readFileSync('$REPO_ROOT/.beads/knowledge/decisions.jsonl','utf8').split('\n').filter(Boolean).forEach(l=>JSON.parse(l))" 2>/dev/null; then
+  pass "decisions.jsonl is valid JSONL"; else fail "decisions.jsonl is valid JSONL"; fi
+
+# ---------------------------------------------------------------------------
+echo "WU4: self-reflect captures misreading patterns"
+# ---------------------------------------------------------------------------
+for sr in commands/self-reflect.md .claude/commands/self-reflect.md; do
+  T="$(readf "$sr")"
+  assert_in "$sr: misreading capture" "$T" 'misunderstanding' '`gotcha`' 'Common misreadings' 'skills/brainstorming-extension/SKILL.md'
+  MC="$(section "$REPO_ROOT/$sr" '^## Misreading Capture')"
+  [ -n "$MC" ] && pass "$sr: has its own Misreading Capture section" || fail "$sr: has its own Misreading Capture section"
+  assert_not_in "$sr: Misreading Capture heading is not optional" "$(grep '^## Misreading Capture' "$REPO_ROOT/$sr" || true)" 'Optional'
+  assert_in "$sr: capture always runs and is not code-filtered" "$MC" 'always runs' 'not filtered by "codebase-specific"'
+  assert_in "$sr: records the pattern per project and offers the upstream issue" "$MC" \
+    '.beads/knowledge/gotchas.jsonl' 'tag `misunderstanding`' 'offer' 'without doing it automatically' 'dsifry/metaswarm' 'only when the current repo is metaswarm itself'
+  assert_not_in "$sr: never says to edit the plugin checklist outside the metaswarm repo" "$T" 'Then append the pattern to the "Common misreadings"'
+  assert_not_in "$sr: capture is not inside the optional Phase B" "$(section "$REPO_ROOT/$sr" '^## Phase B')" 'Misreadings of the user'
+done
+
+# ---------------------------------------------------------------------------
+echo "WU4: instruction-file Clarify bullet"
+# ---------------------------------------------------------------------------
+for f in CLAUDE.md AGENTS.md GEMINI.md templates/CLAUDE.md templates/CLAUDE-append.md templates/AGENTS.md templates/AGENTS-append.md templates/GEMINI.md templates/GEMINI-append.md; do
+  CB="$(grep -E '^- \*\*Clarify\*\*' "$REPO_ROOT/$f" || true)"
+  assert_in "$f: Clarify bullet names C1-C4 and the keep-going rule" "$CB" \
+    'C1' 'C2' 'C3' 'C4' \
+    'A standing instruction such as "keep going" never defaults a `needs_user` question; only the user'"'"'s answer does.'
+done
+
+# ---------------------------------------------------------------------------
+echo "WU4: recovery text lists the review history"
+# ---------------------------------------------------------------------------
+for f in CLAUDE.md templates/CLAUDE.md templates/CLAUDE-append.md commands/prime.md .claude/commands/prime.md; do
+  assert_in "$f: Context Recovery lists the review history and clarify-pending" "$(readf "$f")" \
+    '.beads/context/review-history/' 'non-closed' 'clarify-pending'
+done
+for f in commands/prime.md .claude/commands/prime.md; do
+  assert_in "$f: What Gets Read lists the review history" "$(section "$REPO_ROOT/$f" '^### What Gets Read')" 'review-history' 'non-closed'
+done
+assert_in "skills/start/SKILL.md: Context Recovery lists the review history" "$(section "$REPO_ROOT/skills/start/SKILL.md" '^### Context Recovery')" \
+  'review-history' 'non-closed' 'clarify-pending'
+assert_in "skills/handoff/SKILL.md: resume lists the review history" "$(readf skills/handoff/SKILL.md)" \
+  'review-history' 'non-closed' 'clarify-pending'
+for st in commands/start-task.md .claude/commands/start-task.md; do
+  assert_in "$st: resume check treats a non-closed review history as an interrupted gate" "$(readf "$st")" \
+    'review-history' 'non-closed' 'interrupted'
+  RC="$(section "$REPO_ROOT/$st" '^\*\*Context Recovery Check')"
+  RH_LINE="$(grep -n 'review-history' <<<"$RC" | head -1 | cut -d: -f1 || true)"
+  IY_LINE="$(grep -n 'If YES' <<<"$RC" | head -1 | cut -d: -f1 || true)"
+  if [ -n "$RH_LINE" ] && [ -n "$IY_LINE" ] && [ "$RH_LINE" -lt "$IY_LINE" ]; then pass "$st: review-history check sits outside the active-plan branch"
+  else fail "$st: review-history check sits outside the active-plan branch"; fi
+done
+DOC="$(readf docs/index.html)"
+assert_not_in "docs/index.html: reviewer disagreement is not attributed to Clarify" "$DOC" "If they cannot agree, if the rounds stop converging"
+for pat in 'severity rule decide' 'design review gate iterates'; do
+  assert_in "docs/index.html: '$pat' paragraph names clarify" "$(grep -i "$pat" <<<"$DOC" | tr 'A-Z' 'a-z')" 'clarif'
+done
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
