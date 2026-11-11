@@ -3,10 +3,10 @@
   "rubric": "ux-reviewer-agent",
   "checks": {
     "uiStates": [
-      "(?i)(empty state|loading state|error state|empty, loading|no saved searches|zero state|(loading|empty|error) (and|or|/) (loading|empty|error))"
+      "(?i)(no|missing|without|lacks?|not (defined|specified|described|covered|given)|undefined|never (says|names|defines)|doesn.t (say|define|describe|cover|specify)|nothing about)[^\\n]{0,80}(empty|loading|error)[- ](state|view)|(empty|loading|error)(,? (and|or) (loading|error|empty))* (states?|view)[^\\n]{0,80}(missing|not (defined|specified|described|covered)|undefined|absent|FAIL|none)"
     ],
     "integration": [
-      "(?i)(app shell|\\broute\\b|routing|navigation|nav (link|item|menu|bar)|where (the panel|it|the list) (lives|appears|is (rendered|mounted|shown))|wir(e|ing|ed) (it |the panel |the list )?(in|into|up)|mount(ed|s)? (in|into)|entry point|how (users|the user) (reach|get to|open|find))"
+      "(?i)(no|missing|without|lacks?|not (defined|specified|described|covered|given)|undefined|never (says|names|defines)|doesn.t (say|define|describe|cover|specify)|nothing about)[^\\n]{0,100}(app shell|\\broute\\b|routing|navigation|placement|where (the panel|it) (lives|mounts|appears|sits)|wiring|mounts?)|(app shell|routing|wiring|placement)[^\\n]{0,100}(missing|not (described|specified|defined)|FAIL|undefined|absent|none)"
     ]
   }
 }

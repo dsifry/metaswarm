@@ -191,9 +191,39 @@ test('scenarios: each has a fixture, a prompt and a meta.json whose checks compi
     assert.ok(checks.length > 0, `${n}: checks`);
     for (const [k, patterns] of checks) {
       assert.ok(patterns.length > 0, `${n}.${k}: patterns`);
+      // Every pattern compiles, not just those score() reaches before one misses.
+      for (const p of patterns) assert.doesNotThrow(() => sc.compile(p), `${n}.${k}: ${p}`);
       // An unrelated reply must not satisfy a check.
       assert.equal(sc.score(meta, result('## APPROVED\nNo findings.')).checks[k], false, `${n}.${k} matches an empty review`);
     }
+  }
+});
+
+test('compile: honours (?i)/(?is) prefixes and throws on an invalid pattern', () => {
+  assert.equal(sc.compile('(?i)abc').test('ABC'), true);
+  assert.equal(sc.compile('(?is)a.c').test('A\nC'), true);
+  assert.throws(() => sc.compile('(?i)(unclosed'));
+});
+
+// Replies that mention a check's topic without reporting the defect must not count.
+const scenarioMeta = (n) => JSON.parse(fs.readFileSync(path.join(here, '..', '..', 'evals', 'reviewer-rubric', 'scenarios', n, 'meta.json'), 'utf8'));
+const negatives = {
+  'code-review': { anyHigh: ['- MEDIUM — `any` should be narrowed to `string`.\n- HIGH — `toBeDefined()` only checks presence.'] },
+  'design-ux': {
+    uiStates: ['## UX review — APPROVED\nEmpty states and loading states look fine; error states are clear.'],
+    integration: ['## UX review — APPROVED\nThe app shell wiring and the route are well described.'],
+  },
+  'design-security': {
+    idor: ['## Security review — APPROVED\nThe ownership check is in place, so no other customer can read an invoice.'],
+    secretsInLogs: ['## Security review — APPROVED\nTokens are never logged; the logging config redacts the Authorization header.'],
+  },
+};
+
+test('scenarios: replies that mention a topic but report no defect do not count', () => {
+  for (const [n, byCheck] of Object.entries(negatives)) {
+    const meta = scenarioMeta(n);
+    for (const [k, replies] of Object.entries(byCheck))
+      for (const r of replies) assert.equal(sc.score(meta, result(r)).checks[k], false, `${n}.${k}: ${r}`);
   }
 });
 
