@@ -8,9 +8,12 @@
 # Each scenario (scenarios/<name>/) has fixture.sh (builds a tiny git repo),
 # prompt.txt (a paraphrased reviewer prompt that names no rubric, like the
 # ones orchestrators write in practice) and meta.json (agent type, rubric name
-# and the regex checks for its planted defects). A headless `claude -p` session
-# loads metaswarm from <plugin-dir> and spawns the reviewer with that prompt.
+# and a plain-sentence description of each planted defect). A headless
+# `claude -p` session loads metaswarm from <plugin-dir> and spawns the reviewer
+# with that prompt. A second, tool-less call to $JUDGE_MODEL (default haiku)
+# then judges whether the reply reports each planted defect.
 set -euo pipefail
+JUDGE_MODEL="${JUDGE_MODEL:-haiku}"
 
 LABEL="${1:?usage: run.sh <label> [trials] [plugin-dir] [scenario...]}"
 TRIALS="${2:-3}"
@@ -45,8 +48,19 @@ PROMPT>>>"
         --output-format stream-json --verbose --max-budget-usd 3 \
         > "$log" 2>"$OUT/trial-$i.err" ) || echo "$sc trial $i: claude exited $?" >&2
     rm -rf "${fx:?}"
-    # A scoring failure (e.g. a bad check pattern) stops the run before more paid trials.
-    node "$HERE/score.js" "$SD/meta.json" "$log" > "$OUT/trial-$i.score.json"
+    # Judge the reply. A failed judge call leaves the trial unjudged (its defect checks
+    # are null and the report's Judged column shows it) rather than stopping the run.
+    # One retry: judge calls occasionally fail transiently.
+    judge="$OUT/trial-$i.judge.json"
+    for attempt in 1 2; do
+      node "$HERE/score.js" --judge-prompt "$SD/meta.json" "$log" \
+        | claude -p --model "$JUDGE_MODEL" --tools "" --setting-sources "" --no-session-persistence \
+            --json-schema "$(node "$HERE/score.js" --judge-schema "$SD/meta.json")" \
+            --output-format json --max-budget-usd 0.25 > "$judge" 2>"$OUT/trial-$i.judge.err" \
+        && ! grep -qE '"is_error": ?true' "$judge" && break
+      echo "$sc trial $i: judge attempt $attempt failed" >&2
+    done
+    node "$HERE/score.js" "$SD/meta.json" "$log" "$judge" > "$OUT/trial-$i.score.json"
     echo "$sc #$i $(cat "$OUT/trial-$i.score.json")"
     SCORES+=("$OUT/trial-$i.score.json")
   done

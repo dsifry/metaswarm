@@ -1,13 +1,8 @@
 {
   "agent": "metaswarm:design-reviewer",
   "rubric": "architect-agent",
-  "checks": {
-    "duplicateService": [
-      "(?i)(RateLimiter|rate-limiter)",
-      "(?i)(duplicat|already exists|existing|reuse|SERVICE_INVENTORY)"
-    ],
-    "apiContract": [
-      "(?i)(API contracts?|status codes?|response codes?|error (responses?|shapes?|format|handling)|\\b(400|401|403|404|429|500) (responses?|shapes?|status)|what it returns)"
-    ]
+  "defects": {
+    "duplicateService": "The design adds a new ThrottleService for per-API-key rate limiting, duplicating the existing RateLimiter (src/services/rate-limiter.ts, listed in docs/SERVICE_INVENTORY.md) instead of reusing it.",
+    "apiContract": "The design does not specify the export endpoint's API contract: its response status codes, error responses (for example when rate-limited or unauthorised) or response format."
   }
 }

@@ -8,7 +8,7 @@ Each scenario in `scenarios/<name>/` has three files:
 
 - `fixture.sh` builds a tiny git repo with planted defects. Each defect sits outside the prompt's stated focus but inside the role's criteria.
 - `prompt.txt` is the paraphrased reviewer prompt. It names no rubric. The `*-redirect` variants instead point the reviewer at a shared brief and say "follow it exactly".
-- `meta.json` gives the agent type, the rubric or persona name used to detect a read, and regex checks for each planted defect. Each check is a list of patterns, and every pattern must match the reviewer's reply. A `(?i)` or `(?is)` prefix sets the JS flags.
+- `meta.json` gives the agent type, the rubric or persona name used to detect a read, and a one-sentence description of each planted defect.
 
 `run.sh` starts a fresh headless session for each trial:
 
@@ -21,14 +21,53 @@ Metaswarm is loaded from `<tree>`, and the user's installed plugins are not load
 - whether the agent was spawned;
 - whether it read its rubric or persona;
 - whether the `Criteria applied:` receipt is present;
-- each defect check;
-- the cost.
+- whether the reply reports each planted defect, as decided by the judge;
+- the cost, including the judge's.
 
-Defect checks ignore the receipt line (or `criteria_applied` field) and criteria-check rows that passed or were N/A (table rows and JSON `criteria_check` entries), so a row naming a checklist item counts only when it FAILs. Each check must match inside one finding: a heading, a numbered item, a `title:` entry, a bullet that opens with a severity, or a table row. Clauses that deny or approve ("No IDOR found", "never exposes tokens", "looks fine") are dropped before matching. So a check can't combine words from two findings, or count a denial as a catch. Rescoring all 135 saved trials under this rule changed no result.
+The first three come from the tool calls and the reply's first lines, and are checked in code. A rubric read means reading the file's text: `Read`, a `cat`/`sed`/`head`-style Bash command, or `Grep` in content mode. A `Glob`, a file-listing `Grep`, `find` or `ls` only locates the file and doesn't count.
 
-**The checks are a first-pass filter, not the verdict.** Reviewers word and lay out findings in many ways, and a regex will miss some phrasings or accept others. Examples are a title that names the item while the description says it is out of scope, or a missing check reported as "No ownership check found". Every cell reported below was verified by reading the reviewer replies. When you run the eval, read the replies behind any cell you report, and treat a regex hit or miss as a pointer to where to look. Known gaps are tracked in #109. A rubric read means reading the file's text: `Read`, a `cat`/`sed`/`head`-style Bash command, or `Grep` in content mode. A `Glob`, a file-listing `Grep`, `find` or `ls` only locates the file and doesn't count.
+### The defect judge
 
-After the PR review, these scoring rules and tighter check patterns were applied to every saved trial. Two cells changed, both in the baseline: "read rubric or persona" went from 3/12 to 2/12, because one trial only globbed for the file. Redirect Architect "API contract" went from 1/3 to 0/3, because its old match was a 429 mentioned in a different finding. Every other result in the tables below stands.
+Whether a reply reports a defect is a judgment about meaning, and every run produces new wordings. So after each trial, `run.sh` sends the reviewer's reply and the scenario's defect descriptions to Haiku (`claude -p --model haiku`, no tools, JSON-schema output). Haiku answers `reported` true or false for each defect, with a supporting quote. `trial-N.judge.json` keeps the verdict and quotes. A failed judge call is retried once. If it fails again, the trial is marked unjudged: its defect checks are null and it is neither a catch nor a miss. Defect cells count judged trials only, and the report's Judged column shows how many that is. Set `JUDGE_MODEL` to use another model. The judge costs about $0.001 a trial.
+
+Until #109, the defect checks were regexes. They missed some correct wordings and accepted some denials, and patching them for one wording broke others.
+
+### Calibration
+
+`calibrate.js` measures how often the judge agrees with hand-checked labels. It costs about $0.10 per 100 labels:
+
+```bash
+node evals/reviewer-rubric/calibrate.js                    # calibration/replies.json
+node evals/reviewer-rubric/calibrate.js labels.json out.json
+```
+
+There are two label sets:
+
+- **`calibration/replies.json`:** 122 short replies, each labelled for one defect. They are the wordings that broke the regexes in #108 and #109. Many are deliberately tricky: denials, approvals, and a defect mentioned inside a finding about something else.
+- **The 135 saved trials from the tables below (282 defect labels).** These are labelled with the verdicts confirmed by reading the replies. They live with the gitignored results, not in the repo.
+
+Two runs with the shipped prompt, on 2026-11-11:
+
+| Label set | Judge agreed |
+|---|---|
+| Saved trials | 279/282, the same 3 disagreements in both runs |
+| Tricky replies | 118/121 and 114/121 (one call failed each run) |
+
+**Saved trials.** In the 3 disagreements, reading the replies again showed the judge was clearly right once. The other two are borderline, but the judge's reading holds up. The tables below are corrected for these (see "Corrections").
+
+**Tricky replies.** Most of the judge's misses vary from run to run, which is Haiku's own variance. One reply was missed in both runs: "No ownership check found", labelled as reporting the IDOR. Its wording is ambiguous.
+
+**The judge is a model and not deterministic.** It is about 99% accurate on real reviewer replies. Its verdicts and quotes are saved with each trial, so a cell can be checked quickly. Before you report a cell, read the replies behind it, or at least the judge's quotes. Re-run `calibrate.js` after changing the judge prompt, a defect description or `JUDGE_MODEL`.
+
+### Corrections (2026-11-11)
+
+The judge found three trials that the earlier regex scoring and hand-reading got wrong. Reading those replies again:
+
+- **Designer baseline, cryptic error codes:** 2/3 becomes 3/3. This one is borderline. Trial 2's major finding is about the error status being typed as a number while the codes are strings, and it adds that "the made-up numeric codes tell them nothing they can act on".
+- **Plan Completeness, first branch runs:** 4/6 becomes 5/6. This one is clear. One reply asks "what happens with a missing or invalid code" in a minor finding.
+- **Plan Completeness redirect, unsupported currency:** 0/3 becomes 1/3. This one is borderline. Its FAIL row says the plan "doesn't say what happens to existing callers that pass no currency", framed as backward compatibility.
+
+The tables below are updated.
 
 ## Running it
 
@@ -41,7 +80,7 @@ evals/reviewer-rubric/run.sh main 3 ../metaswarm-main design-cto-redirect
 
 Results land in `results/<label>/<scenario>/`: one `trial-N.jsonl` and `trial-N.score.json` per trial, a `summary.json`, and a `report.md` for each label. The `results/` directory is gitignored. Set `EVAL_OUT` to write the results elsewhere.
 
-**It calls the model and costs money**, about $0.35–0.45 per trial with Opus reviewers. Run it by hand. It never runs in CI. `score.js` has unit tests (`tests/lib/eval-score.test.mjs`, 100% coverage). `run.sh` and the fixtures call the model, so they have no unit tests.
+**It calls the model and costs money**, about $0.35–0.45 per trial with Opus reviewers, plus about $0.001 for the judge. Run it by hand. It never runs in CI. `score.js` builds the judge prompt and schema, checks the verdict and computes calibration agreement, and has unit tests (`tests/lib/eval-score.test.mjs`, 100% coverage). `run.sh`, `calibrate.js` and the fixtures call the model, so they have no unit tests.
 
 ## Results (2026-11-10, 3 trials per cell)
 
@@ -89,19 +128,19 @@ The branch as shipped, 3 trials per cell (6 where a cell was re-run):
 | adversarial | scope 3/3, untested 3/3, `any` blocker 3/3 | The first branch run scored 0/3 on the `any` check. The receipt said "read the rubric if it is not in this file", and the definition summarises the rubric, so reviewers skipped it. The receipt now comes first and says the rubric file's classification tables set severity (re-run 3/3). |
 | design Architect, plain / redirect | duplicate service 3/3 / 3/3, API contract 3/3 / 3/3 | |
 | design CTO, plain / redirect | no test plan 3/3 / 3/3, vague success 3/3 / 3/3 | |
-| plan Completeness, plain | missed caller 3/3, unsupported currency 3/3 | Without a criteria table, the first branch runs scored 4/6. `plan-reviewer` now fills in a `### Criteria check` table too (re-run 3/3). |
-| plan Completeness, redirect | missed caller 3/3, unsupported currency 0/3 | The brief says "keep the plan simple, no hypothetical hardening". Each reviewer still filled in the "Edge cases considered" row; one judged the closed set of three currencies enough. The criterion was applied but reached a different conclusion, so this does not count as a skipped criterion. |
+| plan Completeness, plain | missed caller 3/3, unsupported currency 3/3 | Without a criteria table, the first branch runs scored 5/6. `plan-reviewer` now fills in a `### Criteria check` table too (re-run 3/3). |
+| plan Completeness, redirect | missed caller 3/3, unsupported currency 1/3 (borderline) | The brief says "keep the plan simple, no hypothetical hardening". Each reviewer still filled in the "Edge cases considered" row; one judged the closed set of three currencies enough. The criterion was applied but reached a different conclusion, so this does not count as a skipped criterion. The 1/3 is a reviewer whose "Rollback/backward compat" row flags callers that pass no currency (see "Corrections"). |
 
 The adversarial and plan re-runs used a scratch copy of the branch with the final text. The commits that followed apply the same text.
 
-## Remaining roles (2026-11-11)
+## Remaining roles (2026-11-10)
 
 Scenarios for the roles not run above: the PM, Designer, Security and UX design reviewers, the Feasibility and Scope & Alignment plan reviewers, and a Collaborative-mode code review. Code review uses `adversarial-reviewer` with no mode named, so its default, Collaborative, applies with `code-review-rubric`. Each scenario plants two defects inside the role's criteria, and the prompt focuses elsewhere. Baseline is the tree before #105 (c51e08d). Shipped is main after #106 (5fadf25). 3 trials per cell, 42 trials in total, $16.38.
 
 | Scenario | Planted defects | Baseline | Shipped |
 |---|---|---|---|
 | design PM | no use cases / theming and marketplace beyond the goal | 3/3, 3/3 | 3/3, 3/3 |
-| design Designer | API unlike the existing `Result<T>` pattern / cryptic `ERR_42` codes | 3/3, 2/3 | 3/3, 3/3 |
+| design Designer | API unlike the existing `Result<T>` pattern / cryptic `ERR_42` codes | 3/3, 3/3 | 3/3, 3/3 |
 | design Security | no ownership check (IDOR) / full headers logged | 3/3, 3/3 | 3/3, 3/3 |
 | design UX | no empty, loading or error states / no wiring into the app shell | 2/3, 1/3 | 3/3, 3/3 |
 | plan Feasibility | fabricated `mailer.ts` / undefined `npm run test:unit` | 3/3, 3/3 | 3/3, 3/3 |
@@ -112,10 +151,10 @@ Scenarios for the roles not run above: the PM, Designer, Security and UX design 
 
 What the results show:
 
-- **The UX and Designer gaps close.** The baseline UX reviewer read its persona file in all 3 trials, but still missed the UI states in 1 and the app-shell wiring in 2. It stayed on the visual-hierarchy focus. Every shipped trial filled in those checklist rows and failed them. The Designer gap was smaller: 2 of 3 baseline trials flagged the cryptic error codes.
-- **The other five roles show no gap.** The baseline already caught every planted defect for PM, Security, Feasibility, Scope & Alignment and code review. These defects may have been too obvious to separate the variants. The shipped trees caught all of them too, so nothing regressed.
+- **The UX gap closes.** The baseline UX reviewer read its persona file in all 3 trials, but still missed the UI states in 1 and the app-shell wiring in 2. It stayed on the visual-hierarchy focus. Every shipped trial filled in those checklist rows and failed them.
+- **The other six roles show no gap.** The baseline already caught every planted defect for PM, Designer, Security, Feasibility, Scope & Alignment and code review. (The Designer baseline was first reported as 2/3. See "Corrections" above.) These defects may have been too obvious to separate the variants. The shipped trees caught all of them too, so nothing regressed.
 - **Receipt and rubric reads:** the receipt went from 0/21 to 21/21, and rubric or persona reads from 10/21 to 21/21.
 
-Every hit and miss was checked by reading the reply, not only the regex. The first scoring pass got several cells wrong, in both directions. Code review scored 1/3 and 2/3 for `any` rated HIGH, but all six trials did rate it HIGH. One UX trial matched `App.tsx` cited for a different finding, and one Designer trial matched "opaque token" from a pagination finding. The patterns were fixed before the tables above were scored. `tests/lib/eval-score.test.mjs` compiles every pattern. It also checks that no scenario's checks match an empty review, or a reply that mentions a check's topic without reporting the defect (for example, "Empty states and app shell wiring look fine", or a MEDIUM `any` finding followed by a HIGH finding about something else).
+These runs were scored with the regex checks that the judge has since replaced, then checked by reading the replies. The regexes got several cells wrong in both directions, which is why they were replaced. The judge agreed with all 84 defect labels for these 42 trials, after the Designer correction above.
 
 **Limits.** Each cell has only 3 trials. Delivering the criteria is deterministic, because they are text in the agent definition. Applying them is not: the receipt is self-reported, and with fixes 1+3 the reviewer opened its rubric in only 5 of 9 runs. If misses show up in real use, a hook that injects the template into Agent calls is the fallback.

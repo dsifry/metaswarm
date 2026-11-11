@@ -1,12 +1,8 @@
 {
   "agent": "metaswarm:plan-reviewer",
   "rubric": "plan-review-rubric-adversarial",
-  "checks": {
-    "fabricatedPath": [
-      "(?i)(mailer\\.ts|sendMail)(?:[^.;\\n]|\\.(?=\\S)){0,300}(does ?n.t exist|do ?n.t exist|not exist|neither exists|no such|missing|not (defined|found)|fabricated|nonexistent|there is no|isn.t (there|defined))|(does ?n.t exist|do ?n.t exist|not exist|neither exists|no such|missing|not (defined|found)|fabricated|nonexistent|there is no|isn.t (there|defined))(?:[^.;\\n]|\\.(?=\\S)){0,300}(mailer\\.ts|sendMail)"
-    ],
-    "badCommand": [
-      "(?i)test:unit(?:[^.;\\n]|\\.(?=\\S)){0,200}(does ?n.t exist|do ?n.t exist|not exist|neither exists|no such|missing|not (defined|found)|fabricated|nonexistent|there is no|isn.t (there|defined))|(does ?n.t exist|do ?n.t exist|not exist|neither exists|no such|missing|not (defined|found)|fabricated|nonexistent|there is no|isn.t (there|defined))(?:[^.;\\n]|\\.(?=\\S)){0,200}test:unit"
-    ]
+  "defects": {
+    "fabricatedPath": "The plan cites src/services/mailer.ts and an existing sendMail(), but neither exists (the real code is sendEmail() in src/services/email.ts).",
+    "badCommand": "The plan's verify step runs `npm run test:unit`, but package.json defines no test:unit script (only test)."
   }
 }

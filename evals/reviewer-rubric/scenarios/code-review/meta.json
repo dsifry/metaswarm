@@ -1,12 +1,8 @@
 {
   "agent": "metaswarm:adversarial-reviewer",
   "rubric": "code-review-rubric",
-  "checks": {
-    "anyHigh": [
-      "(?im)(`any`|\\bany\\b type|typed `?any`?|input: any)(?:(?!\\b(LOW|MEDIUM|HIGH|CRITICAL)\\b|\\n[ \\t]*(?:#{1,6}|\\d+\\.)[ \\t])[\\s\\S]){0,250}?(?<!^[ \\t]*(?:[-*+]|\\d+\\.)[ \\t*\\[(]*)\\b(HIGH|CRITICAL)\\b|\\b(HIGH|CRITICAL)\\b(?:(?!\\b(LOW|MEDIUM|HIGH|CRITICAL)\\b|\\n[ \\t]*(?:#{1,6}|\\d+\\.|[-*+])[ \\t])[\\s\\S]){0,250}?(`any`|\\bany\\b type|typed `?any`?|input: any)"
-    ],
-    "presenceAssert": [
-      "(?is)toBeDefined[\\s\\S]{0,300}(always pass|can.?t fail|passes (for any|whatever|even)|only checks|checks only|only (that|whether) (something|a result|the result|it)|presence|does ?n.t (verify|check|assert)|not (verify|check)|weak|meaningless|empty (test )?assertion)|(always pass|can.?t fail|passes (for any|whatever|even)|only checks|checks only|only (that|whether) (something|a result|the result|it)|presence|does ?n.t (verify|check|assert)|not (verify|check)|weak|meaningless|empty (test )?assertion)[\\s\\S]{0,300}toBeDefined"
-    ]
+  "defects": {
+    "anyHigh": "parseQty's parameter is typed `any` (src/parse.ts:1), and the reply rates that finding HIGH or CRITICAL.",
+    "presenceAssert": "The test only asserts toBeDefined() on parseQty('3'), so it passes for any return value and does not check the parsed number."
   }
 }

@@ -1,17 +1,9 @@
 {
   "agent": "metaswarm:adversarial-reviewer",
   "rubric": "adversarial-review-rubric",
-  "checks": {
-    "scope": [
-      "config\\.ts",
-      "(?i)scope"
-    ],
-    "untested": [
-      "(?i)(sum\\(\\[\\]\\)|empty (array|input|list))",
-      "(?i)(untested|no test|not tested|missing test|without a test|lacks? (a )?test|nothing (in the tests )?(tests|checks))"
-    ],
-    "anyBlocker": [
-      "(?i)title:[^\\n]*`?\\bany\\b`?[^\\n]*\\n(?:(?!title:)[\\s\\S])*?blocker: yes"
-    ]
+  "defects": {
+    "scope": "The change modifies src/config.ts (precision 2 to 4, adds verbose), which is outside the work unit's file scope (src/sum.ts, test/sum.test.ts).",
+    "untested": "DoD item 2, sum([]) returns 0 (the empty-array case), has no test: the only test covers sum([1, 2, 3]).",
+    "anyBlocker": "sum's parameter is typed `any`, and the reply rates that finding as a blocker (blocker: yes)."
   }
 }
