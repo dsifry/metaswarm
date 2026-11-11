@@ -3,10 +3,10 @@
   "rubric": "plan-review-rubric-adversarial",
   "checks": {
     "frameworkCreep": [
-      "(?is)(yargs|WU2)[\\s\\S]{0,400}(scope creep|not (requested|asked)|beyond|out of scope|outside (the |what )?(request|was asked)|unrequested|not traceable|can.?t be traced|isn.t (requested|needed)|unnecessary|did ?n.t ask|never asked|wasn.t asked)|(scope creep|not (requested|asked)|beyond|out of scope|outside (the |what )?(request|was asked)|unrequested|not traceable|can.?t be traced|isn.t (requested|needed)|unnecessary|did ?n.t ask|never asked|wasn.t asked)[\\s\\S]{0,400}(yargs|WU2)"
+      "(?i)(yargs|WU2)(?:[^.;\\n]|\\.(?=\\S)){0,300}(scope creep|not (requested|asked)|beyond|out of scope|outside (the |what )?(request|was asked)|unrequested|not traceable|can.?t be traced|isn.t (requested|needed)|unnecessary|did ?n.t ask|never asked|wasn.t asked)|(scope creep|not (requested|asked)|beyond|out of scope|outside (the |what )?(request|was asked)|unrequested|not traceable|can.?t be traced|isn.t (requested|needed)|unnecessary|did ?n.t ask|never asked|wasn.t asked)(?:[^.;\\n]|\\.(?=\\S)){0,300}(yargs|WU2)"
     ],
     "formatCreep": [
-      "(?is)(yaml|csv|WU3)[\\s\\S]{0,400}(scope creep|not (requested|asked)|beyond|out of scope|outside (the |what )?(request|was asked)|unrequested|not traceable|can.?t be traced|isn.t (requested|needed)|unnecessary|did ?n.t ask|never asked|wasn.t asked)|(scope creep|not (requested|asked)|beyond|out of scope|outside (the |what )?(request|was asked)|unrequested|not traceable|can.?t be traced|isn.t (requested|needed)|unnecessary|did ?n.t ask|never asked|wasn.t asked)[\\s\\S]{0,400}(yaml|csv|WU3)"
+      "(?i)(yaml|csv|WU3)(?:[^.;\\n]|\\.(?=\\S)){0,300}(scope creep|not (requested|asked)|beyond|out of scope|outside (the |what )?(request|was asked)|unrequested|not traceable|can.?t be traced|isn.t (requested|needed)|unnecessary|did ?n.t ask|never asked|wasn.t asked)|(scope creep|not (requested|asked)|beyond|out of scope|outside (the |what )?(request|was asked)|unrequested|not traceable|can.?t be traced|isn.t (requested|needed)|unnecessary|did ?n.t ask|never asked|wasn.t asked)(?:[^.;\\n]|\\.(?=\\S)){0,300}(yaml|csv|WU3)"
     ]
   }
 }

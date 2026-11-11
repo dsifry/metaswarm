@@ -6,7 +6,7 @@
       "(?i)(IDOR|insecure direct object|(no|missing|without|lacks?|not (defined|specified|described|covered|given)|undefined|never (says|names|defines)|doesn.t (say|define|describe|cover|specify)|nothing about)[^\\n]{0,40}(owner(ship)?|authori[sz]ation) check|(owner(ship)?|authori[sz]ation) check(ed)?[^\\n]{0,60}(missing|FAIL|absent)|any (signed-in )?(user|customer) can (download|read|fetch|view|access|get))"
     ],
     "secretsInLogs": [
-      "(?i)(writes?|captures?|leaks?|exposes?|records?|dumps?|includ(es|ing)|puts?)[^\\n]{0,80}(tokens?|authorization|cookies?|secrets?|credentials?)[^\\n]{0,80}\\blogs?\\b|(tokens?|authorization|cookies?|secrets?|credentials?)[^\\n]{0,80}(end(s)? up in|written to|land(s)? in|go(es)? (in)?to|stored in) (the |info |application )?logs|\\blog(s|ging|ged)?\\b[^\\n]{0,100}(writes?|captures?|leaks?|exposes?|contain(s|ing)?)[^\\n]{0,60}(tokens?|authorization|cookies?|secrets?|credentials?)"
+      "(?i)(writes?|captures?|leaks?|exposes?|records?|dumps?|includ(es|ing)|puts?)[^\\n]{0,80}(tokens?|authorization|cookies?|secrets?|credentials?)[^\\n]{0,80}\\blogs?\\b|(tokens?|authorization|cookies?|secrets?|credentials?)[^\\n]{0,80}(end(s)? up in|written to|land(s)? in|go(es)? (in)?to|stored in) (the |info |application )?logs|\\blog(s|ging|ged)?\\b[^\\n]{0,100}(writes?|captures?|leaks?|exposes?|contain(s|ing)?)[^\\n]{0,60}(tokens?|authorization|cookies?|secrets?|credentials?)|\\b(logs|logged)\\b[^\\n]{0,60}(tokens?|authorization|cookies?|secrets?|credentials?)|\\blogging (all |every |full |the )*(request )?(headers?|tokens?|cookies?|authorization)"
     ]
   }
 }
