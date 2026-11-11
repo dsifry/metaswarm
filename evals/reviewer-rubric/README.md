@@ -28,7 +28,7 @@ The first three come from the tool calls and the reply's first lines, and are ch
 
 ### The defect judge
 
-Whether a reply reports a defect is a judgment about meaning, and every run produces new wordings. So after each trial, `run.sh` sends the reviewer's reply and the scenario's defect descriptions to Haiku (`claude -p --model haiku`, no tools, JSON-schema output). Haiku answers `reported` true or false for each defect, with a supporting quote. `trial-N.judge.json` keeps the verdict and quotes. A failed judge call is retried once. If it fails again, the trial is marked unjudged: its defect checks are null and it is neither a catch nor a miss. Defect cells count judged trials only, and the report's Judged column shows how many that is. Set `JUDGE_MODEL` to use another model. The judge costs about $0.001 a trial.
+Whether a reply reports a defect is a judgment about meaning, and every run produces new wordings. So after each trial, `run.sh` sends the reviewer's reply and the scenario's defect descriptions to Haiku (`claude -p --model haiku`, no tools, JSON-schema output). Haiku answers `reported` true or false for each defect, with a supporting quote. `trial-N.judge.json` keeps the verdict and quotes. A judge call that fails, runs past its time limit or returns a verdict `score.js` rejects is retried. The budget, attempts and time limit are set in `JUDGE` in `score.js`, and both `run.sh` and `calibrate.js` use them. If every attempt fails, the trial is marked unjudged: its defect checks are null and it is neither a catch nor a miss. Defect cells count judged trials only, and the report's Judged column shows how many that is. Summaries saved before the judge existed show "n/a" there. Set `JUDGE_MODEL` to use another model. The judge costs about $0.001 a trial.
 
 Until #109, the defect checks were regexes. They missed some correct wordings and accepted some denials, and patching them for one wording broke others.
 
@@ -78,7 +78,7 @@ evals/reviewer-rubric/run.sh branch 3 .
 evals/reviewer-rubric/run.sh main 3 ../metaswarm-main design-cto-redirect
 ```
 
-Results land in `results/<label>/<scenario>/`: one `trial-N.jsonl` and `trial-N.score.json` per trial, a `summary.json`, and a `report.md` for each label. The `results/` directory is gitignored. Set `EVAL_OUT` to write the results elsewhere.
+Results land in `results/<label>/<scenario>/`: `trial-N.jsonl`, `trial-N.judge.json` and `trial-N.score.json` per trial, a `summary.json`, and a `report.md` for each label. The `results/` directory is gitignored. Set `EVAL_OUT` to write the results elsewhere.
 
 **It calls the model and costs money**, about $0.35–0.45 per trial with Opus reviewers, plus about $0.001 for the judge. Run it by hand. It never runs in CI. `score.js` builds the judge prompt and schema, checks the verdict and computes calibration agreement, and has unit tests (`tests/lib/eval-score.test.mjs`, 100% coverage). `run.sh`, `calibrate.js` and the fixtures call the model, so they have no unit tests.
 

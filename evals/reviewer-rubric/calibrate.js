@@ -19,18 +19,32 @@ const PARALLEL = Number(process.env.JUDGE_PARALLEL || 6);
 
 const metaFor = (s) => JSON.parse(fs.readFileSync(path.join(HERE, 'scenarios', s, 'meta.json'), 'utf8'));
 
-function judge(meta, reply) {
+// One judge call, with the same limits as run.sh (sc.JUDGE). Resolves to a parsed verdict or { error }.
+function judgeOnce(meta, reply) {
   return new Promise((resolve) => {
     const p = spawn('claude', ['-p', '--model', MODEL, '--tools', '', '--setting-sources', '', '--no-session-persistence',
-      '--json-schema', JSON.stringify(sc.judgeSchema(meta)), '--output-format', 'json', '--max-budget-usd', '0.25'],
+      '--json-schema', JSON.stringify(sc.judgeSchema(meta)), '--output-format', 'json', '--max-budget-usd', String(sc.JUDGE.budgetUsd)],
     { stdio: ['pipe', 'pipe', 'ignore'] });
     let out = '';
+    const timer = setTimeout(() => p.kill('SIGKILL'), sc.JUDGE.timeoutSec * 1000);
+    p.on('error', (e) => { clearTimeout(timer); resolve({ error: `cannot run claude: ${e.message}` }); });
+    p.stdin.on('error', () => {});  // EPIPE if claude exits early; the close handler reports it
     p.stdout.on('data', (d) => { out += d; });
     p.on('close', () => {
+      clearTimeout(timer);
       try { resolve(sc.parseJudge(out, meta)); } catch (e) { resolve({ error: e.message }); }
     });
     p.stdin.end(sc.judgePrompt(meta, reply));
   });
+}
+
+async function judge(meta, reply) {
+  let r;
+  for (let a = 0; a < sc.JUDGE.attempts; a++) {
+    r = await judgeOnce(meta, reply);
+    if (!r.error) break;
+  }
+  return r;
 }
 
 async function run() {
@@ -41,9 +55,7 @@ async function run() {
   const worker = async () => {
     while (next < labels.length) {
       const i = next++;
-      const meta = metaFor(labels[i].scenario);
-      let r = await judge(meta, labels[i].reply);
-      if (r.error) r = await judge(meta, labels[i].reply);  // one retry: judge calls occasionally fail transiently
+      const r = await judge(metaFor(labels[i].scenario), labels[i].reply);
       results[i] = r.error ? null : r.verdict;
       cost += r.costUsd || 0;
       if (r.error) process.stderr.write(`label ${i}: ${r.error}\n`);
@@ -57,4 +69,4 @@ async function run() {
   for (const d of c.disagreements) console.log(`DISAGREE ${d.scenario}.${d.defect} label=${d.reported} judge=${d.got} quote=${JSON.stringify(d.quote)}\n  reply: ${JSON.stringify(d.reply).slice(0, 300)}`);
 }
 
-run();
+run().catch((e) => { console.error(`calibrate: ${e.message}`); process.exitCode = 1; });

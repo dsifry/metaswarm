@@ -4,6 +4,8 @@
 //   score.js <meta.json> <trial.jsonl> [judge.json]  -> one trial's score as JSON
 //   score.js --judge-prompt <meta.json> <trial.jsonl> -> the prompt for the defect judge
 //   score.js --judge-schema <meta.json>               -> the JSON schema the judge answers in
+//   score.js --judge-config                           -> "<budgetUsd> <attempts> <timeoutSec>" for run.sh
+//   score.js --check-judge <meta.json> <judge.json>   -> exit 1 when the verdict is unusable
 //   score.js --summary <score.json>...                -> per-scenario rates as JSON
 //   score.js --report <label-dir>                     -> markdown table over all scenarios
 //
@@ -13,6 +15,10 @@
 // answers it from meta.json's plain-sentence defect descriptions.
 const fs = require('fs');
 const path = require('path');
+
+// Limits for one judge call, shared by run.sh (via --judge-config) and calibrate.js.
+// A call that fails, times out or returns an unusable verdict is retried until attempts run out.
+const JUDGE = { budgetUsd: 0.25, attempts: 2, timeoutSec: 120 };
 
 function events(text) {
   return text.split('\n').filter(Boolean).flatMap((l) => {
@@ -138,14 +144,17 @@ function score(meta, text, judgeText) {
 function summary(scores) {
   const n = scores.length;
   const count = (f) => `${scores.filter(f).length}/${n}`;
-  const s = { trials: n, spawned: count((x) => x.spawned), readRubric: count((x) => x.readRubric), receipt: count((x) => x.receipt), judged: count((x) => !x.judgeError) };
+  // A trial is judged only when its score says so (judgeError === null). Score files from
+  // before the judge have no judgeError, so they count as unjudged rather than as judged.
+  const isJudged = (x) => x.judgeError === null;
+  const s = { trials: n, spawned: count((x) => x.spawned), readRubric: count((x) => x.readRubric), receipt: count((x) => x.receipt), judged: count(isJudged) };
   // Defect rates are over judged trials only; the judged cell shows how many that is.
-  const judged = scores.filter((x) => !x.judgeError);
+  const judged = scores.filter(isJudged);
   const ofJudged = (f) => `${judged.filter(f).length}/${judged.length}`;
   const names = n ? Object.keys(scores[0].checks) : [];
   for (const k of names) s[k] = ofJudged((x) => x.checks[k] === true);
   s.caughtAll = ofJudged((x) => x.caughtAll);
-  s.meanCostUsd = n ? Number((scores.reduce((a, x) => a + x.costUsd + x.judgeCostUsd, 0) / n).toFixed(3)) : 0;
+  s.meanCostUsd = n ? Number((scores.reduce((a, x) => a + (x.costUsd || 0) + (x.judgeCostUsd || 0), 0) / n).toFixed(3)) : 0;
   return s;
 }
 
@@ -183,7 +192,7 @@ function report(dir, io = realIo) {
   for (const [d, s] of rows) {
     const fixed = ['trials', 'spawned', 'readRubric', 'receipt', 'judged', 'caughtAll', 'meanCostUsd'];
     const checks = Object.keys(s).filter((k) => !fixed.includes(k)).map((k) => `${k} ${s[k]}`).join(', ');
-    lines.push(`| ${d} | ${s.spawned} | ${s.readRubric} | ${s.receipt} | ${s.judged} | ${checks} | ${s.caughtAll} | $${s.meanCostUsd} |`);
+    lines.push(`| ${d} | ${s.spawned} | ${s.readRubric} | ${s.receipt} | ${s.judged || 'n/a'} | ${checks} | ${s.caughtAll} | $${s.meanCostUsd} |`);
   }
   return lines.join('\n') + '\n';
 }
@@ -200,6 +209,11 @@ function main(argv, ioOverrides = {}) {
     io.out(judgePrompt(meta(), String(finalResult(io.readFile(argv[2])).result || '')) + '\n');
   } else if (argv[0] === '--judge-schema') {
     io.out(JSON.stringify(judgeSchema(meta())) + '\n');
+  } else if (argv[0] === '--judge-config') {
+    io.out(`${JUDGE.budgetUsd} ${JUDGE.attempts} ${JUDGE.timeoutSec}\n`);
+  } else if (argv[0] === '--check-judge') {
+    // Exit 1 when the verdict is unusable, so run.sh retries the judge call.
+    try { parseJudge(io.readFile(argv[2]), meta()); } catch (e) { io.out(`${e.message}\n`); return 1; }
   } else {
     const m = JSON.parse(io.readFile(argv[0]));
     const judgeText = argv[2] ? io.readFile(argv[2]) : undefined;
@@ -208,5 +222,5 @@ function main(argv, ioOverrides = {}) {
   return 0;
 }
 
-module.exports = { score, summary, report, events, main, judgePrompt, judgeSchema, parseJudge, calibrate };
+module.exports = { score, summary, report, events, main, judgePrompt, judgeSchema, parseJudge, calibrate, JUDGE };
 if (require.main === module) process.exitCode = main(process.argv.slice(2));

@@ -146,6 +146,25 @@ test('summary: defect rates count judged trials only, so an unjudged trial is ne
   assert.deepEqual(sc.summary([]), { trials: 0, spawned: '0/0', readRubric: '0/0', receipt: '0/0', judged: '0/0', caughtAll: '0/0', meanCostUsd: 0 });
 });
 
+test('summary: score files from before the judge (no judgeError, no judgeCostUsd) are unjudged, with no NaN cost', () => {
+  const old = { spawned: true, readRubric: true, receipt: true, checks: { x: true }, caughtAll: true, costUsd: 0.4 };
+  const noCost = { spawned: true, readRubric: false, receipt: false, checks: { x: false }, caughtAll: false };
+  assert.deepEqual(sc.summary([old, noCost]), {
+    trials: 2, spawned: '2/2', readRubric: '1/2', receipt: '1/2', judged: '0/2', x: '0/0', caughtAll: '0/0', meanCostUsd: 0.2,
+  });
+});
+
+test('report: a summary from before the judge shows n/a in the Judged column', () => {
+  const files = { '/r/old/summary.json': JSON.stringify({ trials: 3, spawned: '3/3', readRubric: '1/3', receipt: '0/3', x: '2/3', caughtAll: '2/3', meanCostUsd: 0.4 }) };
+  const io = { readFile: (p) => files[p], readdir: () => ['old'], exists: (p) => p in files };
+  assert.match(sc.report('/r', io), /\| old \| 3\/3 \| 1\/3 \| 0\/3 \| n\/a \| x 2\/3 \| 2\/3 \| \$0\.4 \|/);
+});
+
+test('JUDGE: one set of limits for both judge callers', () => {
+  assert.deepEqual(Object.keys(sc.JUDGE).sort(), ['attempts', 'budgetUsd', 'timeoutSec']);
+  assert.ok(sc.JUDGE.attempts >= 2 && sc.JUDGE.budgetUsd > 0 && sc.JUDGE.timeoutSec > 0);
+});
+
 test('report: markdown table over scenario summaries, skipping dirs without one', () => {
   const dir = tmp();
   for (const d of ['b-scn', 'a-scn', 'empty']) fs.mkdirSync(path.join(dir, d));
@@ -204,6 +223,17 @@ test('main: score, --judge-prompt, --judge-schema, --summary and --report write 
   out = '';
   assert.equal(sc.main(['--judge-schema', meta], io), 0);
   assert.deepEqual(JSON.parse(out).required, ['noTestPlan', 'vague']);
+
+  // --judge-config prints the limits for run.sh; --check-judge exits 1 on a verdict parseJudge rejects, so run.sh retries.
+  out = '';
+  assert.equal(sc.main(['--judge-config'], io), 0);
+  assert.equal(out, `${sc.JUDGE.budgetUsd} ${sc.JUDGE.attempts} ${sc.JUDGE.timeoutSec}\n`);
+  out = '';
+  assert.equal(sc.main(['--check-judge', meta, judge], io), 0);
+  const partial = path.join(dir, 'partial.judge.json');
+  fs.writeFileSync(partial, judged({ noTestPlan: { reported: true, quote: '' } }));
+  assert.equal(sc.main(['--check-judge', meta, partial], io), 1);
+  assert.match(out, /vague: missing or not a boolean/);
 
   const scn = path.join(dir, 'res', 'scn');
   fs.mkdirSync(scn, { recursive: true });

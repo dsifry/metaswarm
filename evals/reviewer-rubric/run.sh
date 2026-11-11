@@ -18,6 +18,8 @@ JUDGE_MODEL="${JUDGE_MODEL:-haiku}"
 LABEL="${1:?usage: run.sh <label> [trials] [plugin-dir] [scenario...]}"
 TRIALS="${2:-3}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# Judge limits (budget per call, attempts, timeout in seconds) are defined once, in score.js.
+read -r JUDGE_BUDGET JUDGE_ATTEMPTS JUDGE_TIMEOUT < <(node "$HERE/score.js" --judge-config)
 PLUGIN_DIR="$(cd "${3:-$HERE/../..}" && pwd)"
 shift $(( $# < 3 ? $# : 3 ))
 if [ $# -gt 0 ]; then SCENARIOS=("$@"); else
@@ -50,14 +52,16 @@ PROMPT>>>"
     rm -rf "${fx:?}"
     # Judge the reply. A failed judge call leaves the trial unjudged (its defect checks
     # are null and the report's Judged column shows it) rather than stopping the run.
-    # One retry: judge calls occasionally fail transiently.
+    # Retry until score.js accepts the verdict: judge calls occasionally fail, time out
+    # (perl's alarm kills a hung call; macOS has no `timeout`) or return an unusable answer.
     judge="$OUT/trial-$i.judge.json"
-    for attempt in 1 2; do
+    for attempt in $(seq 1 "$JUDGE_ATTEMPTS"); do
       node "$HERE/score.js" --judge-prompt "$SD/meta.json" "$log" \
-        | claude -p --model "$JUDGE_MODEL" --tools "" --setting-sources "" --no-session-persistence \
+        | perl -e 'alarm shift; exec @ARGV' "$JUDGE_TIMEOUT" \
+            claude -p --model "$JUDGE_MODEL" --tools "" --setting-sources "" --no-session-persistence \
             --json-schema "$(node "$HERE/score.js" --judge-schema "$SD/meta.json")" \
-            --output-format json --max-budget-usd 0.25 > "$judge" 2>"$OUT/trial-$i.judge.err" \
-        && ! grep -qE '"is_error": ?true' "$judge" && break
+            --output-format json --max-budget-usd "$JUDGE_BUDGET" > "$judge" 2>"$OUT/trial-$i.judge.err" || true
+      node "$HERE/score.js" --check-judge "$SD/meta.json" "$judge" >> "$OUT/trial-$i.judge.err" && break
       echo "$sc trial $i: judge attempt $attempt failed" >&2
     done
     node "$HERE/score.js" "$SD/meta.json" "$log" "$judge" > "$OUT/trial-$i.score.json"
