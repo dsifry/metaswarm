@@ -45,7 +45,8 @@ PROMPT>>>"
         --output-format stream-json --verbose --max-budget-usd 3 \
         > "$log" 2>"$OUT/trial-$i.err" ) || echo "$sc trial $i: claude exited $?" >&2
     rm -rf "${fx:?}"
-    node "$HERE/score.js" "$SD/meta.json" "$log" > "$OUT/trial-$i.score.json" || true
+    # A scoring failure (e.g. a bad check pattern) stops the run before more paid trials.
+    node "$HERE/score.js" "$SD/meta.json" "$log" > "$OUT/trial-$i.score.json"
     echo "$sc #$i $(cat "$OUT/trial-$i.score.json")"
     SCORES+=("$OUT/trial-$i.score.json")
   done

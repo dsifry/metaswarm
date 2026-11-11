@@ -77,7 +77,7 @@ function score(meta, text) {
   return {
     spawned: uses.some((u) => u.name === 'Agent' && u.input.subagent_type === meta.agent),
     readRubric: uses.some((u) => readsRubric(u, meta.rubric)),
-    receipt: /^\s*(\*\*)?Criteria applied(\*\*)?:/im.test(out),
+    receipt: /^\s*(\*\*)?Criteria applied(\*\*)?:|"criteria_applied"\s*:\s*"[^"\n]+"/im.test(out),
     checks,
     caughtAll: Object.values(checks).every(Boolean),
     costUsd: result.total_cost_usd || 0,

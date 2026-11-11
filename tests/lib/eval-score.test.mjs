@@ -83,6 +83,11 @@ test('score: the receipt line and criteria_applied field are not detected defect
   assert.deepEqual(sc.score(META, result(reply)).checks, { noTestPlan: false, strict: false });
 });
 
+test('score: a JSON reply with a criteria_applied field has a receipt', () => {
+  assert.equal(sc.score(META, result('{ "verdict": "APPROVED", "criteria_applied": "CTO — TDD readiness" }')).receipt, true);
+  assert.equal(sc.score(META, result('{ "criteria_applied": "" }')).receipt, false);
+});
+
 test('score: only reading the rubric counts, not searching for it', () => {
   const tool = (name, input) => line({ type: 'assistant', message: { content: [{ type: 'tool_use', name, input }] } });
   const searches = [tool('Glob', { pattern: '**/cto-agent.md' }), tool('Grep', { pattern: 'x', path: 'agents/cto-agent.md' }),
