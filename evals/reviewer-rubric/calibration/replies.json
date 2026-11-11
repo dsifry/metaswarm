@@ -1,0 +1,734 @@
+[
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": false,
+    "reply": "### Summary\n- **Verdict**: CHANGES REQUIRED for one HIGH issue in the auth route\n- **Style**: one `any` type could be narrowed later (nit)"
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": true,
+    "reply": "#### 1. Parameter type is too broad\n- **Severity**: HIGH\n- **Issue**: The parameter uses `any`, so callers lose type checking."
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": true,
+    "reply": "#### 1. Broad type\n- Severity: HIGH\n- Issue: The parameter uses `any`."
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": true,
+    "reply": "#### 1. Broad type\n- **Severity (blocking)**: HIGH\n- **Issue/impact**: The parameter uses `any`."
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": true,
+    "reply": "#### 1. Parameter type is too broad\n- **Severity**: HIGH\n- **Problem**: `parse(input: any)` loses type checking."
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": true,
+    "reply": "#### 1. Broad type\n- **Severity**: HIGH\n- **File**: src/parse.ts:3\n- **Issue**: The parameter uses `any`."
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": true,
+    "reply": "#### 1. Broad type\n* **Severity**: HIGH\n* **Issue**: The parameter uses `any`."
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": true,
+    "reply": "#### 1. Broad type\n- **Severity:** HIGH\n- **Issue:** The parameter uses `any`."
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": true,
+    "reply": "#### 1. Broad type\n- **Severity**: HIGH\n- **Fix**: replace `any` with `string`."
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": true,
+    "reply": "**Severity**: HIGH\n**Issue**: The parameter uses `any`."
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": false,
+    "reply": "### Summary\n- **Verdict**: CHANGES REQUIRED (one HIGH: missing auth on /admin)\n- **Evidence**: src/auth.ts; the `any` in parse.ts is a nit"
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": false,
+    "reply": "### Summary\n- **Severity**: HIGH for the auth bypass\n- **Details**: separately, one `any` type could be narrowed later (nit)"
+  },
+  {
+    "scenario": "code-review",
+    "defect": "anyHigh",
+    "reported": false,
+    "reply": "#### 1. Missing auth check\n- **Severity**: HIGH\n- **Issue**: /admin has no auth.\n- **Location**: src/routes.ts; note src/parse.ts uses `any` (style only)"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: IDOR is prevented by the ownership check; the delete flow needs an audit log."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: A customer cannot access another customer's invoice; the cache key is unclear."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "No IDOR or auth bypass found."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "No authorization check gaps found."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "No missing ownership check found."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: Each customer can see their own invoices, not another customer's, because queries filter by owner."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: Support staff can view any other customer's invoices, which the spec intends."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: No ownership check found"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: A signed-in customer can access another customer's invoice by changing the ID."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: IDOR not addressed in the invoice download endpoint"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: Insecure direct object reference is not prevented: the endpoint takes a raw invoice ID"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "A signed-in customer can access another customer's invoice by changing the ID"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "IDOR is prevented by the ownership check"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "No authorization issues were found."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "No problems found."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "No IDOR found."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: Users can only view their own invoices; another customer's invoice returns 404."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: Ownership check: an admin can view another user's profile, as the spec requires"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: IDOR on invoice download must be addressed before ship."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: IDOR isn't prevented: the download takes a raw invoice ID."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: IDOR is never prevented on the invoice endpoint."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: IDOR is not fully mitigated by the UUID invoice IDs."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: IDOR: the download endpoint must be guarded by an ownership check."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: IDOR risk on /invoices/:id needs to be handled."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: Potential IDOR - nothing in the design covers ownership."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: No authorization check on the download endpoint found"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: No ownership check on GET /invoices/:id found"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: No per-customer ownership check found"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: No owner check found"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: No ownership checks were found for invoice downloads."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": true,
+    "reply": "- title: Customer A can download customer B's invoice by changing the ID."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: Customers can see their invoices and never another customer's."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: Customers can view only their own invoices, never another customer's."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: IDOR is mitigated by the ownership check."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: IDOR is addressed."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "No IDOR issues found."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: IDOR is properly prevented by the ownership check in the service layer."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: IDOR protection: the service checks ownership on every invoice read."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: IDOR - PASS, ownership verified."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "idor",
+    "reported": false,
+    "reply": "- title: Considered IDOR; the ownership check handles it."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": false,
+    "reply": "- title: Logs redact tokens before writing."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": false,
+    "reply": "- title: Logs redact API keys and session IDs before writing."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: Logging request headers exposes API keys and session IDs."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: The handler writes API keys and session IDs to the logs."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: The handler logs bearer tokens and never redacts them."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "Logging request headers exposes API keys and session IDs"
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: The handler writes API-keys and session tokens to the logs."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: The logger writes Authorization headers to the logs, which should be redacted."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: The logging middleware redacts passwords but logs the Authorization header and cookies."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: Bearer tokens are logged in full and are not being redacted."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: Request headers, including tokens, are logged and aren't redacted."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: The handler logs bearer tokens; it fails to redact them."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: The handler logs bearer tokens and fails to redact them."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: Tokens end up in the logs because only passwords are masked."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": true,
+    "reply": "- title: The redaction list masks passwords only, so the logger writes session cookies to the logs."
+  },
+  {
+    "scenario": "design-security",
+    "defect": "secretsInLogs",
+    "reported": false,
+    "reply": "- title: Logs mask API keys and session IDs."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": false,
+    "reply": "- title: The design does not define colors, and users navigate via the sidebar as expected."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": true,
+    "reply": "- title: The design does not say how users can navigate to the saved-search panel."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": true,
+    "reply": "The design does not say how users can navigate to the saved-search panel"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": true,
+    "reply": "- title: Users cannot navigate to the panel from the dashboard."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": true,
+    "reply": "- title: No details on the sidebar and app shell placement"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": true,
+    "reply": "- title: Missing in design.md: route and app-shell placement"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": true,
+    "reply": "- title: The design does not say how users navigate to the panel"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": true,
+    "reply": "- title: No way to navigate to the panel"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": true,
+    "reply": "- title: There is no navigation entry for the panel and no route."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": true,
+    "reply": "- title: Users cannot navigate to the saved-search panel."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": true,
+    "reply": "- title: The design never says how the panel is reached from the dashboard and the sidebar navigation."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": false,
+    "reply": "- title: No color tokens are defined, but users navigate via the sidebar."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": false,
+    "reply": "- title: No dark mode spec; navigation is well described."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": false,
+    "reply": "- title: Without extra clicks users navigate to the panel from the sidebar."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "integration",
+    "reported": false,
+    "reply": "- title: The spec does not define colors, while users navigate via the sidebar as expected."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": false,
+    "reply": "- title: No route is specified, but the error state is fully defined."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": false,
+    "reply": "- title: No route is specified and the error state is fully defined."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": false,
+    "reply": "No missing empty or error states found."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": true,
+    "reply": "- title: The panel has no spinner, empty view, or error state defined"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": false,
+    "reply": "No route is specified, but the error state is fully defined"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": true,
+    "reply": "- title: Nothing about what users see while loading, or the error state"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": true,
+    "reply": "- title: No loading or error state handling was found"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": true,
+    "reply": "- title: No empty or error state design found"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": true,
+    "reply": "- title: Missing from design.md: empty, loading and error states"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": true,
+    "reply": "- title: No designs (e.g. mockups) for the empty or error states"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": true,
+    "reply": "- title: No spec for the search box and the results list's empty state"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": true,
+    "reply": "- title: The design does not describe the filters and the empty state"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": true,
+    "reply": "- title: No designs for search and filter results' empty, loading or error states"
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": false,
+    "reply": "- title: No route is specified; the error state is fully defined."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": false,
+    "reply": "- title: No route is specified, while the error state is fully defined."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": false,
+    "reply": "- title: No route is specified, although error states are well covered."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": false,
+    "reply": "- title: No routing concerns; the empty state is fine."
+  },
+  {
+    "scenario": "design-ux",
+    "defect": "uiStates",
+    "reported": false,
+    "reply": "- title: No route is specified, yet the empty state is defined."
+  },
+  {
+    "scenario": "plan-feasibility",
+    "defect": "badCommand",
+    "reported": true,
+    "reply": "- title: Plan runs npm run test:unit\n  description: That script does not exist in package.json."
+  },
+  {
+    "scenario": "plan-feasibility",
+    "defect": "fabricatedPath",
+    "reported": false,
+    "reply": "### Verified\n- src/mailer.ts exists and exports sendMail\n- The test:unit script is missing from package.json"
+  },
+  {
+    "scenario": "plan-feasibility",
+    "defect": "fabricatedPath",
+    "reported": true,
+    "reply": "- title: Import sendMail from src/mailer.ts\n  description: This file does not exist."
+  },
+  {
+    "scenario": "plan-feasibility",
+    "defect": "fabricatedPath",
+    "reported": false,
+    "reply": "No fabricated paths found; mailer.ts exists."
+  },
+  {
+    "scenario": "plan-feasibility",
+    "defect": "fabricatedPath",
+    "reported": false,
+    "reply": "- title: src/mailer.ts\n  description: exists and exports sendMail.\n  evidence: the test:unit script is missing"
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "formatCreep",
+    "reported": true,
+    "reply": "- title: WU3 adds YAML and CSV\n  description: Nobody asked for these; scope creep."
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "formatCreep",
+    "reported": false,
+    "reply": "### Traceability\n- WU1 (JSON): traced to item 1\n- WU3 (CSV): traced to item 3\n- WU2: out of scope"
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "formatCreep",
+    "reported": true,
+    "reply": "- title: WU3 adds YAML and CSV\n  description: These formats are out of scope."
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": false,
+    "reply": "### Traceability\n- WU1 (JSON output): traced to request item 1\n- WU2 (yargs migration): traced to request item 2\n- WU3: out of scope, nobody asked for YAML"
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": false,
+    "reply": "## Summary\n- WU2 is justified by the request\n- WU3 is out of scope"
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": true,
+    "reply": "- title: Replace commander with yargs\n  description: This is out of scope."
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": true,
+    "reply": "1. - title: Replace commander with yargs\n   - description: This is out of scope."
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": true,
+    "reply": "- **title:** Replace commander with yargs\n  **description:** Nobody asked for this; scope creep."
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": true,
+    "reply": "- title: Replace commander with yargs\n- description: This is out of scope."
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": true,
+    "reply": "### 1. WU2 migrates to yargs\n**Issue**: This is out of scope."
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": true,
+    "reply": "- title: Replace commander with yargs\n  severity: major\n  description: This is out of scope."
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": false,
+    "reply": "- title: WU2 adds yargs\n  description: Traced to request item 2.\n  evidence: WU3 is out of scope, see item 4."
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": true,
+    "reply": "- **title:** Replace commander with yargs\n  **description:** This is scope creep."
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": true,
+    "reply": "- title: Replace commander with yargs\n  - description: This is out of scope."
+  },
+  {
+    "scenario": "plan-scope",
+    "defect": "frameworkCreep",
+    "reported": true,
+    "reply": "- title: Replace commander with yargs\n  - protects: request\n  - description: This is out of scope."
+  }
+]

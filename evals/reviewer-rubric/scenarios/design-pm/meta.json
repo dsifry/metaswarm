@@ -1,12 +1,8 @@
 {
   "agent": "metaswarm:design-reviewer",
   "rubric": "product-manager-agent",
-  "checks": {
-    "noUseCases": [
-      "(?i)(no (clear |stated |defined |named )?(use cases?|personas?|user stor(y|ies)|target users?|WHO\\s*/\\s*WANTS)|(use cases?|personas?|user stor(y|ies)|WHO\\s*/\\s*WANTS)[^\\n]{0,100}(missing|absent|not (defined|stated|given|named)|FAIL|none|aren.t|isn.t)|(missing|without|lacks?|doesn.t (name|say|define))[^\\n]{0,40}(use cases?|personas?|user stor|who (the users|it is for|wants))|(who|which users) (wants|needs|asked for) (this|it|PDF|theming|a marketplace)[^\\n]{0,40}\\?)"
-    ],
-    "featureCreep": [
-      "(?is)(theming|marketplace)[\\s\\S]{0,400}(scope creep|feature creep|MVP|nice[- ]to[- ]have|out of scope|defer|separate (release|design)|split)|(scope creep|feature creep|MVP|nice[- ]to[- ]have|out of scope)[\\s\\S]{0,400}(theming|marketplace)"
-    ]
+  "defects": {
+    "noUseCases": "The design gives no user use cases or user problem for PDF export (who needs it and why); the goal only restates the feature.",
+    "featureCreep": "The theming engine and the plugin marketplace go beyond the goal (PDF export for reports) and should be cut or split into separate work."
   }
 }

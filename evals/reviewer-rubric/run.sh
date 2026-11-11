@@ -8,13 +8,18 @@
 # Each scenario (scenarios/<name>/) has fixture.sh (builds a tiny git repo),
 # prompt.txt (a paraphrased reviewer prompt that names no rubric, like the
 # ones orchestrators write in practice) and meta.json (agent type, rubric name
-# and the regex checks for its planted defects). A headless `claude -p` session
-# loads metaswarm from <plugin-dir> and spawns the reviewer with that prompt.
+# and a plain-sentence description of each planted defect). A headless
+# `claude -p` session loads metaswarm from <plugin-dir> and spawns the reviewer
+# with that prompt. A second, tool-less call to $JUDGE_MODEL (default haiku)
+# then judges whether the reply reports each planted defect.
 set -euo pipefail
+JUDGE_MODEL="${JUDGE_MODEL:-haiku}"
 
 LABEL="${1:?usage: run.sh <label> [trials] [plugin-dir] [scenario...]}"
 TRIALS="${2:-3}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# Judge limits (budget per call, attempts, timeout in seconds) are defined once, in score.js.
+read -r JUDGE_BUDGET JUDGE_ATTEMPTS JUDGE_TIMEOUT < <(node "$HERE/score.js" --judge-config)
 PLUGIN_DIR="$(cd "${3:-$HERE/../..}" && pwd)"
 shift $(( $# < 3 ? $# : 3 ))
 if [ $# -gt 0 ]; then SCENARIOS=("$@"); else
@@ -45,8 +50,21 @@ PROMPT>>>"
         --output-format stream-json --verbose --max-budget-usd 3 \
         > "$log" 2>"$OUT/trial-$i.err" ) || echo "$sc trial $i: claude exited $?" >&2
     rm -rf "${fx:?}"
-    # A scoring failure (e.g. a bad check pattern) stops the run before more paid trials.
-    node "$HERE/score.js" "$SD/meta.json" "$log" > "$OUT/trial-$i.score.json"
+    # Judge the reply. A failed judge call leaves the trial unjudged (its defect checks
+    # are null and the report's Judged column shows it) rather than stopping the run.
+    # Retry until score.js accepts the verdict: judge calls occasionally fail, time out
+    # (perl's alarm kills a hung call; macOS has no `timeout`) or return an unusable answer.
+    judge="$OUT/trial-$i.judge.json"
+    for attempt in $(seq 1 "$JUDGE_ATTEMPTS"); do
+      node "$HERE/score.js" --judge-prompt "$SD/meta.json" "$log" \
+        | perl -e 'alarm shift; exec @ARGV' "$JUDGE_TIMEOUT" \
+            claude -p --model "$JUDGE_MODEL" --tools "" --setting-sources "" --no-session-persistence \
+            --json-schema "$(node "$HERE/score.js" --judge-schema "$SD/meta.json")" \
+            --output-format json --max-budget-usd "$JUDGE_BUDGET" > "$judge" 2>"$OUT/trial-$i.judge.err" || true
+      node "$HERE/score.js" --check-judge "$SD/meta.json" "$judge" >> "$OUT/trial-$i.judge.err" && break
+      echo "$sc trial $i: judge attempt $attempt failed" >&2
+    done
+    node "$HERE/score.js" "$SD/meta.json" "$log" "$judge" > "$OUT/trial-$i.score.json"
     echo "$sc #$i $(cat "$OUT/trial-$i.score.json")"
     SCORES+=("$OUT/trial-$i.score.json")
   done

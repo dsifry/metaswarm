@@ -1,12 +1,8 @@
 {
   "agent": "metaswarm:plan-reviewer",
   "rubric": "plan-review-rubric-adversarial",
-  "checks": {
-    "missedCaller": [
-      "invoice\\.ts"
-    ],
-    "unknownCurrency": [
-      "(?i)(unsupported|unknown|invalid|unrecogni[sz]ed|missing|null|undefined|default) currenc|currenc[a-z]* (is )?(missing|unknown|invalid|unsupported|null|undefined)"
-    ]
+  "defects": {
+    "missedCaller": "src/invoice.ts also calls formatPrice, but the plan does not update it, so invoices will not show the customer's currency.",
+    "unknownCurrency": "The plan does not say what happens when the currency is missing, unknown or unsupported (anything other than USD, EUR or GBP)."
   }
 }

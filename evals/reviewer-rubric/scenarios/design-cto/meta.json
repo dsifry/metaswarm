@@ -1,12 +1,8 @@
 {
   "agent": "metaswarm:design-reviewer",
   "rubric": "cto-agent",
-  "checks": {
-    "noTestPlan": [
-      "(?i)(test (plan|strateg|spec)|no tests?\\b|testing (section|strategy|approach)|untested)"
-    ],
-    "vagueSuccess": [
-      "(?i)((not|n.t|cannot|no way to)( be)? measur|unmeasurable|vague|no (metrics?|KPIs?|targets?)|success criteria[^\\n]{0,40}(FAIL|vague|not))"
-    ]
+  "defects": {
+    "noTestPlan": "The design has no test plan or testing strategy for the digest job.",
+    "vagueSuccess": "The success criteria (\"users find the digest useful and engagement goes up\") are vague: no measurable metric or target."
   }
 }
