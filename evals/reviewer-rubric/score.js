@@ -52,7 +52,10 @@ function findingBlocks(text) {
 }
 const CLAUSE = "[^.;\\n]*";
 const DENIALS = [
-  `\\b(no|not|never|none|nothing)\\b${CLAUSE}\\b(found|issues?|problems?|risks?|concerns?|vulnerab\\w*)\\b`,
+  // The negation applies to the defect itself: "no issues", "no IDOR risk", "No IDOR found", "nothing was found".
+  // "No ownership check is performed, creating an IDOR vulnerability" reports a defect and stays.
+  `\\b(no|not an?|never an?|without any)\\s+(\\S+\\s+){0,2}(issues?|problems?|risks?|concerns?|vulnerabilit(y|ies))\\b`,
+  `\\b(no|nothing|none)\\b(\\s+\\S+){0,4}?\\s+(was |were )?found\\b`,
   `\\b(never|not|doesn.t|does not|don.t|do not)\\s+(\\w+\\s+){0,2}(exposes?|leaks?|logs?|logged|writes?|stores?|reveals?)\\b`,
   `\\b(looks? (fine|good|correct|ok)|(is|are) (fine|in place|correct|clear|well (described|defined|handled|specified)))\\b`,
 ].map((d) => new RegExp(`${CLAUSE}${d}${CLAUSE}`, 'gi'));

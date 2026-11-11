@@ -234,6 +234,7 @@ const positives = {
   },
   'design-security': {
     secretsInLogs: ['- title: The handler logs Authorization headers and session cookies at info level; redact them before logging.'],
+    idor: ['- title: No ownership check is performed, creating an IDOR vulnerability.'],
   },
   'plan-scope': { formatCreep: ['- title: WU2 is needed; WU3 is out of scope'] },
   'plan-feasibility': { fabricatedPath: ['- title: mailer.ts is missing; npm run test:unit is valid'] },
