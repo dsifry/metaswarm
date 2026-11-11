@@ -2,7 +2,11 @@
   "agent": "metaswarm:design-reviewer",
   "rubric": "cto-agent",
   "checks": {
-    "noTestPlan": ["(?i)(test (plan|strateg|spec)|TDD|no tests?\\b|testing (is|section)|untested)"],
-    "vagueSuccess": ["(?i)(measurable|metric|KPI|vague|not measurable|unmeasurable)"]
+    "noTestPlan": [
+      "(?i)(test (plan|strateg|spec)|no tests?\\b|testing (section|strategy|approach)|untested)"
+    ],
+    "vagueSuccess": [
+      "(?i)((not|n.t|cannot|no way to)( be)? measur|unmeasurable|vague|no (metrics?|KPIs?|targets?)|success criteria[^\\n]{0,40}(FAIL|vague|not))"
+    ]
   }
 }

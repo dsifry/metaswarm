@@ -26,7 +26,7 @@ for sc in "${SCENARIOS[@]}"; do
   SD="$HERE/scenarios/$sc"
   OUT="$OUT_ROOT/$sc"
   mkdir -p "$OUT"
-  AGENT="$(node -e "console.log(require('$SD/meta.json').agent)")"
+  AGENT="$(node -e 'console.log(require(process.argv[1]).agent)' "$SD/meta.json")"
   MAIN_PROMPT="Use the Agent tool exactly once with subagent_type \"$AGENT\" and pass it exactly the prompt between the markers, unchanged. Then print the reviewer's reply verbatim and nothing else.
 <<<PROMPT
 $(cat "$SD/prompt.txt")

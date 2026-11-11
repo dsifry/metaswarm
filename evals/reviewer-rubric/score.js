@@ -75,9 +75,17 @@ function summary(scores) {
   return s;
 }
 
-function report(dir) {
-  const rows = fs.readdirSync(dir).filter((d) => fs.existsSync(path.join(dir, d, 'summary.json'))).sort()
-    .map((d) => [d, JSON.parse(fs.readFileSync(path.join(dir, d, 'summary.json'), 'utf8'))]);
+// File access is injected; the real implementation is the default.
+const realIo = {
+  out: (s) => process.stdout.write(s),
+  readFile: (p) => fs.readFileSync(p, 'utf8'),
+  readdir: (d) => fs.readdirSync(d),
+  exists: (p) => fs.existsSync(p),
+};
+
+function report(dir, io = realIo) {
+  const rows = io.readdir(dir).filter((d) => io.exists(path.join(dir, d, 'summary.json'))).sort()
+    .map((d) => [d, JSON.parse(io.readFile(path.join(dir, d, 'summary.json')))]);
   const lines = [`## ${path.basename(dir)}`, '', '| Scenario | Spawned | Read rubric | Receipt | Defect checks | All caught | Mean cost |', '|---|---|---|---|---|---|---|'];
   for (const [d, s] of rows) {
     const fixed = ['trials', 'spawned', 'readRubric', 'receipt', 'caughtAll', 'meanCostUsd'];
@@ -87,15 +95,16 @@ function report(dir) {
   return lines.join('\n') + '\n';
 }
 
-function main(argv, io = { out: (s) => process.stdout.write(s) }) {
+function main(argv, ioOverrides = {}) {
+  const io = { ...realIo, ...ioOverrides };
   if (argv[0] === '--summary') {
-    const scores = argv.slice(1).map((p) => JSON.parse(fs.readFileSync(p, 'utf8')));
+    const scores = argv.slice(1).map((p) => JSON.parse(io.readFile(p)));
     io.out(JSON.stringify(summary(scores)) + '\n');
   } else if (argv[0] === '--report') {
-    io.out(report(argv[1]));
+    io.out(report(argv[1], io));
   } else {
-    const meta = JSON.parse(fs.readFileSync(argv[0], 'utf8'));
-    io.out(JSON.stringify(score(meta, fs.readFileSync(argv[1], 'utf8'))) + '\n');
+    const meta = JSON.parse(io.readFile(argv[0]));
+    io.out(JSON.stringify(score(meta, io.readFile(argv[1]))) + '\n');
   }
   return 0;
 }

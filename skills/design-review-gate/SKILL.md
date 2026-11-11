@@ -126,7 +126,7 @@ interface ReviewResult {
 }
 ```
 
-A NEEDS_REVISION without any `blocker: yes` finding is read as APPROVED, and its findings become follow-ups. A NEEDS_REVISION whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as APPROVED. A blocker that lacks `needs_user` or `origin` gets one re-request too; if they are still missing they are treated as unknown, which triggers nothing. A review without a `Criteria applied:` line is re-requested once too; if it is still missing, it is accepted and the gap becomes a follow-up, so it never blocks (see the guide).
+A NEEDS_REVISION without any `blocker: yes` finding is read as APPROVED, and its findings become follow-ups. A NEEDS_REVISION whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as APPROVED. A blocker that lacks `needs_user` or `origin` gets one re-request too; if they are still missing they are treated as unknown, which triggers nothing. A review without a `Criteria applied:` line, or a JSON review without a `criteria_applied` field, is re-requested once too; if it is still missing, it is accepted and the gap becomes a follow-up, so it never blocks (see the guide).
 
 ### Phase 3: Check Gate
 

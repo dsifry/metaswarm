@@ -146,6 +146,8 @@ for d in agents skills/start/agents; do
     'When the task asks for JSON' '`criteria_applied`' '`criteria_check`'
 done
 assert_in "guide: a JSON reply's criteria_applied field counts as the receipt" "$GUIDE_RULE" '`criteria_applied` field'
+assert_in "$DRG: a JSON review's criteria_applied field counts as the receipt" \
+  "$(grep -F 'is re-requested once in the contract format' "$DRG")" 'or a JSON review without a `criteria_applied` field'
 
 echo "Self-test: drift is detected"
 NEG="$(mktemp -d)"

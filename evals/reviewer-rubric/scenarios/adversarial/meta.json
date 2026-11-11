@@ -7,7 +7,7 @@
       "(?i)scope"
     ],
     "untested": [
-      "(?i)(\\[\\]|empty)",
+      "(?i)(sum\\(\\[\\]\\)|empty (array|input|list))",
       "(?i)(untested|no test|not tested|missing test|without a test|lacks? (a )?test|nothing (in the tests )?(tests|checks))"
     ],
     "anyBlocker": [

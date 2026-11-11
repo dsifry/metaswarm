@@ -146,6 +146,28 @@ test('main: score, --summary and --report modes write through io.out', () => {
   assert.match(out, /\| scn \| 1\/1 \|/);
 });
 
+test('main: file access goes through injected io, so no real files are needed', () => {
+  const files = {
+    '/m.json': JSON.stringify(META),
+    '/t.jsonl': result('test plan'),
+    '/r/scn/summary.json': JSON.stringify({ trials: 1, spawned: '1/1', readRubric: '0/1', receipt: '0/1', caughtAll: '0/1', meanCostUsd: 0 }),
+  };
+  let out = '';
+  const io = {
+    out: (s) => { out += s; },
+    readFile: (p) => { if (!(p in files)) throw new Error(`ENOENT ${p}`); return files[p]; },
+    readdir: (d) => (d === '/r' ? ['scn', 'nosummary'] : []),
+    exists: (p) => p in files,
+  };
+  assert.equal(sc.main(['/m.json', '/t.jsonl'], io), 0);
+  assert.equal(JSON.parse(out).checks.noTestPlan, true);
+  out = '';
+  assert.equal(sc.main(['--report', '/r'], io), 0);
+  assert.match(out, /\| scn \| 1\/1 \|/);
+  assert.doesNotMatch(out, /nosummary/);
+  assert.throws(() => sc.main(['--summary', '/missing.json'], io), /ENOENT \/missing\.json/);
+});
+
 test('CLI: runs as a script and prints to stdout', () => {
   const dir = tmp();
   const meta = path.join(dir, 'meta.json');

@@ -26,6 +26,8 @@ Metaswarm is loaded from `<tree>`, and the user's installed plugins are not load
 
 Defect checks ignore the receipt line (or `criteria_applied` field) and criteria-check rows that passed or were N/A (table rows and JSON `criteria_check` entries), so a row naming a checklist item counts only when it FAILs. A rubric read means reading the file's text: `Read`, a `cat`/`sed`/`head`-style Bash command, or `Grep` in content mode. A `Glob`, a file-listing `Grep`, `find` or `ls` only locates the file and doesn't count.
 
+After the PR review, these scoring rules and tighter check patterns were applied to every saved trial. Two cells changed, both in the baseline: "read rubric or persona" went from 3/12 to 2/12, because one trial only globbed for the file. Redirect Architect "API contract" went from 1/3 to 0/3, because its old match was a 429 mentioned in a different finding. Every other result in the tables below stands.
+
 ## Running it
 
 ```bash
@@ -64,7 +66,7 @@ Redirect prompts ("read the brief and follow it exactly"):
 | Scenario | Check | Baseline | Fix 1+3 | Fix 1+3 + table |
 |---|---|---|---|---|
 | design CTO | no test plan | 0/3 | 3/3 | 3/3 |
-| design Architect | API contract | 1/3 | 1/3 | 3/3 |
+| design Architect | API contract | 0/3 | 1/3 | 3/3 |
 
 "n/a" means fix 1 does not change `adversarial-reviewer.md`, whose definition already embeds its rubric. "(= fix 3)" marks cells that were not run: their tree is identical to fix 3's for that scenario.
 

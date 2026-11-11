@@ -7,7 +7,7 @@
       "(?i)(duplicat|already exists|existing|reuse|SERVICE_INVENTORY)"
     ],
     "apiContract": [
-      "(?i)(status code|response code|\\b(400|401|403|404|429|500)\\b|error (response|shape|format)|API contract)"
+      "(?i)(API contracts?|status codes?|response codes?|error (responses?|shapes?|format|handling)|\\b(400|401|403|404|429|500) (responses?|shapes?|status)|what it returns)"
     ]
   }
 }
