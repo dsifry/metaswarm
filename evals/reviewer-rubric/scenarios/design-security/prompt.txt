@@ -1,0 +1,6 @@
+You are the Security reviewer. Review the design at docs/design.md in this repo. Judge it fresh; you have no context from other reviewers.
+
+Focus on these areas:
+- Whether the 5-minute CDN cache can serve stale invoices after a correction.
+
+Report each finding with: title, description, severity (critical/major/minor/nit), protects, evidence, blocker (yes only if critical or major AND protects is non-empty). Start with `## Security review — APPROVED` or `## Security review — CHANGES REQUIRED`.

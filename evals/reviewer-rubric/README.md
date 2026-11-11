@@ -92,4 +92,28 @@ The branch as shipped, 3 trials per cell (6 where a cell was re-run):
 
 The adversarial and plan re-runs used a scratch copy of the branch with the final text. The commits that followed apply the same text.
 
-**Limits.** Each cell has only 3 trials. Delivering the criteria is deterministic, because they are text in the agent definition. Applying them is not: the receipt is self-reported, and with fixes 1+3 the reviewer opened its rubric in only 5 of 9 runs. Collaborative-mode code review has no scenario. If misses show up in real use, a hook that injects the template into Agent calls is the fallback.
+## Remaining roles (2026-11-11)
+
+Scenarios for the roles not run above: the PM, Designer, Security and UX design reviewers, the Feasibility and Scope & Alignment plan reviewers, and a Collaborative-mode code review. Code review uses `adversarial-reviewer` with no mode named, so its default, Collaborative, applies with `code-review-rubric`. Each scenario plants two defects inside the role's criteria, and the prompt focuses elsewhere. Baseline is the tree before #105 (c51e08d). Shipped is main after #106 (5fadf25). 3 trials per cell, 42 trials in total, $16.38.
+
+| Scenario | Planted defects | Baseline | Shipped |
+|---|---|---|---|
+| design PM | no use cases / theming and marketplace beyond the goal | 3/3, 3/3 | 3/3, 3/3 |
+| design Designer | API unlike the existing `Result<T>` pattern / cryptic `ERR_42` codes | 3/3, 2/3 | 3/3, 3/3 |
+| design Security | no ownership check (IDOR) / full headers logged | 3/3, 3/3 | 3/3, 3/3 |
+| design UX | no empty, loading or error states / no wiring into the app shell | 2/3, 1/3 | 3/3, 3/3 |
+| plan Feasibility | fabricated `mailer.ts` / undefined `npm run test:unit` | 3/3, 3/3 | 3/3, 3/3 |
+| plan Scope & Alignment | yargs migration / YAML and CSV formats, both unrequested | 3/3, 3/3 | 3/3, 3/3 |
+| code review (Collaborative) | `any` parameter rated HIGH / `toBeDefined()`-only test | 3/3, 3/3 | 3/3, 3/3 |
+| all | read rubric or persona | 10/21 | 21/21 |
+| all | receipt present | 0/21 | 21/21 |
+
+What the results show:
+
+- **The UX and Designer gaps close.** The baseline UX reviewer read its persona file in all 3 trials, but still missed the UI states in 1 and the app-shell wiring in 2. It stayed on the visual-hierarchy focus. Every shipped trial filled in those checklist rows and failed them. The Designer gap was smaller: 2 of 3 baseline trials flagged the cryptic error codes.
+- **The other five roles show no gap.** The baseline already caught every planted defect for PM, Security, Feasibility, Scope & Alignment and code review. These defects may have been too obvious to separate the variants. The shipped trees caught all of them too, so nothing regressed.
+- **Receipt and rubric reads:** the receipt went from 0/21 to 21/21, and rubric or persona reads from 10/21 to 21/21.
+
+Every hit and miss was checked by reading the reply, not only the regex. The first scoring pass got several cells wrong, in both directions. Code review scored 1/3 and 2/3 for `any` rated HIGH, but all six trials did rate it HIGH. One UX trial matched `App.tsx` cited for a different finding, and one Designer trial matched "opaque token" from a pagination finding. The patterns were fixed before the tables above were scored. `tests/lib/eval-score.test.mjs` checks that no scenario's checks match an empty review.
+
+**Limits.** Each cell has only 3 trials. Delivering the criteria is deterministic, because they are text in the agent definition. Applying them is not: the receipt is self-reported, and with fixes 1+3 the reviewer opened its rubric in only 5 of 9 runs. If misses show up in real use, a hook that injects the template into Agent calls is the fallback.

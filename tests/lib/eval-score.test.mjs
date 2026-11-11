@@ -178,6 +178,25 @@ test('main: file access goes through injected io, so no real files are needed', 
   assert.throws(() => sc.main(['--summary', '/missing.json'], io), /ENOENT \/missing\.json/);
 });
 
+test('scenarios: each has a fixture, a prompt and a meta.json whose checks compile', () => {
+  const dir = path.join(here, '..', '..', 'evals', 'reviewer-rubric', 'scenarios');
+  const names = fs.readdirSync(dir);
+  assert.ok(names.length >= 14, `expected at least 14 scenarios, found ${names.length}`);
+  for (const n of names) {
+    for (const f of ['fixture.sh', 'prompt.txt', 'meta.json']) assert.ok(fs.existsSync(path.join(dir, n, f)), `${n}/${f}`);
+    const meta = JSON.parse(fs.readFileSync(path.join(dir, n, 'meta.json'), 'utf8'));
+    assert.match(meta.agent, /^metaswarm:/, `${n}: agent`);
+    assert.ok(meta.rubric, `${n}: rubric`);
+    const checks = Object.entries(meta.checks);
+    assert.ok(checks.length > 0, `${n}: checks`);
+    for (const [k, patterns] of checks) {
+      assert.ok(patterns.length > 0, `${n}.${k}: patterns`);
+      // An unrelated reply must not satisfy a check.
+      assert.equal(sc.score(meta, result('## APPROVED\nNo findings.')).checks[k], false, `${n}.${k} matches an empty review`);
+    }
+  }
+});
+
 test('CLI: runs as a script and prints to stdout', () => {
   const dir = tmp();
   const meta = path.join(dir, 'meta.json');

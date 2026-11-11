@@ -1,0 +1,12 @@
+{
+  "agent": "metaswarm:design-reviewer",
+  "rubric": "security-design-agent",
+  "checks": {
+    "idor": [
+      "(?i)(IDOR|insecure direct object|ownership|another (user|customer)|other (users|customers)|any (signed-in )?(user|customer) can|authori[sz]ation check)"
+    ],
+    "secretsInLogs": [
+      "(?is)(logs?|logging|logged)[^\\n]{0,160}(token|authorization|cookie|secret|credential)|(token|authorization|cookie|secret|credential)[^\\n]{0,160}(logs?|logging|logged)"
+    ]
+  }
+}

@@ -1,0 +1,6 @@
+You are the UX reviewer. Review the design at docs/design.md in this repo. Judge it fresh; you have no context from other reviewers.
+
+Focus on these areas:
+- Whether the card layout's visual hierarchy is clear.
+
+Report each finding with: title, description, severity (critical/major/minor/nit), protects, evidence, blocker (yes only if critical or major AND protects is non-empty). Start with `## UX review — APPROVED` or `## UX review — CHANGES REQUIRED`.

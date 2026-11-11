@@ -1,0 +1,12 @@
+{
+  "agent": "metaswarm:design-reviewer",
+  "rubric": "ux-reviewer-agent",
+  "checks": {
+    "uiStates": [
+      "(?i)(empty state|loading state|error state|empty, loading|no saved searches|zero state|(loading|empty|error) (and|or|/) (loading|empty|error))"
+    ],
+    "integration": [
+      "(?i)(app shell|\\broute\\b|routing|navigation|nav (link|item|menu|bar)|where (the panel|it|the list) (lives|appears|is (rendered|mounted|shown))|wir(e|ing|ed) (it |the panel |the list )?(in|into|up)|mount(ed|s)? (in|into)|entry point|how (users|the user) (reach|get to|open|find))"
+    ]
+  }
+}

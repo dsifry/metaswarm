@@ -130,5 +130,5 @@ function main(argv, ioOverrides = {}) {
   return 0;
 }
 
-module.exports = { score, summary, report, events, main };
+module.exports = { score, summary, report, events, main, findingsText };
 if (require.main === module) process.exitCode = main(process.argv.slice(2));
