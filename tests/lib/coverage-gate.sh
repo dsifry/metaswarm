@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # tests/lib/coverage-gate.sh
-# Enforce 100% line/branch/function coverage for bin/metaswarm-usage and
-# lib/review-rule.js (the only code in this repo whose line coverage can be
+# Enforce 100% line/branch/function coverage for bin/metaswarm-usage,
+# lib/review-rule.js and evals/reviewer-rubric/score.js (the only code in this repo whose line coverage can be
 # measured; shell scripts are covered by the behavioural suites in tests/*/test-*.sh).
 #
 # Dev-only: the coverage threshold flags need Node.js >= 22.8. The npm installer's
@@ -21,4 +21,5 @@ exec node --test --experimental-test-coverage \
   --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100 \
   --test-coverage-include=bin/metaswarm-usage \
   --test-coverage-include=lib/review-rule.js \
-  tests/lib/metaswarm-usage.test.mjs tests/lib/review-rule.test.mjs
+  --test-coverage-include=evals/reviewer-rubric/score.js \
+  tests/lib/metaswarm-usage.test.mjs tests/lib/review-rule.test.mjs tests/lib/eval-score.test.mjs

@@ -1,0 +1,12 @@
+{
+  "agent": "metaswarm:plan-reviewer",
+  "rubric": "plan-review-rubric-adversarial",
+  "checks": {
+    "missedCaller": [
+      "invoice\\.ts"
+    ],
+    "unknownCurrency": [
+      "(?i)(unsupported|unknown|invalid|unrecogni[sz]ed|missing|null|undefined|default) currenc|currenc[a-z]* (is )?(missing|unknown|invalid|unsupported|null|undefined)"
+    ]
+  }
+}

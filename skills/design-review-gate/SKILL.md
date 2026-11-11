@@ -105,6 +105,8 @@ interface Finding {
 interface ReviewResult {
   agent: "product-manager" | "architect" | "designer" | "security-design" | "ux-reviewer" | "cto";
   verdict: "APPROVED" | "NEEDS_REVISION"; // NEEDS_REVISION only with at least one blocker: "yes" finding
+  criteria_applied: string; // the receipt: role, criteria sections and rubric or persona file applied
+  criteria_check: { item: string; result: "PASS" | "FAIL" | "N/A"; evidence: string }[]; // one row per role checklist item
   findings: Finding[]; // every finding, any severity
   suggestions: string[]; // Non-finding notes
   questions: string[]; // Clarifications needed
@@ -124,7 +126,7 @@ interface ReviewResult {
 }
 ```
 
-A NEEDS_REVISION without any `blocker: yes` finding is read as APPROVED, and its findings become follow-ups. A NEEDS_REVISION whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as APPROVED. A blocker that lacks `needs_user` or `origin` gets one re-request too; if they are still missing they are treated as unknown, which triggers nothing.
+A NEEDS_REVISION without any `blocker: yes` finding is read as APPROVED, and its findings become follow-ups. A NEEDS_REVISION whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as APPROVED. A blocker that lacks `needs_user` or `origin` gets one re-request too; if they are still missing they are treated as unknown, which triggers nothing. A review without a `Criteria applied:` line, or a JSON review without a `criteria_applied` field, is re-requested once too; if it is still missing, it is accepted and the gap becomes a follow-up, so it never blocks (see the guide).
 
 ### Phase 3: Check Gate
 
@@ -250,6 +252,8 @@ Return JSON:
 {
   "agent": "product-manager",
   "verdict": "APPROVED" | "NEEDS_REVISION",
+  "criteria_applied": "<role> — <criteria sections and rubric or persona file applied>",
+  "criteria_check": [{ "item": "<checklist item>", "result": "PASS|FAIL|N/A", "evidence": "<one line>" }],
   "use_case_analysis": {
     "total_use_cases": <number>,
     "clear": <number>,
@@ -304,6 +308,8 @@ Return JSON:
 {
   "agent": "architect",
   "verdict": "APPROVED" | "NEEDS_REVISION",
+  "criteria_applied": "<role> — <criteria sections and rubric or persona file applied>",
+  "criteria_check": [{ "item": "<checklist item>", "result": "PASS|FAIL|N/A", "evidence": "<one line>" }],
   "findings": [
     { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],
@@ -358,6 +364,8 @@ Return JSON:
 {
   "agent": "designer",
   "verdict": "APPROVED" | "NEEDS_REVISION",
+  "criteria_applied": "<role> — <criteria sections and rubric or persona file applied>",
+  "criteria_check": [{ "item": "<checklist item>", "result": "PASS|FAIL|N/A", "evidence": "<one line>" }],
   "findings": [
     { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],
@@ -426,6 +434,8 @@ Return JSON:
 {
   "agent": "security-design",
   "verdict": "APPROVED" | "NEEDS_REVISION",
+  "criteria_applied": "<role> — <criteria sections and rubric or persona file applied>",
+  "criteria_check": [{ "item": "<checklist item>", "result": "PASS|FAIL|N/A", "evidence": "<one line>" }],
   "threat_model": {
     "high_risk": ["components with critical risk"],
     "medium_risk": ["components with moderate risk"],
@@ -484,6 +494,8 @@ Return JSON:
 {
   "agent": "ux-reviewer",
   "verdict": "APPROVED" | "NEEDS_REVISION",
+  "criteria_applied": "<role> — <criteria sections and rubric or persona file applied>",
+  "criteria_check": [{ "item": "<checklist item>", "result": "PASS|FAIL|N/A", "evidence": "<one line>" }],
   "findings": [
     { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],
@@ -545,6 +557,8 @@ Return JSON:
 {
   "agent": "cto",
   "verdict": "APPROVED" | "NEEDS_REVISION",
+  "criteria_applied": "<role> — <criteria sections and rubric or persona file applied>",
+  "criteria_check": [{ "item": "<checklist item>", "result": "PASS|FAIL|N/A", "evidence": "<one line>" }],
   "findings": [
     { "title": "<short label, ≤ ~80 chars>", "description": "<1-3 sentences: what is wrong and why it matters>", "severity": "critical|major|minor|nit", "protects": "<credible user scenario | explicit requirement | DoD item>", "evidence": "<design doc section: expected-vs-found>", "blocker": "yes|no", "theme": "<short label>", "needs_user": "yes|no", "origin": "implementation|requirement|assumption", "assumption": "<ledger id such as A3, when origin is assumption>" }
   ],

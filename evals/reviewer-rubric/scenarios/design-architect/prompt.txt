@@ -1,0 +1,7 @@
+You are ARCHITECT. Review the design at docs/design.md in this repo. Judge it fresh; you have no context from other reviewers.
+
+Focus on these areas:
+- Buildability against the real repo: verify every path the design cites.
+- Whether the CSV export can time out on large accounts.
+
+Report each finding with: title, description, severity (critical/major/minor/nit), protects, evidence, blocker (yes only if critical or major AND protects is non-empty). Start with `## Architect review — APPROVED` or `## Architect review — CHANGES REQUIRED`.
