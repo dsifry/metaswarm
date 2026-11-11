@@ -78,6 +78,22 @@ test('score: passed or N/A criteria-check rows are not detected defects', () => 
   assert.equal(s.caughtAll, false);
 });
 
+test('score: the receipt line and criteria_applied field are not detected defects', () => {
+  const reply = ['## APPROVED', '**Criteria applied:** CTO — test plan, Exact', '"criteria_applied": "CTO — test plan, Exact",', 'No findings.'].join('\n');
+  assert.deepEqual(sc.score(META, result(reply)).checks, { noTestPlan: false, strict: false });
+});
+
+test('score: only reading the rubric counts, not searching for it', () => {
+  const tool = (name, input) => line({ type: 'assistant', message: { content: [{ type: 'tool_use', name, input }] } });
+  const searches = [tool('Glob', { pattern: '**/cto-agent.md' }), tool('Grep', { pattern: 'x', path: 'agents/cto-agent.md' }),
+    tool('Bash', { command: 'find . -name cto-agent.md' }), tool('Bash', { command: 'ls agents/cto-agent.md' })];
+  assert.equal(sc.score(META, searches.join('\n')).readRubric, false);
+  assert.equal(sc.score(META, tool('Bash', { command: 'cat agents/cto-agent.md' })).readRubric, true);
+  assert.equal(sc.score(META, tool('Bash', { command: "sed -n '1,80p' /p/cto-agent.md" })).readRubric, true);
+  assert.equal(sc.score(META, tool('Grep', { pattern: '^#', path: '/p/cto-agent.md', output_mode: 'content' })).readRubric, true);
+  assert.equal(sc.score(META, [tool('Read', {}), tool('Bash', {}), tool('Grep', { output_mode: 'content' })].join('\n')).readRubric, false);
+});
+
 test('score: failed criteria-check rows and findings still count', () => {
   const reply = ['| Test plan present | FAIL | no test plan section |', '{ "item": "Exact", "result": "FAIL", "evidence": "x" }'].join('\n');
   assert.deepEqual(sc.score(META, result(reply)).checks, { noTestPlan: true, strict: true });

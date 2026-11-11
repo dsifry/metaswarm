@@ -31,6 +31,7 @@ for sc in "${SCENARIOS[@]}"; do
 <<<PROMPT
 $(cat "$SD/prompt.txt")
 PROMPT>>>"
+  SCORES=()  # summarise only this run's trials, not leftovers from an earlier run under the same label
   for i in $(seq 1 "$TRIALS"); do
     fx="$(mktemp -d "${TMPDIR:-/tmp}/rr-fixture.XXXXXX")"
     ( cd "$fx" && git init -q -b main && git config user.email eval@example.com \
@@ -46,7 +47,8 @@ PROMPT>>>"
     rm -rf "${fx:?}"
     node "$HERE/score.js" "$SD/meta.json" "$log" > "$OUT/trial-$i.score.json" || true
     echo "$sc #$i $(cat "$OUT/trial-$i.score.json")"
+    SCORES+=("$OUT/trial-$i.score.json")
   done
-  node "$HERE/score.js" --summary "$OUT"/trial-*.score.json > "$OUT/summary.json"
+  node "$HERE/score.js" --summary "${SCORES[@]}" > "$OUT/summary.json"
 done
 node "$HERE/score.js" --report "$OUT_ROOT" | tee "$OUT_ROOT/report.md"

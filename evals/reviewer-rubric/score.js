@@ -31,20 +31,31 @@ const hit = (patterns, text) => patterns.every((p) => re(p).test(text));
 // a defect, so drop those rows before matching. FAIL rows and findings stay.
 const PASSED_ROW = /^\s*\|.*\|\s*(\*\*)?(PASS|N\/A)(\*\*)?\s*\|.*$/gim;
 const PASSED_JSON = /\{[^{}\n]*"result"\s*:\s*"(PASS|N\/A)"[^{}\n]*\}/g;
-const findingsText = (out) => out.replace(PASSED_ROW, '').replace(PASSED_JSON, '');
+// The receipt names the criteria applied, not defects found.
+const RECEIPT = /^\s*(\*\*)?Criteria applied(\*\*)?:.*$|"criteria_applied"\s*:\s*"[^"\n]*"/gim;
+const findingsText = (out) => out.replace(PASSED_ROW, '').replace(PASSED_JSON, '').replace(RECEIPT, '');
+
+// Reading the file's text counts (Read, cat/sed/..., Grep in content mode);
+// Glob, file-listing Grep, find and ls only locate it.
+const READS_FILE = /^\s*(cat|head|tail|sed|awk|less)\b/;
+function readsRubric(u, rubric) {
+  const has = (v) => String(v || '').includes(rubric);
+  if (u.name === 'Read') return has(u.input.file_path);
+  if (u.name === 'Bash') return READS_FILE.test(String(u.input.command || '')) && has(u.input.command);
+  return u.name === 'Grep' && u.input.output_mode === 'content' && has(u.input.path);
+}
 
 function score(meta, text) {
   const evs = events(text);
   const uses = toolUses(evs);
   const result = evs.filter((e) => e.type === 'result').pop() || {};
   const out = String(result.result || '');
-  const inputs = uses.map((u) => JSON.stringify(u.input));
   const checks = {};
   const findings = findingsText(out);
   for (const [name, patterns] of Object.entries(meta.checks)) checks[name] = hit(patterns, findings);
   return {
     spawned: uses.some((u) => u.name === 'Agent' && u.input.subagent_type === meta.agent),
-    readRubric: inputs.some((s) => s.includes(meta.rubric)),
+    readRubric: uses.some((u) => readsRubric(u, meta.rubric)),
     receipt: /^\s*(\*\*)?Criteria applied(\*\*)?:/im.test(out),
     checks,
     caughtAll: Object.values(checks).every(Boolean),

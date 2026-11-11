@@ -24,7 +24,7 @@ Metaswarm is loaded from `<tree>`, and the user's installed plugins are not load
 - each defect check;
 - the cost.
 
-Defect checks ignore criteria-check rows that passed or were N/A (table rows and JSON `criteria_check` entries), so a row naming a checklist item counts only when it FAILs.
+Defect checks ignore the receipt line (or `criteria_applied` field) and criteria-check rows that passed or were N/A (table rows and JSON `criteria_check` entries), so a row naming a checklist item counts only when it FAILs. A rubric read means reading the file's text: `Read`, a `cat`/`sed`/`head`-style Bash command, or `Grep` in content mode. A `Glob`, a file-listing `Grep`, `find` or `ls` only locates the file and doesn't count.
 
 ## Running it
 
@@ -56,7 +56,7 @@ Plain prompts:
 | design Architect | API contract (status codes, errors) | 0/3 | 2/3 | 0/3 | 3/3 |
 | design CTO | no test plan (TDD readiness) | 0/3 | 3/3 | 2/3 | 3/3 |
 | plan Completeness | missed caller / unknown currency | 3/3, 2/3 | 3/3, 3/3 | 3/3, 3/3 | 3/3, 3/3 |
-| all | read rubric or persona | 3/12 | 0/9 | 12/12 | 5/9 |
+| all | read rubric or persona | 2/12 | 0/9 | 12/12 | 5/9 |
 | all | receipt present | 0/12 | 0/9 | 12/12 | 9/9 |
 
 Redirect prompts ("read the brief and follow it exactly"):
