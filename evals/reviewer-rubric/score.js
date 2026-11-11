@@ -27,6 +27,12 @@ function re(p) {
 }
 const hit = (patterns, text) => patterns.every((p) => re(p).test(text));
 
+// A criteria-check row that passed (or was N/A) names the item without reporting
+// a defect, so drop those rows before matching. FAIL rows and findings stay.
+const PASSED_ROW = /^\s*\|.*\|\s*(\*\*)?(PASS|N\/A)(\*\*)?\s*\|.*$/gim;
+const PASSED_JSON = /\{[^{}\n]*"result"\s*:\s*"(PASS|N\/A)"[^{}\n]*\}/g;
+const findingsText = (out) => out.replace(PASSED_ROW, '').replace(PASSED_JSON, '');
+
 function score(meta, text) {
   const evs = events(text);
   const uses = toolUses(evs);
@@ -34,7 +40,8 @@ function score(meta, text) {
   const out = String(result.result || '');
   const inputs = uses.map((u) => JSON.stringify(u.input));
   const checks = {};
-  for (const [name, patterns] of Object.entries(meta.checks)) checks[name] = hit(patterns, out);
+  const findings = findingsText(out);
+  for (const [name, patterns] of Object.entries(meta.checks)) checks[name] = hit(patterns, findings);
   return {
     spawned: uses.some((u) => u.name === 'Agent' && u.input.subagent_type === meta.agent),
     readRubric: inputs.some((s) => s.includes(meta.rubric)),

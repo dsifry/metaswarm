@@ -61,6 +61,28 @@ test('score: a tool_use with no input still counts', () => {
   assert.equal(sc.score(META, line({ type: 'assistant', message: {} })).spawned, false);
 });
 
+test('score: passed or N/A criteria-check rows are not detected defects', () => {
+  const reply = [
+    '## APPROVED',
+    'Criteria applied: CTO — TDD readiness',
+    '### Criteria check',
+    '| Item | Result | Evidence |',
+    '|---|---|---|',
+    '| Test plan present | PASS | section 4 |',
+    '| Exact numbers | **N/A** | none |',
+    '"criteria_check": [{ "item": "Test plan present", "result": "PASS", "evidence": "s4" }],',
+    'No findings.',
+  ].join('\n');
+  const s = sc.score(META, result(reply));
+  assert.deepEqual(s.checks, { noTestPlan: false, strict: false });
+  assert.equal(s.caughtAll, false);
+});
+
+test('score: failed criteria-check rows and findings still count', () => {
+  const reply = ['| Test plan present | FAIL | no test plan section |', '{ "item": "Exact", "result": "FAIL", "evidence": "x" }'].join('\n');
+  assert.deepEqual(sc.score(META, result(reply)).checks, { noTestPlan: true, strict: true });
+});
+
 test('summary: rates per check and mean cost', () => {
   const a = { spawned: true, readRubric: true, receipt: false, checks: { x: true }, caughtAll: true, costUsd: 0.4 };
   const b = { spawned: true, readRubric: false, receipt: true, checks: { x: false }, caughtAll: false, costUsd: 0.2 };

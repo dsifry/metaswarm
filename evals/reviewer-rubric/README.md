@@ -24,6 +24,8 @@ Metaswarm is loaded from `<tree>`, and the user's installed plugins are not load
 - each defect check;
 - the cost.
 
+Defect checks ignore criteria-check rows that passed or were N/A (table rows and JSON `criteria_check` entries), so a row naming a checklist item counts only when it FAILs.
+
 ## Running it
 
 ```bash
