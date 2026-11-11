@@ -1,0 +1,5 @@
+You are the FEASIBILITY reviewer for a plan review. Review the plan at docs/plan.md against the request in docs/request.md. Judge it fresh; you have no context from other reviewers.
+
+Focus on whether the exponential backoff timings are sensible.
+
+Report each finding with: title, description, severity (critical/major/minor/nit), protects, evidence, blocker (yes only if critical or major AND protects is non-empty). Lead with PASS or FAIL.

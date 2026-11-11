@@ -178,6 +178,98 @@ test('main: file access goes through injected io, so no real files are needed', 
   assert.throws(() => sc.main(['--summary', '/missing.json'], io), /ENOENT \/missing\.json/);
 });
 
+test('scenarios: each has a fixture, a prompt and a meta.json whose checks compile', () => {
+  const dir = path.join(here, '..', '..', 'evals', 'reviewer-rubric', 'scenarios');
+  const names = fs.readdirSync(dir);
+  assert.ok(names.length >= 14, `expected at least 14 scenarios, found ${names.length}`);
+  for (const n of names) {
+    for (const f of ['fixture.sh', 'prompt.txt', 'meta.json']) assert.ok(fs.existsSync(path.join(dir, n, f)), `${n}/${f}`);
+    const meta = JSON.parse(fs.readFileSync(path.join(dir, n, 'meta.json'), 'utf8'));
+    assert.match(meta.agent, /^metaswarm:/, `${n}: agent`);
+    assert.ok(meta.rubric, `${n}: rubric`);
+    const checks = Object.entries(meta.checks);
+    assert.ok(checks.length > 0, `${n}: checks`);
+    for (const [k, patterns] of checks) {
+      assert.ok(patterns.length > 0, `${n}.${k}: patterns`);
+      // Every pattern compiles, not just those score() reaches before one misses.
+      for (const p of patterns) assert.doesNotThrow(() => sc.compile(p), `${n}.${k}: ${p}`);
+      // An unrelated reply must not satisfy a check.
+      assert.equal(sc.score(meta, result('## APPROVED\nNo findings.')).checks[k], false, `${n}.${k} matches an empty review`);
+    }
+  }
+});
+
+test('compile: honours (?i)/(?is) prefixes and throws on an invalid pattern', () => {
+  assert.equal(sc.compile('(?i)abc').test('ABC'), true);
+  assert.equal(sc.compile('(?is)a.c').test('A\nC'), true);
+  assert.throws(() => sc.compile('(?i)(unclosed'));
+});
+
+// Replies that mention a check's topic without reporting the defect must not count.
+const scenarioMeta = (n) => JSON.parse(fs.readFileSync(path.join(here, '..', '..', 'evals', 'reviewer-rubric', 'scenarios', n, 'meta.json'), 'utf8'));
+const negatives = {
+  'code-review': {
+    anyHigh: ['- MEDIUM — `any` should be narrowed to `string`.\n- HIGH — `toBeDefined()` only checks presence.'],
+    presenceAssert: ['1. `src/parse.ts:1` uses weak typing (MEDIUM).\n2. `toBeDefined()` is acceptable here (LOW).'],
+  },
+  'design-ux': {
+    uiStates: ['## UX review — APPROVED\nEmpty states and loading states look fine; error states are clear.'],
+    integration: ['## UX review — APPROVED\nThe app shell wiring and the route are well described.',
+      '- title: The saved-search route needs an error state.'],
+  },
+  'design-security': {
+    idor: ['## Security review — APPROVED\nThe ownership check is in place, so no other customer can read an invoice.',
+      '## Security review — APPROVED\nNo IDOR found. Logging never exposes tokens.\nNo findings.'],
+    secretsInLogs: ['## Security review — APPROVED\nTokens are never logged; the logging config redacts the Authorization header.',
+      '## Security review — APPROVED\nNo IDOR found. Logging never exposes tokens.\nNo findings.'],
+  },
+  'plan-feasibility': { badCommand: ['- title: mailer.ts is missing; npm run test:unit is valid'] },
+  'plan-scope': { frameworkCreep: ['- title: WU2 is needed; WU3 is out of scope'] },
+};
+// ...and the same findings stated as defects still count.
+const positives = {
+  'design-ux': {
+    uiStates: ['- title: missing empty/loading/error UI states'],
+    integration: ['- title: No entry point; users cannot reach the panel.'],
+  },
+  'design-security': {
+    secretsInLogs: ['- title: The handler logs Authorization headers and session cookies at info level; redact them before logging.'],
+    idor: ['- title: No ownership check is performed, creating an IDOR vulnerability.'],
+  },
+  'plan-scope': { formatCreep: ['- title: WU2 is needed; WU3 is out of scope'] },
+  'plan-feasibility': { fabricatedPath: ['- title: mailer.ts is missing; npm run test:unit is valid'] },
+};
+
+test('scenarios: replies that mention a topic but report no defect do not count', () => {
+  for (const [n, byCheck] of Object.entries(negatives)) {
+    const meta = scenarioMeta(n);
+    for (const [k, replies] of Object.entries(byCheck))
+      for (const r of replies) assert.equal(sc.score(meta, result(r)).checks[k], false, `${n}.${k}: ${r}`);
+  }
+  for (const [n, byCheck] of Object.entries(positives)) {
+    const meta = scenarioMeta(n);
+    for (const [k, replies] of Object.entries(byCheck))
+      for (const r of replies) assert.equal(sc.score(meta, result(r)).checks[k], true, `${n}.${k}: ${r}`);
+  }
+});
+
+test('findingBlocks: one block per heading, numbered item, title entry, severity bullet or table row', () => {
+  const text = ['intro', '### Finding 1', '- **title:** A', '- description: a', '**2.** B', '3. C', '- title: D', '- HIGH — E',
+    '| row | FAIL | f |', '| row2 | FAIL | g |', '---', 'tail'].join('\n');
+  assert.deepEqual(sc.findingBlocks(text).map((b) => b.split('\n')[0]),
+    // A bare "### Finding 1" heading carries no claim; its title entry opens the block that holds the finding.
+    ['intro', '### Finding 1', '- **title:** A', '**2.** B', '3. C', '- title: D', '- HIGH — E', '| row | FAIL | f |', '| row2 | FAIL | g |', 'tail']);
+});
+
+test('score: a check must match inside one finding, and denials do not count', () => {
+  const meta = { agent: 'a', rubric: 'r', checks: { both: ['alpha', 'beta'] } };
+  assert.equal(sc.score(meta, result('1. alpha\n2. beta')).checks.both, false);
+  assert.equal(sc.score(meta, result('1. alpha and beta')).checks.both, true);
+  assert.equal(sc.score(meta, result('1. No alpha or beta issues found.')).checks.both, false);
+  assert.equal(sc.score(meta, result('1. The alpha and beta handling looks fine.')).checks.both, false);
+  assert.equal(sc.score(meta, result('1. It never leaks alpha beta.')).checks.both, false);
+});
+
 test('CLI: runs as a script and prints to stdout', () => {
   const dir = tmp();
   const meta = path.join(dir, 'meta.json');

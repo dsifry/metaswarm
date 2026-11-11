@@ -1,0 +1,5 @@
+Review the change on this branch: git diff main..feature. You have no context from earlier reviews.
+
+Focus on whether the variable names are clear.
+
+Report each finding with its severity and a file:line reference, and end with a verdict: APPROVED or CHANGES REQUIRED.

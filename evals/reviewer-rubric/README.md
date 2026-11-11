@@ -24,7 +24,9 @@ Metaswarm is loaded from `<tree>`, and the user's installed plugins are not load
 - each defect check;
 - the cost.
 
-Defect checks ignore the receipt line (or `criteria_applied` field) and criteria-check rows that passed or were N/A (table rows and JSON `criteria_check` entries), so a row naming a checklist item counts only when it FAILs. A rubric read means reading the file's text: `Read`, a `cat`/`sed`/`head`-style Bash command, or `Grep` in content mode. A `Glob`, a file-listing `Grep`, `find` or `ls` only locates the file and doesn't count.
+Defect checks ignore the receipt line (or `criteria_applied` field) and criteria-check rows that passed or were N/A (table rows and JSON `criteria_check` entries), so a row naming a checklist item counts only when it FAILs. Each check must match inside one finding: a heading, a numbered item, a `title:` entry, a bullet that opens with a severity, or a table row. Clauses that deny or approve ("No IDOR found", "never exposes tokens", "looks fine") are dropped before matching. So a check can't combine words from two findings, or count a denial as a catch. Rescoring all 135 saved trials under this rule changed no result.
+
+**The checks are a first-pass filter, not the verdict.** Reviewers word and lay out findings in many ways, and a regex will miss some phrasings or accept others. Examples are a title that names the item while the description says it is out of scope, or a missing check reported as "No ownership check found". Every cell reported below was verified by reading the reviewer replies. When you run the eval, read the replies behind any cell you report, and treat a regex hit or miss as a pointer to where to look. Known gaps are tracked in #109. A rubric read means reading the file's text: `Read`, a `cat`/`sed`/`head`-style Bash command, or `Grep` in content mode. A `Glob`, a file-listing `Grep`, `find` or `ls` only locates the file and doesn't count.
 
 After the PR review, these scoring rules and tighter check patterns were applied to every saved trial. Two cells changed, both in the baseline: "read rubric or persona" went from 3/12 to 2/12, because one trial only globbed for the file. Redirect Architect "API contract" went from 1/3 to 0/3, because its old match was a 429 mentioned in a different finding. Every other result in the tables below stands.
 
@@ -92,4 +94,28 @@ The branch as shipped, 3 trials per cell (6 where a cell was re-run):
 
 The adversarial and plan re-runs used a scratch copy of the branch with the final text. The commits that followed apply the same text.
 
-**Limits.** Each cell has only 3 trials. Delivering the criteria is deterministic, because they are text in the agent definition. Applying them is not: the receipt is self-reported, and with fixes 1+3 the reviewer opened its rubric in only 5 of 9 runs. Collaborative-mode code review has no scenario. If misses show up in real use, a hook that injects the template into Agent calls is the fallback.
+## Remaining roles (2026-11-11)
+
+Scenarios for the roles not run above: the PM, Designer, Security and UX design reviewers, the Feasibility and Scope & Alignment plan reviewers, and a Collaborative-mode code review. Code review uses `adversarial-reviewer` with no mode named, so its default, Collaborative, applies with `code-review-rubric`. Each scenario plants two defects inside the role's criteria, and the prompt focuses elsewhere. Baseline is the tree before #105 (c51e08d). Shipped is main after #106 (5fadf25). 3 trials per cell, 42 trials in total, $16.38.
+
+| Scenario | Planted defects | Baseline | Shipped |
+|---|---|---|---|
+| design PM | no use cases / theming and marketplace beyond the goal | 3/3, 3/3 | 3/3, 3/3 |
+| design Designer | API unlike the existing `Result<T>` pattern / cryptic `ERR_42` codes | 3/3, 2/3 | 3/3, 3/3 |
+| design Security | no ownership check (IDOR) / full headers logged | 3/3, 3/3 | 3/3, 3/3 |
+| design UX | no empty, loading or error states / no wiring into the app shell | 2/3, 1/3 | 3/3, 3/3 |
+| plan Feasibility | fabricated `mailer.ts` / undefined `npm run test:unit` | 3/3, 3/3 | 3/3, 3/3 |
+| plan Scope & Alignment | yargs migration / YAML and CSV formats, both unrequested | 3/3, 3/3 | 3/3, 3/3 |
+| code review (Collaborative) | `any` parameter rated HIGH / `toBeDefined()`-only test | 3/3, 3/3 | 3/3, 3/3 |
+| all | read rubric or persona | 10/21 | 21/21 |
+| all | receipt present | 0/21 | 21/21 |
+
+What the results show:
+
+- **The UX and Designer gaps close.** The baseline UX reviewer read its persona file in all 3 trials, but still missed the UI states in 1 and the app-shell wiring in 2. It stayed on the visual-hierarchy focus. Every shipped trial filled in those checklist rows and failed them. The Designer gap was smaller: 2 of 3 baseline trials flagged the cryptic error codes.
+- **The other five roles show no gap.** The baseline already caught every planted defect for PM, Security, Feasibility, Scope & Alignment and code review. These defects may have been too obvious to separate the variants. The shipped trees caught all of them too, so nothing regressed.
+- **Receipt and rubric reads:** the receipt went from 0/21 to 21/21, and rubric or persona reads from 10/21 to 21/21.
+
+Every hit and miss was checked by reading the reply, not only the regex. The first scoring pass got several cells wrong, in both directions. Code review scored 1/3 and 2/3 for `any` rated HIGH, but all six trials did rate it HIGH. One UX trial matched `App.tsx` cited for a different finding, and one Designer trial matched "opaque token" from a pagination finding. The patterns were fixed before the tables above were scored. `tests/lib/eval-score.test.mjs` compiles every pattern. It also checks that no scenario's checks match an empty review, or a reply that mentions a check's topic without reporting the defect (for example, "Empty states and app shell wiring look fine", or a MEDIUM `any` finding followed by a HIGH finding about something else).
+
+**Limits.** Each cell has only 3 trials. Delivering the criteria is deterministic, because they are text in the agent definition. Applying them is not: the receipt is self-reported, and with fixes 1+3 the reviewer opened its rubric in only 5 of 9 runs. If misses show up in real use, a hook that injects the template into Agent calls is the fallback.

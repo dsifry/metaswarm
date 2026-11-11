@@ -1,0 +1,12 @@
+{
+  "agent": "metaswarm:design-reviewer",
+  "rubric": "ux-reviewer-agent",
+  "checks": {
+    "uiStates": [
+      "(?i)\\b(no|missing|without|lacks?|not (defined|specified|described|covered|given)|undefined|never (says|names|defines)|doesn.t (say|define|describe|cover|specify)|nothing about)\\b[^\\n]{0,80}\\b(empty|loading|error)\\b[^\\n]{0,40}?\\b(states?|views?)\\b|\\b(empty|loading|error)\\b[^\\n]{0,40}?\\bstates?\\b[^\\n]{0,80}(missing|not (defined|specified|described|covered)|undefined|absent|FAIL|none)"
+    ],
+    "integration": [
+      "(?i)\\b(no|missing|without|lacks?|not (defined|specified|described|covered|given)|undefined|never (says|names|defines)|doesn.t (say|define|describe|cover|specify)|nothing about)\\b[^\\n]{0,100}(app shell|\\broute\\b|routing|navigation|placement|entry point|where (the panel|it) (lives|mounts|appears|sits)|wiring|mounts?)|(app shell|routing|wiring|placement)[^\\n]{0,100}(missing|not (described|specified|defined)|FAIL|undefined|absent|none)|\\b(users?|the user) (cannot|can.t|have no way to) (reach|open|find|get to)\\b"
+    ]
+  }
+}

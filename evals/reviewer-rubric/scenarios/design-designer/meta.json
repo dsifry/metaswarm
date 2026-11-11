@@ -1,0 +1,12 @@
+{
+  "agent": "metaswarm:design-reviewer",
+  "rubric": "designer-agent",
+  "checks": {
+    "inconsistentApi": [
+      "(?is)(fetch_order|snake_case|tuple)[\\s\\S]{0,400}(getUserById|camelCase|Result<|existing (pattern|convention)|inconsisten)|(getUserById|camelCase|Result<|inconsisten)[\\s\\S]{0,400}(fetch_order|snake_case|tuple)"
+    ],
+    "crypticErrors": [
+      "(?i)(ERR_\\d+[^\\n]{0,200}(cryptic|opaque|meaningless|unhelpful|no (human-readable |readable )?messages?|without (a )?messages?|not (helpful|actionable))|(cryptic|opaque|meaningless|bare|magic) (error |status )?codes|codes? (with|have|has|carry) no (human-readable |readable )?messages?|no (human-readable|readable) (error )?messages?|(no|without) (a )?(human-readable )?messages?[^\\n]{0,80}ERR_\\d+)"
+    ]
+  }
+}

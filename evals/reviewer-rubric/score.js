@@ -35,6 +35,32 @@ const PASSED_JSON = /\{[^{}\n]*"result"\s*:\s*"(PASS|N\/A)"[^{}\n]*\}/g;
 const RECEIPT = /^\s*(\*\*)?Criteria applied(\*\*)?:.*$|"criteria_applied"\s*:\s*"[^"\n]*"/gim;
 const findingsText = (out) => out.replace(PASSED_ROW, '').replace(PASSED_JSON, '').replace(RECEIPT, '');
 
+// Each check must match inside one finding, and clauses that deny or approve
+// ("No IDOR found", "never leaks tokens", "looks fine") are dropped first. A new finding starts at a heading,
+// a numbered item, a "title:" entry, a bullet that opens with a severity, or a
+// table row; a horizontal rule only ends the block before it.
+const BLOCK_START = /^\s*(#{1,6}\s|\*\*\d+[.)]|\d+[.)]\s|[-*+]?\s*(\*\*)?title(\*\*)?:|[-*+]\s+(\*\*)?\[?(LOW|MEDIUM|HIGH|CRITICAL)\b|\|)/i;
+const RULE = /^\s*(-{3,}|\*{3,}|_{3,})\s*$/;
+function findingBlocks(text) {
+  const blocks = [];
+  let cur = null;
+  for (const line of text.split('\n')) {
+    if (RULE.test(line)) { cur = null; continue; }
+    if (!cur || BLOCK_START.test(line) || /^\s*\|/.test(cur[cur.length - 1])) { cur = [line]; blocks.push(cur); } else cur.push(line);
+  }
+  return blocks.map((b) => b.join('\n'));
+}
+const CLAUSE = "[^.;\\n]*";
+const DENIALS = [
+  // The negation applies to the defect itself: "no issues", "no IDOR risk", "No IDOR found", "nothing was found".
+  // "No ownership check is performed, creating an IDOR vulnerability" reports a defect and stays.
+  `\\b(no|not an?|never an?|without any)\\s+(\\S+\\s+){0,2}(issues?|problems?|risks?|concerns?|vulnerabilit(y|ies))\\b`,
+  `\\b(no|nothing|none)\\b(\\s+\\S+){0,4}?\\s+(was |were )?found\\b`,
+  `\\b(never|not|doesn.t|does not|don.t|do not)\\s+(\\w+\\s+){0,2}(exposes?|leaks?|logs?|logged|writes?|stores?|reveals?)\\b`,
+  `\\b(looks? (fine|good|correct|ok)|(is|are) (fine|in place|correct|clear|well (described|defined|handled|specified)))\\b`,
+].map((d) => new RegExp(`${CLAUSE}${d}${CLAUSE}`, 'gi'));
+const stripDenials = (t) => DENIALS.reduce((s, d) => s.replace(d, ''), t);
+
 // Reading the file's text counts (Read, cat/sed/..., Grep in content mode);
 // Glob, file-listing Grep, find and ls only locate it. A Bash command reads it
 // when any segment (split on && || ; |) starts with a reader and names the
@@ -73,7 +99,8 @@ function score(meta, text) {
   const out = String(result.result || '');
   const checks = {};
   const findings = findingsText(out);
-  for (const [name, patterns] of Object.entries(meta.checks)) checks[name] = hit(patterns, findings);
+  const blocks = findingBlocks(findings).map(stripDenials);
+  for (const [name, patterns] of Object.entries(meta.checks)) checks[name] = blocks.some((b) => hit(patterns, b));
   return {
     spawned: uses.some((u) => u.name === 'Agent' && u.input.subagent_type === meta.agent),
     readRubric: uses.some((u) => readsRubric(u, meta.rubric)),
@@ -130,5 +157,5 @@ function main(argv, ioOverrides = {}) {
   return 0;
 }
 
-module.exports = { score, summary, report, events, main };
+module.exports = { score, summary, report, events, main, findingsText, findingBlocks, compile: re };
 if (require.main === module) process.exitCode = main(process.argv.slice(2));

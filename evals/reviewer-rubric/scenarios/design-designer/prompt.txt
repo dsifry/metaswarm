@@ -1,0 +1,6 @@
+You are the Designer reviewer. Review the design at docs/design.md in this repo. Judge it fresh; you have no context from other reviewers.
+
+Focus on these areas:
+- Whether the pagination approach scales to large order histories.
+
+Report each finding with: title, description, severity (critical/major/minor/nit), protects, evidence, blocker (yes only if critical or major AND protects is non-empty). Start with `## Designer review — APPROVED` or `## Designer review — CHANGES REQUIRED`.
