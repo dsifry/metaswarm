@@ -41,11 +41,26 @@ const findingsText = (out) => out.replace(PASSED_ROW, '').replace(PASSED_JSON, '
 // file; grep counts unless it only lists, counts or tests (-l -L -c -q).
 const READS_FILE = /^\s*(cat|head|tail|sed|awk|less|grep)\b/;
 const GREP_NO_TEXT = /^\s*grep\b.*\s-[a-zA-Z]*[lLcq]/;
+// Split a shell command at unquoted ; | && || (quotes and backslash escapes respected).
+function segments(cmd) {
+  const out = [''];
+  let q = null;
+  for (let i = 0; i < cmd.length; i++) {
+    const c = cmd[i];
+    if (q !== "'" && c === '\\') { out[out.length - 1] += c + (cmd[i + 1] || ''); i++; continue; }
+    if (q) { if (c === q) q = null; out[out.length - 1] += c; continue; }
+    if (c === "'" || c === '"') { q = c; out[out.length - 1] += c; continue; }
+    if (c === ';' || c === '|' || (c === '&' && cmd[i + 1] === '&')) { if (cmd[i + 1] === c) i++; out.push(''); continue; }
+    out[out.length - 1] += c;
+  }
+  return out;
+}
+
 function readsRubric(u, rubric) {
   const has = (v) => String(v || '').includes(rubric);
   if (u.name === 'Read') return has(u.input.file_path);
   if (u.name === 'Bash') {
-    return String(u.input.command || '').split(/&&|\|\||;|\|/)
+    return segments(String(u.input.command || ''))
       .some((seg) => READS_FILE.test(seg) && !GREP_NO_TEXT.test(seg) && has(seg));
   }
   return u.name === 'Grep' && u.input.output_mode === 'content' && has(u.input.path);

@@ -91,7 +91,8 @@ test('score: only reading the rubric counts, not searching for it', () => {
   assert.equal(sc.score(META, tool('Bash', { command: 'cat agents/cto-agent.md' })).readRubric, true);
   assert.equal(sc.score(META, tool('Bash', { command: "sed -n '1,80p' /p/cto-agent.md" })).readRubric, true);
   assert.equal(sc.score(META, tool('Grep', { pattern: '^#', path: '/p/cto-agent.md', output_mode: 'content' })).readRubric, true);
-  for (const command of ['grep -n . /plugin/agents/cto-agent.md', 'cd /plugin && cat agents/cto-agent.md', 'ls agents; head -50 agents/cto-agent.md'])
+  for (const command of ['grep -n . /plugin/agents/cto-agent.md', 'cd /plugin && cat agents/cto-agent.md', 'ls agents; head -50 agents/cto-agent.md',
+    "sed -n '1,5p;7,10p' /p/agents/cto-agent.md", 'grep -E "TDD|test" /p/agents/cto-agent.md', 'grep -n "a\\"|b" /p/cto-agent.md', 'cat /p/cto-agent.md \\'])
     assert.equal(sc.score(META, tool('Bash', { command })).readRubric, true, command);
   for (const command of ['grep -l TDD agents/cto-agent.md', 'grep -c x agents/cto-agent.md', 'grep -q x agents/cto-agent.md && cat other.md', 'wc -l agents/cto-agent.md'])
     assert.equal(sc.score(META, tool('Bash', { command })).readRubric, false, command);
