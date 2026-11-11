@@ -36,12 +36,18 @@ const RECEIPT = /^\s*(\*\*)?Criteria applied(\*\*)?:.*$|"criteria_applied"\s*:\s
 const findingsText = (out) => out.replace(PASSED_ROW, '').replace(PASSED_JSON, '').replace(RECEIPT, '');
 
 // Reading the file's text counts (Read, cat/sed/..., Grep in content mode);
-// Glob, file-listing Grep, find and ls only locate it.
-const READS_FILE = /^\s*(cat|head|tail|sed|awk|less)\b/;
+// Glob, file-listing Grep, find and ls only locate it. A Bash command reads it
+// when any segment (split on && || ; |) starts with a reader and names the
+// file; grep counts unless it only lists, counts or tests (-l -L -c -q).
+const READS_FILE = /^\s*(cat|head|tail|sed|awk|less|grep)\b/;
+const GREP_NO_TEXT = /^\s*grep\b.*\s-[a-zA-Z]*[lLcq]/;
 function readsRubric(u, rubric) {
   const has = (v) => String(v || '').includes(rubric);
   if (u.name === 'Read') return has(u.input.file_path);
-  if (u.name === 'Bash') return READS_FILE.test(String(u.input.command || '')) && has(u.input.command);
+  if (u.name === 'Bash') {
+    return String(u.input.command || '').split(/&&|\|\||;|\|/)
+      .some((seg) => READS_FILE.test(seg) && !GREP_NO_TEXT.test(seg) && has(seg));
+  }
   return u.name === 'Grep' && u.input.output_mode === 'content' && has(u.input.path);
 }
 
