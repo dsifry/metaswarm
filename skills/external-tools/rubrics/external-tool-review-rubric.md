@@ -51,7 +51,7 @@ Do not mark a question `needs_user` when the design's Confirmed section already 
 - **Blocker definition.** A finding is a blocker (`blocker: yes`) only if its severity is critical or major AND `protects` is non-empty. Minor and nit findings are never blockers.
 - **Unjustified findings are advisory.** A critical or major finding that cannot name what it protects is advisory, not a blocker. It becomes a follow-up and does not cause FAIL.
 - **Mapping from the checklist below.** The checklist keeps its wording and is read as:
-  - "BLOCKING if …" checks produce critical or major findings. They block only with `protects`. An unmet acceptance criterion or broken functionality reads the same way. A rubric entry is not itself a requirement: see `guides/delivery-scope.md` for what `protects` can name.
+  - "BLOCKING if …" checks produce critical or major findings. They block only with `protects`. An unmet acceptance criterion or broken functionality reads the same way. A rubric entry is not itself a requirement: `protects` names a DoD item, the spec, a credible user scenario, or a written project standard (CLAUDE.md, coding standards, lint or tsconfig settings).
   - "WARNING" checks produce minor findings. Style issues and non-critical concerns are minor or nit.
 - **The reviewer reports; the orchestrator decides.** Whether a FAIL leads to another round, an advance or an escalation is decided by the orchestrator using the iteration rule in the guide, not by the reviewer.
 
