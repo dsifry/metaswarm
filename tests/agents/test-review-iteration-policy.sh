@@ -990,7 +990,8 @@ for r in adversarial-review-rubric plan-review-rubric-adversarial external-tool-
     "$(grep -F 'They block only with `protects`' "$REPO_ROOT/rubrics/$r.md")" "$NOT_REQ"
 done
 assert_in "rubrics/adversarial-review-rubric.md: no-any row blocks only when the project states it" \
-  "$(grep -F '| No `any` types |' "$REPO_ROOT/rubrics/adversarial-review-rubric.md")" 'BLOCKING when the project states it'
+  "$(grep -F '| No `any` types |' "$REPO_ROOT/rubrics/adversarial-review-rubric.md")" 'BLOCKING when the project states it' \
+  "\`protects\` cites the project's rule" 'Without one, the finding is advisory'
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
