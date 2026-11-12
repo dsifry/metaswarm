@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.16.0
+
 ### Added
 
 - **Reviews now stop and ask when the requirement is the problem** (#103). The review iteration rule gains a Clarify line (line 2, after the clean pass). It fires on four signals:
@@ -25,6 +27,8 @@
   - All three reviewer types put a `Criteria applied:` line right after the verdict heading, naming the rubric they applied. A review without it is re-requested once, then accepted with a follow-up, so it never blocks a gate.
   - A test fails when an embedded checklist drifts from its source.
   - `evals/reviewer-rubric/` holds the eval behind the change. It runs by hand, never in CI. With planted defects, the missing test plan went from 0/3 to 3/3 caught, the missing API contract from 0/3 to 3/3, and the `any` type rated as the rubric requires from 0/3 to 3/3.
+- **A rubric entry is not itself a requirement** (#112). A "BLOCKING" row sets severity; the finding blocks only when `protects` names a DoD item, the spec, a credible user scenario, or a written project standard (CLAUDE.md, coding standards, lint or tsconfig settings). The adversarial, plan, external-tool and UX rubrics state this in their mapping line, so Codex and Gemini reviewers, which get the rubric but not the guide, see it too. The no-`any` row now blocks only when the project states the rule, and is advisory otherwise. Before, reviewers split on `any` in projects with no such rule.
+- **The reviewer eval scores replies with a Haiku judge** (#109). Regex scoring got cells wrong in both directions; a tool-less Haiku call now judges whether each planted defect is reported, for about $0.001 a trial. Calibration against 282 hand labels agreed on 279. Three published cells were corrected (see `evals/reviewer-rubric/README.md`).
 
 ### Changed
 
