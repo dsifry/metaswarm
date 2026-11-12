@@ -1,5 +1,7 @@
 # Builds the repo in the current directory. Last branch: wu1 (3 planted defects).
 mkdir -p src test
+# The project's stated rule is what the `any` finding must cite as `protects` (#112).
+printf '# Project rules\n\n- TypeScript strict mode, no `any` types\n' > CLAUDE.md
 printf 'export const config = { precision: 2 };\n' > src/config.ts
 git add -A && git commit -qm base
 git checkout -qb wu1

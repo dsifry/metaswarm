@@ -42,7 +42,7 @@ Do not mark a question `needs_user` when the design's Confirmed section already 
 - **Blocker definition.** A finding is a blocker (`blocker: yes`) only if its severity is critical or major AND `protects` is non-empty. Minor and nit findings are never blockers.
 - **Unjustified findings are advisory.** A critical or major finding that cannot name what it protects is advisory, not a blocker. It becomes a follow-up and does not cause NEEDS_REVISION.
 - **Mapping from the check tables below.** The tables keep their wording and are read as:
-  - "BLOCKING if …" checks produce critical or major findings. They block only with `protects`.
+  - "BLOCKING if …" checks produce critical or major findings. They block only with `protects`. A rubric entry is not itself a requirement: see `guides/delivery-scope.md` for what `protects` can name.
   - "WARNING" checks produce minor findings.
 - **Verdict.** NEEDS_REVISION only if at least one finding has `blocker: yes`; otherwise APPROVED.
 - **The reviewer reports; the orchestrator decides.** Whether a NEEDS_REVISION leads to another round, an advance or an escalation is decided by the gate's severity rule, not by the reviewer.
