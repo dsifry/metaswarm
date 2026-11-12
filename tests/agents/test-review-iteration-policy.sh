@@ -981,6 +981,18 @@ for a in agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md;
     "$(section "$REPO_ROOT/$a" '^### Escalation Format')" "$SEV_ESC" "${SEV_ESC_REST[@]}"
 done
 
+# #112: a rubric entry sets severity, never blocker status; protects points outside the rubric.
+# The rubrics state the sources themselves: external CLI reviewers get the rubric but not the guide.
+NOT_REQ='A rubric entry is not itself a requirement: `protects` names a DoD item, the spec, a credible user scenario, or a written project standard (CLAUDE.md, coding standards, lint or tsconfig settings).'
+assert_in "guides/delivery-scope.md: protects points outside the rubric" "$(cat "$GUIDE")" "$NOT_REQ"
+for r in adversarial-review-rubric plan-review-rubric-adversarial external-tool-review-rubric ux-review-rubric; do
+  assert_in "rubrics/$r.md: mapping states the protects sources" \
+    "$(grep -F 'They block only with `protects`' "$REPO_ROOT/rubrics/$r.md")" "$NOT_REQ"
+done
+assert_in "rubrics/adversarial-review-rubric.md: no-any row blocks only when the project states it" \
+  "$(grep -F '| No `any` types |' "$REPO_ROOT/rubrics/adversarial-review-rubric.md")" 'BLOCKING when the project states it' \
+  "\`protects\` cites the project's rule" 'Without one, the finding is advisory'
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

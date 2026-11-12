@@ -59,7 +59,7 @@ Do not mark a question `needs_user` when the design's Confirmed section already 
 - **Blocker definition.** A finding is a blocker (`blocker: yes`) only if its severity is critical or major AND `protects` is non-empty. Minor and nit findings are never blockers.
 - **Unjustified findings are advisory.** A critical or major finding that cannot name what it protects is advisory, not a blocker. It becomes a follow-up and does not cause FAIL.
 - **Mapping from the check tables below.** The tables keep their wording and are read as:
-  - "BLOCKING if …" checks produce critical or major findings. They block only with `protects`. A bare "BLOCKING" entry reads the same way.
+  - "BLOCKING if …" checks produce critical or major findings. They block only with `protects`. A bare "BLOCKING" entry reads the same way. A rubric entry is not itself a requirement: `protects` names a DoD item, the spec, a credible user scenario, or a written project standard (CLAUDE.md, coding standards, lint or tsconfig settings).
   - "WARNING" checks produce minor findings.
 - **The reviewer reports; the orchestrator decides.** Whether a FAIL leads to another round, an advance or an escalation is decided by the orchestrator using the iteration rule in the guide, not by the reviewer.
 
@@ -137,7 +137,7 @@ The primary check. For each DoD item:
 
 | Check | Classification | Criteria |
 | --- | --- | --- |
-| No `any` types | BLOCKING | `any` in new code is always a contract violation |
+| No `any` types | BLOCKING when the project states it | `any` in new code; `protects` cites the project's rule (CLAUDE.md, coding standards, `no-explicit-any`). Without one, the finding is advisory |
 | No unsafe type assertions | WARNING | `as` casts without type guards noted but not blocking |
 | Types match runtime behavior | BLOCKING | Type says X but runtime can produce Y |
 
