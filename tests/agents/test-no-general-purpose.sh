@@ -99,7 +99,7 @@ templates/CLAUDE.md|spawn a fresh `Task()` reviewer|adversarial-reviewer
 skills/setup/templates/CLAUDE.md|spawn a fresh `Task()` reviewer|adversarial-reviewer
 agents/issue-orchestrator.md|— persistent across research phase|researcher
 agents/issue-orchestrator.md|— persistent across planning phase|planner
-agents/issue-orchestrator.md|— **persistent across work units**|coder
+agents/issue-orchestrator.md|— **fresh instance per work unit and per review-fix round**|coder
 agents/issue-orchestrator.md|— persistent through PR lifecycle|pr-shepherd-agent
 agents/issue-orchestrator.md|Adversarial reviewers are ALWAYS fresh `Task()`|adversarial-reviewer
 agents/issue-orchestrator.md|# 5. Spawn Researcher Agent|researcher
@@ -114,7 +114,7 @@ agents/issue-orchestrator.md|Spawn a NEW adversarial reviewer (role type|adversa
 agents/issue-orchestrator.md|# 19. Spawn Knowledge Curator|knowledge-curator-agent
 skills/start/agents/issue-orchestrator.md|— persistent across research phase|researcher
 skills/start/agents/issue-orchestrator.md|— persistent across planning phase|planner
-skills/start/agents/issue-orchestrator.md|— **persistent across work units**|coder
+skills/start/agents/issue-orchestrator.md|— **fresh instance per work unit and per review-fix round**|coder
 skills/start/agents/issue-orchestrator.md|— persistent through PR lifecycle|pr-shepherd-agent
 skills/start/agents/issue-orchestrator.md|Adversarial reviewers are ALWAYS fresh `Task()`|adversarial-reviewer
 skills/start/agents/issue-orchestrator.md|# 5. Spawn Researcher Agent|researcher

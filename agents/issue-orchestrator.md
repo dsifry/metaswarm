@@ -69,7 +69,7 @@ When Team tools are available:
 2. **Spawn specialists as named teammates**:
    - `researcher` (type `roleType("researcher")`) — persistent across research phase
    - `architect` (type `roleType("planner")`) — persistent across planning phase
-   - `coder` (type `roleType("coder")`) — **persistent across work units** (retains context from WU-001 → WU-002, no cold start)
+   - `coder` (type `roleType("coder")`) — **fresh instance per work unit and per review-fix round**, chosen by tier (see [coder selection](../guides/coder-selection.md))
    - `shepherd` (type `roleType("pr-shepherd-agent")`) — persistent through PR lifecycle, sends async status updates via `SendMessage`
 3. **Direct handoffs**: Researcher sends findings directly to architect via `SendMessage` (no orchestrator bottleneck)
 4. **Async updates**: Teammates report progress via `SendMessage`; orchestrator receives and coordinates
