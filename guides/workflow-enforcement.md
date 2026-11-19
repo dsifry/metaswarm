@@ -59,19 +59,25 @@ writing-plans ends with its own "Execution Handoff" (present in superpowers 6.4.
 
 ## Execution method menu
 
-metaswarm's 3-option menu, kept in the project's CLAUDE.md ("Execution Method Choice"), replaces writing-plans' 2-option handoff. It is a decision request (see Decision requests in `guides/delivery-scope.md`): each option states its pros and cons, then a recommended option and its rationale. The user still chooses; never auto-select. Option 3 is the one that maps to writing-plans' Native choice.
+metaswarm's 3-option menu, kept in the project's CLAUDE.md ("Execution Method Choice"), replaces writing-plans' 2-option handoff. It is a decision request (see Decision requests in `guides/delivery-scope.md`): each option is its own numbered block with its pros and cons, and only the recommended option carries Why recommended. The user still chooses; never auto-select. Option 3 is the one that maps to writing-plans' Native choice.
 
-**Choices:**
+**Decision needed: How would you like to execute this plan?**
+The plan is ready; the options differ in cost, speed and how much independent review you get.
 
-1. **Metaswarm orchestrated execution** — 4-phase loop per work unit (IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT) with independent quality gates, fresh adversarial reviewers, coverage enforcement and pre-PR knowledge capture.
-   - **Pros:** more thorough and broader coverage; independent review of every work unit.
-   - **Cons:** uses more tokens and takes longer.
-2. **Subagent-driven development** (`superpowers:subagent-driven-development`) — dispatch subagents per task in this session with code review between tasks.
-   - **Pros:** faster, lighter-weight, lower token cost; still has review between tasks.
-   - **Cons:** less independent review and no coverage or knowledge-capture gates.
-3. **Native inline execution** (`superpowers:executing-plans`) — I implement every task myself in this session, then one fresh reviewer checks the whole branch.
-   - **Pros:** cheapest and fastest.
-   - **Cons:** no independent review until the end.
+**Option 1: Metaswarm orchestrated execution** (Recommended)
+4-phase loop per work unit (IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT) with independent quality gates, fresh adversarial reviewers, coverage enforcement and pre-PR knowledge capture.
+- Pros: more thorough and broader coverage; independent review of every work unit.
+- Cons: uses more tokens and takes longer.
+- Why recommended: <chosen from the plan's size and risk and the priorities the user has stated; move the (Recommended) tag and this line to option 2 or 3 when it fits better>
 
-**Recommended:** <1, 2 or 3, chosen from the plan's size and risk and the priorities the user has stated>
-**Rationale:** <why that option fits this plan and those priorities>
+**Option 2: Subagent-driven development** (`superpowers:subagent-driven-development`)
+Dispatch subagents per task in this session with code review between tasks.
+- Pros: faster, lighter-weight, lower token cost; still has review between tasks.
+- Cons: less independent review and no coverage or knowledge-capture gates.
+
+**Option 3: Native inline execution** (`superpowers:executing-plans`)
+I implement every task myself in this session, then one fresh reviewer checks the whole branch.
+- Pros: cheapest and fastest.
+- Cons: no independent review until the end.
+
+Reply with a number. If there's no answer: nothing starts; the plan stays ready and I wait for your choice.

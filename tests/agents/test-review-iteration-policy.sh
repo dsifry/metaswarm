@@ -137,7 +137,7 @@ assert_in "guide: follow-up rule" "$G" \
 assert_in "guide: escalation template" "$G" \
   'Critical' 'Major' 'Minor' 'Nit' \
   'Round history' \
-  '**Recommended:** <revise|clarify|narrow scope|defer|cancel>' '**Rationale:** <reason'
+  '(Recommended)' '- Why recommended: <reason'
 
 # DoD 1.2: mirrors exist and sync check passes
 MIRRORS=(
@@ -361,7 +361,7 @@ RULE_LINES=(
   '6. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers'
   '7. otherwise                           → fix blockers, re-validate, FRESH review'
 )
-RECOMMENDATION='**Recommended:** <revise|clarify|narrow scope|defer|cancel>'
+RECOMMENDATION='- Why recommended: <reason'
 
 for g in "${GATES[@]}"; do
   T="$(readf "$g")"
@@ -941,9 +941,9 @@ done
 echo "Issue #68: escalation never approves; no Override with open blockers"
 # A gate is approved only when a review round has no `blocker: yes` finding (or via rule line 5).
 # Escalating to the human never approves: there is no option that advances with open blockers.
-ESC_OPTIONS=('**Revise**' '**Narrow scope**' '**Defer**' '**Cancel**')
+ESC_OPTIONS=('**Option 1: Revise**' '**Option 2: Narrow scope**' '**Option 3: Defer**' '**Option 4: Cancel**')
 # The canonical guide's template also offers the fifth option and its recommendation enum (issue #103).
-GUIDE_ESC_OPTIONS=("${ESC_OPTIONS[@]}" '**Clarify the requirement / re-brainstorm**' '<revise|clarify|narrow scope|defer|cancel>')
+GUIDE_ESC_OPTIONS=("${ESC_OPTIONS[@]}" '**Option 5: Clarify the requirement / re-brainstorm**' '(Recommended)')
 for f in guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-scope.md \
          skills/plan-review-gate/guides/delivery-scope.md skills/design-review-gate/guides/delivery-scope.md \
          skills/start/guides/delivery-scope.md skills/external-tools/guides/delivery-scope.md; do
@@ -954,7 +954,7 @@ for f in guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-
     "${GUIDE_ESC_OPTIONS[@]}"
 done
 for f in skills/plan-review-gate/SKILL.md skills/design-review-gate/SKILL.md skills/orchestrated-execution/SKILL.md; do
-  assert_in "$f: escalation Options are the standard five" "$(section "$REPO_ROOT/$f" '^### Options')" "${ESC_OPTIONS[@]}" '**Clarify the requirement / re-brainstorm**'
+  assert_in "$f: escalation Options are the standard five" "$(section "$REPO_ROOT/$f" '^### Options')" "${ESC_OPTIONS[@]}" '**Option 5: Clarify the requirement / re-brainstorm**'
 done
 for f in skills/plan-review-gate/SKILL.md skills/design-review-gate/SKILL.md commands/review-design.md \
          .claude/commands/review-design.md skills/brainstorming-extension/SKILL.md skills/start/SKILL.md \

@@ -483,25 +483,35 @@ When the rule says clarify (line 2), use the Clarification report from the [Clar
 | 3     | FAIL    | 0 / 1                     | 0 / 0            | —               | <theme-a>, <theme-c> | 4: escalate (recurring) |
 
 ### Options
-**Choices:** each option below also states its **Pros:** and **Cons:** (see Decision requests in `delivery-scope.md`).
-1. **Revise** — fix the remaining blockers (or the requirement they protect), then run a fresh review round
-   - **Pros:** <pros>
-   - **Cons:** <cons>
-2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
-   - **Pros:** <pros>
-   - **Cons:** <cons>
-3. **Defer** — shelve this work for later; nothing advances
-   - **Pros:** <pros>
-   - **Cons:** <cons>
-4. **Cancel** — abandon this work
-   - **Pros:** <pros>
-   - **Cons:** <cons>
-5. **Clarify the requirement / re-brainstorm** — answer the open questions about the requirement; a new gate occurrence starts
-   - **Pros:** <pros>
-   - **Cons:** <cons>
+Use the decision-request format (see Decision requests in `delivery-scope.md`): mark exactly one option (Recommended) and give only that option a Why recommended line.
 
-**Recommended:** <revise|clarify|narrow scope|defer|cancel>
-**Rationale:** <reason from the rule, tied to the user's goals or constraints>
+**Option 1: Revise** (Recommended)
+fix the remaining blockers (or the requirement they protect), then run a fresh review round
+- Pros: <pros>
+- Cons: <cons>
+- Why recommended: <reason from the rule, tied to the user's goals or constraints>
+
+**Option 2: Narrow scope**
+move the contentious items to a new issue, then run a fresh review round on what remains
+- Pros: <pros>
+- Cons: <cons>
+
+**Option 3: Defer**
+shelve this work for later; nothing advances
+- Pros: <pros>
+- Cons: <cons>
+
+**Option 4: Cancel**
+abandon this work
+- Pros: <pros>
+- Cons: <cons>
+
+**Option 5: Clarify the requirement / re-brainstorm**
+answer the open questions about the requirement; a new gate occurrence starts
+- Pros: <pros>
+- Cons: <cons>
+
+Reply with a number. If there's no answer: nothing advances; the gate stays escalated and the work waits.
 ```
 
 ### What the Orchestrator MUST NOT Do
@@ -920,19 +930,25 @@ After 3 failed VALIDATE attempts, escalate to human with full context:
 <best understanding of why this keeps failing>
 
 ### Options
-**Choices:** each option states its **Pros:** and **Cons:** (see Decision requests in `./guides/delivery-scope.md`).
-1. <option-1>
-   - **Pros:** <pros>
-   - **Cons:** <cons>
-2. <option-2>
-   - **Pros:** <pros>
-   - **Cons:** <cons>
-3. Abandon this work unit and restructure
-   - **Pros:** <pros>
-   - **Cons:** <cons>
+Use the decision-request format (see Decision requests in `./guides/delivery-scope.md`): mark exactly one option (Recommended) and give only that option a Why recommended line.
 
-**Recommended:** <which option>
-**Rationale:** <why, tied to the user's goals or constraints>
+**Option 1: <option-1>** (Recommended)
+<what it does, in one line>
+- Pros: <pros>
+- Cons: <cons>
+- Why recommended: <why, tied to the user's goals or constraints>
+
+**Option 2: <option-2>**
+<what it does, in one line>
+- Pros: <pros>
+- Cons: <cons>
+
+**Option 3: Abandon this work unit and restructure**
+<what it does, in one line>
+- Pros: <pros>
+- Cons: <cons>
+
+Reply with a number. If there's no answer: the work unit stays blocked and nothing else on it proceeds.
 ```
 
 ---

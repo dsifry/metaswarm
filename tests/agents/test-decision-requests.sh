@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # tests/agents/test-decision-requests.sh
-# One "decision request" format for every ask to the user: Choices, Pros, Cons,
-# Recommended, Rationale. Defined once in guides/delivery-scope.md; every decision-ask site
-# references it; the Clarification, escalation and execution-method templates carry the five
-# labelled fields; a template with Recommended but no Rationale fails.
+# One "decision request" format for every ask to the user: one block per option, numbered
+# 1, 2, 3 (never letters), each with Pros and Cons, and "Why recommended" on the recommended
+# option only; a "Reply with a number" line and an "If there's no answer" default. Defined once
+# in guides/delivery-scope.md; every decision-ask site references it; the Clarification,
+# escalation and execution-method templates use the option-block shape; lettered option
+# templates and a Recommended option without Why recommended fail.
 
 set -euo pipefail
 
@@ -26,19 +28,39 @@ section() {
   ' "$1"
 }
 
-LABELS=('**Choices:**' '**Pros:**' '**Cons:**' '**Recommended:**' '**Rationale:**')
-# template_ok <text>: every labelled field is present.
-template_ok() { local l; for l in "${LABELS[@]}"; do grep -qF -- "$l" <<<"$1" || return 1; done; }
+# Option-block shape. Counts only template lines (not prose), so a prose mention of the
+# format in a section does not count as a template field.
+OPT_HEAD='^[> ]*\*\*Option [0-9]+:'
+cnt() { grep -cE -- "$1" <<<"$2" || true; }
+# template_ok <text>: per-option blocks with Pros and Cons each, Why recommended on the
+# recommended option only, numbered options, a reply instruction and a no-answer default.
+template_ok() {
+  local t="$1" heads pros cons why tag
+  heads="$(cnt "$OPT_HEAD" "$t")"
+  pros="$(cnt '^[> ]*- Pros:' "$t")"
+  cons="$(cnt '^[> ]*- Cons:' "$t")"
+  why="$(cnt '^[> ]*- Why recommended:' "$t")"
+  tag="$(cnt "${OPT_HEAD} .*\(Recommended\)" "$t")"
+  [ "$heads" -ge 2 ] || return 1
+  [ "$pros" = "$heads" ] && [ "$cons" = "$heads" ] || return 1
+  [ "$tag" -ge 1 ] && [ "$why" = "$tag" ] || return 1
+  grep -qE '^[> ]*\*\*Option 1:' <<<"$t" || return 1
+  grep -qE '^[> ]*\*\*Option [A-Za-z]\b|^[> ]*\*\*Option [0-9]+[a-z]:' <<<"$t" && return 1
+  grep -qF 'Reply with a number' <<<"$t" || return 1
+  grep -qF "If there's no answer:" <<<"$t" || return 1
+  return 0
+}
 check_template() { # <name> <text>
-  if template_ok "$2"; then pass "$1 has Choices/Pros/Cons/Recommended/Rationale"
-  else fail "$1 lacks one of Choices/Pros/Cons/Recommended/Rationale"; fi
+  if template_ok "$2"; then pass "$1 has numbered option blocks (Pros/Cons each, Why recommended on the recommended one, reply and default lines)"
+  else fail "$1 does not match the option-block shape"; fi
 }
 
-echo "Test 1: the definition exists once, with all four parts"
+echo "Test 1: the definition exists once, with the option-block shape"
 n="$(grep -c '^## Decision requests' "$GUIDE" || true)"
 [ "$n" = 1 ] && pass "guide has exactly one '## Decision requests'" || fail "guide has $n '## Decision requests'"
 DEF="$(section "$GUIDE" '^## Decision requests')"
-for s in 'Choices' 'Pros' 'Cons' 'Recommended' 'Rationale' 'goals or constraints' 'If no answer' \
+for s in 'Decision needed' 'Option N' 'Pros' 'Cons' '(Recommended)' 'Why recommended' 'goals or constraints' \
+  'Numbering rule' 'Never letters' 'relayed from a reviewer or a coder' 'Reply with a number' "If there's no answer" \
   'Exempt' 'fact' 'uestions never block'; do
   grep -qF -- "$s" <<<"$DEF" && pass "definition has '$s'" || fail "definition missing '$s'"
 done
@@ -49,7 +71,7 @@ for f in skills/*/guides/delivery-scope.md; do
   cmp -s "$GUIDE" "$f" && pass "$f in sync" || fail "$f differs from $GUIDE"
 done
 
-echo "Test 2: templates carry the five labelled fields"
+echo "Test 2: templates use the numbered option-block shape"
 check_template "Clarification report" "$(section "$GUIDE" '^### Clarification report')"
 check_template "escalation template (guide)" "$(section "$GUIDE" '^## Escalation template')"
 check_template "execution method menu (workflow-enforcement)" "$(section guides/workflow-enforcement.md '^## Execution method menu')"
@@ -60,11 +82,29 @@ check_template "plan-review-gate escalation" "$(section skills/plan-review-gate/
 check_template "design-review-gate escalation" "$(section skills/design-review-gate/SKILL.md '^### Escalation')"
 check_template "orchestrated-execution VALIDATE escalation" "$(section skills/orchestrated-execution/SKILL.md '^### Step 4: ESCALATE')"
 
-echo "Test 3: negative check, Recommended without Rationale fails"
-printf '%s\n' '**Choices:**' '1. A' '   - **Pros:** x' '   - **Cons:** y' '**Recommended:** A' > "$FIX/no-rationale.md"
-if template_ok "$(cat "$FIX/no-rationale.md")"; then fail "a template without Rationale passed"; else pass "a template without Rationale fails"; fi
-printf '%s\n' '**Choices:**' '1. A' '**Recommended:** A' '**Rationale:** z' > "$FIX/no-proscons.md"
-if template_ok "$(cat "$FIX/no-proscons.md")"; then fail "a template without Pros/Cons passed"; else pass "a template without Pros/Cons fails"; fi
+echo "Test 3: negative checks"
+good='**Option 1: A** (Recommended)\none\n- Pros: x\n- Cons: y\n- Why recommended: z\n\n**Option 2: B**\ntwo\n- Pros: x\n- Cons: y\n\nReply with a number. If there'"'"'s no answer: wait.\n'
+printf "$good" > "$FIX/good.md"
+if template_ok "$(cat "$FIX/good.md")"; then pass "a well-formed block passes"; else fail "a well-formed block failed"; fi
+neg() { # <name> <awk program applied to the good block>
+  awk "$2" "$FIX/good.md" > "$FIX/neg.md"
+  if template_ok "$(cat "$FIX/neg.md")"; then fail "$1 passed"; else pass "$1 fails"; fi
+}
+neg "Recommended without Why recommended" '!/Why recommended/'
+neg "an option without Cons" '!/- Cons: y/ || seen++'
+neg "an option without Pros" '!/- Pros: x/ || seen++'
+neg "lettered options" '{ sub(/Option 1:/, "Option A:"); sub(/Option 2:/, "Option B:"); print }'
+neg "no reply-with-a-number line" '!/Reply with a number/'
+neg "no no-answer default" '{ sub(/ If there.s no answer: wait\./, ""); print }'
+neg "Why recommended on a non-recommended option" '{ print } /^- Cons: y$/ && ++n == 2 { print "- Why recommended: q" }'
+neg "old Choices/Recommended/Rationale layout" '/^\*\*Option 1:/ { print "**Choices:**"; print "1. A"; next } /^\*\*Option 2:/ { print "2. B"; next } !/^- (Pros|Cons|Why)/'
+
+echo "Test 3b: no lettered option templates; finding-contract options field is numbered"
+bad="$( (git grep -nE '^[> -]*(\*\*)?Option [A-Z]\b' -- '*.md' ':!CHANGELOG.md' ':!docs' ':!knowledge' ':!tests' ':!skills/*/guides/*' || true) )"
+[ -z "$bad" ] && pass "no lettered 'Option A' templates in user-facing text" || fail "lettered option templates: $bad"
+bad="$( (git grep -nE '\*\*(Choices|Recommended|Rationale):\*\*' -- '*.md' ':!CHANGELOG.md' ':!docs' ':!knowledge' ':!tests' ':!skills/*/guides/*' || true) )"
+[ -z "$bad" ] && pass "no old Choices/Recommended/Rationale field labels" || fail "old labels remain: $bad"
+grep -E '^- options:' "$GUIDE" | grep -qF 'numbered 1, 2, 3 (never letters)' && pass "finding contract options field is numbered" || fail "finding contract options field is not numbered"
 
 echo "Test 4: every decision-ask site references the one definition"
 SITES=(

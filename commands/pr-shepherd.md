@@ -19,7 +19,7 @@ If no PR number is provided, uses the PR associated with the current branch.
 1. **Monitors CI/CD** - Polls every 60 seconds for status changes
 2. **Monitors Reviews** - Watches for new comments and unresolved threads
 3. **Auto-fixes simple issues** - Lint, prettier, type errors
-4. **Asks before complex fixes** - Presents a decision request for approval: the choices, pros and cons of each, a recommended choice and its rationale (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`)
+4. **Asks before complex fixes** - Presents a decision request for approval: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`)
 5. **Handles review comments** - Delegates to `handling-pr-comments` skill
 6. **Checkpoints at 4 hours** - Asks if you want to continue or handoff
 
@@ -46,7 +46,7 @@ If no PR number is provided, uses the PR associated with the current branch.
 
 4. **Handle issues as they arise**:
    - Simple CI failures -> auto-fix with TDD
-   - Complex failures -> present a decision request (choices, pros/cons, recommended, rationale; Decision requests in `guides/delivery-scope.md`), wait for approval
+   - Complex failures -> present a decision request (numbered options, pros/cons, recommended and why; Decision requests in `guides/delivery-scope.md`), wait for approval
    - New comments -> invoke `handling-pr-comments` skill
 
 5. **Exit when done**:

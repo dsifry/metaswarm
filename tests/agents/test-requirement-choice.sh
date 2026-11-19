@@ -66,7 +66,7 @@ echo "Test 4: Clarification report asks with options, pros/cons, a recommendatio
 REPORT="$(section "$GUIDE" '^### Clarification report')"
 n="$(grep -c '^### Clarification report' "$GUIDE" || true)"
 [ "$n" = 1 ] && pass "exactly one Clarification report template" || fail "$n Clarification report templates"
-for t in 'Pros:' 'Cons:' 'Recommended:' 'Rationale:'; do
+for t in 'Pros:' 'Cons:' '(Recommended)' 'Why recommended:'; do
   grep -qF -- "$t" <<<"$REPORT" && pass "report template has '$t'" || fail "report template missing '$t'"
 done
 

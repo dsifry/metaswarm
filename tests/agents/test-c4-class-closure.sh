@@ -73,7 +73,7 @@ grep -qiF -- 'Two recurrences alone do not trigger this' <<<"$P" \
   && pass "paragraph says two recurrences alone do not trigger it" \
   || fail "paragraph does not say two recurrences alone do not trigger it"
 
-echo "Test 5: the Clarification report template offers close-the-class in Pros/Cons/Recommended form"
+echo "Test 5: the Clarification report template offers close-the-class in numbered Pros/Cons option-block form"
 REPORT="$(section "$GUIDE" '^### Clarification report')"
 n="$(grep -c '^### Clarification report' "$GUIDE" || true)"
 [ "$n" = 1 ] && pass "exactly one Clarification report template" || fail "$n Clarification report templates"
@@ -82,11 +82,12 @@ if grep -qF -- 'close the whole class' <<<"$REPORT"; then
 else
   fail "template missing the close-the-whole-class option"
 fi
-# The class-closure option block must carry its own Pros, Cons and Recommended lines.
-CLOSE_BLOCK="$(awk '/close the whole class/ { on = 1 } on { print } on && /Recommended:/ { exit }' <<<"$REPORT")"
-for t in 'Pros:' 'Cons:' 'Recommended:' 'C4'; do
+# The class-closure option block must carry its own Pros and Cons lines, and the report a recommended option.
+CLOSE_BLOCK="$(awk '/close the whole class/ { on = 1 } on && /^Reply with/ { exit } on { print }' <<<"$REPORT")"
+for t in 'Pros:' 'Cons:' 'C4'; do
   grep -qF -- "$t" <<<"$CLOSE_BLOCK" && pass "class-closure option has '$t'" || fail "class-closure option missing '$t'"
 done
+grep -qF -- '(Recommended)' <<<"$REPORT" && pass "report marks a recommended option" || fail "report has no (Recommended) option"
 
 echo "Test 6: the orchestrated-execution fix-brief checklist points at the guide"
 LINE="$(grep -F -- 'C4 and class closure' "$SKILL" || true)"

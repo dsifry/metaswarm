@@ -541,7 +541,7 @@ Follow the workflow phases exactly as specified.`,
 
 ### How to Escalate
 
-**Every ask to the user uses the decision-request format**: the choices, the pros and cons of each, a recommended choice and its rationale (see Decision requests in `./guides/delivery-scope.md`). The Agent Request below, the Clarification report and the Review Escalation report all carry those fields. Questions that only collect a fact are exempt.
+**Every ask to the user uses the decision-request format**: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `./guides/delivery-scope.md`). The Agent Request below, the Clarification report and the Review Escalation report all use those option blocks. Questions that only collect a fact are exempt.
 
 **Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), still mark the task waiting (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), then post the Review Escalation report from the Escalation template in `./guides/delivery-scope.md` instead. Its options are **Revise**, **Clarify the requirement / re-brainstorm**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. A Clarify signal (rule line 2) uses the Clarification report from the Clarify section of the same guide instead: run the misunderstanding analysis first, then wait for the user's answer. "Keep going" never defaults a `needs_user` question. There is no `@beads approve` for an escalated review gate: escalation never approves, and a Clarification never approves either.
 
@@ -560,17 +560,20 @@ gh issue comment <number> --body "$(cat <<'EOF'
 **Question**: <clear question>
 
 ### Options
-**Choices:** every ask to the user uses the decision-request format (see Decision requests in `./guides/delivery-scope.md`).
-1. **Option A**: <description>
-   - **Pros:** ...
-   - **Cons:** ...
-2. **Option B**: <description>
-   - **Pros:** ...
-   - **Cons:** ...
+Every ask to the user uses the decision-request format (see Decision requests in `./guides/delivery-scope.md`): numbered options 1, 2, 3 (never letters), each with pros and cons, and Why recommended on the recommended option only.
 
-**Recommended:** <which option>
-**Rationale:** <why, tied to the user's goals or constraints>
-**If no answer:** <what proceeds meanwhile, and what waits>
+**Option 1: <name>** (Recommended)
+<one line on what it does>
+- Pros: ...
+- Cons: ...
+- Why recommended: <tied to the user's goals or constraints>
+
+**Option 2: <name>**
+<one line on what it does>
+- Pros: ...
+- Cons: ...
+
+Reply with a number. If there's no answer: <what proceeds meanwhile, and what waits>.
 
 ---
 Reply: `@beads approve <task-id>` or `@beads respond <task-id> <option>`

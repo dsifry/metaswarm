@@ -261,8 +261,8 @@ Reviewers may leave comments on code outside the PR diff. The `handling-pr-comme
 When user input is needed, ALWAYS:
 
 1. **Present the situation clearly**
-2. **Offer 2-4 options with pros/cons**
-3. **State your recommendation**
+2. **Offer 2-4 numbered options, each with pros and cons**
+3. **State your recommendation, with Why recommended on that option only**
 4. **Allow user to choose OR provide their own approach**
 
 ### Template
@@ -270,24 +270,23 @@ When user input is needed, ALWAYS:
 ```text
 [Describe what happened]
 
-**Options:**
+**Option 1: [name]** (Recommended)
+[What it involves]
+- Pros: [benefits]
+- Cons: [drawbacks]
+- Why recommended: [tied to the user's goals or constraints]
 
-1. **[Option name]** (Recommended)
-   - [What it involves]
-   - Pros: [benefits]
-   - Cons: [drawbacks]
+**Option 2: [name]**
+[What it involves]
+- Pros: [benefits]
+- Cons: [drawbacks]
 
-2. **[Option name]**
-   - [What it involves]
-   - Pros: [benefits]
-   - Cons: [drawbacks]
+**Option 3: [name]**
+[What it involves]
+- Pros: [benefits]
+- Cons: [drawbacks]
 
-3. **[Option name]**
-   - [What it involves]
-   - Pros: [benefits]
-   - Cons: [drawbacks]
-
-Which approach would you like? (Or describe a different approach)
+Reply with a number (or describe a different approach). If there's no answer: [what proceeds by default].
 ```
 
 ### After User Responds
@@ -307,24 +306,23 @@ Current status:
 - Threads: [X] resolved, [Y] unresolved
 - Commits: [N] fix commits pushed
 
-**Options:**
+**Option 1: Keep monitoring** (Recommended)
+Continue for another 4 hours.
+- Pros: PR may get reviewed soon
+- Cons: Ties up agent resources
+- Why recommended: [tied to the user's goals, for example a PR that is close to merging]
 
-1. **Keep monitoring** (Recommended)
-   - Continue for another 4 hours
-   - Pros: PR may get reviewed soon
-   - Cons: Ties up agent resources
+**Option 2: Exit with handoff**
+Save status report, exit cleanly.
+- Pros: Frees resources
+- Cons: Must manually re-invoke later
 
-2. **Exit with handoff**
-   - Save status report, exit cleanly
-   - Pros: Frees resources
-   - Cons: Must manually re-invoke later
+**Option 3: Set shorter check-in**
+Check back in 1 hour instead of 4.
+- Pros: More frequent checkpoints
+- Cons: More interruptions
 
-3. **Set shorter check-in**
-   - Check back in 1 hour instead of 4
-   - Pros: More frequent checkpoints
-   - Cons: More interruptions
-
-What would you like to do? (Or describe a different approach)
+Reply with a number (or describe a different approach). If there's no answer: keep monitoring for another 4 hours.
 ```
 
 ## Exit Conditions
@@ -552,7 +550,7 @@ After all post-merge tasks complete:
 
 **Auto-fixing complex issues**
 
-- If uncertain, ASK. Always go through WAITING_FOR_USER for complex issues. Every ask is a decision request: the choices, the pros and cons of each, a recommended choice and its rationale (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`).
+- If uncertain, ASK. Always go through WAITING_FOR_USER for complex issues. Every ask is a decision request: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`).
 
 **Forgetting to invoke handling-pr-comments**
 

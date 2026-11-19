@@ -26,7 +26,8 @@ assert_in() { # <label> <text> <fixed-string>...
 T_TRIGGER='Run the Design Review Gate only for project-sized work: brainstorming sized the work as a project (superpowers 6.4.x Architectural path; 7.x "a project", the full written design) and committed its design doc. Quick tasks, chat-only designs and short design docs for small changes (superpowers 7.0.1+) skip the gate.'
 T_LOCATIONS='`docs/plans/*-design.md` and `docs/superpowers/specs/*-design.md`'
 T_INTERCEPT='Run the Plan Review Gate after the plan is written and before writing-plans presents the plan: do not link the plan, ask the user to review it, or offer an execution choice until all 3 reviewers PASS.'
-T_NATIVE='**Native inline execution** (`superpowers:executing-plans`) — I implement every task myself in this session, then one fresh reviewer checks the whole branch.'
+T_NATIVE='**Option 3: Native inline execution** (`superpowers:executing-plans`)'
+T_NATIVE2='I implement every task myself in this session, then one fresh reviewer checks the whole branch.'
 
 # ---------------------------------------------------------------------------
 echo "WU1: canonical guide"
@@ -37,7 +38,7 @@ if [ -f "$GUIDE" ]; then pass "guides/workflow-enforcement.md exists"; G="$(cat 
 assert_in "guide has T-TRIGGER" "$G" "$T_TRIGGER"
 assert_in "guide has T-LOCATIONS" "$G" "$T_LOCATIONS"
 assert_in "guide has T-INTERCEPT" "$G" "$T_INTERCEPT"
-assert_in "guide has T-NATIVE" "$G" "$T_NATIVE"
+assert_in "guide has T-NATIVE" "$G" "$T_NATIVE" "$T_NATIVE2"
 assert_in "guide names tiers and versions" "$G" "Bounded" "Architectural" "6.4.1" "7.0.2"
 
 for d in brainstorming-extension design-review-gate plan-review-gate start orchestrated-execution; do
@@ -619,7 +620,7 @@ echo "WU5: execution menu and INSTALL.md"
 # ---------------------------------------------------------------------------
 
 for f in CLAUDE.md templates/CLAUDE.md; do
-  assert_in "$f has the Native inline execution option" "$(cat "$REPO_ROOT/$f")" "$T_NATIVE"
+  assert_in "$f has the Native inline execution option" "$(cat "$REPO_ROOT/$f")" "$T_NATIVE" "$T_NATIVE2"
 done
 
 SP_SKILLS=(
