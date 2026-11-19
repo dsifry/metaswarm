@@ -137,7 +137,7 @@ assert_in "guide: follow-up rule" "$G" \
 assert_in "guide: escalation template" "$G" \
   'Critical' 'Major' 'Minor' 'Nit' \
   'Round history' \
-  '**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason'
+  '**Recommended:** <revise|clarify|narrow scope|defer|cancel>' '**Rationale:** <reason'
 
 # DoD 1.2: mirrors exist and sync check passes
 MIRRORS=(
@@ -361,7 +361,7 @@ RULE_LINES=(
   '6. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers'
   '7. otherwise                           → fix blockers, re-validate, FRESH review'
 )
-RECOMMENDATION='**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason from the rule>'
+RECOMMENDATION='**Recommended:** <revise|clarify|narrow scope|defer|cancel>'
 
 for g in "${GATES[@]}"; do
   T="$(readf "$g")"

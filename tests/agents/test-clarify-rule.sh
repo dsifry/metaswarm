@@ -123,7 +123,7 @@ REPORT="$(section "$GUIDE" '^### Clarification report')"
 assert_in "guide: Clarification report template" "$REPORT" \
   '## Clarification needed:' 'Signals fired' 'cap hit' \
   'Goal, in one sentence' 'Assumption trace' 'Readings' 'Questions' \
-  'Round history' 'Signals (C1–C4)' 'Themes' 'Rule decision' '### Options' '**Recommendation**'
+  'Round history' 'Signals (C1–C4)' 'Themes' 'Rule decision' '### Options' '**Recommended:**' '**Rationale:**'
 assert_in "guide: report options 1-5" "$REPORT" \
   '1. **Answer**' '2. **Keep iterating**' '3. **Narrow scope**' '4. **Defer**' '5. **Cancel**'
 # The report offers no way to advance with open blockers.
@@ -635,8 +635,8 @@ printf '%s\n' '1. [X] **a** — needs_user: yes — origin: assumption' '**Rule 
 # ---------------------------------------------------------------------------
 echo "WU3: escalation templates offer exactly five options and never approve"
 # ---------------------------------------------------------------------------
-# options_of <text>: the numbered options between "### Options" and "**Recommendation**".
-options_of() { awk '/^### Options/{on=1;next} on&&/^\*\*Recommendation\*\*/{exit} on&&/^[0-9]+\. \*\*/' <<<"$1"; }
+# options_of <text>: the numbered options between "### Options" and "**Recommended:**".
+options_of() { awk '/^### Options/{on=1;next} on&&/^\*\*Recommended:\*\*/{exit} on&&/^[0-9]+\. \*\*/' <<<"$1"; }
 names_of() { sed -E 's/^([0-9]+)\. \*\*([^*]+)\*\*.*/\1 \2/' <<<"$1" | tr '\n' '|'; }
 WANT_ESC="1 Revise|2 Narrow scope|3 Defer|4 Cancel|5 Clarify the requirement / re-brainstorm|"
 GUIDE_COPIES=(guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-scope.md
@@ -659,7 +659,7 @@ for f in "${GUIDE_COPIES[@]}" "${GATES[@]}"; do
 done
 # Self-test: a sixth, approving option is caught.
 printf '%s\n' '### Options' '1. **Revise** — x' '2. **Narrow scope** — x' '3. **Defer** — x' '4. **Cancel** — x' \
-  '5. **Clarify the requirement / re-brainstorm** — x' '6. **Approve with open blockers** — x' '**Recommendation**: x' > "$FIX/opts-bad.md"
+  '5. **Clarify the requirement / re-brainstorm** — x' '6. **Approve with open blockers** — x' '**Recommended:** x' > "$FIX/opts-bad.md"
 [ "$(names_of "$(options_of "$(cat "$FIX/opts-bad.md")")")" != "$WANT_ESC" ] && pass "self-test: a sixth approve option is flagged" \
   || fail "self-test: a sixth approve option is flagged"
 

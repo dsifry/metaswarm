@@ -206,6 +206,7 @@ When the orchestrator's severity rule says escalate:
 1. Escalate to human with summary of issues
 2. Mark task as waiting:human
 3. Provide clear summary of what's blocking approval
+4. Present it as a decision request: the choices, the pros and cons of each, a recommended choice and the rationale for it (see Decision requests in `guides/delivery-scope.md`).
 
 ### Iteration Tracking
 
@@ -350,4 +351,4 @@ Request specific missing sections rather than rejecting outright.
 
 ### Conflicting Requirements
 
-Escalate to human with clear explanation of the conflict.
+Escalate to human with clear explanation of the conflict. Present it as a decision request: the choices, the pros and cons of each, a recommended choice and the rationale for it (see Decision requests in `guides/delivery-scope.md`).

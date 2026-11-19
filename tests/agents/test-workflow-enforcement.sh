@@ -26,7 +26,7 @@ assert_in() { # <label> <text> <fixed-string>...
 T_TRIGGER='Run the Design Review Gate only for project-sized work: brainstorming sized the work as a project (superpowers 6.4.x Architectural path; 7.x "a project", the full written design) and committed its design doc. Quick tasks, chat-only designs and short design docs for small changes (superpowers 7.0.1+) skip the gate.'
 T_LOCATIONS='`docs/plans/*-design.md` and `docs/superpowers/specs/*-design.md`'
 T_INTERCEPT='Run the Plan Review Gate after the plan is written and before writing-plans presents the plan: do not link the plan, ask the user to review it, or offer an execution choice until all 3 reviewers PASS.'
-T_NATIVE='**Native inline execution** (`superpowers:executing-plans`) — I implement every task myself in this session, then one fresh reviewer checks the whole branch. Cheapest and fastest; no independent review until the end.'
+T_NATIVE='**Native inline execution** (`superpowers:executing-plans`) — I implement every task myself in this session, then one fresh reviewer checks the whole branch.'
 
 # ---------------------------------------------------------------------------
 echo "WU1: canonical guide"

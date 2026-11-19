@@ -119,7 +119,7 @@ Line 2 fires when any of C1–C4 holds. They are evaluated per gate occurrence, 
 
 **C4 and class closure.** When C4 fires, the Clarification report's options include **close the whole class**, and it is the recommended option unless the misunderstanding analysis shows the theme rests on a requirement choice (then C1's question comes first). If the user picks it (or the default stands), the next fix brief must: (a) name the class in one sentence, independent of the instances; (b) list every instance seen so far; (c) require a structural test that fails for any member of the class, not only the named ones, with a negative test; and (d) require the coder to hunt for further members and report every source it checked. Two recurrences alone do not trigger this; only C4's three-round threshold does.
 
-**Orchestrator duty: classify requirement choices before the helper runs.** The orchestrator classifies; it does not only trust the reviewers' tags. Each round, before running the helper, check every blocker against the Requirement choice definition in Signal fields. If a blocker is one, set `needs_user: yes` and `origin: requirement` on the recorded finding and add `classifiedBy: orchestrator`, even when the reviewer said no. C1 fires that same round, so the user is asked at the first round that shows the choice, not after C4 sees the theme three times. The Clarification report states the choice, the options with their pros and cons, and the orchestrator's recommended default. Founder working style still holds: questions never block other independent work. State the recommended default and continue the work that does not depend on the answer; "keep going" never defaults a `needs_user` question for the blocked item (see Options and re-entry). Never edit a recorded round afterwards; classify before the round is written.
+**Orchestrator duty: classify requirement choices before the helper runs.** The orchestrator classifies; it does not only trust the reviewers' tags. Each round, before running the helper, check every blocker against the Requirement choice definition in Signal fields. If a blocker is one, set `needs_user: yes` and `origin: requirement` on the recorded finding and add `classifiedBy: orchestrator`, even when the reviewer said no. C1 fires that same round, so the user is asked at the first round that shows the choice, not after C4 sees the theme three times. The Clarification report states the choice as a decision request (see [Decision requests](#decision-requests)): the options with their pros and cons, the recommended default and its rationale. Founder working style still holds: questions never block other independent work. State the recommended default and continue the work that does not depend on the answer; "keep going" never defaults a `needs_user` question for the blocked item (see Options and re-entry). Never edit a recorded round afterwards; classify before the round is written.
 
 C1 and C4 usually fire before C3 would. The history fields `windowStart`, `ackThemes` and `ackFindings` record what the user acknowledged (see Options and re-entry).
 
@@ -202,6 +202,36 @@ Minor and nit findings, and blockers downgraded by rule line 5, never block. Rec
 - If `bd` is unavailable or `bd create` fails, list the item in a `### Follow-ups` section of the gate output, so nothing is lost. The PR body carries that list.
 - Open a GitHub issue only for an item estimated at more than a day.
 
+## Decision requests
+
+Every time the orchestrator, an agent or a gate asks the user to decide, it uses this one format. The user's rule: each request gives (a) the choices available, (b) the pros and cons of each, (c) the recommended choice, and (d) the rationale for the recommendation. This section is the only definition; every other place that asks the user to decide points here and does not restate it.
+
+Required parts, each as a labelled field:
+
+- **Choices:** the options available, at least two, each named and said in one line. Include "do nothing" or "defer" when it is a real option.
+- **Pros:** and **Cons:** for each choice. A short line each is enough for a small ask; never leave one out because it is awkward for the recommended choice.
+- **Recommended:** exactly one choice.
+- **Rationale:** why that choice, tied to the user's stated goals or constraints (quote or point to them), not a general preference. If it rests on an assumption the user has not confirmed, say so.
+- **If no answer:** what proceeds meanwhile. Questions never block independent work: state the default and continue the work the answer does not affect. For a `needs_user` question the default never applies to the blocked item (see Standing instructions).
+
+```markdown
+**Decision needed:** <the question, in one sentence>
+**Choices:**
+1. <choice A> — <what it means>
+   - **Pros:** <pros>
+   - **Cons:** <cons>
+2. <choice B> — <what it means>
+   - **Pros:** <pros>
+   - **Cons:** <cons>
+**Recommended:** <choice>
+**Rationale:** <why this one, tied to the user's goals or constraints>
+**If no answer:** <what proceeds meanwhile, and what waits>
+```
+
+The Clarification report and the escalation templates below, and the execution-method menu, carry these fields inside their own layouts.
+
+Exempt: a question that only collects a fact the agent cannot detect or derive (a repo URL, a name, "which language is this project"), and a notice that tells the user to do something with no choice in it (for example, fix expired credentials). If a fact question hides a choice between acceptable behaviours, it is a decision request.
+
 ## Clarify
 
 Line 2 is a stop. When it fires, run the misunderstanding analysis, send the Clarification report, and wait for the user. Asking is not enough on its own: the questions must be better than the ones brainstorming missed.
@@ -219,7 +249,7 @@ Run this before writing the Clarification report.
    - **A proposal read as a decision:** the agent's own proposal treated as the user's decision.
    - **A one-word acknowledgement taken as approval of a message with several parts.**
 3. **Check the blockers against each reading.** For each blocker theme and each reframing, ask: would this blocker disappear under that reframing?
-4. **Write the questions.** Ask at most about 3 questions. Each one names the reading it tests, the options with the pros and cons of each, a recommended option with a one-line reason, and which blockers each option removes. Do not ask what the Confirmed section already answers.
+4. **Write the questions.** Ask at most about 3 questions, each as a decision request (see [Decision requests](#decision-requests)): it names the reading it tests, gives the choices with the pros and cons of each, a recommended choice and the rationale, and says which blockers each choice removes. Do not ask what the Confirmed section already answers.
 
 ### Clarification report
 
@@ -246,16 +276,18 @@ Run this before writing the Clarification report.
 
 ### Questions
 1. <question> — tests reading <n>
-   - Option A: <what it means> — removes <blockers>
-     - Pros: <pros>
-     - Cons: <cons>
-   - Option B: <what it means> — removes <blockers>
-     - Pros: <pros>
-     - Cons: <cons>
-   - Option C (C4 only): **close the whole class** — <the class in one sentence, and the instances it covers> — removes <blockers>
-     - Pros: <pros>
-     - Cons: <cons>
-   - Recommended: <option> because <one-line reason>
+   - **Choices:**
+     - Option A: <what it means> — removes <blockers>
+       - **Pros:** <pros>
+       - **Cons:** <cons>
+     - Option B: <what it means> — removes <blockers>
+       - **Pros:** <pros>
+       - **Cons:** <cons>
+     - Option C (C4 only): **close the whole class** — <the class in one sentence, and the instances it covers> — removes <blockers>
+       - **Pros:** <pros>
+       - **Cons:** <cons>
+   - **Recommended:** <option>
+   - **Rationale:** <why this option, tied to the user's goals or constraints>
 
 ### Round history
 | Round | Verdict | Blockers (critical/major) | Fixed this round | Signals (C1–C4) | Themes | Rule decision |
@@ -263,13 +295,25 @@ Run this before writing the Clarification report.
 | 1     | FAIL    | 0 / 2                     | —                | C1              | <theme> | 2: clarify    |
 
 ### Options
+**Choices:** each option below also states its **Pros:** and **Cons:** (see [Decision requests](#decision-requests)).
 1. **Answer** — answer the questions; the requirement is revised and a new gate occurrence starts
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 2. **Keep iterating** — the reading was right; record your answers and continue at rule line 3 (the cap), then the later lines in order, once no signal remains; any unanswered question is asked again
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 3. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 4. **Defer** — shelve this work for later; nothing moves
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 5. **Cancel** — abandon this work
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 
-**Recommendation**: <answer|keep iterating|narrow scope|defer|cancel> — <reason from the signals>
+**Recommended:** <answer|keep iterating|narrow scope|defer|cancel>
+**Rationale:** <reason from the signals, tied to the user's goals or constraints>
 ```
 
 ### Options and re-entry
@@ -310,13 +354,25 @@ Clarification never approves. There is no option that advances with open blocker
 | 1     | FAIL    | 0 / 2                     | —                | —               | <theme> | 7: iterate    |
 
 ### Options
+**Choices:** each option below also states its **Pros:** and **Cons:** (see [Decision requests](#decision-requests)).
 1. **Revise** — fix the remaining blockers (or the requirement they protect), then run a fresh review round
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 3. **Defer** — shelve this work for later; nothing advances
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 4. **Cancel** — abandon this work
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 5. **Clarify the requirement / re-brainstorm** — answer the open questions about the requirement; a new gate occurrence starts
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 
-**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason from the rule>
+**Recommended:** <revise|clarify|narrow scope|defer|cancel>
+**Rationale:** <reason from the rule, tied to the user's goals or constraints>
 ```
 
 Line 2 never uses this template; it uses the Clarification report.

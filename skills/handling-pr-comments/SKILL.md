@@ -139,8 +139,10 @@ Recommend: FIX_NOW or CREATE_ISSUE
 | Criteria                                      | Action                                    |
 | --------------------------------------------- | ----------------------------------------- |
 | Simple fix (< 30 min, < 3 files, no refactor) | **FIX_NOW** - Make the change immediately |
-| Medium complexity (unclear scope)             | **ASK_USER** - Present options            |
+| Medium complexity (unclear scope)             | **ASK_USER** - Present a decision request |
 | Major refactor (multiple systems, risky)      | **CREATE_ISSUE** - Document for follow-up |
+
+ASK_USER uses the decision-request format: the choices, the pros and cons of each, a recommended choice and its rationale (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`).
 
 #### For FIX_NOW
 

@@ -112,6 +112,7 @@ Block delivery only for a credible normal-usage failure, a missing or contradict
 - **Escalate to the human** -> the same critical/major finding recurs after a fix attempt for it, two reviewers rate the same finding blocker vs. non-blocker, or the safety cap of 10 rounds is hit. The options include clarifying the requirement.
 - **Overengineering signal** -> restate the DoD and re-classify each blocker against the policy; escalate if any still names a credible scenario, otherwise downgrade them to follow-ups and advance.
 - **Iterate** (fix, re-validate, fresh review) -> this round fixed a critical/major finding, or 2+ independent reviewers reported blockers.
+- **Asking the user** -> every request to the user to decide uses one format: the choices available, the pros and cons of each, the recommended choice, and the rationale for it (see Decision requests in `guides/delivery-scope.md` in the metaswarm plugin). Questions that only collect a fact are exempt.
 
 These rules apply in order, top to bottom (Clarify is checked before escalation, and escalation before iteration). A round that still has a blocker and matches none of them also iterates. If `bd` is unavailable, list follow-ups in a `### Follow-ups` section.
 

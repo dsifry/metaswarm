@@ -579,6 +579,8 @@ Stop for the user (not an escalation) when:
 
 ### Escalation Format
 
+**Every ask to the user uses the decision-request format**: the choices, the pros and cons of each, a recommended choice and its rationale (see Decision requests in `./guides/delivery-scope.md`). The Agent Request below, the Clarification report and the Review Escalation report all carry those fields. Questions that only collect a fact are exempt.
+
 **Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), still mark the task waiting (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), then post the Review Escalation report from the Escalation template in `./guides/delivery-scope.md` instead. Its options are **Revise**, **Clarify the requirement / re-brainstorm**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. There is no `@beads approve` for an escalated review gate: escalation never approves.
 
 **A Clarify signal (rule line 2) is a stop, not an escalation.** Run the misunderstanding analysis, post the Clarification report from the Clarify section of `./guides/delivery-scope.md`, mark the task waiting the same way, and wait for the user.
@@ -602,15 +604,17 @@ gh issue comment <number> --body "$(cat <<'EOF'
 **Question**: <clear question>
 
 ### Options
+**Choices:** every ask to the user uses the decision-request format (see Decision requests in `./guides/delivery-scope.md`).
 1. **Option A**: <description>
-   - Pros: ...
-   - Cons: ...
+   - **Pros:** ...
+   - **Cons:** ...
 2. **Option B**: <description>
-   - Pros: ...
-   - Cons: ...
+   - **Pros:** ...
+   - **Cons:** ...
 
-### Agent Recommendation
-<which option and why>
+**Recommended:** <which option>
+**Rationale:** <why, tied to the user's goals or constraints>
+**If no answer:** <what proceeds meanwhile, and what waits>
 
 ---
 Reply with: `@beads approve <task-id>` or `@beads respond <task-id> <option>`

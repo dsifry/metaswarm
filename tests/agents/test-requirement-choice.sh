@@ -2,7 +2,7 @@
 # tests/agents/test-requirement-choice.sh
 # "Ask as soon as a blocker rests on a requirement choice": one definition in the guide,
 # every needs_user copy points at it, the orchestrator classifies before the helper runs,
-# the Clarification report asks with options, pros/cons and a recommendation, and the
+# the Clarification report asks with options, pros/cons, a recommendation and a rationale, and the
 # planner and coders STOP and ask instead of choosing silently.
 
 set -euo pipefail
@@ -62,11 +62,11 @@ for t in 'orchestrator classifies' 'classifiedBy: orchestrator' 'C1 fires that s
 done
 grep -qF 'questions never block' <<<"$DUTY" && pass "duty keeps the non-blocking-questions rule" || fail "duty missing non-blocking rule"
 
-echo "Test 4: Clarification report asks with options, pros/cons and a recommendation"
+echo "Test 4: Clarification report asks with options, pros/cons, a recommendation and a rationale"
 REPORT="$(section "$GUIDE" '^### Clarification report')"
 n="$(grep -c '^### Clarification report' "$GUIDE" || true)"
 [ "$n" = 1 ] && pass "exactly one Clarification report template" || fail "$n Clarification report templates"
-for t in 'Pros:' 'Cons:' 'Recommended:' 'because'; do
+for t in 'Pros:' 'Cons:' 'Recommended:' 'Rationale:'; do
   grep -qF -- "$t" <<<"$REPORT" && pass "report template has '$t'" || fail "report template missing '$t'"
 done
 

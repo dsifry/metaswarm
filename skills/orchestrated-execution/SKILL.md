@@ -483,13 +483,25 @@ When the rule says clarify (line 2), use the Clarification report from the [Clar
 | 3     | FAIL    | 0 / 1                     | 0 / 0            | —               | <theme-a>, <theme-c> | 4: escalate (recurring) |
 
 ### Options
+**Choices:** each option below also states its **Pros:** and **Cons:** (see Decision requests in `delivery-scope.md`).
 1. **Revise** — fix the remaining blockers (or the requirement they protect), then run a fresh review round
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 3. **Defer** — shelve this work for later; nothing advances
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 4. **Cancel** — abandon this work
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 5. **Clarify the requirement / re-brainstorm** — answer the open questions about the requirement; a new gate occurrence starts
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 
-**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason from the rule>
+**Recommended:** <revise|clarify|narrow scope|defer|cancel>
+**Rationale:** <reason from the rule, tied to the user's goals or constraints>
 ```
 
 ### What the Orchestrator MUST NOT Do
@@ -908,12 +920,19 @@ After 3 failed VALIDATE attempts, escalate to human with full context:
 <best understanding of why this keeps failing>
 
 ### Options
+**Choices:** each option states its **Pros:** and **Cons:** (see Decision requests in `./guides/delivery-scope.md`).
 1. <option-1>
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 2. <option-2>
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 3. Abandon this work unit and restructure
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 
-### Recommendation
-<which option and why>
+**Recommended:** <which option>
+**Rationale:** <why, tied to the user's goals or constraints>
 ```
 
 ---

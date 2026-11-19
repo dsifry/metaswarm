@@ -72,6 +72,8 @@ Then ask the user to confirm your assessment:
 
 > **Proposed complexity**: [Simple / Complex] - Does this match your expectation?
 
+This, and every other ask below, uses the decision-request format: the choices, the pros and cons of each, a recommended choice and its rationale (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`). For this one, a line each is enough.
+
 **Simple Task (streamlined flow):**
 
 - Bug fixes
@@ -114,7 +116,7 @@ If the issue lacks DoD items or clear scope, ask the user to clarify before proc
 
 - For **simple tasks**: No issue needed. Proceed directly.
 - For **complex tasks**: An issue is ALWAYS needed. Ask the user:
-  > "This is a complex task. Should I create a GitHub Issue to track it?"
+  > "This is a complex task. Should I create a GitHub Issue to track it?" (state the choices, their pros and cons, your recommendation and why: Decision requests)
 
 **If the problem is unclear:**
 

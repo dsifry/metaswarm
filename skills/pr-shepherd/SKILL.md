@@ -77,7 +77,7 @@ MONITORING → FIXING → MONITORING → WAITING_FOR_USER → FIXING → MONITOR
 | `MONITORING`       | Poll CI and reviews every 60s in background | CI fails, new comments, all done, or need help |
 | `FIXING`           | Fix issues using TDD, run local validation  | Local validation passes OR need user guidance  |
 | `HANDLING_REVIEWS` | Invoke `handling-pr-comments` skill         | Comments handled OR need user input            |
-| `WAITING_FOR_USER` | Present options, wait for user decision     | User responds                                  |
+| `WAITING_FOR_USER` | Present a decision request, wait for the answer | User responds                              |
 | `DONE`             | All CI green + all threads resolved         | Exit successfully                              |
 
 ## Phase 1: Initialize
@@ -552,7 +552,7 @@ After all post-merge tasks complete:
 
 **Auto-fixing complex issues**
 
-- If uncertain, ASK. Always go through WAITING_FOR_USER for complex issues.
+- If uncertain, ASK. Always go through WAITING_FOR_USER for complex issues. Every ask is a decision request: the choices, the pros and cons of each, a recommended choice and its rationale (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`).
 
 **Forgetting to invoke handling-pr-comments**
 

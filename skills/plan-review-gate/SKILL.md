@@ -204,13 +204,25 @@ When the severity rule says clarify (line 2), use the Clarification report from 
 - <minor/nit findings, or the BEADS task IDs filed for them>
 
 ### Options
+**Choices:** each option below also states its **Pros:** and **Cons:** (see Decision requests in `delivery-scope.md`).
 1. **Revise** — fix the remaining blockers (or the requirement they protect), then run a fresh review round
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 3. **Defer** — shelve this work for later; nothing advances
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 4. **Cancel** — abandon this work
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 5. **Clarify the requirement / re-brainstorm** — answer the open questions about the requirement; a new gate occurrence starts
+   - **Pros:** <pros>
+   - **Cons:** <cons>
 
-**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason from the rule>
+**Recommended:** <revise|clarify|narrow scope|defer|cancel>
+**Rationale:** <reason from the rule, tied to the user's goals or constraints>
 ```
 
 ### Recovery

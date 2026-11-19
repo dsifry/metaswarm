@@ -25,6 +25,8 @@ This skill generates GitHub issues that are self-contained work packets. Each is
 
 ## Interactive Flow
 
+Questions that only collect facts (the description, the acceptance criteria) are plain questions. Any question that is a choice between acceptable options (type, complexity, scope) is a decision request: the choices, the pros and cons of each, a recommended choice and its rationale (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`); a line each is enough.
+
 ### Step 1: Issue Type
 
 Ask the user:

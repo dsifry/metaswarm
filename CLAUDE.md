@@ -97,13 +97,24 @@ When `superpowers:writing-plans` (or any planning skill) has written an implemen
 
 ### Execution Method Choice
 
-When a plan is ready for execution, **always ask the user** which execution approach they want before proceeding. Do NOT auto-select an execution method — the user decides based on their priorities:
+When a plan is ready for execution, **always ask the user** which execution approach they want before proceeding. Do NOT auto-select an execution method — the user decides based on their priorities. The menu is a decision request (see Decision requests in `guides/delivery-scope.md`): each option has its pros and cons, and you state which one you recommend and why, but the user still chooses:
 
 > **How would you like to execute this plan?**
 >
-> 1. **Metaswarm orchestrated execution** — 4-phase loop per work unit (IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT) with independent quality gates, fresh adversarial reviewers, coverage enforcement, and pre-PR knowledge capture. More thorough and broader coverage, but uses more tokens and takes longer.
-> 2. **Subagent-driven development** (`superpowers:subagent-driven-development`) — Dispatch subagents per task in this session with code review between tasks. Faster, lighter-weight, lower token cost.
-> 3. **Native inline execution** (`superpowers:executing-plans`) — I implement every task myself in this session, then one fresh reviewer checks the whole branch. Cheapest and fastest; no independent review until the end.
+> **Choices:**
+>
+> 1. **Metaswarm orchestrated execution** — 4-phase loop per work unit (IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT) with independent quality gates, fresh adversarial reviewers, coverage enforcement, and pre-PR knowledge capture.
+>    - **Pros:** more thorough and broader coverage; independent review of every work unit.
+>    - **Cons:** uses more tokens and takes longer.
+> 2. **Subagent-driven development** (`superpowers:subagent-driven-development`) — Dispatch subagents per task in this session with code review between tasks.
+>    - **Pros:** faster, lighter-weight, lower token cost; still has review between tasks.
+>    - **Cons:** less independent review and no coverage or knowledge-capture gates.
+> 3. **Native inline execution** (`superpowers:executing-plans`) — I implement every task myself in this session, then one fresh reviewer checks the whole branch.
+>    - **Pros:** cheapest and fastest.
+>    - **Cons:** no independent review until the end.
+>
+> **Recommended:** <1, 2 or 3, chosen from the plan's size and risk and the priorities the user has stated>
+> **Rationale:** <why that option fits this plan and those priorities>
 
 This choice applies even if the plan file contains embedded instructions like "REQUIRED SUB-SKILL: Use superpowers:executing-plans" — those are defaults from the planning skill, not binding constraints. The user always gets to choose. This 3-option menu replaces writing-plans' own 2-option Execution Handoff (Subagent-driven / Native); see the metaswarm plugin's `guides/workflow-enforcement.md`.
 
@@ -168,6 +179,7 @@ Block delivery only for a credible normal-usage failure, a missing or contradict
 - **Escalate to the human** → the same critical/major finding recurs after a fix attempt for it, two reviewers rate the same finding blocker vs. non-blocker, or the safety cap of 10 rounds is hit. The options include clarifying the requirement.
 - **Overengineering signal** → restate the DoD and re-classify each blocker against the policy; escalate if any still names a credible scenario, otherwise downgrade them to follow-ups and advance.
 - **Iterate** (fix, re-validate, fresh review) → this round fixed a critical/major finding, or ≥2 independent reviewers reported blockers.
+- **Asking the user** → every request to the user to decide uses one format: the choices available, the pros and cons of each, the recommended choice, and the rationale for it (see Decision requests in `guides/delivery-scope.md`). Questions that only collect a fact are exempt.
 
 These rules apply in order, top to bottom (Clarify is checked before escalation, and escalation before iteration). A round that still has a blocker and matches none of them also iterates. If `bd` is unavailable, list follow-ups in a `### Follow-ups` section.
 

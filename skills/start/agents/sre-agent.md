@@ -298,6 +298,8 @@ Escalate to human when:
 4. **Security incident** detected
 5. **Multiple systems affected**
 
+Present it as a decision request: the choices, the pros and cons of each, a recommended choice and the rationale for it (see Decision requests in `./guides/delivery-scope.md`).
+
 ```bash
 bd update <task-id> --status blocked
 bd label add <task-id> waiting:human
