@@ -458,6 +458,7 @@ When the rule says iterate:
 - the minors (non-blocking findings to fix if cheap, or leave as follow-ups);
 - the validation commands to run;
 - a standing rule: if the fix requires a requirement choice the brief does not settle, STOP and report the choice as options with pros/cons and a recommendation. Do not pick silently.
+- if the round is a C4 class closure, the brief follows [C4 and class closure](./guides/delivery-scope.md#clarify): the class named in one sentence, every instance listed, a structural test with a negative test, and a hunt for further members reported source by source.
 
 Track each round visibly: "Review round 1/10", "Review round 2/10", etc.
 
