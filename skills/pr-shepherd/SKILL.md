@@ -49,14 +49,20 @@ Task: [describe the implementation task]
 
 After creating the PR:
 1. Use the pr-shepherd skill to monitor it through to merge
-2. Handle CI failures and review comments autonomously
-3. Only escalate to orchestrator for complex issues requiring user input
-4. Report back when PR is ready to merge or if blocked
+2. Do not fix CI failures or review comments yourself or in this agent: the shepherd spawns a fresh coder for each code change
+3. Report back when PR is ready to merge or if blocked
 
 Run in background so I can continue other work.
 ```
 
-**Key principle**: The agent owns its PR lifecycle. The orchestrator spawns and forgets, checking back via `AgentOutputTool` when needed.
+**Key principle**: The shepherd owns the PR lifecycle, but the PR's original coder does not own its fixes. The shepherd monitors CI, review comments and threads. When something needs a code change (a CI failure or an actionable review comment), it spawns a fresh coder of the tier the rubric picks (the coder selection rubric, `guides/coder-selection.md`) with a fix brief, and never asks the coder that wrote the PR. The fix brief contains:
+
+- the comment or failure verbatim, with file:line;
+- the PR head SHA;
+- the contract pointers (spec, plan or work-unit files);
+- the validation commands.
+
+The shepherd then verifies the result, pushes, and resolves threads per the handling-pr-comments skill. Trivial reply-only or doc fixes can stay with the shepherd. The orchestrator spawns the shepherd and checks back via `AgentOutputTool` when needed.
 
 ## State Machine
 
@@ -71,7 +77,7 @@ MONITORING → FIXING → MONITORING → WAITING_FOR_USER → FIXING → MONITOR
 | `MONITORING`       | Poll CI and reviews every 60s in background | CI fails, new comments, all done, or need help |
 | `FIXING`           | Fix issues using TDD, run local validation  | Local validation passes OR need user guidance  |
 | `HANDLING_REVIEWS` | Invoke `handling-pr-comments` skill         | Comments handled OR need user input            |
-| `WAITING_FOR_USER` | Present options, wait for user decision     | User responds                                  |
+| `WAITING_FOR_USER` | Present a decision request, wait for the answer | User responds                              |
 | `DONE`             | All CI green + all threads resolved         | Exit successfully                              |
 
 ## Phase 1: Initialize
@@ -255,8 +261,8 @@ Reviewers may leave comments on code outside the PR diff. The `handling-pr-comme
 When user input is needed, ALWAYS:
 
 1. **Present the situation clearly**
-2. **Offer 2-4 options with pros/cons**
-3. **State your recommendation**
+2. **Offer 2-4 numbered options, each with pros and cons**
+3. **State your recommendation, with Why recommended on that option only**
 4. **Allow user to choose OR provide their own approach**
 
 ### Template
@@ -264,24 +270,23 @@ When user input is needed, ALWAYS:
 ```text
 [Describe what happened]
 
-**Options:**
+**Option 1: [name]** (Recommended)
+[What it involves]
+- Pros: [benefits]
+- Cons: [drawbacks]
+- Why recommended: [tied to the user's goals or constraints]
 
-1. **[Option name]** (Recommended)
-   - [What it involves]
-   - Pros: [benefits]
-   - Cons: [drawbacks]
+**Option 2: [name]**
+[What it involves]
+- Pros: [benefits]
+- Cons: [drawbacks]
 
-2. **[Option name]**
-   - [What it involves]
-   - Pros: [benefits]
-   - Cons: [drawbacks]
+**Option 3: [name]**
+[What it involves]
+- Pros: [benefits]
+- Cons: [drawbacks]
 
-3. **[Option name]**
-   - [What it involves]
-   - Pros: [benefits]
-   - Cons: [drawbacks]
-
-Which approach would you like? (Or describe a different approach)
+Reply with a number (or describe a different approach). If there's no answer: [what proceeds by default].
 ```
 
 ### After User Responds
@@ -301,24 +306,23 @@ Current status:
 - Threads: [X] resolved, [Y] unresolved
 - Commits: [N] fix commits pushed
 
-**Options:**
+**Option 1: Keep monitoring** (Recommended)
+Continue for another 4 hours.
+- Pros: PR may get reviewed soon
+- Cons: Ties up agent resources
+- Why recommended: [tied to the user's goals, for example a PR that is close to merging]
 
-1. **Keep monitoring** (Recommended)
-   - Continue for another 4 hours
-   - Pros: PR may get reviewed soon
-   - Cons: Ties up agent resources
+**Option 2: Exit with handoff**
+Save status report, exit cleanly.
+- Pros: Frees resources
+- Cons: Must manually re-invoke later
 
-2. **Exit with handoff**
-   - Save status report, exit cleanly
-   - Pros: Frees resources
-   - Cons: Must manually re-invoke later
+**Option 3: Set shorter check-in**
+Check back in 1 hour instead of 4.
+- Pros: More frequent checkpoints
+- Cons: More interruptions
 
-3. **Set shorter check-in**
-   - Check back in 1 hour instead of 4
-   - Pros: More frequent checkpoints
-   - Cons: More interruptions
-
-What would you like to do? (Or describe a different approach)
+Reply with a number (or describe a different approach). If there's no answer: keep monitoring for another 4 hours.
 ```
 
 ## Exit Conditions
@@ -546,7 +550,7 @@ After all post-merge tasks complete:
 
 **Auto-fixing complex issues**
 
-- If uncertain, ASK. Always go through WAITING_FOR_USER for complex issues.
+- If uncertain, ASK. Always go through WAITING_FOR_USER for complex issues. Every ask is a decision request: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`).
 
 **Forgetting to invoke handling-pr-comments**
 

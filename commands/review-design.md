@@ -209,7 +209,7 @@ Individual agents have 3-minute timeout. If timeout occurs:
 
 ### "Stuck in review loop"
 
-On any escalation (including the 10-round cap), the human chooses Revise, Clarify the requirement / re-brainstorm, Narrow scope, Defer or Cancel. When a Clarify signal fires first, the gate stops with a Clarification report and waits for your answer. There is no way to advance with open blockers: a revised or narrowed design gets a fresh review round and passes only by that round.
+On any escalation (including the 10-round cap), the report is a decision request (numbered options with pros and cons, the recommended one marked with why; see Decision requests in `guides/delivery-scope.md`), and the human chooses Revise, Clarify the requirement / re-brainstorm, Narrow scope, Defer or Cancel. When a Clarify signal fires first, the gate stops with a Clarification report and waits for your answer. There is no way to advance with open blockers: a revised or narrowed design gets a fresh review round and passes only by that round.
 
 ## Related Commands
 

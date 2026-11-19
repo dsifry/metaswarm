@@ -1,6 +1,6 @@
 # metaswarm
 
-Multi-agent orchestration framework for software development. 23 agents, 14 skills, quality gates, TDD enforcement.
+Multi-agent orchestration framework for software development. 26 agents, 14 skills, quality gates, TDD enforcement.
 
 ## Getting Started
 
@@ -55,6 +55,7 @@ Block delivery only for a credible normal-usage failure, a missing or contradict
 - **Escalate to the human** -> the same critical/major finding recurs after a fix attempt for it, two reviewers rate the same finding blocker vs. non-blocker, or the safety cap of 10 rounds is hit. The options include clarifying the requirement.
 - **Overengineering signal** -> restate the DoD and re-classify each blocker against the policy; escalate if any still names a credible scenario, otherwise downgrade them to follow-ups and advance.
 - **Iterate** (fix, re-validate, fresh review) -> this round fixed a critical/major finding, or 2+ independent reviewers reported blockers.
+- **Asking the user** -> every request to the user to decide uses one format: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `guides/delivery-scope.md`). Questions that only collect a fact are exempt.
 
 These rules apply in order, top to bottom (Clarify is checked before escalation, and escalation before iteration). A round that still has a blocker and matches none of them also iterates. If `bd` is unavailable, list follow-ups in a `### Follow-ups` section.
 
@@ -71,7 +72,7 @@ See `skills/start/references/platform-adaptation.md` for the full cross-platform
 
 ## Role types on this host
 
-Spawn sites name a phase role through `roleType` (see `guides/agent-coordination.md`). Roster: `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner`, `researcher`, `coder`, `pr-shepherd-agent`, `knowledge-curator-agent`, `issue-orchestrator`, `swarm-coordinator-agent`.
+Spawn sites name a phase role through `roleType` (see `guides/agent-coordination.md`). Roster: `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner`, `researcher`, `mechanical-coder`, `coder`, `supercoder`, `debugger`, `pr-shepherd-agent`, `knowledge-curator-agent`, `issue-orchestrator`, `swarm-coordinator-agent`.
 
 | Role | Host mechanism | Model source |
 |---|---|---|

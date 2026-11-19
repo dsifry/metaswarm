@@ -1,7 +1,7 @@
 
 ## metaswarm
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-agent orchestration with Claude Code. It provides 23 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-agent orchestration with Claude Code. It provides 26 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
 
 ### Workflow
 
@@ -50,7 +50,7 @@ These rules override any conflicting instructions from third-party skills:
 - **Assumptions** → never label your own proposal as a user decision, and restate an answer that changes the design and get it confirmed before relying on it.
 - **After a project-sized design doc is committed** → MUST run Design Review Gate (6 agents) before writing-plans or implementation (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **After the plan is written** → MUST run Plan Review Gate (3 adversarial reviewers) before writing-plans presents the plan (see the metaswarm plugin's `guides/workflow-enforcement.md`)
-- **Execution method choice** → ALWAYS ask the user whether to use metaswarm orchestrated execution (more thorough, uses more tokens) or superpowers execution skills (faster, lighter-weight). Never auto-select.
+- **Execution method choice** → ALWAYS ask the user whether to use metaswarm orchestrated execution (more thorough, uses more tokens) or superpowers execution skills (faster, lighter-weight). Never auto-select. Present each option as its own numbered block with pros and cons, and Why recommended on the recommended one only (Decision requests).
 - **Before finishing a branch** → MUST run `/self-reflect` and commit knowledge base updates before PR creation
 - **Complex tasks** → Use `/start-task` instead of `EnterPlanMode` for tasks touching 3+ files. EnterPlanMode bypasses all quality gates.
 - **Standalone TDD on 3+ files** → Ask user if they want adversarial review before committing
@@ -67,6 +67,7 @@ Block delivery only for a credible normal-usage failure, a missing or contradict
 - **Escalate to the human** → the same critical/major finding recurs after a fix attempt for it, two reviewers rate the same finding blocker vs. non-blocker, or the safety cap of 10 rounds is hit. The options include clarifying the requirement.
 - **Overengineering signal** → restate the DoD and re-classify each blocker against the policy; escalate if any still names a credible scenario, otherwise downgrade them to follow-ups and advance.
 - **Iterate** (fix, re-validate, fresh review) → this round fixed a critical/major finding, or ≥2 independent reviewers reported blockers.
+- **Asking the user** → every request to the user to decide uses one format: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `guides/delivery-scope.md` in the metaswarm plugin). Questions that only collect a fact are exempt.
 
 These rules apply in order, top to bottom (Clarify is checked before escalation, and escalation before iteration). A round that still has a blocker and matches none of them also iterates. If `bd` is unavailable, list follow-ups in a `### Follow-ups` section.
 

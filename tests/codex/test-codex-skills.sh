@@ -120,7 +120,7 @@ else
 fi
 
 # 9. Host reference files document role types (#53)
-ROLES="design-reviewer plan-reviewer adversarial-reviewer planner researcher coder pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent"
+ROLES="design-reviewer plan-reviewer adversarial-reviewer planner researcher mechanical-coder coder supercoder debugger pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent"
 for ref in codex-tools opencode-tools cursor-tools platform-adaptation; do
   f="$ROOT/skills/start/references/$ref.md"
   for role in $ROLES; do

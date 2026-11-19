@@ -401,6 +401,8 @@ Escalate to human when:
 3. **Third-party issue**: Vulnerability in dependency
 4. **Disputed finding**: Coder disagrees with assessment
 
+Present it as a decision request: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `guides/delivery-scope.md`).
+
 ```bash
 bd update <task-id> --status blocked
 bd label add <task-id> waiting:human

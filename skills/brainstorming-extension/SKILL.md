@@ -212,7 +212,7 @@ Please revise the design document and I'll re-run the review gate.
 - If NEEDS_REVISION (at least one `blocker: yes` finding): Help user address the blockers, re-run gate. Iteration is severity-gated (cap 10 rounds; see the metaswarm plugin's `guides/delivery-scope.md`)
 - If ALL APPROVED: Proceed to planning phase
 - When a Clarify signal fires (the user is needed, or the reviews are not converging): stop, run the misunderstanding analysis, and send the Clarification report (see the metaswarm plugin's `guides/delivery-scope.md`). For option 1 (Answer), re-brainstorm with the user's answers (see Re-brainstorm after a Clarification); option 2 keeps the same occurrence and continues the review
-- When the severity rule escalates (cap hit, or a recurring or disputed blocker): Escalate to human decision (Revise / Clarify the requirement / re-brainstorm / Narrow scope / Defer / Cancel). Neither a Clarify nor an escalation approves: a revised design gets a fresh review round
+- When the severity rule escalates (cap hit, or a recurring or disputed blocker): Escalate to human decision, as a decision request (numbered options with pros and cons, the recommended one marked with why; see Decision requests in `./guides/delivery-scope.md`) (Revise / Clarify the requirement / re-brainstorm / Narrow scope / Defer / Cancel). Neither a Clarify nor an escalation approves: a revised design gets a fresh review round
 
 ---
 

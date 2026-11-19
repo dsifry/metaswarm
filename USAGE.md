@@ -2,7 +2,7 @@
 
 ## Agents
 
-metaswarm provides 23 agents, each with a defined role in the software development lifecycle.
+metaswarm provides 26 agents, each with a defined role in the software development lifecycle.
 
 ### Orchestration Agents
 
@@ -31,7 +31,12 @@ metaswarm provides 23 agents, each with a defined role in the software developme
 | Agent | File | Role |
 |---|---|---|
 | **Coder** | `agents/coder.md` | TDD implementation (RED-GREEN-REFACTOR). 100% coverage required. |
+| **Mechanical Coder** | `agents/mechanical-coder.md` | Haiku. Small, fully specified, behaviour-preserving edits only (test expectations, fixtures, generated files, citations, comments, specified renames). Stops and reports "needs coder" if the brief needs a design decision or a production behaviour change. |
+| **Supercoder** | `agents/supercoder.md` | Opus. Particularly hard work units (security boundaries, concurrency, crypto or auth, cross-component protocols, fix-induced or repeated review blockers, coder escalation). Same TDD rules as Coder. |
+| **Debugger** | `agents/debugger.md` | Fable. Root-cause investigation of tricky bugs (recurring, flaky, race, integrated-only, cross-component). Read-only on the repo, scratch-directory probes only; returns root cause with evidence, bug class, a structural test and a complete fix design for a coder. Never implements. |
 | **Test Automator** | `agents/test-automator-agent.md` | Test generation and coverage enforcement. |
+
+The orchestrator picks the tier with [`guides/coder-selection.md`](guides/coder-selection.md): `mechanical-coder` only when every mechanical condition holds, `supercoder` when any hard condition holds, otherwise `coder` (when unsure, `coder`). The `escalation.coder` keys in `.metaswarm/models.yaml` still work: after `escalation.coder.after_failures` failed VALIDATE attempts the orchestrator re-spawns a fresh `supercoder`, and `escalation.coder.claude` is its Claude model unless `roles.supercoder.claude` is set. Each review-fix round spawns a fresh coder with a complete fix brief; a coder is never resumed for a new round. See the rubric for when to use the `debugger` first.
 
 ### Review Agents
 

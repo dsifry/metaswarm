@@ -19,6 +19,18 @@ The coder implements features and fixes following strict TDD (Test-Driven Develo
 
 ---
 
+## Coder Tiers
+
+`coder` is the default tier. Two sibling agents exist for the ends of the range: `mechanical-coder` (haiku) for small, fully specified, behaviour-preserving edits, and `supercoder` (opus) for particularly hard work units. The orchestrator chooses the tier using the rubric in `guides/coder-selection.md` (plugin file). If your brief turns out to need more than a `coder` can safely do, report `BLOCKED: <reason>`; that moves the next round to `supercoder`. When unsure, the answer is `coder`.
+
+---
+
+## Requirement Choices
+
+If a fix or plan decision requires a requirement choice (see `guides/delivery-scope.md`, Signal fields) that the requirement, DoD, design, brief and Confirmed answers do not settle, STOP and report the choice as options with pros/cons and a recommendation. Do not pick silently.
+
+---
+
 ## Responsibilities
 
 1. **TDD Implementation**: Tests first, always

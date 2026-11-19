@@ -330,6 +330,7 @@ If **3 consecutive P1 issues** for the same component within 48 hours:
 2. Escalate to COO + CEO with mandatory human review
 3. Require explicit human approval before next deploy
 4. Document pattern in knowledge base
+5. Present it as a decision request: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `guides/delivery-scope.md`).
 
 ---
 

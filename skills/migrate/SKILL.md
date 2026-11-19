@@ -123,7 +123,7 @@ git diff --cached --name-only -z --diff-filter=D -- .claude/plugins/metaswarm .c
 
 ## Step 5: User Confirmation
 
-Use `AskUserQuestion`:
+Use `AskUserQuestion`. The question is a decision request: numbered options (1 clean up, 2 keep, 3 show diff), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`). A line each is enough:
 - Remind the user: "This stages the cleanup — nothing is committed yet. You can undo just these removals before committing (see the Rollback section)."
 - Ask: "Ready to clean up the redundant framework files?" (not "Ready to delete files?")
 - For each user-modified file, ask individually: keep, remove, or show diff

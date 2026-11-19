@@ -203,7 +203,7 @@ I detected the following about your project:
 
 ## Phase 2: Interactive Questions
 
-Use AskUserQuestion to ask ONLY questions relevant based on detection. 3-5 questions maximum.
+Use AskUserQuestion to ask ONLY questions relevant based on detection. 3-5 questions maximum. Each question that is a choice (coverage threshold, external tools, visual review, CI rules) is a decision request: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`); a line each is enough, and the option labelled "(Recommended)" is that recommendation. Questions that only collect a fact (the language or stack when detection finds none) are exempt.
 
 **Always ask:**
 
