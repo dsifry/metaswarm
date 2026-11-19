@@ -435,7 +435,7 @@ ONFAIL="$(section "$REPO_ROOT/$OE" '^### On FAIL: Mandatory Re-Review Protocol')
 assert_in "$OE: On FAIL protocol runs the severity rule and tracks rounds" "$ONFAIL" \
   "${RULE_LINES[@]}" 'Review round 1/10'
 assert_in "$OE: On FAIL step 6 (coder model escalation) is verbatim" "$ONFAIL" \
-  '6. **Coder model escalation**: after `escalation.coder.after_failures` failed VALIDATE attempts (default 2, read from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default (the `coder` role'"'"'s `sonnet`).'
+  '6. **Coder escalation**: after `escalation.coder.after_failures` failed VALIDATE attempts (default 2, read from `.metaswarm/models.yaml`), re-spawn with `roleType("supercoder")`. The `supercoder` role is the one definition of the Opus coder; its model comes from `roles.supercoder.claude` in `.metaswarm/models.yaml` (default `opus`). `escalation.coder.claude` is still honoured as the `supercoder` model when `roles.supercoder.claude` is not set. There is no per-call `model` override on `coder`.'
 TR="$(section "$REPO_ROOT/$OE" '^### Transition Rules')"
 assert_in "$OE: transition rule scopes the 3-attempt cap to VALIDATE" "$TR" \
   'VALIDATE gets 3 attempts' 'REVIEW follows the severity rule'

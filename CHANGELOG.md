@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Three coder tiers** with one selection rubric in `guides/coder-selection.md`. `mechanical-coder` (haiku) is for small, fully specified, behaviour-preserving edits and stops with "needs coder" when the brief needs a design decision or a production behaviour change. `coder` (sonnet) stays the default. `supercoder` (opus) is for particularly hard work units: security boundaries, concurrency or locking, crypto or auth, cross-component protocols, fix-induced (C3) or twice-repeated review blockers, repeated VALIDATE failures, or a coder that reported BLOCKED. When unsure, use `coder`; never step down within a round. The agent count is now 26.
+- **`roles.mechanical-coder` and `roles.supercoder`** in `.metaswarm/models.yaml` (and the shipped template), with Claude, Codex and Gemini models. The setup scripts and `metaswarm-agents.sh` generate and resolve both roles.
+
+- **`debugger` agent** (fable) for root-cause investigation of tricky bugs: recurring defects (C4), flaky or racy failures, integrated-only failures, cross-component failures, and a coder stuck on "can't find why". It is read-only on the repo, writes only to a scratch directory, and returns the root cause with evidence, the bug class, a structural test and a complete fix design for a coder. It never implements the fix. Fable costs 2x Opus per token, so each run gets one narrow question. The selection rubric has a debugger section.
+
+### Changed
+
+- **Coder escalation re-spawns `supercoder`** instead of `coder` with a per-call `model` override, so there is one definition of the Opus coder. `escalation.coder.after_failures` is unchanged. `escalation.coder.claude` still works: it is the `supercoder` Claude model when `roles.supercoder.claude` is not set (`roles.supercoder.claude` wins when both are set).
+- **Each review-fix round spawns a fresh coder** of the chosen tier with a complete fix brief (work-unit contract as file pointers, start SHA, blocker findings verbatim with the fix design, minors, validation commands). A coder is never resumed for a new round, except to message an old agent to resend a lost report. This replaces the Team Mode note that a coder may be a persistent teammate.
+
 ## 0.16.0
 
 ### Added

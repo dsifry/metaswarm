@@ -69,7 +69,7 @@ All three contain the same workflow enforcement rules (TDD, coverage gates, qual
 
 ## Role types on each host
 
-Spawn sites name a phase role through `roleType` (`guides/agent-coordination.md`, "Role type resolution"). The roster is: `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner`, `researcher`, `coder`, `pr-shepherd-agent`, `knowledge-curator-agent`, `issue-orchestrator`, `swarm-coordinator-agent`. The Claude defaults are opus for the first four, sonnet for `researcher`, `coder`, `pr-shepherd-agent` and `knowledge-curator-agent`, and inherit for the last two.
+Spawn sites name a phase role through `roleType` (`guides/agent-coordination.md`, "Role type resolution"). The roster is: `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner`, `researcher`, `mechanical-coder`, `coder`, `supercoder`, `debugger`, `pr-shepherd-agent`, `knowledge-curator-agent`, `issue-orchestrator`, `swarm-coordinator-agent`. The Claude defaults are opus for the first four, sonnet for `researcher`, `coder`, `pr-shepherd-agent` and `knowledge-curator-agent`, haiku for `mechanical-coder`, opus for `supercoder`, fable for `debugger`, and inherit for the last two.
 
 | Host | Host mechanism for a role | Model source |
 |---|---|---|

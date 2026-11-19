@@ -20,7 +20,7 @@ This skill defines a generalized 4-phase execution loop that any orchestrator ca
 
 This skill is mode-agnostic — the 4-phase execution loop works identically in both Task Mode and Team Mode. The differences:
 
-- **Phase 1 (IMPLEMENT)**: In Team Mode, the coding subagent may be a persistent teammate (retains context across work units). In Task Mode, it's a fresh `Task()` per work unit. Role type: `roleType("coder")`.
+- **Phase 1 (IMPLEMENT)**: In both modes, the coding subagent is a fresh `Task()` per work unit, and each review-fix round spawns a FRESH coder of the chosen tier with a complete fix brief. A coder is never resumed for a new round. The only exception is messaging an old agent to resend a lost report. Role type: `roleType("coder")` by default; `roleType("mechanical-coder")` or `roleType("supercoder")` per [Coder Selection](./guides/coder-selection.md).
 - **Phase 3 (ADVERSARIAL REVIEW)**: ALWAYS a fresh `Task()` instance (`roleType("adversarial-reviewer")`) in BOTH modes. Never a teammate, never resumed.
 - **All quality gates**: Unchanged regardless of mode.
 
@@ -198,9 +198,10 @@ The coding subagent executes against the work unit spec.
 
 **Orchestrator actions:**
 
-1. Spawn a coding subagent (role type `roleType("coder")`) with the work unit spec, DoD items, file scope, and the **Project Context Document**
-2. The subagent implements the change following TDD (test first, then implementation)
-3. The subagent reports completion — **but the orchestrator does NOT trust this report**
+1. Choose the coder tier with the rubric in [`./guides/coder-selection.md`](./guides/coder-selection.md): `roleType("mechanical-coder")` only when every mechanical condition holds, `roleType("supercoder")` when any super condition holds, otherwise `roleType("coder")` (when unsure, `coder`)
+2. Spawn a coding subagent (role type `roleType("coder")` unless the rubric chose another tier) with the work unit spec, DoD items, file scope, and the **Project Context Document**
+3. The subagent implements the change following TDD (test first, then implementation)
+4. The subagent reports completion — **but the orchestrator does NOT trust this report**
 
 **Subagent spawn template** (role type `roleType("coder")`):
 
@@ -442,12 +443,20 @@ after each review round (round = 1, 2, ...):
 
 When the rule says iterate:
 
-1. Fix every `blocker: yes` finding identified by the reviewer
+1. Fix every `blocker: yes` finding identified by the reviewer. Choose the coder tier for the round with [`./guides/coder-selection.md`](./guides/coder-selection.md) and spawn a **FRESH** coder of that tier (`roleType("coder")`, `roleType("supercoder")` or `roleType("mechanical-coder")`) with a complete fix brief. Never resume the previous coder for a new round. The only exception is messaging an old agent to resend a lost report. Never step down a tier within a round.
 2. Re-run Phase 2 (VALIDATE) — ALL quality gates, not just the one that failed
 3. **MANDATORY**: Spawn a NEW adversarial reviewer (role type `roleType("adversarial-reviewer")`, fresh instance, no memory of previous review)
 4. Only COMMIT after the fresh reviewer returns PASS, or rule line 5 downgraded every remaining blocker to a follow-up
 5. Apply the severity rule after every round; stop and Clarify when it says clarify, and ESCALATE to human when it says escalate (at most 10 rounds)
-6. **Coder model escalation**: after `escalation.coder.after_failures` failed VALIDATE attempts (default 2, read from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default (the `coder` role's `sonnet`).
+6. **Coder escalation**: after `escalation.coder.after_failures` failed VALIDATE attempts (default 2, read from `.metaswarm/models.yaml`), re-spawn with `roleType("supercoder")`. The `supercoder` role is the one definition of the Opus coder; its model comes from `roles.supercoder.claude` in `.metaswarm/models.yaml` (default `opus`). `escalation.coder.claude` is still honoured as the `supercoder` model when `roles.supercoder.claude` is not set. There is no per-call `model` override on `coder`.
+
+**Fix-brief checklist.** Every fix-round spawn (and every tier change) gets a complete brief, because the fresh coder has no memory of earlier rounds:
+
+- the work-unit contract as file pointers (spec, DoD, file scope, Project Context Document);
+- the start SHA (the commit the fix round starts from);
+- the blocker findings verbatim, each with the fix design;
+- the minors (non-blocking findings to fix if cheap, or leave as follow-ups);
+- the validation commands to run.
 
 Track each round visibly: "Review round 1/10", "Review round 2/10", etc.
 
@@ -871,7 +880,7 @@ For fixable and ambiguous VALIDATE failures:
 2. **Attempt 2**: If same failure, try alternative approach
 3. **Attempt 3**: If still failing, gather all evidence for escalation
 
-**Model escalation (coder).** Retrying alone never changes the model. After `escalation.coder.after_failures` failed VALIDATE attempts (default 2, from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default, so the escalated attempt runs on `opus` while earlier attempts ran on the coder's configured model.
+**Coder escalation.** Retrying alone never changes the model. After `escalation.coder.after_failures` failed VALIDATE attempts (default 2, from `.metaswarm/models.yaml`), re-spawn a fresh coder with `roleType("supercoder")`, the one definition of the Opus coder (model from `roles.supercoder.claude`, default `opus`). `escalation.coder.claude` is still honoured as the `supercoder` model when `roles.supercoder.claude` is not set. See [Coder Selection](./guides/coder-selection.md) for the full rubric, including when a `mechanical-coder` attempt moves up to `coder`.
 
 Track VALIDATE attempts with labels, and remove the `retry:N` label when VALIDATE passes (review rounds are tracked in `.beads/context/execution-state.md`, not labels):
 
