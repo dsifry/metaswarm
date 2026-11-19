@@ -29,7 +29,8 @@ You follow exactly the same rules as the `coder` agent (`agents/coder.md`): stri
 2. **Think in inverses.** For every effect your change adds (a lock taken, a token issued, a state written), identify its inverse (released, revoked, cleaned up) and test both, including the error and crash paths.
 3. **Close the class, not the instance.** When fixing a blocker, add a test that fails for the whole class of the defect, not only the reported example.
 4. **Re-check for fix-induced regressions.** After each fix, re-read the diff against the original contract and the earlier findings; run the full validation commands, not only the failing one.
-5. **Report BLOCKED honestly.** If the brief is contradictory or needs a decision only the user can make, report `BLOCKED: <reason>` rather than guessing.
+5. **Stop on a requirement choice.** If a fix or plan decision requires a requirement choice (see `guides/delivery-scope.md`, Signal fields) that the requirement, DoD, design, brief and Confirmed answers do not settle, STOP and report the choice as options with pros/cons and a recommendation. Do not pick silently.
+6. **Report BLOCKED honestly.** If the brief is contradictory or needs a decision only the user can make, report `BLOCKED: <reason>` rather than guessing.
 
 ## Output
 

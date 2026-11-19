@@ -822,3 +822,19 @@ test('main: file access goes through the injected reader', () => {
   assert.equal(rule.main(['missing.json'], failing), 2);
   assert.match(err, /cannot read missing\.json: nope/);
 });
+
+test('C1: an orchestrator-classified requirement choice fires C1 even though the reviewer said no', () => {
+  const f = { reviewer: 'A', blocker: 'yes', id: 'rc', canonicalTheme: 'proof', needs_user: 'yes', origin: 'requirement', classifiedBy: 'orchestrator' };
+  const out = rule.evaluate(hist([rnd(1, [f])]));
+  assert.deepEqual(ids(out), ['C1']);
+  assert.equal(out.action, 'clarify');
+  // The same finding unclassified (reviewer said no) is silent: the classification is what fires C1.
+  assert.deepEqual(rule.evaluate(hist([rnd(1, [{ ...f, needs_user: 'no', origin: 'implementation', classifiedBy: undefined }])])).signals, []);
+});
+
+test('classifiedBy is validated: only "orchestrator" is accepted', () => {
+  const bad = { reviewer: 'A', blocker: 'yes', id: 'x', needs_user: 'yes', classifiedBy: 'reviewer' };
+  assert.throws(() => rule.evaluate(hist([rnd(1, [bad])])), /classifiedBy/);
+  const ok = { ...bad, classifiedBy: 'orchestrator' };
+  assert.doesNotThrow(() => rule.evaluate(hist([rnd(1, [ok])])));
+});

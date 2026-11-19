@@ -162,7 +162,7 @@ after each review round (round = 1, 2, ...):
 - **Malformed output.** A FAIL whose findings lack the 6 fields is re-requested once in the contract format, then escalated with the raw output. It is never treated as PASS. A blocker that lacks `needs_user` or `origin` gets one re-request too; if they are still missing they are treated as unknown, which triggers nothing. A review without a `Criteria applied:` line is re-requested once too; if it is still missing, it is accepted and the gap becomes a follow-up, so it never blocks (see the guide).
 - **Clarify (line 2).** A Clarify signal (C1–C4, see [Clarify signals](./guides/delivery-scope.md#clarify-signals)) is a stop, not an escalation. Run the misunderstanding analysis and send the Clarification report from the [Clarify section](./guides/delivery-scope.md#clarify) of the guide, then wait for the user. Mark the BEADS task for this work waiting on the user (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), and set `status: clarify-pending` with `pendingClarify` in the history file. Line 2 never uses the escalation report; the Clarification report's options are in the guide and none of them approves.
 - **Round history.** Keep the round history and write it after every round to `.beads/context/review-history/plan-review-gate-<slug>-<occurrence>.json` (the format, the `status` lifecycle and `pendingClarify` are in the guide's Round history section). `<occurrence>` is the next free integer for that gate and slug, starting at 1. The slug is derived from the plan path. Store the artifact path (the plan file) in the file, set `reviewers` to 3, and use stable role names as reviewer labels.
-- **After each round, before the rule.** First set `fix_induced` on each new blocker that matches the `lastFix` stored before this round's review (the changes made since the previous review). Then map each blocker's `theme` to a `canonicalTheme`, and merge duplicate blockers (the same canonical theme and the same defect) by setting `mergedInto` on each duplicate. Run the rule. When you then fix the blockers, overwrite `lastFix` with that fix before the next review.
+- **After each round, before the rule.** First set `fix_induced` on each new blocker that matches the `lastFix` stored before this round's review (the changes made since the previous review). Then map each blocker's `theme` to a `canonicalTheme`, and merge duplicate blockers (the same canonical theme and the same defect) by setting `mergedInto` on each duplicate. Then classify requirement choices: check every blocker against the requirement choice definition in the guide's Signal fields, and for each one set `needs_user: yes`, `origin: requirement` and `classifiedBy: orchestrator` on the recorded finding, even when the reviewer said no, so C1 fires this round. The Clarification report gives the options with pros and cons and a recommended default; questions never block independent work. Run the rule. When you then fix the blockers, overwrite `lastFix` with that fix before the next review.
 - **Themes.** From round 2 on, give each fresh reviewer the earlier canonical theme labels (labels only, never the findings) and ask it to reuse one when it fits.
 - **Helper.** Set `HISTORY` to the review-history file path, then run the rule with `RR=lib/review-rule.js; { [ -f ./lib/review-rule.js ] && grep -q '"name": *"metaswarm"' package.json 2>/dev/null; } || { RR="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh 2>/dev/null)")")}/lib/review-rule.js"; [ -f "$RR" ] || RR=lib/review-rule.js; }; node "$RR" "$HISTORY"` (HISTORY is the path of the review-history file, for example `HISTORY=.beads/context/review-history/<file>.json`). It prints `{line, action, signals, capHit}`. Recurring or disputed (line 4) and overengineering (line 5) need your judgement, so set the round's `recurring`, `disputed` and `overengineering` flags first. If the path does not resolve or Node is unavailable, apply the rule by hand. On exit 2, fix the history file and run it again.
 
@@ -255,7 +255,7 @@ Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
 - theme: <short label>       # on every finding; reuse an earlier theme label when one fits
-- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it, or the fix is a requirement choice (see the guide)
 - origin: implementation | requirement | assumption   # blockers only
 - assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
 
@@ -310,7 +310,7 @@ Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
 - theme: <short label>       # on every finding; reuse an earlier theme label when one fits
-- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it, or the fix is a requirement choice (see the guide)
 - origin: implementation | requirement | assumption   # blockers only
 - assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
 
@@ -365,7 +365,7 @@ Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
 - theme: <short label>       # on every finding; reuse an earlier theme label when one fits
-- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it, or the fix is a requirement choice (see the guide)
 - origin: implementation | requirement | assumption   # blockers only
 - assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
 

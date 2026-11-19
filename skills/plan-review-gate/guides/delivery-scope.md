@@ -67,15 +67,16 @@ Every review finding carries six core fields (the signal fields below are added 
 The contract is the six core fields plus signal fields. The core six and their blocking rules do not change. Every finding carries `theme`; each `blocker: yes` finding also carries the rest:
 
 ```text
-- needs_user: yes | no       # only the user can answer this
+- needs_user: yes | no       # only the user can answer this, or the fix is a requirement choice (see Requirement choice)
 - origin: implementation | requirement | assumption
 - assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
 - theme: <short label>       # on every finding
 ```
 
 - **Scope.** `needs_user`, `origin` and `assumption` are optional on non-blockers. Only blockers feed the Clarify signals.
+- **Requirement choice.** A blocker rests on a requirement choice when its fix requires choosing between two or more acceptable behaviours, levels or trade-offs, and the requirement, the DoD, the design and the Confirmed answers do not settle which one. Examples: how strong a proof must be (server acceptance, the founder's receipt, or none), which side of a cost/safety trade-off, whether a step is a condition or a report. It is not a requirement choice when exactly one fix meets the stated requirement, or when the choice is purely technical with no user-visible difference. A requirement choice is `needs_user: yes` with `origin: requirement`. The question asked of the user gives each option, the pros and cons of each, and a recommended option with a one-line reason.
 - **Already answered.** Reviewers do not mark a question `needs_user` when the design's Confirmed section already answers it.
-- **Set by the orchestrator, not the reviewers.** `canonicalTheme` (see Themes), `fix_induced: yes | no` (the blocker matches the orchestrator's record of the previous round's fix, kept as `lastFix`; a fresh reviewer cannot know what changed) and `mergedInto: <kept id>` on duplicates (see Clarify signals).
+- **Set by the orchestrator, not the reviewers.** `classifiedBy: orchestrator` (see the orchestrator duty under Clarify signals), `canonicalTheme` (see Themes), `fix_induced: yes | no` (the blocker matches the orchestrator's record of the previous round's fix, kept as `lastFix`; a fresh reviewer cannot know what changed) and `mergedInto: <kept id>` on duplicates (see Clarify signals).
 - **Re-request rule.** A blocker that lacks `needs_user` or `origin` gets one re-request, like malformed output. If the fields are still missing, they are treated as unknown, which triggers nothing. This is not an escalation, and the finding itself still counts as a blocker.
 
 ## Iteration rule
@@ -115,6 +116,8 @@ Line 2 fires when any of C1–C4 holds. They are evaluated per gate occurrence, 
 - **C2** (not converging). Total distinct blockers are non-decreasing over the last three rounds since `windowStart`, that is t[r] ≥ t[r-1] ≥ t[r-2] (three rounds since the window start are needed), or, for gates with ≥2 reviewers, divergence: this round's total distinct blockers did not fall (it is ≥ the previous in-window round's total), and one reviewer reports no blockers while another reviewer's count is higher than its own count in the previous round. A falling total never counts as divergence. A single-reviewer gate never diverges. Divergence needs at least 2 rounds inside the window, so after option 2 it cannot fire until two new rounds exist.
 - **C3** (fix-induced). At least 2 distinct blockers in the round have `fix_induced: yes`. It applies only to rounds at or after `windowStart`.
 - **C4** (recurring theme). One canonical theme that is not in `ackThemes` appears among the blockers of at least three rounds of the occurrence. The rounds do not need to be consecutive. `windowStart` does not reset C4; only `ackThemes` does. A blocker with no theme counts toward no theme.
+
+**Orchestrator duty: classify requirement choices before the helper runs.** The orchestrator classifies; it does not only trust the reviewers' tags. Each round, before running the helper, check every blocker against the Requirement choice definition in Signal fields. If a blocker is one, set `needs_user: yes` and `origin: requirement` on the recorded finding and add `classifiedBy: orchestrator`, even when the reviewer said no. C1 fires that same round, so the user is asked at the first round that shows the choice, not after C4 sees the theme three times. The Clarification report states the choice, the options with their pros and cons, and the orchestrator's recommended default. Founder working style still holds: questions never block other independent work. State the recommended default and continue the work that does not depend on the answer; "keep going" never defaults a `needs_user` question for the blocked item (see Options and re-entry). Never edit a recorded round afterwards; classify before the round is written.
 
 C1 and C4 usually fire before C3 would. The history fields `windowStart`, `ackThemes` and `ackFindings` record what the user acknowledged (see Options and re-entry).
 
@@ -214,7 +217,7 @@ Run this before writing the Clarification report.
    - **A proposal read as a decision:** the agent's own proposal treated as the user's decision.
    - **A one-word acknowledgement taken as approval of a message with several parts.**
 3. **Check the blockers against each reading.** For each blocker theme and each reframing, ask: would this blocker disappear under that reframing?
-4. **Write the questions.** Ask at most about 3 questions. Each one names the reading it tests, the options, and which blockers each option removes. Do not ask what the Confirmed section already answers.
+4. **Write the questions.** Ask at most about 3 questions. Each one names the reading it tests, the options with the pros and cons of each, a recommended option with a one-line reason, and which blockers each option removes. Do not ask what the Confirmed section already answers.
 
 ### Clarification report
 
@@ -240,7 +243,14 @@ Run this before writing the Clarification report.
 | <theme> | <reading numbers, or none> |
 
 ### Questions
-1. <question> — tests reading <n> — options: <A: removes <blockers>; B: removes <blockers>>
+1. <question> — tests reading <n>
+   - Option A: <what it means> — removes <blockers>
+     - Pros: <pros>
+     - Cons: <cons>
+   - Option B: <what it means> — removes <blockers>
+     - Pros: <pros>
+     - Cons: <cons>
+   - Recommended: <option> because <one-line reason>
 
 ### Round history
 | Round | Verdict | Blockers (critical/major) | Fixed this round | Signals (C1–C4) | Themes | Rule decision |
