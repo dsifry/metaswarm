@@ -138,6 +138,13 @@ for s in 'FRESH coder' 'never resumed' 'start SHA' 'verbatim' 'minors' 'validati
   grep -qiF -- "$s" "$SKILL" && pass "skill fix-brief rule has '$s'" || fail "skill missing '$s'"
 done
 
+echo "Test 6: coders are never persistent; fix handoffs go to a fresh coder"
+stale="$(grep -rniE 'Coder retains context|Persistent coder: retains|No cold starts.*coder|coder.*No cold starts' agents skills guides commands --include='*.md' || true)"
+[ -z "$stale" ] && pass "no doc says a coder retains context" || { fail "doc says a coder retains context: $stale"; }
+shep="$(awk '/^## For Orchestrators/{on=1;next} /^## State Machine/{on=0} on' skills/pr-shepherd/SKILL.md)"
+grep -qiF 'spawns a fresh coder' <<<"$shep" && pass "pr-shepherd spawns a fresh coder for code changes" || fail "pr-shepherd does not spawn a fresh coder"
+grep -qF 'never asks the coder that wrote the PR' <<<"$shep" && pass "pr-shepherd never asks the original coder" || fail "pr-shepherd may ask the original coder"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 DONE=1

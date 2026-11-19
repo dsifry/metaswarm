@@ -66,7 +66,7 @@ Task Mode is the baseline coordination mechanism. It uses fire-and-forget `Task(
 ### Characteristics
 
 - Each subagent gets the complete context it needs in its spawn prompt
-- No persistent state between subagent invocations (cold start every time)
+- No persistent state between subagent invocations (each one starts from its prompt; for coders this is intended, see below)
 - Sequential handoffs go through the orchestrator (researcher result fed into architect prompt)
 - Parallel work uses parallel `Task()` calls (e.g., design review panel)
 - This is the current behavior documented in all agent and skill files
@@ -74,7 +74,6 @@ Task Mode is the baseline coordination mechanism. It uses fire-and-forget `Task(
 ### When Task Mode Is Sufficient
 
 Task Mode works well for most workflows. The overhead of cold starts only becomes significant when:
-- The same agent needs to work on multiple sequential units (e.g., a coder across work units)
 - Design reviews require multiple iteration cycles (6 reviewers x 3 iterations = 18 cold starts)
 - A PR shepherd needs to persist through a long CI/review lifecycle
 
@@ -89,7 +88,7 @@ Team Mode uses persistent teammates with context retention and direct inter-agen
 1. **Orchestrator creates a team** via `TeamCreate("{team-name}")`
 2. **Specialists join as named teammates** (e.g., `researcher` as `roleType("researcher")`, `architect` as `roleType("planner")`, `coder` as `roleType("coder")`, `shepherd` as `roleType("pr-shepherd-agent")`)
 3. **Teammates communicate directly** via `SendMessage` -- no orchestrator bottleneck for handoffs
-4. **Teammates retain context** across multiple work items within the same team session
+4. **Orchestrators, shepherds and reviewers-in-a-team retain context** across multiple work items within the same team session. Coders do not: every work unit and every review-fix round gets a fresh coder with a fix brief
 5. **Orchestrator coordinates** phase gates, conflict resolution, and shutdown
 6. **Graceful teardown** via `shutdown_request` to all teammates, then `TeamDelete`
 
@@ -97,7 +96,7 @@ Team Mode uses persistent teammates with context retention and direct inter-agen
 
 | Benefit                     | Description                                                                 |
 | --------------------------- | --------------------------------------------------------------------------- |
-| **No cold starts**          | Coder retains context from WU-001 when starting WU-002                     |
+| **Fresh coders, full briefs** | Each work unit and review-fix round spawns a fresh coder; the brief carries the context (see below) |
 | **Direct handoffs**         | Researcher sends findings directly to architect via `SendMessage`           |
 | **Persistent PR shepherd**  | Stays alive through entire PR lifecycle without `run_in_background`         |
 | **Efficient review cycles** | Design reviewers retain context across iterations (saves N cold starts)     |
@@ -121,7 +120,7 @@ The Issue Orchestrator creates an issue-level team and spawns specialist agents:
 1. `TeamCreate("issue-{number}")`
 2. Spawn specialists: `researcher` (`roleType("researcher")`), `architect` (`roleType("planner")`), `coder` (`roleType("coder")`), `shepherd` (`roleType("pr-shepherd-agent")`)
 3. Direct handoff: researcher completes, sends findings to `architect` directly
-4. Persistent coder: retains context across work units (no cold start between WU-001 and WU-002). Inside orchestrated execution a review-fix round always spawns a FRESH coder of the chosen tier with a complete fix brief and never resumes one (see [Coder Selection](./coder-selection.md))
+4. Coders are never persistent: each work unit and each review-fix round spawns a FRESH coder of the tier the rubric picks, with a complete fix brief that carries what context used to carry (see [Coder Selection](./coder-selection.md)). The cold start is deliberate, not a cost to avoid: resumed coders accumulate context (one reached about 950k tokens over 7 rounds), and the agent that wrote a bug is the one most anchored on it
 5. Persistent shepherd: stays alive through the PR lifecycle, sends async status updates
 6. Graceful shutdown: `shutdown_request` to all teammates, then `TeamDelete`
 

@@ -49,14 +49,20 @@ Task: [describe the implementation task]
 
 After creating the PR:
 1. Use the pr-shepherd skill to monitor it through to merge
-2. Handle CI failures and review comments autonomously
-3. Only escalate to orchestrator for complex issues requiring user input
-4. Report back when PR is ready to merge or if blocked
+2. Do not fix CI failures or review comments yourself or in this agent: the shepherd spawns a fresh coder for each code change
+3. Report back when PR is ready to merge or if blocked
 
 Run in background so I can continue other work.
 ```
 
-**Key principle**: The agent owns its PR lifecycle. The orchestrator spawns and forgets, checking back via `AgentOutputTool` when needed.
+**Key principle**: The shepherd owns the PR lifecycle, but the PR's original coder does not own its fixes. The shepherd monitors CI, review comments and threads. When something needs a code change (a CI failure or an actionable review comment), it spawns a fresh coder of the tier the rubric picks (the coder selection rubric, `guides/coder-selection.md`) with a fix brief, and never asks the coder that wrote the PR. The fix brief contains:
+
+- the comment or failure verbatim, with file:line;
+- the PR head SHA;
+- the contract pointers (spec, plan or work-unit files);
+- the validation commands.
+
+The shepherd then verifies the result, pushes, and resolves threads per the handling-pr-comments skill. Trivial reply-only or doc fixes can stay with the shepherd. The orchestrator spawns the shepherd and checks back via `AgentOutputTool` when needed.
 
 ## State Machine
 

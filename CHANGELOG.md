@@ -13,6 +13,7 @@
 
 - **Coder escalation re-spawns `supercoder`** instead of `coder` with a per-call `model` override, so there is one definition of the Opus coder. `escalation.coder.after_failures` is unchanged. `escalation.coder.claude` still works: it is the `supercoder` Claude model when `roles.supercoder.claude` is not set (`roles.supercoder.claude` wins when both are set).
 - **Each review-fix round spawns a fresh coder** of the chosen tier with a complete fix brief (work-unit contract as file pointers, start SHA, blocker findings verbatim with the fix design, minors, validation commands). A coder is never resumed for a new round, except to message an old agent to resend a lost report. This replaces the Team Mode note that a coder may be a persistent teammate.
+- **Fix handoffs always go to a fresh coder.** Team Mode no longer treats the coder as persistent, and `pr-shepherd` and `handling-pr-comments` spawn a fresh coder of the right tier with a fix brief (comment verbatim with file:line, PR head SHA, contract pointers, validation commands) instead of asking the PR's original coder. A new test rejects any doc that says a coder retains context.
 
 ## 0.16.0
 

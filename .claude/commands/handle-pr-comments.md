@@ -120,7 +120,7 @@ gh api graphql -f query='{ rateLimit { limit remaining resetAt } }' -q '.data.ra
 **IMPORTANT**: Comment IDs can change after you push commits. Always:
 
 1. Get initial comment IDs
-2. Make your fixes and commit
+2. Make your fixes (code changes go to a fresh coder of the right tier with a complete fix brief, not back to the agent that wrote the code; trivial reply-only or doc fixes can stay with you) and commit
 3. **RE-FETCH comment IDs** before posting responses (comments may have been updated/replaced)
 4. Post responses to CURRENT comment IDs (not stale ones from before your commit)
 5. **WAIT for reviewer confirmation** - Do NOT resolve threads immediately after your reply

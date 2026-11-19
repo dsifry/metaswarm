@@ -158,7 +158,7 @@ Recommend: FIX_NOW or CREATE_ISSUE
 
 ### Phase 3: Make Fixes
 
-Fix the actual code issues. Commit and push.
+Fix the actual code issues. Code changes go to a FRESH coder of the tier the rubric picks (see coder-selection.md), never back to the agent that wrote the code. Give it a complete fix brief: the comment verbatim with file:line, the PR head SHA, the contract pointers and the validation commands. Trivial reply-only or doc fixes can stay with the handler. Verify the result, then commit and push.
 
 ### Phase 4: RESPOND TO EACH THREAD (Often Forgotten!)
 
