@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Type `E` to have the agent explain what is waiting on you.** Agents end turns with a `WAITING-ON:` line, human items first and prefixed `YOU:` (`guides/waiting-on.md`). A new `UserPromptSubmit` hook (`hooks/explain-waiting.sh`) recognises a prompt of exactly `E` or `e` and tells the agent to explain the next `YOU:` item (what, why, numbered choices or the exact command, what happens if you do nothing), one per press. Any other prompt is untouched.
+
 ## 0.16.0
 
 ### Added

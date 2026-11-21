@@ -72,8 +72,9 @@ metaswarm/
 │   ├── install.sh            # Codex CLI install script
 │   └── README.md             # Codex CLI usage guide
 ├── hooks/
-│   ├── hooks.json            # SessionStart + PreCompact hook definitions
-│   └── session-start.sh      # Context priming (platform-aware)
+│   ├── hooks.json            # SessionStart + PreCompact + UserPromptSubmit hook definitions
+│   ├── session-start.sh      # Context priming (platform-aware)
+│   └── explain-waiting.sh    # Typing just "E" explains what is waiting on you
 ├── skills/                   # Orchestration skills (Agent Skills standard — portable)
 │   ├── start/                # Main entry point — workflow guide + 23 agent personas
 │   ├── orchestrated-execution/ # 4-phase execution loop (IMPLEMENT→VALIDATE→REVIEW→COMMIT)

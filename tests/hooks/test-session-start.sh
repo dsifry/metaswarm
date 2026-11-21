@@ -494,6 +494,7 @@ echo "Test 9: hooks.json quotes \${CLAUDE_PLUGIN_ROOT}"
 SPACE_ROOT="$TMPDIR_BASE/plugin with space"
 mkdir -p "$SPACE_ROOT/hooks"
 cp "$HOOK_SCRIPT" "$SPACE_ROOT/hooks/session-start.sh"
+cp "$REPO_ROOT/hooks/explain-waiting.sh" "$SPACE_ROOT/hooks/explain-waiting.sh"
 TEST_CWD="$TMPDIR_BASE/test9"
 mkdir -p "$TEST_CWD"
 n9=0
