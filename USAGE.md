@@ -224,6 +224,7 @@ Prerequisites: `npx playwright install chromium`
 |---|---|
 | `/start-task <id>` | Begin a BEADS-tracked task with full workflow |
 | `/start` | Alias for `/start-task` |
+| `E` (just the letter) | Claude Code only: explains the next item the agent is waiting on you for (`YOU:` items in its `WAITING-ON:` line), one per press. See `guides/waiting-on.md` |
 | `/setup` | Interactive project setup — detects language, framework, test runner, and configures everything |
 | `/update` | Update metaswarm plugin to latest version |
 | `/metaswarm:status` | Run 12 diagnostic checks on your installation |
