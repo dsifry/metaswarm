@@ -1,6 +1,6 @@
 # metaswarm
 
-Multi-agent orchestration framework for software development. 26 agents, 14 skills, quality gates, TDD enforcement.
+Multi-agent orchestration framework for software development. 27 agents, 14 skills, quality gates, TDD enforcement.
 
 ## Getting Started
 
@@ -72,7 +72,7 @@ See `skills/start/references/platform-adaptation.md` for the full cross-platform
 
 ## Role types on this host
 
-Spawn sites name a phase role through `roleType` (see `guides/agent-coordination.md`). Roster: `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner`, `researcher`, `mechanical-coder`, `coder`, `supercoder`, `debugger`, `pr-shepherd-agent`, `knowledge-curator-agent`, `issue-orchestrator`, `swarm-coordinator-agent`.
+Spawn sites name a phase role through `roleType` (see `guides/agent-coordination.md`). Roster: `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner`, `researcher`, `mechanical-coder`, `coder`, `supercoder`, `debugger`, `security-coder`, `pr-shepherd-agent`, `knowledge-curator-agent`, `issue-orchestrator`, `swarm-coordinator-agent`.
 
 | Role | Host mechanism | Model source |
 |---|---|---|

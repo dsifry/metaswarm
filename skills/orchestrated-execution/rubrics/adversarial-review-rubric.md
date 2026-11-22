@@ -6,6 +6,8 @@
 
 ---
 
+> **Security-critical work units:** also apply `security-implementation-rubric.md` and append its S1-S8 verdict block to the review.
+
 ## Overview
 
 This rubric is for **adversarial review** — a fundamentally different mode from collaborative code review. Your job is to **find failures**, not to help improve the code. You are checking whether the implementation meets its written contract (the spec and DoD items), not whether the code is "good."

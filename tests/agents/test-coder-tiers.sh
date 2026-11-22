@@ -25,7 +25,7 @@ has() { grep -qF -- "$2" "$1" && pass "$1 has '$2'" || fail "$1 missing '$2'"; }
 fm_model() { awk 'NR==1{ if ($0!="---") exit; next } /^---[[:space:]]*$/ { exit } /^model:/ { sub(/^model:[[:space:]]*/,""); print; exit }' "$1"; }
 
 echo "Test 1: agent frontmatter"
-for pair in "mechanical-coder:haiku" "coder:sonnet" "supercoder:opus" "debugger:fable"; do
+for pair in "mechanical-coder:haiku" "coder:sonnet" "supercoder:opus" "debugger:fable" "security-coder:fable"; do
   role="${pair%%:*}"; want="${pair#*:}"
   for dir in agents skills/start/agents; do
     f="$dir/$role.md"
@@ -39,6 +39,9 @@ has agents/mechanical-coder.md "$GUIDE"
 has agents/supercoder.md "$GUIDE"
 has agents/coder.md "$GUIDE"
 has agents/debugger.md "$GUIDE"
+has agents/security-coder.md "$GUIDE"
+has agents/security-coder.md 'rubrics/security-implementation-rubric.md'
+has agents/security-coder.md 'Stop on a security policy choice'
 has agents/debugger.md 'Never guess'
 has agents/debugger.md 'scratch directory'
 has agents/debugger.md 'superpowers:systematic-debugging'
@@ -56,6 +59,9 @@ proj tmpl < templates/models.yaml
 [ "$(resolve debugger claude)" = fable ] && pass "template: debugger claude=fable" || fail "template: debugger claude"
 [ "$(resolve debugger codex)" = gpt-5.3-codex ] && pass "template: debugger codex strongest" || fail "template: debugger codex"
 [ "$(resolve debugger gemini)" = pro ] && pass "template: debugger gemini=pro" || fail "template: debugger gemini"
+[ "$(resolve security-coder claude)" = fable ] && pass "template: security-coder claude=fable" || fail "template: security-coder claude"
+[ "$(resolve security-coder gemini)" = pro ] && pass "template: security-coder gemini=pro" || fail "template: security-coder gemini"
+[ "$(resolve security-coder codex)" = gpt-5.3-codex ] && pass "template: security-coder codex strongest" || fail "template: security-coder codex"
 [ "$(resolve coder claude)" = sonnet ] && pass "template: coder claude=sonnet" || fail "template: coder claude"
 for r in mechanical-coder supercoder; do
   for h in codex gemini; do
@@ -94,6 +100,7 @@ roles:
     claude: sonnet
 Y
 [ "$(resolve supercoder claude)" = opus ] && pass "no config falls back to plugin default opus" || fail "plugin default supercoder"
+[ "$(resolve security-coder claude)" = fable ] && pass "no config falls back to plugin default fable (security-coder)" || fail "plugin default security-coder"
 [ "$(resolve debugger claude)" = fable ] && pass "no config falls back to plugin default fable" || fail "plugin default debugger"
 [ "$(resolve mechanical-coder claude)" = haiku ] && pass "no config falls back to plugin default haiku" || fail "plugin default mechanical"
 
@@ -103,6 +110,7 @@ proj gen < templates/models.yaml
 grep -q '^name: metaswarm-supercoder$' "$P/.claude/agents/metaswarm-supercoder.md" && pass "supercoder generated" || fail "supercoder not generated"
 grep -q '^model: opus$' "$P/.claude/agents/metaswarm-supercoder.md" && pass "supercoder generated with opus" || fail "supercoder model"
 grep -q '^model: fable$' "$P/.claude/agents/metaswarm-debugger.md" && pass "debugger generated with fable" || fail "debugger model"
+grep -q '^model: fable$' "$P/.claude/agents/metaswarm-security-coder.md" && pass "security-coder generated with fable" || fail "security-coder model"
 grep -q '^model: haiku$' "$P/.claude/agents/metaswarm-mechanical-coder.md" && pass "mechanical-coder generated with haiku" || fail "mechanical model"
 proj gen2 <<'Y'
 roles:
@@ -118,7 +126,7 @@ grep -q '^model: claude-opus-4-5$' "$P/.claude/agents/metaswarm-supercoder.md" &
 
 echo "Test 4: rubric guide and links"
 [ -f "$GUIDE" ] && pass "$GUIDE exists" || fail "$GUIDE missing"
-for s in '## debugger: ANY of these' 'C4 signal' 'flaky' 'cannot reach a root cause' '2x Opus' 'Do NOT use `debugger`' 'one narrow question' 'mechanical-coder' 'supercoder' 'When unsure, use `coder`' 'Never step down within a round' 'C3'; do has "$GUIDE" "$s"; done
+for s in '## debugger: ANY of these' 'C4 signal' 'flaky' 'cannot reach a root cause' '2x Opus' 'Do NOT use `debugger`' 'one narrow question' 'mechanical-coder' 'supercoder' 'When unsure, use `coder`' 'Never step down within a round' 'C3' '## security-coder: ANY of these' '`security-coder` takes precedence over `supercoder`'; do has "$GUIDE" "$s"; done
 for f in "$SKILL" skills/orchestrated-execution/guides/coder-selection.md; do
   [ -f "$f" ] && pass "$f exists" || fail "$f missing"
 done
@@ -127,6 +135,18 @@ impl="$(awk '/^### Phase 1: IMPLEMENT/{on=1;next} /^### Phase 2/{on=0} on' "$SKI
 iter="$(awk '/^When the rule says iterate:/{on=1;next} /^Track each round visibly/{on=0} on' "$SKILL")"
 grep -qF './guides/coder-selection.md' <<<"$impl" && pass "IMPLEMENT phase links the rubric" || fail "IMPLEMENT phase does not link the rubric"
 grep -qF './guides/coder-selection.md' <<<"$iter" && pass "iterate step links the rubric" || fail "iterate step does not link the rubric"
+
+echo "Test 4b: SKILL names security-coder and the security rubric"
+grep -qF 'roleType("security-coder")' "$SKILL" && pass "SKILL mentions roleType(\"security-coder\")" || fail "SKILL missing roleType(\"security-coder\")"
+has "$SKILL" 'security-implementation-rubric.md'
+has "$SKILL" 'S1-S8'
+grep -qF 'roleType("security-coder")' <<<"$iter" && pass "iterate step lists security-coder" || fail "iterate step missing security-coder"
+for f in rubrics/security-implementation-rubric.md skills/orchestrated-execution/rubrics/security-implementation-rubric.md skills/start/rubrics/security-implementation-rubric.md; do
+  [ -f "$f" ] || { fail "$f missing"; continue; }
+  for n in 1 2 3 4 5 6 7 8; do grep -q "^## S$n\\." "$f" && pass "$f has S$n" || fail "$f missing S$n"; done
+  has "$f" 'ever downgraded'
+done
+has rubrics/adversarial-review-rubric.md 'security-implementation-rubric.md'
 
 echo "Test 5: escalation re-spawns supercoder, fresh-coder rule"
 grep -qF 'roleType("supercoder")' <<<"$iter" && pass "iterate step spawns supercoder" || fail "iterate step missing roleType(\"supercoder\")"

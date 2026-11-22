@@ -8,7 +8,7 @@
 # Can be sourced: resolve_role_model <role> <host> prints the configured model.
 # Bash 3.2 compatible (no associative arrays, no mapfile).
 
-ROLES="design-reviewer plan-reviewer researcher planner mechanical-coder coder supercoder debugger adversarial-reviewer pr-shepherd-agent knowledge-curator-agent"
+ROLES="design-reviewer plan-reviewer researcher planner mechanical-coder coder supercoder debugger security-coder adversarial-reviewer pr-shepherd-agent knowledge-curator-agent"
 HEADER_RE='^<!-- generated-by: metaswarm '
 
 # --- Locate plugin root, project root, version ---

@@ -28,6 +28,10 @@ roles:
     claude: fable
     codex: gpt-5.3-codex
     gemini: pro
+  security-coder:
+    claude: fable
+    codex: gpt-5.3-codex
+    gemini: pro
   adversarial-reviewer:
     claude: opus
     codex: gpt-5.3-codex

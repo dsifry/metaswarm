@@ -70,3 +70,4 @@ skills/start/guides/agent-coordination.md|planner|2
 skills/start/guides/agent-coordination.md|pr-shepherd-agent|2
 skills/start/guides/agent-coordination.md|researcher|2
 templates/CLAUDE.md|adversarial-reviewer|1
+skills/orchestrated-execution/SKILL.md|security-coder|5

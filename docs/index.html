@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>metaswarm - Multi-Agent Orchestration for Claude Code</title>
-  <meta name="description" content="A self-improving multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. 26 agents, 14 skills, 16 commands. TDD, cross-model adversarial review, spec-driven development. Production-proven.">
+  <meta name="description" content="A self-improving multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. 27 agents, 14 skills, 16 commands. TDD, cross-model adversarial review, spec-driven development. Production-proven.">
   <style>
     :root {
       --bg: #ffffff;
@@ -397,7 +397,7 @@
 
   <header>
     <h1><a href="https://github.com/dsifry/metaswarm" style="color: inherit; text-decoration: none;"><span>meta</span>swarm</a></h1>
-    <p class="tagline">A self-improving multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. 26 agents coordinate through the full development lifecycle, from GitHub issue to merged PR, with TDD, cross-model adversarial review, and spec-driven development.</p>
+    <p class="tagline">A self-improving multi-agent orchestration framework for Claude Code, Gemini CLI, and Codex CLI. 27 agents coordinate through the full development lifecycle, from GitHub issue to merged PR, with TDD, cross-model adversarial review, and spec-driven development.</p>
   </header>
 
   <!-- QUICK INSTALL -->
@@ -650,7 +650,7 @@ When all work units pass, create a PR.</code></pre>
     <h2>Components</h2>
     <div class="features">
       <div class="feature">
-        <h4>26 Agents</h4>
+        <h4>27 Agents</h4>
         <p>Researcher, Planner, Architect, PM, Designer, Security, UX Reviewer, CTO, Design Reviewer, Plan Reviewer, Coder, Adversarial Reviewer, Security Auditor, PR Shepherd, Release Engineer, Test Automator, Knowledge Curator, and more. Each has a defined role, process, and output format.</p>
       </div>
       <div class="feature">
@@ -662,7 +662,7 @@ When all work units pass, create a PR.</code></pre>
         <p><code>/metaswarm:setup</code>, <code>/metaswarm:update</code>, <code>/metaswarm:status</code>, <code>/metaswarm:start-task</code>, <code>/metaswarm:start</code>, <code>/metaswarm:prime</code>, <code>/metaswarm:review-design</code>, <code>/metaswarm:brainstorm</code>, <code>/metaswarm:self-reflect</code>, <code>/metaswarm:pr-shepherd</code>, <code>/metaswarm:create-issue</code>, <code>/metaswarm:handle-pr-comments</code>, <code>/metaswarm:external-tools-health</code>, <code>/metaswarm:handoff</code>, plus the deprecated aliases <code>/metaswarm:metaswarm-setup</code> and <code>/metaswarm:metaswarm-update-version</code>.</p>
       </div>
       <div class="feature">
-        <h4>10 Quality Rubrics</h4>
+        <h4>11 Quality Rubrics</h4>
         <p>Standardized review criteria for code, architecture, security, test coverage, implementation plans, adversarial plan review, adversarial spec compliance, external tool review, UX review, and release engineering.</p>
       </div>
       <div class="feature">
@@ -732,6 +732,7 @@ When all work units pass, create a PR.</code></pre>
         <tr><td>Coder</td><td>Implement</td><td>TDD implementation with 100% coverage</td></tr>
         <tr><td>Mechanical Coder</td><td>Implement</td><td>Small, fully specified, behaviour-preserving edits (haiku)</td></tr>
         <tr><td>Supercoder</td><td>Implement</td><td>TDD implementation for the hardest work units (opus)</td></tr>
+        <tr><td>Security Coder</td><td>Implement</td><td>TDD implementation of security-critical work units; reviewed against the security implementation rubric (fable)</td></tr>
         <tr><td>Debugger</td><td>Investigate</td><td>Root-cause investigation of tricky bugs; designs the fix, never implements it (fable)</td></tr>
         <tr><td>Adversarial Reviewer</td><td>Review</td><td>Fresh-context review against the spec and rubrics: collaborative (suggestions) or adversarial (spec compliance)</td></tr>
         <tr><td>Security Auditor</td><td>Review</td><td>Vulnerability scanning, OWASP checks</td></tr>
