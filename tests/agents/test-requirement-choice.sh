@@ -71,7 +71,7 @@ for t in 'Pros:' 'Cons:' '(Recommended)' 'Why recommended:'; do
 done
 
 echo "Test 5: planner and coders STOP on an unsettled requirement choice"
-for f in agents/planner.md agents/coder.md agents/supercoder.md skills/start/agents/planner.md skills/start/agents/coder.md skills/start/agents/supercoder.md; do
+for f in agents/planner.md agents/coder.md agents/supercoder.md agents/security-coder.md skills/start/agents/planner.md skills/start/agents/coder.md skills/start/agents/supercoder.md skills/start/agents/security-coder.md; do
   has "$f" 'requirement choice'
   has "$f" 'options with pros/cons and a recommendation'
 done
