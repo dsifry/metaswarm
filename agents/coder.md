@@ -580,6 +580,12 @@ Each of these checks must pass before closing the implementation task.
 
 ---
 
+## Hand-back Checklist
+
+The orchestrator's brief lists the exact gate commands for the files in scope: tests, type check and lint, and also project registration gates (lint allow-lists, service inventories, CI gate tables). Run every one of them. Paste the raw last lines of each command's output into your hand-back. "Passes" without pasted output is not a hand-back, and the orchestrator will send it back. If the brief lists no gate commands, ask for them rather than guessing. Why: in the soak, coders claimed lint passed when it had failed, and missed registration files that the pre-push hook caught later.
+
+---
+
 ## Output Format
 
 The coder produces working code with:

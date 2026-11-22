@@ -57,3 +57,9 @@ Every move is a fresh spawn with a complete brief. A coder is never resumed for 
 ## Configuration and backward compatibility
 
 `escalation.coder.after_failures` in `.metaswarm/models.yaml` still sets how many failed VALIDATE attempts trigger the move to `supercoder`. `escalation.coder.claude` is still honoured: when `roles.supercoder.claude` is not set, it is the Claude model of the `supercoder` role. When both are set, `roles.supercoder.claude` wins. There is no per-call `model` override on `coder` any more; `supercoder` is the one definition of the Opus coder.
+
+## Spawn log
+
+Log every spawn (coder, reviewer, debugger) with these fields: `ts, wu, round, role, model, tokens, outcome, claim_matched`. `claim_matched` records whether the agent's "passes" claim matched the orchestrator's own check of the same commands. Keep the field set fixed so tier and model comparisons, such as Opus vs Fable, can be measured instead of argued.
+
+Head-to-head method: give the same work unit to two models in separate worktrees, review both with fresh adversarial reviewers, and merge the better one. Log both runs.

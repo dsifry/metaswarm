@@ -133,6 +133,15 @@ The primary check. For each DoD item:
 | Tests don't test mock behavior | BLOCKING | Tests must exercise real logic, not just verify mocks were called |
 | Tests are deterministic | WARNING | No timing-dependent, order-dependent, or flaky patterns |
 
+**Required checks** (apply to every work unit):
+
+| Check | Classification | Criteria |
+| --- | --- | --- |
+| Sibling paths | BLOCKING if a sibling path is unhandled | For every fix or new behaviour, check the paths that handle the same data or event: replay or recovery after restart, resume, retry, rollback, restore. Why: an attachment fix covered live messages but not the restart replay |
+| Production wiring | BLOCKING if tests diverge from production | Tests exercise the production constants and wiring, not a hand-built config that differs from production. Why: a test set a concurrency limit of 1 while production used 2 |
+
+As with every blocker, `protects` must name the credible user scenario or requirement.
+
 ### 3. Type Safety (blocker threshold)
 
 | Check | Classification | Criteria |

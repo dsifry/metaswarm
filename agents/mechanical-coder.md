@@ -40,7 +40,7 @@ Do not try to work around the limit. Do not guess at an unspecified detail.
 2. Make exactly the specified edits, in the named files only.
 3. Run the validation commands from the brief. If a test expectation changes, run the tests before and after so the change is explained by the brief, not by a behaviour change.
 4. If validation fails once, STOP and report the failure. The orchestrator re-does the work with `coder`; do not iterate.
-5. Report the changed files and the validation output.
+5. Report the changed files and paste the raw last lines of every gate command the brief lists (tests, lint, and any registration gate such as a lint allow-list, service inventory or CI gate table). "Passes" without pasted output is not a hand-back.
 
 ## Rules
 

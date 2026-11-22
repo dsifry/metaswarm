@@ -34,4 +34,4 @@ You follow exactly the same rules as the `coder` agent (`agents/coder.md`): stri
 
 ## Output
 
-Report changed files, tests added, the validation commands you ran with their results, and any residual risk you could not close.
+Report changed files, tests added, and any residual risk you could not close. Follow the Hand-back Checklist in `agents/coder.md`: run every gate command the brief lists (including project registration gates such as lint allow-lists, service inventories and CI gate tables) and paste the raw last lines of each. "Passes" without pasted output is not a hand-back.

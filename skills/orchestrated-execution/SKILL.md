@@ -34,6 +34,18 @@ After drafting an implementation plan (Step 1: Plan Validation), submit it to th
 
 ---
 
+## Blocker Graph Before Any Date
+
+Before giving the user any milestone date or estimate, the orchestrator MUST:
+
+1. Walk the full transitive graph of open dependencies of that milestone (for example with `bd dep` / `bd show`), not just the next one or two units.
+2. List every pending or unwired placeholder in the code that the milestone needs.
+3. Sum the plan's estimates over everything found in steps 1 and 2.
+
+State the date together with the blockers it rests on. Why: a milestone date was given from the next one or two units and was wrong twice.
+
+---
+
 ## When to Use This Skill
 
 - **Complex tasks** decomposed into multiple work units
@@ -220,11 +232,16 @@ You may ONLY modify these files: ${fileScope.join(', ')}
 ## Project Context
 ${projectContext}
 
+## Gate Commands
+${gateCommands.join('\n')}
+(The exact commands for the files in scope: tests, type check, lint, and project registration gates such as lint allow-lists, service inventories and CI gate tables.)
+
 ## Rules
 - Follow TDD: write failing test first, then implement to make it pass
 - Do NOT modify files outside your file scope
 - Do NOT self-certify — the orchestrator will validate independently
 - When complete, report what you changed and what tests you added
+- Run EVERY gate command above and paste the raw last lines of each into your hand-back. "Passes" without pasted output is not a hand-back
 - NEVER use --no-verify on git commits — pre-commit hooks are mandatory
 - NEVER use git push --force
 - NEVER suppress linter/type errors with eslint-disable, @ts-ignore, or as any
@@ -334,6 +351,8 @@ ${confirmedAnswers}
 
 ## Rules
 - Check EACH DoD item. Cite file:line evidence for PASS or expected-vs-found for FAIL.
+- Required check, sibling paths: for every fix or new behaviour, check the paths that handle the same data or event (replay or recovery after restart, resume, retry, rollback, restore).
+- Required check, production wiring: tests must exercise the production constants and wiring, not a hand-built config that differs from production.
 - Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
 - Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.
