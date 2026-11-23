@@ -121,6 +121,8 @@ SITES=(
   skills/brainstorming-extension/SKILL.md skills/create-issue/SKILL.md skills/design-review-gate/SKILL.md
   skills/handling-pr-comments/SKILL.md skills/migrate/SKILL.md skills/orchestrated-execution/SKILL.md
   skills/plan-review-gate/SKILL.md skills/pr-shepherd/SKILL.md skills/setup/SKILL.md skills/start/SKILL.md
+  rubrics/deep-research-rubric.md skills/brainstorming-extension/rubrics/deep-research-rubric.md
+  skills/start/rubrics/deep-research-rubric.md
 )
 for f in "${SITES[@]}"; do
   if [ -f "$f" ] && grep -qF 'Decision requests' "$f" && grep -qF 'delivery-scope.md' "$f"; then pass "$f references Decision requests"
