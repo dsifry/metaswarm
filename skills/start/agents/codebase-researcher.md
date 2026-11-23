@@ -12,7 +12,7 @@ disallowedTools: Write, Edit, NotebookEdit
 **Spawned By**: Issue Orchestrator; brainstorming (alongside a `deep-researcher`)
 **Tools**: Codebase read, git history, library docs (Context7), BEADS CLI. Read-only: never edits the repo.
 
-When to use this role, and when to use `deep-researcher` instead, is in `guides/research-selection.md` (plugin file; the plugin root is `CLAUDE_PLUGIN_ROOT`).
+When to use this role, and when to use `deep-researcher` instead, is in `guides/research-selection.md` (plugin file; the plugin root is found with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"`, or `$CLAUDE_PLUGIN_ROOT` if set).
 
 ---
 
@@ -40,7 +40,7 @@ For each MATCH or NEAR citation from the citation check, read the cited lines pl
 | **STRENGTH** | The claim is stronger than the source ("never", "only", "must" where the source says "usually", "by default", "should"). |
 | **OK** | The context supports the claim. |
 
-Worked example of a TENSE miss (2026-11-23): plan line P:2419 says "create without --import fails seat start". A context check endorsed it after saying it had checked the code, but it never followed the path. The launcher falls back to the image's model-registry (fleetlaunch/pi.go:62-69, seat.go:52, staged by stage-context.sh:2775), so the plan line was stale. Start at the entry point and read every fallback before you mark a plan line OK.
+Worked example of a TENSE miss (2026-11-23): a plan line says a command fails ("create without the import flag fails seat start"). The launcher's fallback path makes it work, so the plan line is stale. A context check endorsed the line without following the path. Start at the entry point and read every fallback before you mark a plan line OK.
 
 Prioritise load-bearing claims: suppliers (who provides a credential, an app, an account), blockers, "reusable as-is" claims, and the defaults behind questions to the founder. Check those first and all of them; check the rest as budget allows and say which you skipped.
 

@@ -68,12 +68,12 @@ After the citation check, the orchestrator spawns a `codebase-researcher` (`role
 
 It prioritises load-bearing claims: suppliers, blockers, "reusable as-is", and the defaults behind founder questions. Its corrections are applied with the citation check's before the findings are used.
 
-Why it exists (2026-11-23): an Opus judge found context errors that the mechanical check missed: a test-fleet line cited for a production rule about who writes ops.env; "the customer creates the Slack app" when the founder does today; and a stale plan line, "create without --import fails seat start", that the code contradicts. 
+Why it exists (2026-11-23): an Opus judge found context errors that the mechanical check missed: a test-fleet config line cited as a production rule (SCOPE); "the customer creates the app" when the operator does (ACTOR); and a stale plan line, "create without the import flag fails seat start", that the code contradicts (TENSE). 
 
 **Live test (2026-11-23, one sample).** A Sonnet context check on the two design-research reports, after the Haiku citation check: 116k tokens, 138 s, 47 claims checked.
-- It caught all 3 context errors the Opus judge had found: the test-fleet ops.env line used as the rule for who writes it (SCOPE); "the customer creates the Slack app" when the founder does (ACTOR); "the customer approves" read into a line that says only "human step-up" (STRENGTH).
-- It found about 20 more that the judge and the citation check did not, for example: a test-fleet mailbox design presented as RepoFortify's and the customer default; an approval service listed as "reusable" though it is gated on realCompany; install warnings counted as blockers though they are log-only.
-- It missed one, and the miss matters (the worked example for TENSE). Plan line P:2419 says "create without --import fails seat start". The code contradicts it: the launcher falls back to the image's model-registry (fleetlaunch/pi.go:62-69, seat.go:52, staged by stage-context.sh:2775). The checker endorsed the stale plan line: it said it checked code where plan lines describe code, but it did not follow that code path. Hence the TENSE rule: find and follow the actual code path, entry point then each fallback.
+- It caught all 3 context errors the Opus judge had found: a test-fleet config line cited as a production rule (SCOPE); "the customer creates the app" when the operator does (ACTOR); "the customer approves" read into a line that says only "human step-up" (STRENGTH).
+- It found about 20 more that the judge and the citation check did not, for example: a test-fleet mailbox design presented as the production default; a service listed as "reusable" though it is gated on a production-only flag; install warnings counted as blockers though they are log-only.
+- It missed one, and the miss matters (the worked example for TENSE). A plan line says "create without the import flag fails seat start". The code contradicts it: the launcher falls back to the image's model registry. The checker endorsed the stale plan line: it said it checked code where plan lines describe code, but it did not follow that code path. Hence the TENSE rule: find and follow the actual code path, entry point then each fallback.
 
 ## Evidence (2026-11-23)
 

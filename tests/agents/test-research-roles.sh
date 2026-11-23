@@ -89,7 +89,7 @@ echo "Test 4c: context check mode of codebase-researcher"
 for dir in agents skills/start/agents; do
   f="$dir/codebase-researcher.md"
   has "$f" '## Context check mode'
-  for s in SCOPE ACTOR TENSE STRENGTH '**OK**' 'load-bearing' 'surrounding section' 'MATCH or NEAR' 'find and follow the actual code path' 'each fallback' 'P:2419' 'fleetlaunch/pi.go:62-69'; do has "$f" "$s"; done
+  for s in SCOPE ACTOR TENSE STRENGTH '**OK**' 'load-bearing' 'surrounding section' 'MATCH or NEAR' 'find and follow the actual code path' 'each fallback' 'create without the import flag fails seat start' 'fallback path makes it work'; do has "$f" "$s"; done
 done
 
 echo "Test 4b: citation-checker"
@@ -141,7 +141,7 @@ for s in 'citation-checker' '138k' '108 s' '132k' '65 s' '22/26' '24/29' '186k' 
 hasi "$GUIDE" 'cannot spawn subagents'
 PIPE='researcher(s) → citation check → context check → apply corrections → design'
 for f in "$GUIDE" skills/brainstorming-extension/SKILL.md agents/issue-orchestrator.md skills/start/agents/issue-orchestrator.md; do has "$f" "$PIPE"; done
-for s in '## Context check' 'SCOPE' 'ACTOR' 'TENSE' 'STRENGTH' 'test-fleet line' 'ops.env' '116k' '138 s' '47 claims' 'all 3 context errors' 'about 20 more' 'realCompany' 'log-only' 'P:2419' 'fleetlaunch/pi.go:62-69' 'find and follow the actual code path' 'Slack app' 'create without --import fails seat start' '## Dual-arm deep research (default)' 'two deep-researchers' 'roles.deep-researcher-second' 'Single arm' 'getting the facts right' 'deep-researcher-second'; do has "$GUIDE" "$s"; done
+for s in '## Context check' 'SCOPE' 'ACTOR' 'TENSE' 'STRENGTH' 'test-fleet config line' 'cited as a production rule' '116k' '138 s' '47 claims' 'all 3 context errors' 'about 20 more' 'production-only flag' 'log-only' 'create without the import flag fails seat start' 'falls back to the image' 'find and follow the actual code path' 'the customer creates the app' '## Dual-arm deep research (default)' 'two deep-researchers' 'roles.deep-researcher-second' 'Single arm' 'getting the facts right' 'deep-researcher-second'; do has "$GUIDE" "$s"; done
 has guides/coder-selection.md 'research-selection.md'
 
 echo "Test 7: models.yaml template, resolution and legacy alias"

@@ -12,7 +12,7 @@ disallowedTools: Write, Edit, NotebookEdit
 **Spawned By**: the orchestrator (or the session running brainstorming), after a `codebase-researcher` or `deep-researcher` report whose findings feed a design, plan or decision. A researcher cannot spawn subagents, so this is always an orchestrator step.
 **Tools**: Read, Grep, Glob, Bash (read-only commands such as `grep -c`, `sed -n`, `bd show`). Read-only: never edits anything.
 
-When this step runs, and the evidence for it, is in `guides/research-selection.md` (plugin file; the plugin root is `CLAUDE_PLUGIN_ROOT`).
+When this step runs, and the evidence for it, is in `guides/research-selection.md` (plugin file; the plugin root is found with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"`, or `$CLAUDE_PLUGIN_ROOT` if set).
 
 ---
 

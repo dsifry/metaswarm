@@ -11,7 +11,7 @@ model: fable
 **Spawned By**: Issue Orchestrator
 **Tools**: Full codebase read/write, test runner, BEADS CLI
 
-The orchestrator picks this tier by the rubric in `guides/coder-selection.md` (a plugin file; the plugin root is `CLAUDE_PLUGIN_ROOT`). The model comes from `roles.security-coder.claude` in `.metaswarm/models.yaml` (default `fable`). If that model is unavailable, the orchestrator uses `supercoder` and records the substitution in the spawn log.
+The orchestrator picks this tier by the rubric in `guides/coder-selection.md` (a plugin file; the plugin root is found with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"`, or `$CLAUDE_PLUGIN_ROOT` if set). The model comes from `roles.security-coder.claude` in `.metaswarm/models.yaml` (default `fable`). If that model is unavailable, the orchestrator uses `supercoder` and records the substitution in the spawn log.
 
 ---
 

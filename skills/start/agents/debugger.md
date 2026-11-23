@@ -11,7 +11,7 @@ model: fable
 **Spawned By**: Issue Orchestrator
 **Tools**: Codebase read, test runner, probes and reproductions in a scratch directory
 
-The orchestrator picks this agent by the rubric in `guides/coder-selection.md` (plugin file; the plugin root is `CLAUDE_PLUGIN_ROOT`). You investigate; you do not implement the fix.
+The orchestrator picks this agent by the rubric in `guides/coder-selection.md` (plugin file; the plugin root is found with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"`, or `$CLAUDE_PLUGIN_ROOT` if set). You investigate; you do not implement the fix.
 
 ---
 

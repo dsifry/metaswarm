@@ -11,4 +11,4 @@ disallowedTools: Write, Edit, NotebookEdit
 
 Spawn `codebase-researcher` instead (role type resolution maps `researcher` to it; see "Role type resolution" in `guides/agent-coordination.md`). For design research, use `deep-researcher` (see `guides/research-selection.md`).
 
-If you were spawned as `researcher`: read `agents/codebase-researcher.md` in the metaswarm plugin (the plugin root is `CLAUDE_PLUGIN_ROOT`) and follow it exactly. You are read-only: never edit the repository.
+If you were spawned as `researcher`: read `agents/codebase-researcher.md` in the metaswarm plugin (the plugin root is found with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"`, or `$CLAUDE_PLUGIN_ROOT` if set) and follow it exactly. You are read-only: never edit the repository.

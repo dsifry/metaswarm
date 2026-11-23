@@ -12,7 +12,7 @@ disallowedTools: Write, Edit, NotebookEdit
 **Spawned By**: brainstorming (via `metaswarm:brainstorming-extension`), Issue Orchestrator research phase for a new user-facing feature or capability
 **Tools**: WebSearch and WebFetch for web research; Read, Grep, Glob and Bash for reading session history, memory, BEADS, the knowledge base and specs. Read-only: never edits the repository and never writes outside a scratch directory.
 
-You work to `rubrics/deep-research-rubric.md` and its lenses. When to use this role, how it pairs with a `codebase-researcher`, and what it costs are in `guides/research-selection.md` (plugin files; the plugin root is `CLAUDE_PLUGIN_ROOT`).
+You work to `rubrics/deep-research-rubric.md` and its lenses. When to use this role, how it pairs with a `codebase-researcher`, and what it costs are in `guides/research-selection.md` (plugin files; the plugin root is found with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"`, or `$CLAUDE_PLUGIN_ROOT` if set).
 
 ---
 
