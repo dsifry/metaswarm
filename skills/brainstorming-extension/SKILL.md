@@ -19,6 +19,16 @@ This skill bridges `superpowers:brainstorming` into the metaswarm quality pipeli
 
 Load this skill at the start of brainstorming, for every brainstorming session regardless of size. Quick tasks, chat-only designs and short design docs for small changes skip the project-sized design review gate below, but they do not skip this section. Follow it before any design is presented or committed.
 
+### Research before options
+
+When the brainstorm is about a user-facing feature or a new major capability (or another design that matters), research comes before options are presented:
+
+1. Spawn a `codebase-researcher` (`roleType("codebase-researcher")`) for the code facts and dual-arm deep research for the design research, all in parallel: a `deep-researcher` (`roleType("deep-researcher")`, fable) and a `deep-researcher-second` (`roleType("deep-researcher-second")`, opus) on the same brief. Merge the two arms. A single arm (fable only) is the option for a small or low-stakes design. The deep-research brief names the lenses for the kind of work: Product for user-facing work, Design when there is more than one reasonable shape, Capability for new major capabilities and platform changes. It works to [`rubrics/deep-research-rubric.md`](./rubrics/deep-research-rubric.md), including the session-history search, web research, numbered open questions with defaults, a size estimate and "challenge the brief".
+2. Citation check, then context check: when the findings will feed the design, spawn a `citation-checker` (`roleType("citation-checker")`) on each report, then a `codebase-researcher` in its context check mode (SCOPE, ACTOR, TENSE, STRENGTH) on each report, and apply both sets of corrections before using them. Order: researcher(s) → citation check → context check → apply corrections → design. This session runs these steps; a researcher cannot spawn subagents.
+3. Merge the reports into the options you present, and carry their assumptions and open questions into the assumption ledger below. A blind judge is optional, only when the reports disagree.
+
+For a small change or a code-only question, a `codebase-researcher` alone is enough. Which role to use, and what each costs, is in [`guides/research-selection.md`](./guides/research-selection.md).
+
 ### Assumption ledger and confirmation
 
 Write an assumption ledger into the design doc when there is one, so the reviewers and the user can see what the design rests on. For a chat-only design, keep the ledger in the conversation, restated in a message, and in the plan when one exists.

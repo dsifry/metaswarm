@@ -26,6 +26,10 @@ fm_has_key() { frontmatter "$1" | grep -q "^$2:"; }
 RO="Write, Edit, NotebookEdit"
 ROSTER="design-reviewer|opus|$RO
 plan-reviewer|opus|$RO
+codebase-researcher|sonnet|$RO
+deep-researcher|fable|$RO
+deep-researcher-second|opus|$RO
+citation-checker|haiku|$RO
 researcher|sonnet|$RO
 planner|opus|-
 mechanical-coder|haiku|-
@@ -40,7 +44,7 @@ issue-orchestrator|inherit|-
 swarm-coordinator-agent|inherit|-"
 # Removed in 0.14.0 (deprecated in 0.13.0): old name|successor
 REMOVED="coder-agent|coder
-researcher-agent|researcher
+researcher-agent|codebase-researcher
 code-review-agent|adversarial-reviewer"
 
 echo ""

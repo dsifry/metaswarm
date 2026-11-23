@@ -2,7 +2,7 @@
 
 ## Agents
 
-metaswarm provides 27 agents, each with a defined role in the software development lifecycle.
+metaswarm provides 31 agents, each with a defined role in the software development lifecycle.
 
 ### Orchestration Agents
 
@@ -15,7 +15,11 @@ metaswarm provides 27 agents, each with a defined role in the software developme
 
 | Agent | File | Role |
 |---|---|---|
-| **Researcher** | `agents/researcher.md` | Codebase exploration, pattern discovery, dependency analysis. Read-only; Sonnet by default. |
+| **Codebase Researcher** | `agents/codebase-researcher.md` | Codebase and prior-art-in-repo exploration with file:line citations; also the context check (SCOPE / ACTOR / TENSE / STRENGTH) of a research report after the citation check. Read-only; Sonnet by default (a brief may ask for Haiku for a narrow lookup). |
+| **Deep Researcher** | `agents/deep-researcher.md` | Design research for user-facing features and new major capabilities: Product, Design and Capability lenses, session-history search, web research, open questions with defaults (`rubrics/deep-research-rubric.md`). Read-only; Fable by default. |
+| **Citation Checker** | `agents/citation-checker.md` | Mechanical check of every citation in a research report (MATCH / NEAR / WRONG / COUNT); an orchestrator step before findings are used. Read-only; Haiku by default. |
+| **Deep Researcher (second arm)** | `agents/deep-researcher-second.md` | Second arm of dual-arm deep research (the default for designs that matter): same brief and rubric as Deep Researcher, on Opus by default. Read-only. |
+| **Researcher (deprecated alias)** | `agents/researcher.md` | Deprecated alias for Codebase Researcher, kept for one release. |
 | **Planner** | `agents/planner.md` | Plan and decompose into work units. Opus by default; can write plan files. |
 | **Design Reviewer** | `agents/design-reviewer.md` | Design review gate reviewer; role (PM, Architect, Designer, Security, UX Reviewer, CTO) passed in the prompt. Opus, read-only. |
 | **Plan Reviewer** | `agents/plan-reviewer.md` | Plan review gate reviewer (Feasibility, Completeness, Scope & Alignment). Opus, read-only. |
@@ -399,6 +403,7 @@ Quality standards used by review agents:
 | `external-tool-review-rubric.md` | Cross-model adversarial reviewers | Binary PASS/FAIL for cross-model review, file:line evidence |
 | `release-engineering-rubric.md` | Release Engineer | Safe delivery from merge through production verification |
 | `security-implementation-rubric.md` | Adversarial Reviewer (security-critical work units) | S1-S8: trust anchor, binding and replay, fail closed, one verification path, secrets, inverses, hostile inputs, tests that prove the mechanism |
+| `deep-research-rubric.md` | Deep Researcher (both arms); a judge comparing research reports | Product, Design and Capability lenses; session-history search, web research, assumptions and open questions, size estimate, challenge the brief; scoring checklist |
 
 ## Scripts
 
@@ -416,7 +421,7 @@ The full orchestration lifecycle:
 
 | Phase | Agent(s) | Output |
 |---|---|---|
-| 1. Research | Researcher | Codebase analysis, pattern inventory |
+| 1. Research | Codebase Researcher (+ Deep Researcher for a new user-facing feature or capability, then Citation Checker) | Codebase analysis, pattern inventory, design research |
 | 2. Planning | Architect | Implementation plan with tasks |
 | 2a. External Dependency Detection | Issue Orchestrator | Identifies API keys/credentials, prompts user |
 | 2b. Plan Validation | Issue Orchestrator | Pre-flight checklist (architecture, deps, API contracts, security, UI/UX) |
@@ -430,4 +435,4 @@ The full orchestration lifecycle:
 
 **Note**: For simple tasks without DoD items, phases 4-6 collapse into a linear implementation + code review flow. The orchestrated execution loop is only activated when the task has a written spec with enumerable DoD items.
 
-> **Removed in 0.14.0:** the old `-agent` variants of Coder, Researcher and Code Review, deprecated in 0.13.0. Use `coder`, `researcher` and `adversarial-reviewer`.
+> **Removed in 0.14.0:** the old `-agent` variants of Coder, Researcher and Code Review, deprecated in 0.13.0. Use `coder`, `codebase-researcher` (the `researcher` name is itself a deprecated alias now) and `adversarial-reviewer`.

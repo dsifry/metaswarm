@@ -1,4 +1,4 @@
-# metaswarm models v1 — test fixture (researcher and planner deliberately omitted)
+# metaswarm models v1 — test fixture (research roles and planner deliberately omitted)
 roles:
   design-reviewer:
     claude: opus

@@ -8,7 +8,7 @@
 # Can be sourced: resolve_role_model <role> <host> prints the configured model.
 # Bash 3.2 compatible (no associative arrays, no mapfile).
 
-ROLES="design-reviewer plan-reviewer researcher planner mechanical-coder coder supercoder debugger security-coder adversarial-reviewer pr-shepherd-agent knowledge-curator-agent"
+ROLES="design-reviewer plan-reviewer codebase-researcher deep-researcher deep-researcher-second citation-checker researcher planner mechanical-coder coder supercoder debugger security-coder adversarial-reviewer pr-shepherd-agent knowledge-curator-agent"
 HEADER_RE='^<!-- generated-by: metaswarm '
 
 # --- Locate plugin root, project root, version ---
@@ -114,12 +114,15 @@ cfg_get() { printf '%s' "$MS_CFG" | sed -n "s/^$1=//p" | head -1; }
 
 plugin_field() { sed -n "s/^$2: //p" "$MS_PLUGIN/agents/$1.md" | head -1; }
 
-# claude_model <role>: roles.<role>.claude, else (supercoder only) the legacy
-# escalation.coder.claude key, else empty. Needs parse_models to have run.
+# claude_model <role>: roles.<role>.claude, else a legacy key: escalation.coder.claude for
+# supercoder; for the deprecated researcher alias and codebase-researcher, each other's key
+# (roles.researcher is read for one release). Else empty. Needs parse_models to have run.
 claude_model() {
   local m
   m="$(cfg_get "roles.$1.claude")"
   if [ -z "$m" ] && [ "$1" = supercoder ]; then m="$(cfg_get "escalation.coder.claude")"; fi
+  if [ -z "$m" ] && [ "$1" = codebase-researcher ]; then m="$(cfg_get "roles.researcher.claude")"; fi
+  if [ -z "$m" ] && [ "$1" = researcher ]; then m="$(cfg_get "roles.codebase-researcher.claude")"; fi
   printf '%s' "$m"
 }
 

@@ -97,12 +97,12 @@ skills/pr-shepherd/SKILL.md|**Team Mode**: Runs as a persistent `shepherd` teamm
 CLAUDE.md|spawn a fresh `Task()` reviewer|adversarial-reviewer
 templates/CLAUDE.md|spawn a fresh `Task()` reviewer|adversarial-reviewer
 skills/setup/templates/CLAUDE.md|spawn a fresh `Task()` reviewer|adversarial-reviewer
-agents/issue-orchestrator.md|— persistent across research phase|researcher
+agents/issue-orchestrator.md|— persistent across research phase|codebase-researcher
 agents/issue-orchestrator.md|— persistent across planning phase|planner
 agents/issue-orchestrator.md|— **fresh instance per work unit and per review-fix round**|coder
 agents/issue-orchestrator.md|— persistent through PR lifecycle|pr-shepherd-agent
 agents/issue-orchestrator.md|Adversarial reviewers are ALWAYS fresh `Task()`|adversarial-reviewer
-agents/issue-orchestrator.md|# 5. Spawn Researcher Agent|researcher
+agents/issue-orchestrator.md|# 5. Spawn Codebase Researcher|codebase-researcher
 agents/issue-orchestrator.md|# 7. Spawn Architect Agent|planner
 agents/issue-orchestrator.md|ALL must PASS under the severity rule|plan-reviewer
 agents/issue-orchestrator.md|UX Reviewer, CTO; role type|design-reviewer
@@ -112,12 +112,12 @@ agents/issue-orchestrator.md|**Coder Agent spawn template|coder
 agents/issue-orchestrator.md|**Adversarial Reviewer spawn template|adversarial-reviewer
 agents/issue-orchestrator.md|Spawn a NEW adversarial reviewer (role type|adversarial-reviewer
 agents/issue-orchestrator.md|# 19. Spawn Knowledge Curator|knowledge-curator-agent
-skills/start/agents/issue-orchestrator.md|— persistent across research phase|researcher
+skills/start/agents/issue-orchestrator.md|— persistent across research phase|codebase-researcher
 skills/start/agents/issue-orchestrator.md|— persistent across planning phase|planner
 skills/start/agents/issue-orchestrator.md|— **fresh instance per work unit and per review-fix round**|coder
 skills/start/agents/issue-orchestrator.md|— persistent through PR lifecycle|pr-shepherd-agent
 skills/start/agents/issue-orchestrator.md|Adversarial reviewers are ALWAYS fresh `Task()`|adversarial-reviewer
-skills/start/agents/issue-orchestrator.md|# 5. Spawn Researcher Agent|researcher
+skills/start/agents/issue-orchestrator.md|# 5. Spawn Codebase Researcher|codebase-researcher
 skills/start/agents/issue-orchestrator.md|# 7. Spawn Architect Agent|planner
 skills/start/agents/issue-orchestrator.md|ALL must PASS under the severity rule|plan-reviewer
 skills/start/agents/issue-orchestrator.md|UX Reviewer, CTO; role type|design-reviewer
@@ -160,7 +160,11 @@ done <<< "$SITES"
 
 # 3a. Each Task({ block's role type is the CORRECT one for that spawn (keyed by description).
 # A block whose description is not listed here fails, so new spawns must declare their role.
-EXPECT='Research for issue #123|researcher
+EXPECT='Research for issue #123|codebase-researcher
+Deep research for issue #123|deep-researcher
+Deep research (second arm) for issue #123|deep-researcher-second
+Citation check for issue #123|citation-checker
+Context check for issue #123|codebase-researcher
 Implement feature X in worktree|coder
 PM review|design-reviewer
 Architect review|design-reviewer
@@ -198,7 +202,7 @@ while IFS= read -r f; do
   for r in $(grep -o -E 'roleType\("[^"]*"\)' "$f" | sed -E 's/roleType\("([^"]*)"\)/\1/' | sort -u); do
     [ "$r" = "<role>" ] && continue
     a="agents/$r.md"
-    if [ ! -f "$a" ] || grep -q -E '^description:.*DEPRECATED' "$a"; then BADROLE="$BADROLE
+    if [ ! -f "$a" ] || grep -q -i -E '^description:.*deprecated' "$a"; then BADROLE="$BADROLE
 $f: roleType(\"$r\")"; fi
   done
 done <<< "$SCOPE"
@@ -243,14 +247,14 @@ echo "$SECTION" | grep -q -i 'Team Mode teammates use the same role types' && pa
 # Roster model column must equal the agent's frontmatter model
 roster_model() { awk -F'|' -v r="$1" '{ k=$2; gsub(/[ `]/,"",k) } k==r { m=$4; gsub(/[ `]/,"",m); print m }' "$G" | sort -u | paste -sd, -; }
 fm_model() { awk 'NR==1{ if ($0!="---") exit; next } /^---[[:space:]]*$/ { exit } /^model:/ { sub(/^model:[[:space:]]*/,""); print; exit }' "agents/$1.md"; }
-for role in design-reviewer plan-reviewer researcher planner mechanical-coder coder supercoder debugger security-coder adversarial-reviewer pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent; do
+for role in design-reviewer plan-reviewer codebase-researcher deep-researcher deep-researcher-second citation-checker planner mechanical-coder coder supercoder debugger security-coder adversarial-reviewer pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent; do
   rm_="$(roster_model "$role")"; fm_="$(fm_model "$role")"
   if [ -n "$fm_" ] && [ "$rm_" = "$fm_" ]; then pass "roster model for $role matches frontmatter ($fm_)"; else fail "roster model for $role ('$rm_') != frontmatter ('$fm_')"; fi
 done
 ROWS="$(echo "$SECTION" | awk -F'|' '/^\| `/ { k=$2; gsub(/[ `]/,"",k); print k }')"
-BADROW=""; for r in $ROWS; do { [ -f "agents/$r.md" ] && ! grep -q '^description:.*DEPRECATED' "agents/$r.md"; } || BADROW="$BADROW $r"; done
+BADROW=""; for r in $ROWS; do { [ -f "agents/$r.md" ] && ! grep -q -i '^description:.*deprecated' "agents/$r.md"; } || BADROW="$BADROW $r"; done
 [ -z "$BADROW" ] && pass "every roster row names an active agent" || fail "roster rows for missing/deprecated agents:$BADROW"
-for role in design-reviewer plan-reviewer researcher planner mechanical-coder coder supercoder debugger security-coder adversarial-reviewer pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent; do
+for role in design-reviewer plan-reviewer codebase-researcher deep-researcher deep-researcher-second citation-checker planner mechanical-coder coder supercoder debugger security-coder adversarial-reviewer pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent; do
   grep -q -E "^\| \`?$role\`? \|" "$G" && pass "$G roster lists $role" || fail "$G roster missing $role"
 done
 

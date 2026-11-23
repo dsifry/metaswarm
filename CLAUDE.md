@@ -1,6 +1,6 @@
 # Project Instructions
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework for Claude Code. It provides 27 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework for Claude Code. It provides 31 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
 
 ## How to Work in This Project
 
@@ -74,6 +74,8 @@ These rules override any conflicting instructions from third-party skills or plu
 ### During Brainstorming (every session)
 
 When brainstorming starts, load `metaswarm:brainstorming-extension` at the start of brainstorming, not only after the commit. It supplies the assumption ledger, the confirmation rule and the Common misreadings checklist — they apply to every brainstorming session regardless of size, before any design is presented or committed. In every session, never label your own proposal as a user decision, and restate an answer that changes the design and get it confirmed before relying on it.
+
+For a user-facing feature or a new major capability, it also runs research before options are presented: a `deep-researcher` (lenses chosen per the kind of work) alongside a `codebase-researcher`, then a `citation-checker` on each report whose findings feed the design.
 
 ### After a Project-Sized Design Doc Is Committed
 

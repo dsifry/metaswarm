@@ -11,7 +11,11 @@ const path = require('path');
 const ROLE_PHASES = {
   'design-reviewer': 'design-review',
   'plan-reviewer': 'plan-review',
-  researcher: 'research',
+  'codebase-researcher': 'research',
+  'deep-researcher': 'research',
+  'deep-researcher-second': 'research',
+  'citation-checker': 'research',
+  researcher: 'research', // deprecated alias of codebase-researcher
   planner: 'plan/decompose',
   coder: 'implement',
   'adversarial-reviewer': 'adversarial-review',

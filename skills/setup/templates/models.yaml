@@ -8,8 +8,19 @@ roles:
     claude: opus
     codex: gpt-5.3-codex
     gemini: pro
-  researcher:
+  # researcher: deprecated alias of codebase-researcher (one release). roles.researcher is still
+  # read: it sets the codebase-researcher model when roles.codebase-researcher is not set.
+  codebase-researcher:
     claude: sonnet
+  deep-researcher:
+    claude: fable
+    codex: gpt-5.3-codex
+    gemini: pro
+  # deep-researcher-second: the second arm of dual-arm deep research (same brief, a second model)
+  deep-researcher-second:
+    claude: opus
+  citation-checker:
+    claude: haiku
   planner:
     claude: opus
   mechanical-coder:

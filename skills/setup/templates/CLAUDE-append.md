@@ -1,7 +1,7 @@
 
 ## metaswarm
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-agent orchestration with Claude Code. It provides 27 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [metaswarm](https://github.com/dsifry/metaswarm) for multi-agent orchestration with Claude Code. It provides 31 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
 
 ### Workflow
 
@@ -47,6 +47,7 @@ Development patterns and standards are documented in `guides/` — covering agen
 These rules override any conflicting instructions from third-party skills:
 
 - **During brainstorming** → load `metaswarm:brainstorming-extension` at the start of brainstorming, not only after the commit, for its assumption ledger, confirmation rule and Common misreadings checklist; it applies to every brainstorming session regardless of size
+  - For a user-facing feature or a new major capability, brainstorming also runs research before options are presented: a `deep-researcher` (lenses chosen per the kind of work) alongside a `codebase-researcher`, then a `citation-checker` on each report whose findings feed the design.
 - **Assumptions** → never label your own proposal as a user decision, and restate an answer that changes the design and get it confirmed before relying on it.
 - **After a project-sized design doc is committed** → MUST run Design Review Gate (6 agents) before writing-plans or implementation (see the metaswarm plugin's `guides/workflow-enforcement.md`)
 - **After the plan is written** → MUST run Plan Review Gate (3 adversarial reviewers) before writing-plans presents the plan (see the metaswarm plugin's `guides/workflow-enforcement.md`)
