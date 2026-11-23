@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 TOOL="$REPO_ROOT/bin/metaswarm-agents.sh"
 FIXTURE="$SCRIPT_DIR/fixtures/models.yaml"
-ROLES="design-reviewer plan-reviewer researcher planner mechanical-coder coder supercoder debugger security-coder adversarial-reviewer pr-shepherd-agent knowledge-curator-agent"
+ROLES="design-reviewer plan-reviewer codebase-researcher deep-researcher deep-researcher-second citation-checker researcher planner mechanical-coder coder supercoder debugger security-coder adversarial-reviewer pr-shepherd-agent knowledge-curator-agent"
 VERSION="$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$REPO_ROOT/.claude-plugin/plugin.json" | head -1)"
 PASS=0
 FAIL=0
@@ -80,7 +80,7 @@ check "second generate exits 0" "$RC"
 diff -r "$P/.claude/agents" "$TMP_BASE/snap$N" >/dev/null && pass "output byte-identical" || fail "output byte-identical"
 
 echo "Test 3: defaults and overrides"
-[ "$(sed -n 's/^model: //p' "$(agent_file researcher)")" = "$(plugin_model researcher)" ] && pass "missing role gets plugin default" || fail "missing role gets plugin default"
+[ "$(sed -n 's/^model: //p' "$(agent_file codebase-researcher)")" = "$(plugin_model codebase-researcher)" ] && pass "missing role gets plugin default" || fail "missing role gets plugin default"
 grep -q '^model: opus$' "$(agent_file design-reviewer)" && pass "reviewer set to opus is opus" || fail "reviewer set to opus is opus"
 grep -q '^model: claude-opus-4-5$' "$(agent_file plan-reviewer)" && pass "full model id accepted" || fail "full model id accepted"
 
@@ -181,8 +181,8 @@ left="$(ls "$P/.claude/agents" | tr '\n' ' ')"
 
 echo "Test 11: resolve_role_model is sourceable"
 new_proj
-got="$(cd "$P" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash -c ". '$TOOL'; resolve_role_model design-reviewer codex; resolve_role_model coder claude; resolve_role_model researcher claude; resolve_role_model researcher codex")"
-[ "$got" = "$(printf 'gpt-5.3-codex\nhaiku\n%s\n' "$(plugin_model researcher)")" ] && pass "resolves config, then plugin default, empty for unset codex" || fail "resolve_role_model: $got"
+got="$(cd "$P" && CLAUDE_PLUGIN_ROOT="$REPO_ROOT" bash -c ". '$TOOL'; resolve_role_model design-reviewer codex; resolve_role_model coder claude; resolve_role_model codebase-researcher claude; resolve_role_model codebase-researcher codex")"
+[ "$got" = "$(printf 'gpt-5.3-codex\nhaiku\n%s\n' "$(plugin_model codebase-researcher)")" ] && pass "resolves config, then plugin default, empty for unset codex" || fail "resolve_role_model: $got"
 
 echo "Test 12: check flags a same-named user-authored file (same verdict as generate)"
 new_proj

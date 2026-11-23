@@ -120,7 +120,7 @@ else
 fi
 
 # 9. Host reference files document role types (#53)
-ROLES="design-reviewer plan-reviewer adversarial-reviewer planner researcher mechanical-coder coder supercoder debugger security-coder pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent"
+ROLES="design-reviewer plan-reviewer adversarial-reviewer planner codebase-researcher deep-researcher deep-researcher-second citation-checker mechanical-coder coder supercoder debugger security-coder pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent"
 for ref in codex-tools opencode-tools cursor-tools platform-adaptation; do
   f="$ROOT/skills/start/references/$ref.md"
   for role in $ROLES; do
@@ -138,7 +138,7 @@ for ref in codex-tools opencode-tools cursor-tools platform-adaptation; do
     fi
   done
 done
-for role in design-reviewer plan-reviewer adversarial-reviewer planner researcher coder pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent; do
+for role in design-reviewer plan-reviewer adversarial-reviewer planner codebase-researcher deep-researcher deep-researcher-second citation-checker coder pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent; do
   grep -q -- "\b$role\b" "$ROOT/GEMINI.md" && pass "GEMINI.md mentions $role" || fail "GEMINI.md missing $role"
 done
 grep -q -i "pass the role name through" "$ROOT/GEMINI.md" && pass "GEMINI.md documents pass-through fallback" || fail "GEMINI.md missing pass-through fallback"

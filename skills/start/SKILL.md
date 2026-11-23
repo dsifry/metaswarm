@@ -94,6 +94,8 @@ Project-Sized Design Doc Committed
 
 Load the `brainstorming-extension` skill at the start of brainstorming, not only after the commit: its assumption ledger, confirmation rule and Common misreadings checklist apply to every brainstorming session regardless of size, before any design is presented or committed.
 
+For a user-facing feature or a new major capability, the extension's "Research before options" step spawns dual-arm deep research (`deep-researcher` and `deep-researcher-second`, lenses chosen per the kind of work) alongside a `codebase-researcher` before options are presented, then a `citation-checker` and a context check on each report that feeds the design (see [`./guides/research-selection.md`](./guides/research-selection.md)).
+
 The gate is automatically triggered when brainstorming writes and commits a project-sized design doc (see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md)):
 
 - A project-sized design doc is committed to `docs/plans/*-design.md` or `docs/superpowers/specs/*-design.md`
@@ -608,9 +610,9 @@ Every `subagent_type` below is a role type resolved per [Role type resolution](.
 ### Sequential Spawning
 
 ```typescript
-// Spawn Researcher first
+// Spawn the Codebase Researcher first (add a deep-researcher in parallel for a new user-facing feature or capability)
 const researchResult = await Task({
-  subagent_type: roleType("researcher"),
+  subagent_type: roleType("codebase-researcher"),
   description: "Research for issue #123",
   prompt: researcherPrompt,
 });
@@ -806,7 +808,10 @@ skills/start/                   # This skill (main orchestration)
 ├── SKILL.md                    # This file
 ├── agents/                     # Agent definitions
 │   ├── issue-orchestrator.md   # Main coordinator (runs 4-phase loop)
-│   ├── researcher.md     # Codebase exploration
+│   ├── codebase-researcher.md # Codebase exploration (file:line facts)
+│   ├── deep-researcher.md  # Design research (lenses, history, web)
+│   ├── citation-checker.md # Mechanical citation check of research reports
+│   ├── researcher.md       # Deprecated alias for codebase-researcher
 │   ├── architect-agent.md      # Implementation planning
 │   ├── product-manager-agent.md # Use case & user benefit review
 │   ├── designer-agent.md       # UX/API design review

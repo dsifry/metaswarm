@@ -1,6 +1,6 @@
 # Coder Selection
 
-metaswarm has four coder tiers and a debugger. This guide is the single rubric the orchestrator uses to pick one for an IMPLEMENT phase or a review-fix round. The agent files carry only a pointer back here.
+metaswarm has four coder tiers and a debugger. This guide is the single rubric the orchestrator uses to pick one for an IMPLEMENT phase or a review-fix round. The agent files carry only a pointer back here. Research roles (`codebase-researcher`, `deep-researcher`, `citation-checker`) are picked by [Research Selection](./research-selection.md).
 
 | Tier | Role type | Claude default | Use for |
 |---|---|---|---|

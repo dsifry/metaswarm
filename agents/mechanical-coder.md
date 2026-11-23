@@ -11,7 +11,7 @@ model: haiku
 **Spawned By**: Issue Orchestrator
 **Tools**: Codebase read/write, test runner
 
-The orchestrator picks this tier by the rubric in `guides/coder-selection.md` (plugin file; the plugin root is `CLAUDE_PLUGIN_ROOT`). The default coder is `coder`.
+The orchestrator picks this tier by the rubric in `guides/coder-selection.md` (plugin file; the plugin root is found with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"`, or `$CLAUDE_PLUGIN_ROOT` if set). The default coder is `coder`.
 
 ---
 

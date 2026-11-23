@@ -37,6 +37,10 @@ test('classifyPhase: role types, prefixes and legacy names', () => {
   assert.equal(c('design-reviewer'), 'design-review');
   assert.equal(c('metaswarm:plan-reviewer'), 'plan-review');
   assert.equal(c('metaswarm-researcher'), 'research');
+  assert.equal(c('metaswarm-codebase-researcher'), 'research');
+  assert.equal(c('deep-researcher'), 'research');
+  assert.equal(c('metaswarm:citation-checker'), 'research');
+  assert.equal(c('deep-researcher-second'), 'research');
   assert.equal(c('planner'), 'plan/decompose');
   assert.equal(c('coder'), 'implement');
   assert.equal(c('adversarial-reviewer'), 'adversarial-review');

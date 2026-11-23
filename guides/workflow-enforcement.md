@@ -37,6 +37,8 @@ Brainstorming sizes its output to the work. Only project-sized work reaches the 
 
 Load `metaswarm:brainstorming-extension` at the start of brainstorming, not only after the design doc is committed. It supplies the assumption ledger, the confirmation rule and the Common misreadings checklist (the 4 built-in patterns plus the project's `misunderstanding` gotchas). They apply to every brainstorming session regardless of size, including quick tasks, chat-only designs and short design docs, before any design is presented or committed.
 
+When the brainstorm is about a user-facing feature or a new major capability, the extension also has research run before options are presented: dual-arm deep research (`deep-researcher` on fable and `deep-researcher-second` on opus, lenses chosen per the kind of work) alongside a `codebase-researcher`, in parallel, then a `citation-checker` and a context check on each report whose findings feed the design. Code-only or small work needs only the `codebase-researcher`. See `guides/research-selection.md`.
+
 ## Design Review Gate trigger
 
 Run the Design Review Gate only for project-sized work: brainstorming sized the work as a project (superpowers 6.4.x Architectural path; 7.x "a project", the full written design) and committed its design doc. Quick tasks, chat-only designs and short design docs for small changes (superpowers 7.0.1+) skip the gate.

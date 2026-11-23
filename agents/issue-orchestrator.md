@@ -67,7 +67,8 @@ When Team tools are available:
 
 1. **Create team**: `TeamCreate("issue-{issue-number}")` (e.g., `issue-123`)
 2. **Spawn specialists as named teammates**:
-   - `researcher` (type `roleType("researcher")`) — persistent across research phase
+   - `researcher` (type `roleType("codebase-researcher")`) — persistent across research phase
+   - `deep-researcher` (type `roleType("deep-researcher")`) and `deep-researcher-second` (type `roleType("deep-researcher-second")`) — dual-arm deep research, only when the issue is a new user-facing feature or capability (see [research selection](../guides/research-selection.md))
    - `architect` (type `roleType("planner")`) — persistent across planning phase
    - `coder` (type `roleType("coder")`) — **fresh instance per work unit and per review-fix round**, chosen by tier (see [coder selection](../guides/coder-selection.md))
    - `shepherd` (type `roleType("pr-shepherd-agent")`) — persistent through PR lifecycle, sends async status updates via `SendMessage`
@@ -119,8 +120,22 @@ gh issue comment <number> --body "Agent claiming this issue. Epic: <epic-id>"
 bd create "Research: <issue-title>" --type task --parent <epic-id> \
   --description "Investigate codebase, prior art, and constraints"
 
-# 5. Spawn Researcher Agent (Task tool, role type roleType("researcher"))
+# 5. Spawn Codebase Researcher (Task tool, role type roleType("codebase-researcher"))
+#    When the issue is a new user-facing feature or capability, also spawn dual-arm deep research
+#    in parallel: roleType("deep-researcher") (fable) and roleType("deep-researcher-second") (opus)
+#    on the same brief, then merge the two arms (single arm only for a small or low-stakes design).
+#    Lenses named in the brief:
+#    Product for user-facing work, Design when there are several shapes, Capability for
+#    new major capabilities; rubric rubrics/deep-research-rubric.md). Give it the codebase
+#    researcher's report, or let it list the code facts it still needs.
 # Wait for research output
+
+# 5b. Citation check, then context check (orchestrator steps; a researcher cannot spawn them):
+#     when the findings feed the plan or a decision, spawn roleType("citation-checker") on each
+#     research report, then a codebase-researcher in context check mode on each report.
+#     Pipeline: researcher(s) → citation check → context check → apply corrections → design.
+#     Apply both sets of corrections before step 7 uses the findings. A blind judge is
+#     optional, only when two reports disagree.
 
 # 6. Create planning task (blocked by research)
 bd create "Create implementation plan" --type task --parent <epic-id>
@@ -472,11 +487,11 @@ Each Work Unit runs the 4-Phase Execution Loop:
 Use the Task tool to spawn specialist agents:
 
 ```typescript
-// Example: Spawn Researcher Agent (role type resolved per the guide's Role type resolution rule)
+// Example: Spawn the Codebase Researcher (role type resolved per the guide's Role type resolution rule)
 Task({
-  subagent_type: roleType("researcher"),
+  subagent_type: roleType("codebase-researcher"),
   description: "Research for issue #123",
-  prompt: `You are acting as the RESEARCHER AGENT for BEADS epic ${epicId}.
+  prompt: `You are acting as the CODEBASE RESEARCHER for BEADS epic ${epicId}.
 
   ## Your Task
   ${researchTask.description}
@@ -504,7 +519,41 @@ Task({
   - **Dependencies**: External/internal dependencies
   - **Risks**: Potential issues or blockers
   - **Recommendations**: Suggested approach
+  Cite every fact as path:line, and every count with the command that produced it.
   `,
+});
+
+// New user-facing feature or capability only: Deep Researcher in parallel with the above
+Task({
+  subagent_type: roleType("deep-researcher"),
+  description: "Deep research for issue #123",
+  prompt: `Deep research for issue #${issueNumber}: ${issueTitle}.
+  Lenses: ${lenses}  // Product | Design | Capability, per the kind of work
+  Work to rubrics/deep-research-rubric.md, including every mandatory part (a) to (e).
+  Code facts: ${codebaseResearchReport ?? "list the code facts you still need"}.`,
+});
+
+// Second arm of dual-arm deep research: same brief, in parallel with the first arm
+Task({
+  subagent_type: roleType("deep-researcher-second"),
+  description: "Deep research (second arm) for issue #123",
+  prompt: deepResearchBrief, // identical to the first arm's brief
+});
+
+// After the reports return, when they feed the plan or a decision: one citation check per report
+Task({
+  subagent_type: roleType("citation-checker"),
+  description: "Citation check for issue #123",
+  prompt: `Check every citation in this report (MATCH / NEAR / WRONG / COUNT): ${report}`,
+});
+
+// Then one context check per report (codebase-researcher in its context check mode)
+Task({
+  subagent_type: roleType("codebase-researcher"),
+  description: "Context check for issue #123",
+  prompt: `Context check mode. For each MATCH or NEAR citation, read the cited lines and their
+  surrounding section; verdict SCOPE / ACTOR / TENSE / STRENGTH / OK, load-bearing claims first.
+  Report: ${report}  Citation check: ${citationCheck}`,
 });
 ```
 

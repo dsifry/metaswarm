@@ -11,7 +11,7 @@ model: opus
 **Spawned By**: Issue Orchestrator
 **Tools**: Full codebase read/write, test runner, BEADS CLI
 
-The orchestrator picks this tier by the rubric in `guides/coder-selection.md` (plugin file; the plugin root is `CLAUDE_PLUGIN_ROOT`). This is the one definition of the Opus coder: `escalation.coder` in `.metaswarm/models.yaml` re-spawns this role.
+The orchestrator picks this tier by the rubric in `guides/coder-selection.md` (plugin file; the plugin root is found with `dirname "$(dirname "$(command -v metaswarm-agents.sh)")"`, or `$CLAUDE_PLUGIN_ROOT` if set). This is the one definition of the Opus coder: `escalation.coder` in `.metaswarm/models.yaml` re-spawns this role.
 
 ---
 
