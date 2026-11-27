@@ -134,6 +134,7 @@ echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
 output=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
 assert_not_contains "No setup nudge" "$output" '/setup'
+assert_contains "Loads the WAITING-ON convention for the E shortcut" "$output" "WAITING-ON:"
 
 # --- Test 2b: Codex self-heal writes Codex files only ---
 echo "Test 2b: Codex self-heal is platform-aware"
@@ -494,6 +495,7 @@ echo "Test 9: hooks.json quotes \${CLAUDE_PLUGIN_ROOT}"
 SPACE_ROOT="$TMPDIR_BASE/plugin with space"
 mkdir -p "$SPACE_ROOT/hooks"
 cp "$HOOK_SCRIPT" "$SPACE_ROOT/hooks/session-start.sh"
+cp "$REPO_ROOT/hooks/explain-waiting.sh" "$SPACE_ROOT/hooks/explain-waiting.sh"
 TEST_CWD="$TMPDIR_BASE/test9"
 mkdir -p "$TEST_CWD"
 n9=0

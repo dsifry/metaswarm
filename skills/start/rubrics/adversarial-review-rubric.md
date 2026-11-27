@@ -6,6 +6,8 @@
 
 ---
 
+> **Security-critical work units:** also apply `security-implementation-rubric.md` and append its S1-S8 verdict block to the review.
+
 ## Overview
 
 This rubric is for **adversarial review** — a fundamentally different mode from collaborative code review. Your job is to **find failures**, not to help improve the code. You are checking whether the implementation meets its written contract (the spec and DoD items), not whether the code is "good."
@@ -48,7 +50,7 @@ Signal fields (see "Signal fields" in the guide) are added to the six core field
 
 ```text
 - theme: <short label>       # on every finding; reuse an earlier theme label when one fits
-- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it, or the fix is a requirement choice (see the guide)
 - origin: implementation | requirement | assumption   # blockers only
 - assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
 ```
@@ -132,6 +134,15 @@ The primary check. For each DoD item:
 | Tests cover error paths | WARNING | Happy path alone is insufficient for DoD items mentioning errors |
 | Tests don't test mock behavior | BLOCKING | Tests must exercise real logic, not just verify mocks were called |
 | Tests are deterministic | WARNING | No timing-dependent, order-dependent, or flaky patterns |
+
+**Required checks** (apply to every work unit):
+
+| Check | Classification | Criteria |
+| --- | --- | --- |
+| Sibling paths | BLOCKING if a sibling path is unhandled | For every fix or new behaviour, check the paths that handle the same data or event: replay or recovery after restart, resume, retry, rollback, restore. Why: an attachment fix covered live messages but not the restart replay |
+| Production wiring | BLOCKING if tests diverge from production | Tests exercise the production constants and wiring, not a hand-built config that differs from production. Why: a test set a concurrency limit of 1 while production used 2. A test of a supported non-default setting is fine when the production value is also tested |
+
+As with every blocker, `protects` must name the credible user scenario or requirement.
 
 ### 3. Type Safety (blocker threshold)
 

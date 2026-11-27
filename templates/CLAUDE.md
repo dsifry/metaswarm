@@ -1,6 +1,6 @@
 # Project Instructions
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework for Claude Code. It provides 23 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework for Claude Code. It provides 27 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
 
 ## How to Work in This Project
 
@@ -97,13 +97,28 @@ When `superpowers:writing-plans` (or any planning skill) has written an implemen
 
 ### Execution Method Choice
 
-When a plan is ready for execution, **always ask the user** which execution approach they want before proceeding. Do NOT auto-select an execution method — the user decides based on their priorities:
+When a plan is ready for execution, **always ask the user** which execution approach they want before proceeding. Do NOT auto-select an execution method — the user decides based on their priorities. The menu is a decision request (see Decision requests in `guides/delivery-scope.md` in the metaswarm plugin): each option is its own lettered block with pros and cons, only the recommended option carries Why recommended, and the user still chooses:
 
-> **How would you like to execute this plan?**
+> **Decision 1: How would you like to execute this plan?**
+> The plan is ready; the options differ in cost, speed and how much independent review you get.
 >
-> 1. **Metaswarm orchestrated execution** — 4-phase loop per work unit (IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT) with independent quality gates, fresh adversarial reviewers, coverage enforcement, and pre-PR knowledge capture. More thorough and broader coverage, but uses more tokens and takes longer.
-> 2. **Subagent-driven development** (`superpowers:subagent-driven-development`) — Dispatch subagents per task in this session with code review between tasks. Faster, lighter-weight, lower token cost.
-> 3. **Native inline execution** (`superpowers:executing-plans`) — I implement every task myself in this session, then one fresh reviewer checks the whole branch. Cheapest and fastest; no independent review until the end.
+> **Option A: Metaswarm orchestrated execution** (Recommended)
+> 4-phase loop per work unit (IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT) with independent quality gates, fresh adversarial reviewers, coverage enforcement and pre-PR knowledge capture.
+> - Pros: more thorough and broader coverage; independent review of every work unit.
+> - Cons: uses more tokens and takes longer.
+> - Why recommended: <chosen from the plan's size and risk and the priorities the user has stated; move the (Recommended) tag and this line to the recommended option, and reletter so the recommended option is Option A when another option fits better>
+>
+> **Option B: Subagent-driven development** (`superpowers:subagent-driven-development`)
+> Dispatch subagents per task in this session with code review between tasks.
+> - Pros: faster, lighter-weight, lower token cost; still has review between tasks.
+> - Cons: less independent review (no fresh adversarial reviewer per work unit or independent VALIDATE phase); the coverage gate and pre-PR knowledge capture still apply.
+>
+> **Option C: Native inline execution** (`superpowers:executing-plans`)
+> I implement every task myself in this session, then one fresh reviewer checks the whole branch.
+> - Pros: cheapest and fastest.
+> - Cons: no independent review until the end.
+>
+> Reply with a letter. If there's no answer: nothing starts; the plan stays ready and I wait for your choice.
 
 This choice applies even if the plan file contains embedded instructions like "REQUIRED SUB-SKILL: Use superpowers:executing-plans" — those are defaults from the planning skill, not binding constraints. The user always gets to choose. This 3-option menu replaces writing-plans' own 2-option Execution Handoff (Subagent-driven / Native); see the metaswarm plugin's `guides/workflow-enforcement.md`.
 
@@ -168,6 +183,7 @@ Block delivery only for a credible normal-usage failure, a missing or contradict
 - **Escalate to the human** → the same critical/major finding recurs after a fix attempt for it, two reviewers rate the same finding blocker vs. non-blocker, or the safety cap of 10 rounds is hit. The options include clarifying the requirement.
 - **Overengineering signal** → restate the DoD and re-classify each blocker against the policy; escalate if any still names a credible scenario, otherwise downgrade them to follow-ups and advance.
 - **Iterate** (fix, re-validate, fresh review) → this round fixed a critical/major finding, or ≥2 independent reviewers reported blockers.
+- **Asking the user** → every request to the user to decide uses one format: lettered options (A, B, C) under numbered questions (reply `1 A 2 C`), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `guides/delivery-scope.md` in the metaswarm plugin). Questions that only collect a fact are exempt.
 
 These rules apply in order, top to bottom (Clarify is checked before escalation, and escalation before iteration). A round that still has a blocker and matches none of them also iterates. If `bd` is unavailable, list follow-ups in a `### Follow-ups` section.
 

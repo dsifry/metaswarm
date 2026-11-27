@@ -20,7 +20,7 @@ This skill defines a generalized 4-phase execution loop that any orchestrator ca
 
 This skill is mode-agnostic — the 4-phase execution loop works identically in both Task Mode and Team Mode. The differences:
 
-- **Phase 1 (IMPLEMENT)**: In Team Mode, the coding subagent may be a persistent teammate (retains context across work units). In Task Mode, it's a fresh `Task()` per work unit. Role type: `roleType("coder")`.
+- **Phase 1 (IMPLEMENT)**: In both modes, the coding subagent is a fresh `Task()` per work unit, and each review-fix round spawns a FRESH coder of the chosen tier with a complete fix brief. A coder is never resumed for a new round. The only exception is messaging an old agent to resend a lost report. Role type: `roleType("coder")` by default; `roleType("mechanical-coder")` or `roleType("supercoder")` per [Coder Selection](./guides/coder-selection.md). A security-critical work unit uses `roleType("security-coder")`, which takes precedence over `supercoder`.
 - **Phase 3 (ADVERSARIAL REVIEW)**: ALWAYS a fresh `Task()` instance (`roleType("adversarial-reviewer")`) in BOTH modes. Never a teammate, never resumed.
 - **All quality gates**: Unchanged regardless of mode.
 
@@ -31,6 +31,18 @@ See `./guides/agent-coordination.md` for full mode detection and coordination de
 ## Plan Review Gate
 
 After drafting an implementation plan (Step 1: Plan Validation), submit it to the **Plan Review Gate** before writing-plans presents the plan (or before you present it to the user); see [`./guides/workflow-enforcement.md`](./guides/workflow-enforcement.md). In full orchestration there is no separate design doc, so after the Plan Review Gate passes the plan goes to the Design Review Gate ([two pipelines](./guides/workflow-enforcement.md#two-pipelines)). The Plan Review Gate spawns 3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment) — all must PASS. See `skills/plan-review-gate/SKILL.md` for details.
+
+---
+
+## Blocker Graph Before Any Date
+
+Before giving the user any milestone date or estimate, the orchestrator MUST:
+
+1. Walk the full transitive graph of open dependencies of that milestone (for example with `bd dep` / `bd show`), not just the next one or two units.
+2. List every pending or unwired placeholder in the code that the milestone needs.
+3. Sum the plan's estimates over everything found in steps 1 and 2.
+
+State the date together with the blockers it rests on. Why: a milestone date was given from the next one or two units and was wrong twice.
 
 ---
 
@@ -198,9 +210,10 @@ The coding subagent executes against the work unit spec.
 
 **Orchestrator actions:**
 
-1. Spawn a coding subagent (role type `roleType("coder")`) with the work unit spec, DoD items, file scope, and the **Project Context Document**
-2. The subagent implements the change following TDD (test first, then implementation)
-3. The subagent reports completion — **but the orchestrator does NOT trust this report**
+1. Choose the coder tier with the rubric in [`./guides/coder-selection.md`](./guides/coder-selection.md): `roleType("mechanical-coder")` only when every mechanical condition holds, `roleType("supercoder")` when any super condition holds, otherwise `roleType("coder")` (when unsure, `coder`). `roleType("security-coder")` when any security-coder condition holds; it takes precedence over `supercoder`. A debugger condition in the rubric (a recurrence, a flaky or racy failure, a cross-component failure nobody can place, or a coder BLOCKED on "can't find why") sends `roleType("debugger")` first, with one narrow question; its fix design then goes to a fresh coder of the tier the rubric picks, and a debugger condition takes precedence over supercoder escalation until the root cause is known
+2. Spawn a coding subagent (role type `roleType("coder")` unless the rubric chose another tier) with the work unit spec, DoD items, file scope, and the **Project Context Document**
+3. The subagent implements the change following TDD (test first, then implementation)
+4. The subagent reports completion — **but the orchestrator does NOT trust this report**
 
 **Subagent spawn template** (role type `roleType("coder")`):
 
@@ -219,11 +232,16 @@ You may ONLY modify these files: ${fileScope.join(', ')}
 ## Project Context
 ${projectContext}
 
+## Gate Commands
+${gateCommands.join('\n')}
+(The exact commands for the files in scope: tests, type check, lint, and project registration gates such as lint allow-lists, service inventories and CI gate tables.)
+
 ## Rules
 - Follow TDD: write failing test first, then implement to make it pass
 - Do NOT modify files outside your file scope
 - Do NOT self-certify — the orchestrator will validate independently
 - When complete, report what you changed and what tests you added
+- Run EVERY gate command above and paste the raw last lines of each into your hand-back. "Passes" without pasted output is not a hand-back
 - NEVER use --no-verify on git commits — pre-commit hooks are mandatory
 - NEVER use git push --force
 - NEVER suppress linter/type errors with eslint-disable, @ts-ignore, or as any
@@ -319,7 +337,7 @@ Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
 - evidence: <file:line or expected-vs-found>
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
 - theme: <short label>       # on every finding; reuse an earlier theme label when one fits
-- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it, or the fix is a requirement choice (see the guide)
 - origin: implementation | requirement | assumption   # blockers only
 - assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
 
@@ -333,11 +351,15 @@ ${confirmedAnswers}
 
 ## Rules
 - Check EACH DoD item. Cite file:line evidence for PASS or expected-vs-found for FAIL.
+- Required check, sibling paths: for every fix or new behaviour, check the paths that handle the same data or event (replay or recovery after restart, resume, retry, rollback, restore).
+- Required check, production wiring: tests must exercise the production constants and wiring, not a hand-built config that differs from production.
 - Any `blocker: yes` finding means overall FAIL. A critical or major finding without `protects` is advisory (`blocker: no`).
 - You have NO context from previous reviews. Judge fresh.
 - Report every finding with the 6 fields; minor/nit findings are recorded as follow-ups, not suggestions.
 - Do not mark `needs_user` when the Confirmed section (the Confirmed Answers above) already answers the question. Add `theme` to every finding and the other signal fields to each blocker.
 ```
+
+**Security work units.** When the work unit meets any `security-coder` condition in [Coder Selection](./guides/coder-selection.md) (whichever tier built it, including a `supercoder` fallback), or touches a security boundary, the reviewer brief also names `./rubrics/security-implementation-rubric.md` (when review is routed to external tools, see Review in `skills/external-tools/SKILL.md`: the same rubric goes with the spec and the S1-S8 block is required in the result) (add a line `Also read and follow: ./rubrics/security-implementation-rubric.md` under Rubric), and the review appends the S1-S8 verdict block defined there.
 
 **Phase 3 outcomes:**
 
@@ -436,18 +458,28 @@ after each review round (round = 1, 2, ...):
 - **Follow-ups.** Minor/nit findings never block. When `bd` is available, file each as a BEADS task (`bd create --type task`) linked to the work unit. Otherwise, or if `bd create` fails, list them under a `### Follow-ups` heading in the work unit's report; the PR body carries them (see 8.5).
 - **Clarify (line 2).** A Clarify signal (C1–C4, see [Clarify signals](./guides/delivery-scope.md#clarify-signals)) is a stop, not an escalation. Run the misunderstanding analysis and send the Clarification report from the [Clarify section](./guides/delivery-scope.md#clarify) of the guide, then wait for the user. Mark the BEADS task for this work waiting on the user (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), and set `status: clarify-pending` with `pendingClarify` in the history file. Line 2 never uses the escalation report; the Clarification report's options are in the guide and none of them approves.
 - **Round history.** Keep the round history and write it after every round to `.beads/context/review-history/orchestrated-execution-<slug>-<occurrence>.json` (the format, the `status` lifecycle and `pendingClarify` are in the guide's Round history section). `<occurrence>` is the next free integer for that gate and slug, starting at 1. For this gate the slug is `<plan-slug>-<wu-id>`, so the file is `orchestrated-execution-<plan-slug>-<wu-id>-<occurrence>.json`. `<plan-slug>` is the issue number or a short slug of the title in the `# Plan:` heading of `.beads/plans/active-plan.md` (for example `103`), so different issues do not collide. Store the artifact path (here `.beads/plans/active-plan.md#<wu-id>`) in the file, set `reviewers` to 1, and use stable role names as reviewer labels.
-- **After each round, before the rule.** First set `fix_induced` on each new blocker that matches the `lastFix` stored before this round's review (the changes made since the previous review). Then map each blocker's `theme` to a `canonicalTheme`, and merge duplicate blockers (the same canonical theme and the same defect) by setting `mergedInto` on each duplicate. Run the rule. When you then fix the blockers, overwrite `lastFix` with that fix before the next review.
+- **After each round, before the rule.** First set `fix_induced` on each new blocker that matches the `lastFix` stored before this round's review (the changes made since the previous review). Then map each blocker's `theme` to a `canonicalTheme`, and merge duplicate blockers (the same canonical theme and the same defect) by setting `mergedInto` on each duplicate. Then classify requirement choices: check every blocker against the requirement choice definition in the guide's Signal fields, and for each one set `needs_user: yes`, `origin: requirement` and `classifiedBy: orchestrator` on the recorded finding, even when the reviewer said no, so C1 fires this round. Remove any `assumption` id from a finding you reclassify this way (record an unconfirmed assumption as its own `origin: assumption` finding). Before running the helper, check that a new requirement-choice blocker's canonical theme is not already in `ackFindings` unless it re-asks the same answered question; if it is a different question, give it a new canonical theme. The Clarification report gives the options with pros and cons and a recommended default; questions never block independent work. Run the rule. When you then fix the blockers, overwrite `lastFix` with that fix before the next review.
 - **Themes.** From round 2 on, give each fresh reviewer the earlier canonical theme labels (labels only, never the findings) and ask it to reuse one when it fits.
 - **Helper.** Set `HISTORY` to the review-history file path, then run the rule with `RR=lib/review-rule.js; { [ -f ./lib/review-rule.js ] && grep -q '"name": *"metaswarm"' package.json 2>/dev/null; } || { RR="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$(command -v metaswarm-agents.sh 2>/dev/null)")")}/lib/review-rule.js"; [ -f "$RR" ] || RR=lib/review-rule.js; }; node "$RR" "$HISTORY"` (HISTORY is the path of the review-history file, for example `HISTORY=.beads/context/review-history/<file>.json`). It prints `{line, action, signals, capHit}`. Recurring or disputed (line 4) and overengineering (line 5) need your judgement, so set the round's `recurring`, `disputed` and `overengineering` flags first. If the path does not resolve or Node is unavailable, apply the rule by hand. On exit 2, fix the history file and run it again.
 
 When the rule says iterate:
 
-1. Fix every `blocker: yes` finding identified by the reviewer
+1. Fix every `blocker: yes` finding identified by the reviewer. Choose the coder tier for the round with [`./guides/coder-selection.md`](./guides/coder-selection.md) and spawn a **FRESH** coder of that tier (`roleType("coder")`, `roleType("supercoder")`, `roleType("security-coder")` or `roleType("mechanical-coder")`) with a complete fix brief. Never resume the previous coder for a new round. The only exception is messaging an old agent to resend a lost report. Never step down a tier within a round. If a debugger condition in the rubric holds (recurrence or C4, a flaky or racy failure, tests pass but the integrated system fails, a cross-component failure, or a coder BLOCKED on "can't find why"), spawn `roleType("debugger")` first with one narrow question and give its fix design to the fresh coder; the debugger takes precedence over supercoder escalation until the root cause is known. If the coder STOPs on a requirement choice instead of finishing, that is a Clarify stop: record it as a `needs_user: yes`, `origin: requirement` blocker, send the Clarification report with the options, pros, cons and recommended default, mark the work unit waiting on the user, and do not spawn another coder for that question until the user answers.
 2. Re-run Phase 2 (VALIDATE) — ALL quality gates, not just the one that failed
 3. **MANDATORY**: Spawn a NEW adversarial reviewer (role type `roleType("adversarial-reviewer")`, fresh instance, no memory of previous review)
 4. Only COMMIT after the fresh reviewer returns PASS, or rule line 5 downgraded every remaining blocker to a follow-up
 5. Apply the severity rule after every round; stop and Clarify when it says clarify, and ESCALATE to human when it says escalate (at most 10 rounds)
-6. **Coder model escalation**: after `escalation.coder.after_failures` failed VALIDATE attempts (default 2, read from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default (the `coder` role's `sonnet`).
+6. **Coder escalation**: after `escalation.coder.after_failures` failed VALIDATE attempts (default 2, read from `.metaswarm/models.yaml`), re-spawn with `roleType("supercoder")`. The `supercoder` role is the one definition of the Opus coder; its model comes from `roles.supercoder.claude` in `.metaswarm/models.yaml` (default `opus`). `escalation.coder.claude` is still honoured as the `supercoder` model when `roles.supercoder.claude` is not set. There is no per-call `model` override on `coder`. Escalation of a security-critical work unit goes to `roleType("security-coder")` instead; everything else stays `supercoder`.
+
+**Fix-brief checklist.** Every fix-round spawn (and every tier change) gets a complete brief, because the fresh coder has no memory of earlier rounds:
+
+- the work-unit contract as file pointers (spec, DoD, file scope, Project Context Document);
+- the start SHA (the commit the fix round starts from);
+- the blocker findings verbatim, each with the fix design;
+- the minors (non-blocking findings to fix if cheap, or leave as follow-ups);
+- the validation commands to run;
+- a standing rule: if the fix requires a requirement choice the brief does not settle, STOP and report the choice as options with pros/cons and a recommendation. Do not pick silently.
+- if the round is a C4 class closure, the brief follows [C4 and class closure](./guides/delivery-scope.md#clarify): the class named in one sentence, every instance listed, a structural test with a negative test, and a hunt for further members reported source by source.
 
 Track each round visibly: "Review round 1/10", "Review round 2/10", etc.
 
@@ -472,13 +504,38 @@ When the rule says clarify (line 2), use the Clarification report from the [Clar
 | 3     | FAIL    | 0 / 1                     | 0 / 0            | —               | <theme-a>, <theme-c> | 4: escalate (recurring) |
 
 ### Options
-1. **Revise** — fix the remaining blockers (or the requirement they protect), then run a fresh review round
-2. **Narrow scope** — move the contentious items to a new issue, then run a fresh review round on what remains
-3. **Defer** — shelve this work for later; nothing advances
-4. **Cancel** — abandon this work
-5. **Clarify the requirement / re-brainstorm** — answer the open questions about the requirement; a new gate occurrence starts
+Use the decision-request format (see Decision requests in `delivery-scope.md`): mark exactly one option (Recommended) and give only that option a Why recommended line.
 
-**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason from the rule>
+**Decision 1: <what must be decided>**
+<one or two lines of context>
+
+**Option A: Revise** (Recommended)
+fix the remaining blockers (or the requirement they protect), then run a fresh review round
+- Pros: <pros>
+- Cons: <cons>
+- Why recommended: <reason from the rule, tied to the user's goals or constraints>
+
+**Option B: Narrow scope**
+move the contentious items to a new issue, then run a fresh review round on what remains
+- Pros: <pros>
+- Cons: <cons>
+
+**Option C: Defer**
+shelve this work for later; nothing advances
+- Pros: <pros>
+- Cons: <cons>
+
+**Option D: Cancel**
+abandon this work
+- Pros: <pros>
+- Cons: <cons>
+
+**Option E: Clarify the requirement / re-brainstorm**
+answer the open questions about the requirement; a new gate occurrence starts
+- Pros: <pros>
+- Cons: <cons>
+
+Reply with the decision number and a letter, like `1 A` (option E is `1 E`; a bare `E` is the explain shortcut). If there's no answer: nothing advances; the gate stays escalated and the work waits.
 ```
 
 ### What the Orchestrator MUST NOT Do
@@ -871,7 +928,7 @@ For fixable and ambiguous VALIDATE failures:
 2. **Attempt 2**: If same failure, try alternative approach
 3. **Attempt 3**: If still failing, gather all evidence for escalation
 
-**Model escalation (coder).** Retrying alone never changes the model. After `escalation.coder.after_failures` failed VALIDATE attempts (default 2, from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default, so the escalated attempt runs on `opus` while earlier attempts ran on the coder's configured model.
+**Coder escalation.** Retrying alone never changes the model. After `escalation.coder.after_failures` failed VALIDATE attempts (default 2, from `.metaswarm/models.yaml`), re-spawn a fresh coder with `roleType("supercoder")`, the one definition of the Opus coder (model from `roles.supercoder.claude`, default `opus`). `escalation.coder.claude` is still honoured as the `supercoder` model when `roles.supercoder.claude` is not set. Escalation of a security-critical work unit re-spawns `roleType("security-coder")` instead; everything else stays `supercoder`. See [Coder Selection](./guides/coder-selection.md) for the full rubric, including when a `mechanical-coder` attempt moves up to `coder`.
 
 Track VALIDATE attempts with labels, and remove the `retry:N` label when VALIDATE passes (review rounds are tracked in `.beads/context/execution-state.md`, not labels):
 
@@ -897,12 +954,28 @@ After 3 failed VALIDATE attempts, escalate to human with full context:
 <best understanding of why this keeps failing>
 
 ### Options
-1. <option-1>
-2. <option-2>
-3. Abandon this work unit and restructure
+Use the decision-request format (see Decision requests in `./guides/delivery-scope.md`): mark exactly one option (Recommended) and give only that option a Why recommended line.
 
-### Recommendation
-<which option and why>
+**Decision 1: <what must be decided>**
+<one or two lines of context>
+
+**Option A: <option-a>** (Recommended)
+<what it does, in one line>
+- Pros: <pros>
+- Cons: <cons>
+- Why recommended: <why, tied to the user's goals or constraints>
+
+**Option B: <option-b>**
+<what it does, in one line>
+- Pros: <pros>
+- Cons: <cons>
+
+**Option C: Abandon this work unit and restructure**
+<what it does, in one line>
+- Pros: <pros>
+- Cons: <cons>
+
+Reply with the decision number and a letter, like `1 A`. If there's no answer: the work unit stays blocked and nothing else on it proceeds.
 ```
 
 ---

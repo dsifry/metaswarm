@@ -2,7 +2,7 @@
 
 ## Agents
 
-metaswarm provides 23 agents, each with a defined role in the software development lifecycle.
+metaswarm provides 27 agents, each with a defined role in the software development lifecycle.
 
 ### Orchestration Agents
 
@@ -31,7 +31,13 @@ metaswarm provides 23 agents, each with a defined role in the software developme
 | Agent | File | Role |
 |---|---|---|
 | **Coder** | `agents/coder.md` | TDD implementation (RED-GREEN-REFACTOR). 100% coverage required. |
+| **Mechanical Coder** | `agents/mechanical-coder.md` | Haiku. Small, fully specified, behaviour-preserving edits only (test expectations, fixtures, generated files, citations, comments, specified renames). Stops and reports "needs coder" if the brief needs a design decision or a production behaviour change. |
+| **Supercoder** | `agents/supercoder.md` | Opus. Particularly hard work units (security boundaries, concurrency, crypto or auth, cross-component protocols, fix-induced or repeated review blockers, coder escalation). Same TDD rules as Coder. |
+| **Security Coder** | `agents/security-coder.md` | Fable. Security-critical work units (trust boundaries, keys and signatures, tokens and secrets, auth, isolation, security fixes). Mutation-proves its rejection tests and is reviewed with `rubrics/security-implementation-rubric.md`. |
+| **Debugger** | `agents/debugger.md` | Fable. Root-cause investigation of tricky bugs (recurring, flaky, race, integrated-only, cross-component). Read-only on the repo, scratch-directory probes only; returns root cause with evidence, bug class, a structural test and a complete fix design for a coder. Never implements. |
 | **Test Automator** | `agents/test-automator-agent.md` | Test generation and coverage enforcement. |
+
+The orchestrator picks the tier with [`guides/coder-selection.md`](guides/coder-selection.md): `mechanical-coder` only when every mechanical condition holds, `supercoder` when any hard condition holds, `security-coder` when any security condition holds (it takes precedence over `supercoder`), otherwise `coder` (when unsure, `coder`). The `escalation.coder` keys in `.metaswarm/models.yaml` still work: after `escalation.coder.after_failures` failed VALIDATE attempts the orchestrator re-spawns a fresh `supercoder`, and `escalation.coder.claude` is its Claude model unless `roles.supercoder.claude` is set. Each review-fix round spawns a fresh coder with a complete fix brief; a coder is never resumed for a new round. See the rubric for when to use the `debugger` first. An existing project that sets `escalation.coder.claude` must run `/update` (or `/setup`) once so the project's `metaswarm-supercoder` agent is generated; until then the plugin's `supercoder` and its `opus` model are used.
 
 ### Review Agents
 
@@ -219,6 +225,7 @@ Prerequisites: `npx playwright install chromium`
 |---|---|
 | `/start-task <id>` | Begin a BEADS-tracked task with full workflow |
 | `/start` | Alias for `/start-task` |
+| `E` (just the letter) | Claude Code only: explains the next item the agent is waiting on you for (`YOU:` items in its `WAITING-ON:` line), one per press. See `guides/waiting-on.md` |
 | `/setup` | Interactive project setup — detects language, framework, test runner, and configures everything |
 | `/update` | Update metaswarm plugin to latest version |
 | `/metaswarm:status` | Run 12 diagnostic checks on your installation |
@@ -391,6 +398,7 @@ Quality standards used by review agents:
 | `test-coverage-rubric.md` | Test Automator | Coverage, edge cases, mock quality |
 | `external-tool-review-rubric.md` | Cross-model adversarial reviewers | Binary PASS/FAIL for cross-model review, file:line evidence |
 | `release-engineering-rubric.md` | Release Engineer | Safe delivery from merge through production verification |
+| `security-implementation-rubric.md` | Adversarial Reviewer (security-critical work units) | S1-S8: trust anchor, binding and replay, fail closed, one verification path, secrets, inverses, hostile inputs, tests that prove the mechanism |
 
 ## Scripts
 

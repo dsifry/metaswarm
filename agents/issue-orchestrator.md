@@ -69,7 +69,7 @@ When Team tools are available:
 2. **Spawn specialists as named teammates**:
    - `researcher` (type `roleType("researcher")`) — persistent across research phase
    - `architect` (type `roleType("planner")`) — persistent across planning phase
-   - `coder` (type `roleType("coder")`) — **persistent across work units** (retains context from WU-001 → WU-002, no cold start)
+   - `coder` (type: the role of the tier the rubric picks, one of `roleType("mechanical-coder")`, `roleType("coder")`, `roleType("supercoder")` or `roleType("security-coder")`) — **fresh instance per work unit and per review-fix round**, chosen by tier (see [coder selection](../guides/coder-selection.md)); `roleType("debugger")` is spawned first, with one narrow question, when a debugger condition in that rubric holds, and its fix design goes to a fresh coder of the tier the rubric picks
    - `shepherd` (type `roleType("pr-shepherd-agent")`) — persistent through PR lifecycle, sends async status updates via `SendMessage`
 3. **Direct handoffs**: Researcher sends findings directly to architect via `SendMessage` (no orchestrator bottleneck)
 4. **Async updates**: Teammates report progress via `SendMessage`; orchestrator receives and coordinates
@@ -129,7 +129,12 @@ bd dep add <plan-task> <research-task>
 # 7. Spawn Architect Agent for planning (role type roleType("planner"))
 #    The plan must carry an "Assumptions (unconfirmed)" section (ids A1, A2, ...) and a "Confirmed" section
 #    (what the user confirmed, in the user's words). Never label an agent proposal as a user decision.
-# Wait for plan output
+# Wait for plan output. If the planner instead STOPs on a requirement choice, that is a Clarify stop,
+#   not plan output: post the choice as a Clarification report (decision request: options, pros, cons,
+#   recommendation), mark the planning task waiting on the user (bd label add <plan-task> waiting:human),
+#   do NOT run the Plan Review Gate, and when the user answers record it in the plan's Confirmed section
+#   and resume planning with the same planner (restate the answer in your own words and get it
+#   confirmed before it goes in Confirmed).
 
 # 8. Plan Review Gate (blocked by planning): run the plan-review-gate skill
 #    3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment),
@@ -299,7 +304,7 @@ Report every finding with the 6 fields defined in `guides/delivery-scope.md`:
 - blocker: yes | no      # yes only if severity ∈ {critical, major} AND protects is non-empty
 Also report the signal fields (the guide defines them):
 - theme: <short label>       # on every finding; reuse an earlier theme label when one fits
-- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it, or the fix is a requirement choice (see the guide)
 - origin: implementation | requirement | assumption   # blockers only
 - assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
 
@@ -579,6 +584,8 @@ Stop for the user (not an escalation) when:
 
 ### Escalation Format
 
+**Every ask to the user uses the decision-request format**: lettered options (A, B, C) under numbered questions (reply `1 A 2 C`), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `guides/delivery-scope.md`). The Agent Request below, the Clarification report and the Review Escalation report all use those option blocks. Questions that only collect a fact are exempt.
+
 **Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), still mark the task waiting (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), then post the Review Escalation report from the Escalation template in `guides/delivery-scope.md` instead. Its options are **Revise**, **Clarify the requirement / re-brainstorm**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. There is no `@beads approve` for an escalated review gate: escalation never approves.
 
 **A Clarify signal (rule line 2) is a stop, not an escalation.** Run the misunderstanding analysis, post the Clarification report from the Clarify section of `guides/delivery-scope.md`, mark the task waiting the same way, and wait for the user.
@@ -599,18 +606,23 @@ gh issue comment <number> --body "$(cat <<'EOF'
 ## Agent Request: <type>
 
 **Task**: <task-id>
-**Question**: <clear question>
+**Decision 1**: <clear question>
 
 ### Options
-1. **Option A**: <description>
-   - Pros: ...
-   - Cons: ...
-2. **Option B**: <description>
-   - Pros: ...
-   - Cons: ...
+Every ask to the user uses the decision-request format (see Decision requests in `guides/delivery-scope.md`): lettered options A, B, C (never numbers), each with pros and cons, and Why recommended on the recommended option only.
 
-### Agent Recommendation
-<which option and why>
+**Option A: <name>** (Recommended)
+<one line on what it does>
+- Pros: ...
+- Cons: ...
+- Why recommended: <tied to the user's goals or constraints>
+
+**Option B: <name>**
+<one line on what it does>
+- Pros: ...
+- Cons: ...
+
+Reply with the decision number and a letter, like `1 A`. If there's no answer: <what proceeds meanwhile, and what waits>.
 
 ---
 Reply with: `@beads approve <task-id>` or `@beads respond <task-id> <option>`

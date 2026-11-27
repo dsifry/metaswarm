@@ -120,11 +120,11 @@ else
 fi
 
 # 9. Host reference files document role types (#53)
-ROLES="design-reviewer plan-reviewer adversarial-reviewer planner researcher coder pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent"
+ROLES="design-reviewer plan-reviewer adversarial-reviewer planner researcher mechanical-coder coder supercoder debugger security-coder pr-shepherd-agent knowledge-curator-agent issue-orchestrator swarm-coordinator-agent"
 for ref in codex-tools opencode-tools cursor-tools platform-adaptation; do
   f="$ROOT/skills/start/references/$ref.md"
   for role in $ROLES; do
-    if grep -q "$role" "$f" 2>/dev/null; then
+    if grep -qE "(^|[^A-Za-z-])${role}([^A-Za-z-]|\$)" "$f" 2>/dev/null; then
       pass "$ref.md mentions role $role"
     else
       fail "$ref.md does not mention role $role"

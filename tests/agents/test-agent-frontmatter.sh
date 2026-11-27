@@ -28,7 +28,11 @@ ROSTER="design-reviewer|opus|$RO
 plan-reviewer|opus|$RO
 researcher|sonnet|$RO
 planner|opus|-
+mechanical-coder|haiku|-
 coder|sonnet|-
+supercoder|opus|-
+debugger|fable|-
+security-coder|fable|-
 adversarial-reviewer|opus|$RO
 pr-shepherd-agent|sonnet|-
 knowledge-curator-agent|sonnet|-

@@ -8,7 +8,7 @@
 # Can be sourced: resolve_role_model <role> <host> prints the configured model.
 # Bash 3.2 compatible (no associative arrays, no mapfile).
 
-ROLES="design-reviewer plan-reviewer researcher planner coder adversarial-reviewer pr-shepherd-agent knowledge-curator-agent"
+ROLES="design-reviewer plan-reviewer researcher planner mechanical-coder coder supercoder debugger security-coder adversarial-reviewer pr-shepherd-agent knowledge-curator-agent"
 HEADER_RE='^<!-- generated-by: metaswarm '
 
 # --- Locate plugin root, project root, version ---
@@ -114,13 +114,22 @@ cfg_get() { printf '%s' "$MS_CFG" | sed -n "s/^$1=//p" | head -1; }
 
 plugin_field() { sed -n "s/^$2: //p" "$MS_PLUGIN/agents/$1.md" | head -1; }
 
+# claude_model <role>: roles.<role>.claude, else (supercoder only) the legacy
+# escalation.coder.claude key, else empty. Needs parse_models to have run.
+claude_model() {
+  local m
+  m="$(cfg_get "roles.$1.claude")"
+  if [ -z "$m" ] && [ "$1" = supercoder ]; then m="$(cfg_get "escalation.coder.claude")"; fi
+  printf '%s' "$m"
+}
+
 # resolve_role_model <role> <host>: configured model, else the plugin default
 # (agents/<role>.md frontmatter for claude; empty for codex/gemini = adapter built-in).
 resolve_role_model() {
   local m
   init_env
   parse_models
-  m="$(cfg_get "roles.$1.$2")"
+  if [ "$2" = claude ]; then m="$(claude_model "$1")"; else m="$(cfg_get "roles.$1.$2")"; fi
   if [ -z "$m" ] && [ "$2" = claude ]; then m="$(plugin_field "$1" model)"; fi
   [ -z "$m" ] || echo "$m"
 }
@@ -130,7 +139,7 @@ resolve_role_model() {
 # render <role>: write the full generated file to stdout
 render() {
   local role="$1" model tmp hash
-  model="$(cfg_get "roles.$role.claude")"
+  model="$(claude_model "$role")"
   tmp="$(mktemp)"
   awk -v name="metaswarm-$role" -v model="$model" '
     /^---$/ { print; if (++dashes == 2) exit; next }

@@ -541,6 +541,8 @@ Follow the workflow phases exactly as specified.`,
 
 ### How to Escalate
 
+**Every ask to the user uses the decision-request format**: lettered options (A, B, C) under numbered questions (reply `1 A 2 C`), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `./guides/delivery-scope.md`). The Agent Request below, the Clarification report and the Review Escalation report all use those option blocks. Questions that only collect a fact are exempt.
+
 **Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), still mark the task waiting (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), then post the Review Escalation report from the Escalation template in `./guides/delivery-scope.md` instead. Its options are **Revise**, **Clarify the requirement / re-brainstorm**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. A Clarify signal (rule line 2) uses the Clarification report from the Clarify section of the same guide instead: run the misunderstanding analysis first, then wait for the user's answer. "Keep going" never defaults a `needs_user` question. There is no `@beads approve` for an escalated review gate: escalation never approves, and a Clarification never approves either.
 
 For triggers 1-4:
@@ -555,14 +557,23 @@ gh issue comment <number> --body "$(cat <<'EOF'
 ## 🤖 Agent Request: <type>
 
 **Task**: <task-id>
-**Question**: <clear question>
+**Decision 1**: <clear question>
 
 ### Options
-1. **Option A**: <description>
-2. **Option B**: <description>
+Every ask to the user uses the decision-request format (see Decision requests in `./guides/delivery-scope.md`): lettered options A, B, C (never numbers), each with pros and cons, and Why recommended on the recommended option only.
 
-### Agent Recommendation
-<recommendation>
+**Option A: <name>** (Recommended)
+<one line on what it does>
+- Pros: ...
+- Cons: ...
+- Why recommended: <tied to the user's goals or constraints>
+
+**Option B: <name>**
+<one line on what it does>
+- Pros: ...
+- Cons: ...
+
+Reply with the decision number and a letter, like `1 A`. If there's no answer: <what proceeds meanwhile, and what waits>.
 
 ---
 Reply: `@beads approve <task-id>` or `@beads respond <task-id> <option>`

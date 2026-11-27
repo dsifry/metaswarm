@@ -313,7 +313,7 @@ PROMPT_TEMPLATE
    - evidence: file:line reference(s), or expected-vs-found
    - blocker: yes | no (yes only if severity is critical or major AND protects is non-empty)
    - theme: <short label> (every finding)
-   - needs_user: yes | no (blockers only: yes only if just the user can answer it)
+   - needs_user: yes | no (blockers only: yes only if just the user can answer it, or the fix is a requirement choice (see the guide))
    - origin: implementation | requirement | assumption (blockers only)
    - assumption: <ledger id such as A3, or a quoted decision> (when origin is assumption)
    A critical or major finding without protects is advisory: report it with blocker: no.

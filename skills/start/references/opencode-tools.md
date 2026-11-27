@@ -10,7 +10,7 @@ Implementation deferred — see `docs/plans/2026-02-26-plugin-migration-design.m
 
 ## Role types on this host
 
-metaswarm spawn sites name a phase role through `roleType`. Roster: `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner`, `researcher`, `coder`, `pr-shepherd-agent`, `knowledge-curator-agent`, `issue-orchestrator`, `swarm-coordinator-agent`.
+metaswarm spawn sites name a phase role through `roleType`. Roster: `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner`, `researcher`, `mechanical-coder`, `coder`, `supercoder`, `debugger`, `security-coder`, `pr-shepherd-agent`, `knowledge-curator-agent`, `issue-orchestrator`, `swarm-coordinator-agent`.
 
 | Role | Host mechanism | Model source |
 |---|---|---|

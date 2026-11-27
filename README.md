@@ -1,12 +1,12 @@
 # metaswarm
 
-A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 23 AI agents and 14 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
+A self-improving multi-agent orchestration framework for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Gemini CLI, and Codex CLI. Coordinate 27 AI agents and 14 orchestration skills through a complete software development lifecycle, from issue to merged PR, with recursive orchestration, parallel review gates, and a git-native knowledge base.
 
 ## What Is This?
 
 metaswarm is an extraction of a production-tested agentic orchestration system. It has been proven in the field writing production-level code with 100% test coverage, mandatory TDD, multi-reviewed spec-driven development, and SDLC best practices across hundreds of PRs. It provides:
 
-- **23 agents: phase agents and specialized personas** (Researcher, Architect, Coder, Security Auditor, PR Shepherd, etc.)
+- **27 agents: phase agents and specialized personas** (Researcher, Architect, Coder, Security Auditor, PR Shepherd, etc.)
 - **A structured 9-phase workflow**: Research → Plan (with its Plan Review Gate) → Design Review Gate → Work Unit Decomposition → Orchestrated Execution → Final Review → PR Creation → PR Shepherd → Closure & Learning
 - **4-Phase Orchestrated Execution Loop**: Each work unit runs through IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT. The orchestrator validates independently (never trusts subagent self-reports), and adversarial reviewers check DoD compliance with file:line evidence
 - **Parallel Design Review Gate**: 6 specialist agents (PM, Architect, Designer, Security, UX Reviewer, CTO) review in parallel; severity-gated iteration (only `blocker: yes` findings re-run the gate, cap 10 rounds) before human escalation
@@ -72,10 +72,11 @@ metaswarm/
 │   ├── install.sh            # Codex CLI install script
 │   └── README.md             # Codex CLI usage guide
 ├── hooks/
-│   ├── hooks.json            # SessionStart + PreCompact hook definitions
-│   └── session-start.sh      # Context priming (platform-aware)
+│   ├── hooks.json            # SessionStart + PreCompact + UserPromptSubmit hook definitions
+│   ├── session-start.sh      # Context priming (platform-aware)
+│   └── explain-waiting.sh    # Typing just "E" explains what is waiting on you
 ├── skills/                   # Orchestration skills (Agent Skills standard — portable)
-│   ├── start/                # Main entry point — workflow guide + 23 agent personas
+│   ├── start/                # Main entry point — workflow guide + 27 agent personas
 │   ├── orchestrated-execution/ # 4-phase execution loop (IMPLEMENT→VALIDATE→REVIEW→COMMIT)
 │   ├── design-review-gate/   # Parallel 6-agent review
 │   ├── plan-review-gate/     # 3-reviewer adversarial plan review
@@ -92,8 +93,8 @@ metaswarm/
 ├── commands/                  # Slash commands
 │   ├── *.md                  # Claude Code commands (16 files)
 │   └── metaswarm/*.toml      # Gemini CLI commands (13 files)
-├── agents/                    # 23 agent definitions
-├── rubrics/                   # 10 quality review rubrics
+├── agents/                    # 27 agent definitions
+├── rubrics/                   # 11 quality review rubrics
 ├── guides/                    # Development patterns
 ├── knowledge/                 # Knowledge base schema + templates
 ├── templates/                 # Setup templates (CLAUDE.md, AGENTS.md, GEMINI.md + append variants)
@@ -164,6 +165,9 @@ Each phase runs as its own agent type with a default model in its frontmatter, s
 |---|---|
 | `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner` | opus |
 | `researcher`, `coder`, `pr-shepherd-agent`, `knowledge-curator-agent` | sonnet |
+| `mechanical-coder` | haiku |
+| `supercoder` | opus |
+| `security-coder`, `debugger` | fable |
 | `issue-orchestrator`, `swarm-coordinator-agent` | inherit (your session model) |
 
 - **Override:** edit `.metaswarm/models.yaml`, then run `/update` to regenerate the `.claude/agents/metaswarm-<role>.md` files. Restart Claude Code after `.claude/agents/` is first created. `issue-orchestrator` and `swarm-coordinator-agent` are plugin-only (they inherit the session model) and are not configurable in `models.yaml`.

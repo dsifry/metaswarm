@@ -1,6 +1,6 @@
 # Project Instructions
 
-This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework. It provides 23 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
+This project uses [metaswarm](https://github.com/dsifry/metaswarm), a multi-agent orchestration framework. It provides 27 agents, a 9-phase development workflow, and quality gates that enforce TDD, coverage thresholds, and spec-driven development.
 
 ## How to Work in This Project
 
@@ -112,6 +112,7 @@ Block delivery only for a credible normal-usage failure, a missing or contradict
 - **Escalate to the human** -> the same critical/major finding recurs after a fix attempt for it, two reviewers rate the same finding blocker vs. non-blocker, or the safety cap of 10 rounds is hit. The options include clarifying the requirement.
 - **Overengineering signal** -> restate the DoD and re-classify each blocker against the policy; escalate if any still names a credible scenario, otherwise downgrade them to follow-ups and advance.
 - **Iterate** (fix, re-validate, fresh review) -> this round fixed a critical/major finding, or 2+ independent reviewers reported blockers.
+- **Asking the user** -> every request to the user to decide uses one format: lettered options (A, B, C) under numbered questions (reply `1 A 2 C`), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `guides/delivery-scope.md` in the metaswarm plugin). Questions that only collect a fact are exempt.
 
 These rules apply in order, top to bottom (Clarify is checked before escalation, and escalation before iteration). A round that still has a blocker and matches none of them also iterates. If `bd` is unavailable, list follow-ups in a `### Follow-ups` section.
 

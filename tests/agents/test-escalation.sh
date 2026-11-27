@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tests/agents/test-escalation.sh
-# orchestrated-execution must describe model escalation of the coder after repeated VALIDATE failures.
+# orchestrated-execution must describe escalation of the coder to the supercoder role after repeated VALIDATE failures.
 
 set -euo pipefail
 
@@ -39,10 +39,10 @@ ONFAIL="$(section '^### On FAIL: Mandatory Re-Review Protocol')"
 for pair in "Recovery Step 3:$RETRY" "On FAIL:$ONFAIL"; do
   label="${pair%%:*}"; text="${pair#*:}"
   assert_in "$label names escalation.coder.after_failures and default 2" "$text" 'escalation.coder.after_failures' '(default 2'
-  assert_in "$label re-spawns coder with roleType(\"coder\") and a per-call model" "$text" 'roleType("coder")' 'model'
-  assert_in "$label uses escalation.coder.claude (default opus)" "$text" 'escalation.coder.claude' '`opus`'
+  assert_in "$label re-spawns the supercoder role" "$text" 'roleType("supercoder")'
+  assert_in "$label keeps escalation.coder.claude as the supercoder model fallback" "$text" 'escalation.coder.claude' 'roles.supercoder.claude' '`opus`'
   assert_in "$label reads .metaswarm/models.yaml" "$text" '.metaswarm/models.yaml'
-  assert_in "$label says per-call model overrides the agent-file default" "$text" 'overrides the agent-file default'
+  assert_in "$label links the coder-selection rubric" "$text" 'coder-selection.md'
 done
 
 echo ""

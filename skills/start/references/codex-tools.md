@@ -33,13 +33,17 @@ metaswarm spawn sites name a phase role through `roleType` (see `guides/agent-co
 | `adversarial-reviewer` | `spawn_agent` with `agents/adversarial-reviewer.md` | same |
 | `planner` | `spawn_agent` with `agents/planner.md` | same |
 | `researcher` | `spawn_agent` with `agents/researcher.md` | same |
+| `mechanical-coder` | `spawn_agent` with `agents/mechanical-coder.md` | same |
 | `coder` | `spawn_agent` with `agents/coder.md` | same |
+| `supercoder` | `spawn_agent` with `agents/supercoder.md` | same |
+| `debugger` | `spawn_agent` with `agents/debugger.md` | same |
+| `security-coder` | `spawn_agent` with `agents/security-coder.md` | same |
 | `pr-shepherd-agent` | `spawn_agent` with `agents/pr-shepherd-agent.md` | same |
 | `knowledge-curator-agent` | `spawn_agent` with `agents/knowledge-curator-agent.md` | same |
 | `issue-orchestrator` | `spawn_agent` with `agents/issue-orchestrator.md` | same |
 | `swarm-coordinator-agent` | `spawn_agent` with `agents/swarm-coordinator-agent.md` | same |
 
-**Fallback (what metaswarm does today):** Codex has no per-role model that metaswarm configures, so pass the role name through to `spawn_agent` with the role's agent file as the instructions. The Codex default model applies. The Claude defaults (opus for reviewers and planner, sonnet for researcher, coder and the two housekeeping agents) are not enforced on Codex.
+**Fallback (what metaswarm does today):** Codex has no per-role model that metaswarm configures, so pass the role name through to `spawn_agent` with the role's agent file as the instructions. The Codex default model applies. The Claude defaults (opus for reviewers and planner, sonnet for researcher, coder and the two housekeeping agents, haiku for mechanical-coder, opus for supercoder, fable for debugger and security-coder) are not enforced on Codex.
 
 **Mechanisms that exist but are NOT wired up by metaswarm (candidate follow-up issue, host-side generator):**
 - Codex config reference documents `agents.<name>.config_file` (a TOML layer per role, which can set a model) and `agents.<name>.description`, plus `agents.default_subagent_model` and `agents.default_subagent_reasoning_effort`, where "an explicit spawn model takes precedence". Source: https://developers.openai.com/codex/config-reference (verified via the page text).

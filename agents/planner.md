@@ -26,4 +26,5 @@ Follow the Architect playbook in `agents/architect-agent.md`: research existing 
 1. Decompose into work units, each with a declared file scope and testable DoD items.
 2. Order units by dependency; mark which can run in parallel.
 3. Require TDD in every unit and reference `.coverage-thresholds.json` for coverage.
-4. Do not implement code. The plan goes through the Plan Review Gate before execution.
+4. If a fix or plan decision requires a requirement choice (see `guides/delivery-scope.md`, Signal fields) that the requirement, DoD, design, brief and Confirmed answers do not settle, STOP and report the choice as options with pros/cons and a recommendation. Do not pick silently. The orchestrator treats that report as a Clarify stop, not plan output, and asks the user before the Plan Review Gate.
+5. Do not implement code. The plan goes through the Plan Review Gate before execution.

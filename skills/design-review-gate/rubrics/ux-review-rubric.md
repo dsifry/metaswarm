@@ -31,7 +31,7 @@ Signal fields (see "Signal fields" in the guide) are added to the six core field
 
 ```text
 - theme: <short label>       # on every finding; reuse an earlier theme label when one fits
-- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it, or the fix is a requirement choice (see the guide)
 - origin: implementation | requirement | assumption   # blockers only
 - assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
 ```

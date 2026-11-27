@@ -101,8 +101,8 @@ Requires superpowers **6.4.1 or later** (tested with **7.0.2**). For how metaswa
 |---|---|---|
 | `superpowers:brainstorming` | Brainstorming Extension, Design Review Gate, `/brainstorm`, `/start-task`, `/review-design` | Collaborative design ideation before implementation |
 | `superpowers:writing-plans` | Plan Review Gate (intercepts before it presents the plan), Design Review Gate | Detailed implementation plan generation |
-| `superpowers:executing-plans` | Execution Method Choice (option 3, Native inline execution), Before Finishing a Development Branch | Inline execution of a plan in the current session, then one fresh whole-branch review |
-| `superpowers:subagent-driven-development` | Execution Method Choice (option 2), Before Finishing a Development Branch | Per-task subagent execution with review between tasks |
+| `superpowers:executing-plans` | Execution Method Choice (option C, Native inline execution), Before Finishing a Development Branch | Inline execution of a plan in the current session, then one fresh whole-branch review |
+| `superpowers:subagent-driven-development` | Execution Method Choice (option B), Before Finishing a Development Branch | Per-task subagent execution with review between tasks |
 | `superpowers:finishing-a-development-branch` | Before Finishing a Development Branch (workflow enforcement) | Merge/PR decision once implementation is complete |
 | `superpowers:test-driven-development` | PR Shepherd, After Standalone TDD and Coverage Source of Truth (workflow enforcement) | RED-GREEN-REFACTOR implementation cycle |
 | `superpowers:systematic-debugging` | PR Shepherd | Four-phase bug investigation framework |

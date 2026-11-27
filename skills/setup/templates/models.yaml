@@ -12,10 +12,26 @@ roles:
     claude: sonnet
   planner:
     claude: opus
+  mechanical-coder:
+    claude: haiku
+    codex: gpt-5.3-codex
+    gemini: flash
   coder:
     claude: sonnet
     codex: gpt-5.3-codex
     gemini: flash
+  supercoder:
+    claude: opus
+    codex: gpt-5.3-codex
+    gemini: pro
+  debugger:
+    claude: fable
+    codex: gpt-5.3-codex
+    gemini: pro
+  security-coder:
+    claude: fable
+    codex: gpt-5.3-codex
+    gemini: pro
   adversarial-reviewer:
     claude: opus
     codex: gpt-5.3-codex
@@ -24,6 +40,9 @@ roles:
     claude: sonnet
   knowledge-curator-agent:
     claude: sonnet
+# escalation.coder: after this many failed VALIDATE attempts the orchestrator re-spawns the
+# supercoder role (roles.supercoder above). escalation.coder.claude is still honoured as the
+# supercoder's Claude model when roles.supercoder.claude is not set.
 escalation:
   coder:
     after_failures: 2

@@ -40,12 +40,14 @@ Signal fields (see "Signal fields" in the guide) are added to the six core field
 
 ```text
 - theme: <short label>       # on every finding; reuse an earlier theme label when one fits
-- needs_user: yes | no       # blockers only: yes only if just the user can answer it
+- needs_user: yes | no       # blockers only: yes only if just the user can answer it, or the fix is a requirement choice (see the guide)
 - origin: implementation | requirement | assumption   # blockers only
 - assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
 ```
 
-Do not mark a question `needs_user` when the design's Confirmed section already answers it.
+Mark `needs_user: yes` only for a requirement choice or a fact only the user can provide: a choice between behaviours the user would see or care about, that the requirement, DoD and Confirmed section do not settle. A purely technical choice with no user-visible difference is not one. Do not mark a question `needs_user` when the design's Confirmed section already answers it.
+
+For a security work unit the spec also carries the security implementation rubric; apply it and end with its S1-S8 verdict block.
 
 - **`protects:` is required for critical and major findings.** It names the credible user scenario, explicit requirement or DoD item the finding protects.
 - **Blocker definition.** A finding is a blocker (`blocker: yes`) only if its severity is critical or major AND `protects` is non-empty. Minor and nit findings are never blockers.

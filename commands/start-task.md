@@ -22,7 +22,7 @@ Before starting any new task:
 
 - [ ] Check for a non-closed file in `.beads/context/review-history/` (even when there is no active plan): it means an interrupted review gate. If its `status` is `clarify-pending`, re-ask the pending questions instead of iterating; if the helper's result for its last round is an escalation, re-send the escalation report and wait for the user's choice; otherwise resume it at its next round
 - [ ] Check if `.beads/plans/active-plan.md` exists with `status: in-progress`
-- [ ] If YES: An interrupted execution exists. Ask user: "There's an active plan from a previous session. Resume it or start fresh?"
+- [ ] If YES: An interrupted execution exists. Ask the user as a decision request (lettered options with pros and cons, the recommended one marked with why; see Decision requests in `guides/delivery-scope.md`): "There's an active plan from a previous session. Resume it or start fresh?" Starting fresh abandons the old plan, so say so in its Cons
   - Resume → if bd is installed, `bd prime` (bd context); then read `.beads/plans/active-plan.md` and `.beads/context/*.md`; then `/prime` for knowledge; then pick up where execution stopped
   - Start fresh → mark the old plan as `status: abandoned` and proceed normally
 
@@ -35,7 +35,7 @@ Before starting any new task:
 **PR Check**:
 
 - [ ] Check if there are active PRs with pending comments
-- [ ] Ask: "Before we start the new task, should we check if there are any PR comments to address?"
+- [ ] Ask as a decision request (options with pros and cons and a recommendation; see Decision requests in `guides/delivery-scope.md`): "Before we start the new task, should we check if there are any PR comments to address?"
 - [ ] If yes, run: `gh pr list --author @me --state open`
 - [ ] Check each PR for new CodeRabbit comments
 
@@ -71,6 +71,8 @@ Consider:
 Then ask the user to confirm your assessment:
 
 > **Proposed complexity**: [Simple / Complex] - Does this match your expectation?
+
+This, and every other ask below, uses the decision-request format: lettered options (A, B, C) under numbered questions (reply `1 A 2 C`), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`). For this one, a line each is enough.
 
 **Simple Task (streamlined flow):**
 
@@ -114,7 +116,7 @@ If the issue lacks DoD items or clear scope, ask the user to clarify before proc
 
 - For **simple tasks**: No issue needed. Proceed directly.
 - For **complex tasks**: An issue is ALWAYS needed. Ask the user:
-  > "This is a complex task. Should I create a GitHub Issue to track it?"
+  > "This is a complex task. Should I create a GitHub Issue to track it?" (lettered options with pros and cons, your recommendation and why: Decision requests)
 
 **If the problem is unclear:**
 

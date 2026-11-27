@@ -19,6 +19,18 @@ The coder implements features and fixes following strict TDD (Test-Driven Develo
 
 ---
 
+## Coder Tiers
+
+`coder` is the default tier. Two sibling agents exist for the ends of the range: `mechanical-coder` (haiku) for small, fully specified, behaviour-preserving edits, and `supercoder` (opus) for particularly hard work units. The orchestrator chooses the tier using the rubric in `guides/coder-selection.md` (plugin file). If your brief turns out to need more than a `coder` can safely do, report `BLOCKED: <reason>`; that moves the next round to `supercoder`. When unsure, the answer is `coder`.
+
+---
+
+## Requirement Choices
+
+If a fix or plan decision requires a requirement choice (see `guides/delivery-scope.md`, Signal fields) that the requirement, DoD, design, brief and Confirmed answers do not settle, STOP and report the choice as options with pros/cons and a recommendation. Do not pick silently. The orchestrator treats that report as a Clarify stop and asks the user.
+
+---
+
 ## Responsibilities
 
 1. **TDD Implementation**: Tests first, always
@@ -565,6 +577,12 @@ pnpm build
 100% coverage required — run `pnpm test --run --coverage` and verify lines, branches, functions, and statements are all at 100%.
 
 Each of these checks must pass before closing the implementation task.
+
+---
+
+## Hand-back Checklist
+
+The orchestrator's brief lists the exact gate commands for the files in scope: tests, type check and lint, and also project registration gates (lint allow-lists, service inventories, CI gate tables). Run every one of them. Paste the raw last lines of each command's output into your hand-back. "Passes" without pasted output is not a hand-back, and the orchestrator will send it back. If the brief lists no gate commands, ask for them rather than guessing. Why: in the soak, coders claimed lint passed when it had failed, and missed registration files that the pre-push hook caught later.
 
 ---
 

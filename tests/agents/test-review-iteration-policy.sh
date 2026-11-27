@@ -137,7 +137,7 @@ assert_in "guide: follow-up rule" "$G" \
 assert_in "guide: escalation template" "$G" \
   'Critical' 'Major' 'Minor' 'Nit' \
   'Round history' \
-  '**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason'
+  '(Recommended)' '- Why recommended: <reason'
 
 # DoD 1.2: mirrors exist and sync check passes
 MIRRORS=(
@@ -361,7 +361,7 @@ RULE_LINES=(
   '6. this round fixed ≥1 critical/major, or ≥2 independent reviewers reported blockers'
   '7. otherwise                           → fix blockers, re-validate, FRESH review'
 )
-RECOMMENDATION='**Recommendation**: <revise|clarify|narrow scope|defer|cancel> — <reason from the rule>'
+RECOMMENDATION='- Why recommended: <reason'
 
 for g in "${GATES[@]}"; do
   T="$(readf "$g")"
@@ -435,7 +435,7 @@ ONFAIL="$(section "$REPO_ROOT/$OE" '^### On FAIL: Mandatory Re-Review Protocol')
 assert_in "$OE: On FAIL protocol runs the severity rule and tracks rounds" "$ONFAIL" \
   "${RULE_LINES[@]}" 'Review round 1/10'
 assert_in "$OE: On FAIL step 6 (coder model escalation) is verbatim" "$ONFAIL" \
-  '6. **Coder model escalation**: after `escalation.coder.after_failures` failed VALIDATE attempts (default 2, read from `.metaswarm/models.yaml`), re-spawn the coder with `roleType("coder")` plus a per-call `model` set to `escalation.coder.claude` (default `opus`). The per-call `model` overrides the agent-file default (the `coder` role'"'"'s `sonnet`).'
+  '6. **Coder escalation**: after `escalation.coder.after_failures` failed VALIDATE attempts (default 2, read from `.metaswarm/models.yaml`), re-spawn with `roleType("supercoder")`. The `supercoder` role is the one definition of the Opus coder; its model comes from `roles.supercoder.claude` in `.metaswarm/models.yaml` (default `opus`). `escalation.coder.claude` is still honoured as the `supercoder` model when `roles.supercoder.claude` is not set. There is no per-call `model` override on `coder`.'
 TR="$(section "$REPO_ROOT/$OE" '^### Transition Rules')"
 assert_in "$OE: transition rule scopes the 3-attempt cap to VALIDATE" "$TR" \
   'VALIDATE gets 3 attempts' 'REVIEW follows the severity rule'
@@ -941,9 +941,9 @@ done
 echo "Issue #68: escalation never approves; no Override with open blockers"
 # A gate is approved only when a review round has no `blocker: yes` finding (or via rule line 5).
 # Escalating to the human never approves: there is no option that advances with open blockers.
-ESC_OPTIONS=('**Revise**' '**Narrow scope**' '**Defer**' '**Cancel**')
+ESC_OPTIONS=('**Option A: Revise**' '**Option B: Narrow scope**' '**Option C: Defer**' '**Option D: Cancel**')
 # The canonical guide's template also offers the fifth option and its recommendation enum (issue #103).
-GUIDE_ESC_OPTIONS=("${ESC_OPTIONS[@]}" '**Clarify the requirement / re-brainstorm**' '<revise|clarify|narrow scope|defer|cancel>')
+GUIDE_ESC_OPTIONS=("${ESC_OPTIONS[@]}" '**Option E: Clarify the requirement / re-brainstorm**' '(Recommended)')
 for f in guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-scope.md \
          skills/plan-review-gate/guides/delivery-scope.md skills/design-review-gate/guides/delivery-scope.md \
          skills/start/guides/delivery-scope.md skills/external-tools/guides/delivery-scope.md; do
@@ -954,7 +954,7 @@ for f in guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-
     "${GUIDE_ESC_OPTIONS[@]}"
 done
 for f in skills/plan-review-gate/SKILL.md skills/design-review-gate/SKILL.md skills/orchestrated-execution/SKILL.md; do
-  assert_in "$f: escalation Options are the standard five" "$(section "$REPO_ROOT/$f" '^### Options')" "${ESC_OPTIONS[@]}" '**Clarify the requirement / re-brainstorm**'
+  assert_in "$f: escalation Options are the standard five" "$(section "$REPO_ROOT/$f" '^### Options')" "${ESC_OPTIONS[@]}" '**Option E: Clarify the requirement / re-brainstorm**'
 done
 for f in skills/plan-review-gate/SKILL.md skills/design-review-gate/SKILL.md commands/review-design.md \
          .claude/commands/review-design.md skills/brainstorming-extension/SKILL.md skills/start/SKILL.md \
