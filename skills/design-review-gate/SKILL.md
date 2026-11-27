@@ -645,7 +645,7 @@ answer the open questions about the requirement; a new gate occurrence starts
 - Pros: <pros>
 - Cons: <cons>
 
-Reply with a letter. If there's no answer: nothing advances; the gate stays escalated and the work waits.
+Reply with a letter for the action, written `Action A` (never a bare `E`, which is the explain shortcut). If there's no answer: nothing advances; the gate stays escalated and the work waits.
 ```
 
 ---

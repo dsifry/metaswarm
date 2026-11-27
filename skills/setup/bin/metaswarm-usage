@@ -17,6 +17,7 @@ const ROLE_PHASES = {
   'mechanical-coder': 'implement',
   supercoder: 'implement',
   'security-coder': 'implement',
+  debugger: 'debug',
   'adversarial-reviewer': 'adversarial-review',
   'pr-shepherd-agent': 'pr-shepherd',
   'knowledge-curator-agent': 'knowledge-curator',
