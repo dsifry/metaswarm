@@ -27,7 +27,7 @@ When the user's whole prompt is `E` (or `e`), explain the items waiting on them,
 1. Take the latest `WAITING-ON:` line. On the first `E`, explain its first `YOU:` item. Each further `E` in a row moves to the next item.
 2. Explain the item in plain language:
    - what it is and why it is needed;
-   - for a decision: the choices, numbered, recommended first, each with pros and cons;
+   - for a decision: the options, lettered A, B, C under numbered questions, recommended first (see Decision requests in `delivery-scope.md`), each with pros and cons;
    - for an action: the exact command or step;
    - what happens if the human does nothing.
 3. End with `Item k of n - type E for the next.`

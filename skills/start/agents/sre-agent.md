@@ -298,7 +298,7 @@ Escalate to human when:
 4. **Security incident** detected
 5. **Multiple systems affected**
 
-Present it as a decision request: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `./guides/delivery-scope.md`).
+Present it as a decision request: lettered options (A, B, C) under numbered questions (reply `1 A 2 C`), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `./guides/delivery-scope.md`).
 
 ```bash
 bd update <task-id> --status blocked

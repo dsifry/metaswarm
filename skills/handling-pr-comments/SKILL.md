@@ -142,7 +142,7 @@ Recommend: FIX_NOW or CREATE_ISSUE
 | Medium complexity (unclear scope)             | **ASK_USER** - Present a decision request |
 | Major refactor (multiple systems, risky)      | **CREATE_ISSUE** - Document for follow-up |
 
-ASK_USER uses the decision-request format: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`).
+ASK_USER uses the decision-request format: lettered options (A, B, C) under numbered questions (reply `1 A 2 C`), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`).
 
 #### For FIX_NOW
 

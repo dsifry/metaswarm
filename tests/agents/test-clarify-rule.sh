@@ -124,19 +124,19 @@ assert_in "guide: Clarification report template" "$REPORT" \
   '## Clarification needed:' 'Signals fired' 'cap hit' \
   'Goal, in one sentence' 'Assumption trace' 'Readings' 'Questions' \
   'Round history' 'Signals (C1–C4)' 'Themes' 'Rule decision' '### Options' '(Recommended)' 'Why recommended:'
-assert_in "guide: report options 1-5" "$REPORT" \
-  '**Option 1: Answer**' '**Option 2: Keep iterating**' '**Option 3: Narrow scope**' '**Option 4: Defer**' '**Option 5: Cancel**'
+assert_in "guide: report options A-E" "$REPORT" \
+  '**Option A: Answer**' '**Option B: Keep iterating**' '**Option C: Narrow scope**' '**Option D: Defer**' '**Option E: Cancel**'
 # The report offers no way to advance with open blockers.
 if grep -qiE '(^|[^a-z])(approve|approved|override)([^a-z]|$)' <<<"$REPORT"; then
   fail "guide: Clarification report offers no approve or override option"
 else
   pass "guide: Clarification report offers no approve or override option"
 fi
-# opt2_of <text>: the report's option 2 heading and its description line.
-opt2_of() { awk '/^\*\*Option 2: Keep iterating\*\*/ { print; getline; print; exit }' <<<"$1"; }
+# opt2_of <text>: the report's option B heading and its description line.
+opt2_of() { awk '/^\*\*Option B: Keep iterating\*\*/ { print; getline; print; exit }' <<<"$1"; }
 OPT2="$(opt2_of "$REPORT")"
-assert_in "guide: option 2 continues at line 3" "$OPT2" 'continue at rule line 3'
-assert_not_in "guide: option 2 does not advance" "$OPT2" 'advance' 'PASS'
+assert_in "guide: option B continues at line 3" "$OPT2" 'continue at rule line 3'
+assert_not_in "guide: option B does not advance" "$OPT2" 'advance' 'PASS'
 RE="$(section "$GUIDE" '^### Options and re-entry')"
 assert_in "guide: re-entry rules" "$RE" \
   'new gate occurrence' 'cap resets' \
@@ -154,15 +154,15 @@ assert_in "guide: feed it back" "$FB" \
   'Now' 're-brainstorm' 'Common misreadings' 'skills/brainstorming-extension/SKILL.md' \
   '/self-reflect' '`gotcha`' '`misunderstanding`' "each project's knowledge base" 'only when the current repo is metaswarm itself'
 assert_not_in "guide: feed it back does not tell agents to append to the plugin checklist everywhere" "$FB" 'Append the misreading pattern to the'
-assert_in "guide: option 2 re-entry is conditional on no remaining signal" "$RE" \
+assert_in "guide: option B re-entry is conditional on no remaining signal" "$RE" \
   'After the acknowledgement, re-run the helper on the same round' \
   'only when no signal remains' \
-  'every C1 key that fired has been answered by the user (their answer is recorded as the assumption id in `confirmed`) or is in `ackFindings`, recorded from their option-2 choice' \
+  'every C1 key that fired has been answered by the user (their answer is recorded as the assumption id in `confirmed`) or is in `ackFindings`, recorded from their option B choice' \
   'The orchestrator never edits or removes a recorded round'"'"'s findings to clear a signal' \
   'A `needs_user` blocker clears only through `ackFindings`; `confirmed` clears only the unconfirmed-assumption part' \
   'every C4 theme that fired is in `ackThemes`' \
   'Otherwise line 2 still holds: ask the remaining questions again'
-assert_in "guide: report option 2 is conditional too" "$(opt2_of "$REPORT")" \
+assert_in "guide: report option B is conditional too" "$(opt2_of "$REPORT")" \
   'once no signal remains' 'any unanswered question is asked again'
 assert_in "guide: waiting state" "$CL" 'waiting' 'pendingClarify'
 
@@ -173,19 +173,19 @@ OPT_NAMES="Answer|Keep iterating|Narrow scope|Defer|Cancel"
 for pair in "Clarification report:$REPORT" "Options and re-entry:$RE"; do
   label="${pair%%:*}"; text="${pair#*:}"
   if [ "$label" = "Clarification report" ]; then
-    got="$(awk '/^### Options/ { on = 1 } on' <<<"$text" | grep -oE '^\*\*Option [0-9]+: [^*]+\*\*' | sed -E 's/^\*\*Option ([0-9]+): (.*)\*\*/\1 \2/' | tr '\n' '|')"
+    got="$(awk '/^### Options/ { on = 1 } on' <<<"$text" | grep -oE '^\*\*Option [A-Z]: [^*]+\*\*' | sed -E 's/^\*\*Option ([A-Z]): (.*)\*\*/\1 \2/' | tr '\n' '|')"
   else
-    got="$(grep -oE '^[0-9]+\. \*\*[^*]+\*\*' <<<"$text" | sed -E 's/^([0-9]+)\. \*\*(.*)\*\*/\1 \2/' | sed -E 's/\.$//' | tr '\n' '|')"
+    got="$(grep -oE '^[A-Z]\. \*\*[^*]+\*\*' <<<"$text" | sed -E 's/^([A-Z])\. \*\*(.*)\*\*/\1 \2/' | sed -E 's/\.$//' | tr '\n' '|')"
   fi
-  want="1 Answer|2 Keep iterating|3 Narrow scope|4 Defer|5 Cancel|"
-  [ "$got" = "$want" ] && pass "guide: $label lists exactly options 1-5" \
-                       || fail "guide: $label lists exactly options 1-5 (got: $got)"
+  want="A Answer|B Keep iterating|C Narrow scope|D Defer|E Cancel|"
+  [ "$got" = "$want" ] && pass "guide: $label lists exactly options A-E" \
+                       || fail "guide: $label lists exactly options A-E (got: $got)"
   if [ "$label" = "Clarification report" ]; then o2="$(opt2_of "$text" | sed 's/never advances//')"
-  else o2="$(grep -E '^2\. \*\*Keep iterating' <<<"$text" | sed 's/never advances//')"; fi
+  else o2="$(grep -E '^B\. \*\*Keep iterating' <<<"$text" | sed 's/never advances//')"; fi
   if grep -qiE 'advances|proceeds|with open blockers' <<<"$o2"; then
-    fail "guide: $label option 2 does not advance or proceed"
+    fail "guide: $label option B does not advance or proceed"
   else
-    pass "guide: $label option 2 does not advance or proceed"
+    pass "guide: $label option B does not advance or proceed"
   fi
 done
 
@@ -260,14 +260,14 @@ assert_in "guide: escalation Rule line has lines 3-5 only" "$ET" \
   '**Rule line**: <3 cap hit | 4 recurring/disputed | 5 overengineering signal>'
 assert_not_in "guide: escalation Rule line never uses line 2" "$ET" '<2 ' '2 clarify'
 assert_in "guide: escalation options gain Clarify" "$ET" \
-  '**Option 5: Clarify the requirement / re-brainstorm**' \
+  '**Option E: Clarify the requirement / re-brainstorm**' \
   '(Recommended)' \
   'choosing from the five options above' \
   'Signals (C1–C4)' 'Themes' '7: iterate'
 # Forbidden defaulting loopholes, scoped to the Clarify section, Standing instructions and the options.
 FORBIDDEN_RE='unreachable|answers? (the |a )?needs_user|with the recommended option|accept the open blockers|defaults? after|re-asks?, (then )?default'
 forbidden_found() { grep -iE -- "$FORBIDDEN_RE" <<<"$1" || true; }
-OPTIONS_ONLY="$(grep -E '^[0-9]+\. \*\*' <<<"$REPORT"; grep -E '^[0-9]+\. \*\*' <<<"$RE")"
+OPTIONS_ONLY="$(grep -E '^[A-Z]\. \*\*' <<<"$RE" || true)"
 [ -z "$(forbidden_found "$CL")" ] && pass "guide: Clarify section has no defaulting loophole" \
   || fail "guide: Clarify section has no defaulting loophole: $(forbidden_found "$CL")"
 [ -z "$(forbidden_found "$(section "$GUIDE" '^### Standing instructions')")" ] && pass "guide: Standing instructions have no defaulting loophole" \
@@ -642,10 +642,10 @@ printf '%s\n' '1. [X] **a** — needs_user: yes — origin: assumption' '**Rule 
 # ---------------------------------------------------------------------------
 echo "WU3: escalation templates offer exactly five options and never approve"
 # ---------------------------------------------------------------------------
-# options_of <text>: the option blocks between "### Options" and the "Reply with a number" line.
-options_of() { awk '/^### Options/{on=1;next} on&&/^Reply with a number/{exit} on' <<<"$1"; }
-names_of() { grep -E '^\*\*Option [0-9]+: ' <<<"$1" | sed -E 's/^\*\*Option ([0-9]+): ([^*]+)\*\*.*/\1 \2/' | tr '\n' '|'; }
-WANT_ESC="1 Revise|2 Narrow scope|3 Defer|4 Cancel|5 Clarify the requirement / re-brainstorm|"
+# options_of <text>: the option blocks between "### Options" and the "Reply with" line.
+options_of() { awk '/^### Options/{on=1;next} on&&/^Reply with/{exit} on' <<<"$1"; }
+names_of() { grep -E '^\*\*Option [A-Z]: ' <<<"$1" | sed -E 's/^\*\*Option ([A-Z]): ([^*]+)\*\*.*/\1 \2/' | tr '\n' '|'; }
+WANT_ESC="A Revise|B Narrow scope|C Defer|D Cancel|E Clarify the requirement / re-brainstorm|"
 GUIDE_COPIES=(guides/delivery-scope.md skills/orchestrated-execution/guides/delivery-scope.md
   skills/plan-review-gate/guides/delivery-scope.md skills/design-review-gate/guides/delivery-scope.md
   skills/start/guides/delivery-scope.md skills/external-tools/guides/delivery-scope.md)
@@ -665,8 +665,8 @@ for f in "${GUIDE_COPIES[@]}" "${GATES[@]}"; do
   fi
 done
 # Self-test: a sixth, approving option is caught.
-printf '%s\n' '### Options' '**Option 1: Revise**' '**Option 2: Narrow scope**' '**Option 3: Defer**' '**Option 4: Cancel**' \
-  '**Option 5: Clarify the requirement / re-brainstorm**' '**Option 6: Approve with open blockers**' 'Reply with a number.' > "$FIX/opts-bad.md"
+printf '%s\n' '### Options' '**Option A: Revise**' '**Option B: Narrow scope**' '**Option C: Defer**' '**Option D: Cancel**' \
+  '**Option E: Clarify the requirement / re-brainstorm**' '**Option F: Approve with open blockers**' 'Reply with a letter.' > "$FIX/opts-bad.md"
 [ "$(names_of "$(options_of "$(cat "$FIX/opts-bad.md")")")" != "$WANT_ESC" ] && pass "self-test: a sixth approve option is flagged" \
   || fail "self-test: a sixth approve option is flagged"
 
@@ -776,7 +776,7 @@ RB="$(section "$REPO_ROOT/$BX" '^### Re-brainstorm after a Clarification')"
 assert_in "$BX: re-brainstorm input" "$RB" \
   'Clarification report' "user's answers" "design's Confirmed section"
 assert_in "$BX: ledger location for chat-only designs" "$BXT" 'chat-only' 'in the conversation' 'in the plan when one exists'
-assert_in "$BX: Step 4 re-brainstorm applies to option 1 only" "$BXT" 'option 1 (Answer)' 'option 2'
+assert_in "$BX: Step 4 re-brainstorm applies to option A only" "$BXT" 'option A (Answer)' 'option B'
 DB_LINE="$(grep -n '^## During brainstorming (every session)' "$REPO_ROOT/$BX" | cut -d: -f1 | head -1 || true)"
 PROC_LINE="$(grep -n '^## Procedure: After' "$REPO_ROOT/$BX" | cut -d: -f1 | head -1 || true)"
 if [ -n "$DB_LINE" ] && [ -n "$PROC_LINE" ] && [ "$DB_LINE" -lt "$PROC_LINE" ]; then pass "$BX: During-brainstorming section comes before the post-commit procedure"

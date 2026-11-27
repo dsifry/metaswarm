@@ -73,7 +73,7 @@ grep -qiF -- 'Two recurrences alone do not trigger this' <<<"$P" \
   && pass "paragraph says two recurrences alone do not trigger it" \
   || fail "paragraph does not say two recurrences alone do not trigger it"
 
-echo "Test 5: the Clarification report template offers close-the-class in numbered Pros/Cons option-block form"
+echo "Test 5: the Clarification report template offers close-the-class in lettered Pros/Cons option-block form"
 REPORT="$(section "$GUIDE" '^### Clarification report')"
 n="$(grep -c '^### Clarification report' "$GUIDE" || true)"
 [ "$n" = 1 ] && pass "exactly one Clarification report template" || fail "$n Clarification report templates"

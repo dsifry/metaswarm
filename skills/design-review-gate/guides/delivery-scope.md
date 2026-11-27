@@ -71,11 +71,11 @@ The contract is the six core fields plus signal fields. The core six and their b
 - origin: implementation | requirement | assumption
 - assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
 - theme: <short label>       # on every finding
-- options: 1. <option> | 2. <option> ...   # optional on a needs_user blocker: the choices the reviewer sees, numbered 1, 2, 3 (never letters), each with pros and cons, so the orchestrator relays them as decision-request options (see Decision requests)
+- options: A. <option> | B. <option> ...   # optional on a needs_user blocker: the choices the reviewer sees, lettered A, B, C (never numbers), each with pros and cons, so the orchestrator relays them as decision-request options (see Decision requests)
 ```
 
 - **Scope.** `needs_user`, `origin` and `assumption` are optional on non-blockers. Only blockers feed the Clarify signals.
-- **Requirement choice.** A blocker rests on a requirement choice when its fix requires choosing between two or more acceptable behaviours, levels or trade-offs, and the requirement, the DoD, the design and the Confirmed answers do not settle which one. Examples: how strong a proof must be (server acceptance, the founder's receipt, or none), which side of a cost/safety trade-off, whether a step is a condition or a report. It is not a requirement choice when exactly one fix meets the stated requirement, or when the choice is purely technical with no user-visible difference. A requirement choice is `needs_user: yes` with `origin: requirement`. The question asked of the user is a decision request: numbered options, each with its pros and cons, and the recommended option with its Why recommended.
+- **Requirement choice.** A blocker rests on a requirement choice when its fix requires choosing between two or more acceptable behaviours, levels or trade-offs, and the requirement, the DoD, the design and the Confirmed answers do not settle which one. Examples: how strong a proof must be (server acceptance, the founder's receipt, or none), which side of a cost/safety trade-off, whether a step is a condition or a report. It is not a requirement choice when exactly one fix meets the stated requirement, or when the choice is purely technical with no user-visible difference. A requirement choice is `needs_user: yes` with `origin: requirement`. The question asked of the user is a decision request: lettered options, each with its pros and cons, and the recommended option with its Why recommended.
 - **Already answered.** Reviewers do not mark a question `needs_user` when the design's Confirmed section already answers it.
 - **Set by the orchestrator, not the reviewers.** `classifiedBy: orchestrator` (see the orchestrator duty under Clarify signals), `canonicalTheme` (see Themes), `fix_induced: yes | no` (the blocker matches the orchestrator's record of the previous round's fix, kept as `lastFix`; a fresh reviewer cannot know what changed) and `mergedInto: <kept id>` on duplicates (see Clarify signals).
 - **Re-request rule.** A blocker that lacks `needs_user` or `origin` gets one re-request, like malformed output. If the fields are still missing, they are treated as unknown, which triggers nothing. This is not an escalation, and the finding itself still counts as a blocker.
@@ -114,13 +114,13 @@ after each review round (round = 1, 2, ...):
 Line 2 fires when any of C1–C4 holds. They are evaluated per gate occurrence, after each round, on the last round's blockers. They count **distinct blockers**: after each round the orchestrator merges duplicates (the same canonical theme and the same defect, even when the evidence is worded differently) and records `mergedInto: <kept id>` on each duplicate. A merged blocker still counts once per reviewer for divergence, and C1 scans every blocker.
 
 - **C1** (needs the user). A blocker has `needs_user: yes`, or `origin: assumption` with an `assumption` that is not in the ledger's Confirmed list. An `origin: assumption` blocker with no id counts as unconfirmed.
-- **C2** (not converging). Total distinct blockers are non-decreasing over the last three rounds since `windowStart`, that is t[r] ≥ t[r-1] ≥ t[r-2] (three rounds since the window start are needed), or, for gates with ≥2 reviewers, divergence: this round's total distinct blockers did not fall (it is ≥ the previous in-window round's total), and one reviewer reports no blockers while another reviewer's count is higher than its own count in the previous round. A falling total never counts as divergence. A single-reviewer gate never diverges. Divergence needs at least 2 rounds inside the window, so after option 2 it cannot fire until two new rounds exist.
+- **C2** (not converging). Total distinct blockers are non-decreasing over the last three rounds since `windowStart`, that is t[r] ≥ t[r-1] ≥ t[r-2] (three rounds since the window start are needed), or, for gates with ≥2 reviewers, divergence: this round's total distinct blockers did not fall (it is ≥ the previous in-window round's total), and one reviewer reports no blockers while another reviewer's count is higher than its own count in the previous round. A falling total never counts as divergence. A single-reviewer gate never diverges. Divergence needs at least 2 rounds inside the window, so after option B it cannot fire until two new rounds exist.
 - **C3** (fix-induced). At least 2 distinct blockers in the round have `fix_induced: yes`. It applies only to rounds at or after `windowStart`.
 - **C4** (recurring theme). One canonical theme that is not in `ackThemes` appears among the blockers of at least three rounds of the occurrence. The rounds do not need to be consecutive. `windowStart` does not reset C4; only `ackThemes` does. A blocker with no theme counts toward no theme.
 
 **C4 and class closure.** When C4 fires, the Clarification report's options include **close the whole class**, and it is the recommended option unless the misunderstanding analysis shows the theme rests on a requirement choice (then C1's question comes first). If the user picks it (or the default stands), the next fix brief must: (a) name the class in one sentence, independent of the instances; (b) list every instance seen so far; (c) require a structural test that fails for any member of the class, not only the named ones, with a negative test; and (d) require the coder to hunt for further members and report every source it checked. Two recurrences alone do not trigger this; only C4's three-round threshold does.
 
-**Orchestrator duty: classify requirement choices before the helper runs.** The orchestrator classifies; it does not only trust the reviewers' tags. Each round, before running the helper, check every blocker against the Requirement choice definition in Signal fields. If a blocker is one, set `needs_user: yes` and `origin: requirement` on the recorded finding and add `classifiedBy: orchestrator`, even when the reviewer said no. C1 fires that same round, so the user is asked at the first round that shows the choice, not after C4 sees the theme three times. The Clarification report states the choice as a decision request (see [Decision requests](#decision-requests)): numbered options, each with its pros and cons, and the recommended default with its Why recommended. Founder working style still holds: questions never block other independent work. State the recommended default and continue the work that does not depend on the answer; "keep going" never defaults a `needs_user` question for the blocked item (see Options and re-entry). Never edit a recorded round afterwards; classify before the round is written.
+**Orchestrator duty: classify requirement choices before the helper runs.** The orchestrator classifies; it does not only trust the reviewers' tags. Each round, before running the helper, check every blocker against the Requirement choice definition in Signal fields. If a blocker is one, set `needs_user: yes` and `origin: requirement` on the recorded finding and add `classifiedBy: orchestrator`, even when the reviewer said no. C1 fires that same round, so the user is asked at the first round that shows the choice, not after C4 sees the theme three times. The Clarification report states the choice as a decision request (see [Decision requests](#decision-requests)): lettered options, each with its pros and cons, and the recommended default with its Why recommended. Founder working style still holds: questions never block other independent work. State the recommended default and continue the work that does not depend on the answer; "keep going" never defaults a `needs_user` question for the blocked item (see Options and re-entry). Never edit a recorded round afterwards; classify before the round is written.
 
 C1 and C4 usually fire before C3 would. The history fields `windowStart`, `ackThemes` and `ackFindings` record what the user acknowledged (see Options and re-entry).
 
@@ -153,8 +153,8 @@ The orchestrator keeps the round history and writes it after every round, one fi
 - **`recurring`, `disputed`, `overengineering`** are the orchestrator's per-round judgements for lines 4 and 5.
 - **Status.**
   - `active` is the normal state. A Clarify sets `clarify-pending` and `pendingClarify`.
-  - Answering (option 1) sets `closed`, clears `pendingClarify` and starts the next occurrence's file.
-  - Keeping iterating (option 2) clears `pendingClarify` and returns the file to `active`.
+  - Answering (option A) sets `closed`, clears `pendingClarify` and starts the next occurrence's file.
+  - Keeping iterating (option B) clears `pendingClarify` and returns the file to `active`.
   - At an escalation, "Clarify the requirement / re-brainstorm" is handled like a Clarify answer. "Revise" keeps the same occurrence, so the round count and cap continue. "Narrow scope" closes the file and starts a new occurrence on the narrowed artifact.
   - Defer, cancel and PASS set `closed`.
   - Starting a new occurrence for the same gate and artifact while an older file is not closed abandons the old one: it is set to `closed`. If several non-closed files exist for one gate and artifact, recovery uses the newest and closes the rest.
@@ -205,33 +205,33 @@ Minor and nit findings, and blockers downgraded by rule line 5, never block. Rec
 
 ## Decision requests
 
-Every time the orchestrator, an agent or a gate asks the user to decide, it uses this one format. The user's rule: go through the options one at a time. For each option give its pros and cons, and if it is the recommended option, why it is recommended. Then move on to the next option. This section is the only definition; every other place that asks the user to decide points here and does not restate it.
+Every time the orchestrator, an agent or a gate asks the user to decide, it uses this one format. The user's rule (founder, 11-27): number the questions 1, 2, 3 and letter the options in each A, B, C, so a reply reads `1 A 2 C` instead of the confusing "1. 1 2 1 3 3". Go through the options one at a time. For each option give its pros and cons, and if it is the recommended option, why it is recommended. Then move on to the next option. This section is the only definition; every other place that asks the user to decide points here and does not restate it.
 
 Required parts:
 
-- **Decision needed:** a one-line question, then one or two lines of context.
-- **Option N: <name>** blocks, at least two, one after another. Each has one line on what it does, then **Pros** and **Cons**. Include "do nothing" or "defer" when it is a real option. Never leave a pro or con out because it is awkward for the recommended option.
-- **(Recommended)** on exactly one option. Only that option carries **Why recommended**, tied to the user's stated goals or constraints (quote or point to them), not a general preference. If it rests on an assumption the user has not confirmed, say so.
-- **Reply with a number** (or numbers), then **If there's no answer:** what proceeds meanwhile. Questions never block independent work: state the default and continue the work the answer does not affect. For a `needs_user` question the default never applies to the blocked item (see Standing instructions).
+- **Decision N:** a one-line question, then one or two lines of context. Number the decisions 1, 2, 3 when one message asks several; a message with a single decision is still `Decision 1`.
+- **Option X: <name>** blocks, at least two, lettered A, B, C one after another. Each has one line on what it does, then **Pros** and **Cons**. Include "do nothing" or "defer" when it is a real option. Never leave a pro or con out because it is awkward for the recommended option.
+- **(Recommended)** on exactly one option, and it is listed first (Option A). Only that option carries **Why recommended**, tied to the user's stated goals or constraints (quote or point to them), not a general preference. If it rests on an assumption the user has not confirmed, say so.
+- **Reply with** the decision number and the option letter, like `1 A 2 C` (just the letter when there is one decision), then **If there's no answer:** what proceeds meanwhile. Questions never block independent work: state the default and continue the work the answer does not affect. For a `needs_user` question the default never applies to the blocked item (see Standing instructions).
 
-**Numbering rule.** Options are numbered 1, 2, 3 everywhere: the `Option N` headings, the reply instruction, and any options relayed from a reviewer or a coder. Never letters ((a), (b), Option A). An agent that produces options for the orchestrator to relay numbers them too, so the user is asked for a number and sees numbers.
+**Numbering rule.** Questions or items are numbered 1, 2, 3; the options inside each are lettered A, B, C. Never numbers for options, and never letters for the questions. This holds everywhere: the `Option X` headings, the reply instruction, and any options relayed from a reviewer or a coder. An agent that produces options for the orchestrator to relay letters them too, so the user sees letters and replies with letters.
 
 ```markdown
-**Decision needed: <one-line question>**
+**Decision 1: <one-line question>**
 <one or two lines of context>
 
-**Option 1: <name>** (Recommended)
+**Option A: <name>** (Recommended)
 <one line on what it does>
 - Pros: ...
 - Cons: ...
 - Why recommended: <tied to the user's stated goals or constraints>
 
-**Option 2: <name>**
+**Option B: <name>**
 <one line on what it does>
 - Pros: ...
 - Cons: ...
 
-Reply with a number (or numbers). If there's no answer: <what proceeds by default>.
+Reply with a letter (several decisions: `1 A 2 C`). If there's no answer: <what proceeds by default>.
 ```
 
 The Clarification report and the escalation templates below, and the execution-method menu, use these option blocks inside their own layouts.
@@ -255,7 +255,7 @@ Run this before writing the Clarification report.
    - **A proposal read as a decision:** the agent's own proposal treated as the user's decision.
    - **A one-word acknowledgement taken as approval of a message with several parts.**
 3. **Check the blockers against each reading.** For each blocker theme and each reframing, ask: would this blocker disappear under that reframing?
-4. **Write the questions.** Ask at most about 3 questions, each as a decision request (see [Decision requests](#decision-requests)): it names the reading it tests, gives numbered options with the pros and cons of each, marks the recommended option with its Why recommended, and says which blockers each option removes. Do not ask what the Confirmed section already answers.
+4. **Write the questions.** Ask at most about 3 questions, each as a decision request (see [Decision requests](#decision-requests)): it names the reading it tests, gives lettered options with the pros and cons of each, marks the recommended option with its Why recommended, and says which blockers each option removes. Do not ask what the Confirmed section already answers.
 
 ### Clarification report
 
@@ -282,25 +282,25 @@ Run this before writing the Clarification report.
 
 ### Questions
 #### Question 1: <question> — tests reading <n>
-Number the options 1, 2, 3 (see Decision requests): one block each, with Pros and Cons, and Why recommended on the recommended option only.
+Letter the options A, B, C (see Decision requests): one block each, with Pros and Cons, and Why recommended on the recommended option only. Number further questions 2, 3.
 
-**Option 1: <what it means>** (Recommended)
+**Option A: <what it means>** (Recommended)
 <one line> — removes <blockers>
 - Pros: <pros>
 - Cons: <cons>
 - Why recommended: <why this option, tied to the user's goals or constraints>
 
-**Option 2: <what it means>**
+**Option B: <what it means>**
 <one line> — removes <blockers>
 - Pros: <pros>
 - Cons: <cons>
 
-**Option 3: close the whole class** (C4 only)
+**Option C: close the whole class** (C4 only)
 <the class in one sentence, and the instances it covers> — removes <blockers>
 - Pros: <pros>
 - Cons: <cons>
 
-Reply with a number for each question. If there's no answer: the blocked item waits; other independent work continues.
+Reply with each question's number and your letter, like `1 A 2 C`. If there's no answer: the blocked item waits; other independent work continues.
 
 ### Round history
 | Round | Verdict | Blockers (critical/major) | Fixed this round | Signals (C1–C4) | Themes | Rule decision |
@@ -310,42 +310,42 @@ Reply with a number for each question. If there's no answer: the blocked item wa
 ### Options
 Use the decision-request format (see [Decision requests](#decision-requests)): mark exactly one option (Recommended) and give only that option a Why recommended line.
 
-**Option 1: Answer** (Recommended)
+**Option A: Answer** (Recommended)
 answer the questions; the requirement is revised and a new gate occurrence starts
 - Pros: <pros>
 - Cons: <cons>
 - Why recommended: <reason from the signals, tied to the user's goals or constraints>
 
-**Option 2: Keep iterating**
+**Option B: Keep iterating**
 the reading was right; record your answers and continue at rule line 3 (the cap), then the later lines in order, once no signal remains; any unanswered question is asked again
 - Pros: <pros>
 - Cons: <cons>
 
-**Option 3: Narrow scope**
+**Option C: Narrow scope**
 move the contentious items to a new issue, then run a fresh review round on what remains
 - Pros: <pros>
 - Cons: <cons>
 
-**Option 4: Defer**
+**Option D: Defer**
 shelve this work for later; nothing moves
 - Pros: <pros>
 - Cons: <cons>
 
-**Option 5: Cancel**
+**Option E: Cancel**
 abandon this work
 - Pros: <pros>
 - Cons: <cons>
 
-Reply with a number. If there's no answer: nothing advances; the gate stays open and the work waits.
+Reply with a letter, like `B`. If there's no answer: nothing advances; the gate stays open and the work waits.
 ```
 
 ### Options and re-entry
 
-1. **Answer.** The orchestrator updates the ledger, re-brainstorms or revises the artifact, and starts a **new gate occurrence** on it: a fresh round 1, and the cap resets. The previous occurrence's history is kept for reference and does not feed the new windows.
-2. **Keep iterating.** The reading was right. Restate any answer the user gave and write it to the ledger's Confirmed section. The acknowledgement covers the C2 window and the C3 round, by moving the window start to the next round, and the specific canonical themes acknowledged for C4 (added to `ackThemes`). C1 cannot be acknowledged by type: only the specific questions the user answered are cleared, by adding their `ackFindings` keys. An acknowledged key clears re-raises of that question, meaning the same canonical theme with `needs_user` and no assumption id, or the same assumption id. A new question fires C1, because the orchestrator gives it a new canonical theme or a new assumption id (see Themes). The cap is not reset. After the acknowledgement, re-run the helper on the same round. Review continues at rule line 3 (the cap), then the later lines in order, only when no signal remains: every C1 key that fired has been answered by the user (their answer is recorded as the assumption id in `confirmed`) or is in `ackFindings`, recorded from their option-2 choice, and every C4 theme that fired is in `ackThemes`. A `needs_user` blocker clears only through `ackFindings`; `confirmed` clears only the unconfirmed-assumption part. The orchestrator never edits or removes a recorded round's findings to clear a signal. Otherwise line 2 still holds: ask the remaining questions again. The acknowledgement never returns to line 1 and never advances by itself.
-3. **Narrow scope.** Move the contentious items to a new issue; the narrowed artifact starts a new occurrence with a fresh review round.
-4. **Defer.** Shelve the work. The history file is closed.
-5. **Cancel.** Abandon the work. The history file is closed.
+A. **Answer.** The orchestrator updates the ledger, re-brainstorms or revises the artifact, and starts a **new gate occurrence** on it: a fresh round 1, and the cap resets. The previous occurrence's history is kept for reference and does not feed the new windows.
+B. **Keep iterating.** The reading was right. Restate any answer the user gave and write it to the ledger's Confirmed section. The acknowledgement covers the C2 window and the C3 round, by moving the window start to the next round, and the specific canonical themes acknowledged for C4 (added to `ackThemes`). C1 cannot be acknowledged by type: only the specific questions the user answered are cleared, by adding their `ackFindings` keys. An acknowledged key clears re-raises of that question, meaning the same canonical theme with `needs_user` and no assumption id, or the same assumption id. A new question fires C1, because the orchestrator gives it a new canonical theme or a new assumption id (see Themes). The cap is not reset. After the acknowledgement, re-run the helper on the same round. Review continues at rule line 3 (the cap), then the later lines in order, only when no signal remains: every C1 key that fired has been answered by the user (their answer is recorded as the assumption id in `confirmed`) or is in `ackFindings`, recorded from their option B choice, and every C4 theme that fired is in `ackThemes`. A `needs_user` blocker clears only through `ackFindings`; `confirmed` clears only the unconfirmed-assumption part. The orchestrator never edits or removes a recorded round's findings to clear a signal. Otherwise line 2 still holds: ask the remaining questions again. The acknowledgement never returns to line 1 and never advances by itself.
+C. **Narrow scope.** Move the contentious items to a new issue; the narrowed artifact starts a new occurrence with a fresh review round.
+D. **Defer.** Shelve the work. The history file is closed.
+E. **Cancel.** Abandon the work. The history file is closed.
 
 Clarification never approves. There is no option that advances with open blockers, and any revised or narrowed artifact passes only through a fresh review round with no `blocker: yes` finding.
 
@@ -379,33 +379,33 @@ Clarification never approves. There is no option that advances with open blocker
 ### Options
 Use the decision-request format (see [Decision requests](#decision-requests)): mark exactly one option (Recommended) and give only that option a Why recommended line.
 
-**Option 1: Revise** (Recommended)
+**Option A: Revise** (Recommended)
 fix the remaining blockers (or the requirement they protect), then run a fresh review round
 - Pros: <pros>
 - Cons: <cons>
 - Why recommended: <reason from the rule, tied to the user's goals or constraints>
 
-**Option 2: Narrow scope**
+**Option B: Narrow scope**
 move the contentious items to a new issue, then run a fresh review round on what remains
 - Pros: <pros>
 - Cons: <cons>
 
-**Option 3: Defer**
+**Option C: Defer**
 shelve this work for later; nothing advances
 - Pros: <pros>
 - Cons: <cons>
 
-**Option 4: Cancel**
+**Option D: Cancel**
 abandon this work
 - Pros: <pros>
 - Cons: <cons>
 
-**Option 5: Clarify the requirement / re-brainstorm**
+**Option E: Clarify the requirement / re-brainstorm**
 answer the open questions about the requirement; a new gate occurrence starts
 - Pros: <pros>
 - Cons: <cons>
 
-Reply with a number. If there's no answer: nothing advances; the gate stays open and the work waits.
+Reply with a letter, like `A`. If there's no answer: nothing advances; the gate stays open and the work waits.
 ```
 
 Line 2 never uses this template; it uses the Clarification report.

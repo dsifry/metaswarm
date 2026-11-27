@@ -261,7 +261,7 @@ Reviewers may leave comments on code outside the PR diff. The `handling-pr-comme
 When user input is needed, ALWAYS:
 
 1. **Present the situation clearly**
-2. **Offer 2-4 numbered options, each with pros and cons**
+2. **Offer 2-4 lettered options, each with pros and cons**
 3. **State your recommendation, with Why recommended on that option only**
 4. **Allow user to choose OR provide their own approach**
 
@@ -270,28 +270,28 @@ When user input is needed, ALWAYS:
 ```text
 [Describe what happened]
 
-**Option 1: [name]** (Recommended)
+**Option A: [name]** (Recommended)
 [What it involves]
 - Pros: [benefits]
 - Cons: [drawbacks]
 - Why recommended: [tied to the user's goals or constraints]
 
-**Option 2: [name]**
+**Option B: [name]**
 [What it involves]
 - Pros: [benefits]
 - Cons: [drawbacks]
 
-**Option 3: [name]**
+**Option C: [name]**
 [What it involves]
 - Pros: [benefits]
 - Cons: [drawbacks]
 
-Reply with a number (or describe a different approach). If there's no answer: [what proceeds by default].
+Reply with a letter (or describe a different approach). If there's no answer: [what proceeds by default].
 ```
 
 ### After User Responds
 
-- If user picks a numbered option → proceed with that approach → FIXING
+- If user picks a lettered option → proceed with that approach → FIXING
 - If user describes alternative → proceed with their approach → FIXING
 
 ## Phase 6: Soft Timeout (4 Hours)
@@ -306,23 +306,23 @@ Current status:
 - Threads: [X] resolved, [Y] unresolved
 - Commits: [N] fix commits pushed
 
-**Option 1: Keep monitoring** (Recommended)
+**Option A: Keep monitoring** (Recommended)
 Continue for another 4 hours.
 - Pros: PR may get reviewed soon
 - Cons: Ties up agent resources
 - Why recommended: [tied to the user's goals, for example a PR that is close to merging]
 
-**Option 2: Exit with handoff**
+**Option B: Exit with handoff**
 Save status report, exit cleanly.
 - Pros: Frees resources
 - Cons: Must manually re-invoke later
 
-**Option 3: Set shorter check-in**
+**Option C: Set shorter check-in**
 Check back in 1 hour instead of 4.
 - Pros: More frequent checkpoints
 - Cons: More interruptions
 
-Reply with a number (or describe a different approach). If there's no answer: keep monitoring for another 4 hours.
+Reply with a letter (or describe a different approach). If there's no answer: keep monitoring for another 4 hours.
 ```
 
 ## Exit Conditions
@@ -550,7 +550,7 @@ After all post-merge tasks complete:
 
 **Auto-fixing complex issues**
 
-- If uncertain, ASK. Always go through WAITING_FOR_USER for complex issues. Every ask is a decision request: numbered options (1, 2, 3), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`).
+- If uncertain, ASK. Always go through WAITING_FOR_USER for complex issues. Every ask is a decision request: lettered options (A, B, C) under numbered questions (reply `1 A 2 C`), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in the metaswarm plugin's `guides/delivery-scope.md`).
 
 **Forgetting to invoke handling-pr-comments**
 
