@@ -256,7 +256,7 @@ Run this before writing the Clarification report.
    - **A proposal read as a decision:** the agent's own proposal treated as the user's decision.
    - **A one-word acknowledgement taken as approval of a message with several parts.**
 3. **Check the blockers against each reading.** For each blocker theme and each reframing, ask: would this blocker disappear under that reframing?
-4. **Write the questions.** Ask at most about 3 questions, each as a decision request (see [Decision requests](#decision-requests)): it names the reading it tests, gives lettered options with the pros and cons of each, marks the recommended option with its Why recommended, and says which blockers each option removes. Do not ask what the Confirmed section already answers.
+4. **Write the questions.** Ask at most about 3 questions, each as a decision request (see [Decision requests](#decision-requests)): it names the reading it tests, gives lettered options with the pros and cons of each, marks the recommended option with its Why recommended, and says which blockers each option removes. Do not ask what the Confirmed section already answers. A question that only collects a fact the user alone knows is exempt from the option format (see the exemption under Decision requests): ask it plainly.
 
 ### Clarification report
 
@@ -297,7 +297,7 @@ Letter the options A, B, C (see Decision requests): one block each, with Pros an
 - Cons: <cons>
 
 **Option C: close the whole class** (C4 only)
-<the class in one sentence, and the instances it covers; when C4 fired and no requirement choice is behind the theme, this is the recommended option, so move the recommended tag and the Why recommended line here from Option A> — removes <blockers>
+<the class in one sentence, and the instances it covers; when C4 fired and no requirement choice is behind the theme, this is the recommended option, and the recommended option is always listed first as Option A, so in that case list this as Option A and reletter the rest> — removes <blockers>
 - Pros: <pros>
 - Cons: <cons>
 
@@ -382,6 +382,9 @@ Clarification never approves. There is no option that advances with open blocker
 ### Options
 Use the decision-request format (see [Decision requests](#decision-requests)): mark exactly one option (Recommended) and give only that option a Why recommended line.
 
+**Decision 1: <what must be decided>**
+<one or two lines of context>
+
 **Option A: Revise** (Recommended)
 fix the remaining blockers (or the requirement they protect), then run a fresh review round
 - Pros: <pros>
@@ -408,7 +411,7 @@ answer the open questions about the requirement; a new gate occurrence starts
 - Pros: <pros>
 - Cons: <cons>
 
-Reply with a letter for the action, written `Action A` (never a bare `E`, which is the explain shortcut). If there's no answer: nothing advances; the gate stays open and the work waits.
+Reply with the decision number and a letter, like `1 A` (option E is `1 E`; a bare `E` is the explain shortcut). If there's no answer: nothing advances; the gate stays open and the work waits.
 ```
 
 Line 2 never uses this template; it uses the Clarification report.

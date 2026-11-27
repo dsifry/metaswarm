@@ -133,7 +133,8 @@ bd dep add <plan-task> <research-task>
 #   not plan output: post the choice as a Clarification report (decision request: options, pros, cons,
 #   recommendation), mark the planning task waiting on the user (bd label add <plan-task> waiting:human),
 #   do NOT run the Plan Review Gate, and when the user answers record it in the plan's Confirmed section
-#   and resume planning with the same planner.
+#   and resume planning with the same planner (restate the answer in your own words and get it
+#   confirmed before it goes in Confirmed).
 
 # 8. Plan Review Gate (blocked by planning): run the plan-review-gate skill
 #    3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment),
@@ -605,7 +606,7 @@ gh issue comment <number> --body "$(cat <<'EOF'
 ## Agent Request: <type>
 
 **Task**: <task-id>
-**Question**: <clear question>
+**Decision 1**: <clear question>
 
 ### Options
 Every ask to the user uses the decision-request format (see Decision requests in `guides/delivery-scope.md`): lettered options A, B, C (never numbers), each with pros and cons, and Why recommended on the recommended option only.
@@ -621,7 +622,7 @@ Every ask to the user uses the decision-request format (see Decision requests in
 - Pros: ...
 - Cons: ...
 
-Reply with a letter. If there's no answer: <what proceeds meanwhile, and what waits>.
+Reply with the decision number and a letter, like `1 A`. If there's no answer: <what proceeds meanwhile, and what waits>.
 
 ---
 Reply with: `@beads approve <task-id>` or `@beads respond <task-id> <option>`

@@ -32,10 +32,26 @@ Questions that only collect facts (the description, the acceptance criteria) are
 Ask the user:
 
 ```
-What type of issue is this?
-1. Feature - New functionality
-2. Bug - Something broken
-3. Refactor - Improving existing code
+**Decision 1: What type of issue is this?**
+Pick the closest type; it sets the template and labels.
+
+**Option A: Feature** (Recommended)
+New functionality.
+- Pros: gets the feature template with acceptance criteria.
+- Cons: wrong if something already exists and is broken.
+- Why recommended: <tied to what the user described>
+
+**Option B: Bug**
+Something broken.
+- Pros: gets reproduction steps and expected behaviour.
+- Cons: wrong for a new capability.
+
+**Option C: Refactor**
+Improving existing code.
+- Pros: gets scope and no-behaviour-change criteria.
+- Cons: wrong when users will see a difference.
+
+Reply with a letter, like `1 A`. If there's no answer: ask again; nothing is filed.
 ```
 
 ### Step 2: Brief Description
@@ -47,10 +63,23 @@ Brief description of the problem or feature? (1-2 sentences)
 ### Step 3: Complexity Assessment
 
 ```
-What's the estimated complexity?
-1. Simple (< 1 day)
-2. Medium (2-5 days)
-3. Complex (> 1 week)
+**Decision 2: What's the estimated complexity?**
+Pick the closest size; it sets how the work is broken down.
+
+**Option A: Medium (2-5 days)** (Recommended)
+- Pros: fits most issues.
+- Cons: may over- or under-plan.
+- Why recommended: <tied to the scope described>
+
+**Option B: Simple (< 1 day)**
+- Pros: minimal ceremony.
+- Cons: can hide unknowns.
+
+**Option C: Complex (> 1 week)**
+- Pros: forces decomposition.
+- Cons: more planning overhead.
+
+Reply with a letter, like `2 B` (several decisions: `1 A 2 B`). If there's no answer: ask again; nothing is filed.
 ```
 
 ### Step 4: Context Gathering

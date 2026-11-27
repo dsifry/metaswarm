@@ -33,4 +33,5 @@ When the user's whole prompt is `E` (or `e`), explain the items waiting on them,
 3. End with `Item k of n - type E for the next.`
 4. After the last item, say so and restate the full `YOU:` list briefly.
 5. If there are no `YOU:` items, say `Nothing is waiting on you.`
-6. **Never treat `E` as an answer** to a pending question or approval. It only asks for an explanation.
+6. **An explanation turn does not reset the sequence.** The `Item k of n - type E for the next.` ending replaces the `WAITING-ON:` line for that turn only; the cursor stays on the latest real `WAITING-ON:` line, so the next `E` moves to item k+1. A new `WAITING-ON:` line published by a normal work turn restarts the sequence at item 1.
+7. **Never treat `E` as an answer** to a pending question or approval. It only asks for an explanation.

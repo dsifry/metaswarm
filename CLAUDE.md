@@ -106,7 +106,7 @@ When a plan is ready for execution, **always ask the user** which execution appr
 > 4-phase loop per work unit (IMPLEMENT → VALIDATE → ADVERSARIAL REVIEW → COMMIT) with independent quality gates, fresh adversarial reviewers, coverage enforcement and pre-PR knowledge capture.
 > - Pros: more thorough and broader coverage; independent review of every work unit.
 > - Cons: uses more tokens and takes longer.
-> - Why recommended: <chosen from the plan's size and risk and the priorities the user has stated; move the (Recommended) tag and this line to option B or C when it fits better>
+> - Why recommended: <chosen from the plan's size and risk and the priorities the user has stated; move the (Recommended) tag and this line to the recommended option, and reletter so the recommended option is Option A when another option fits better>
 >
 > **Option B: Subagent-driven development** (`superpowers:subagent-driven-development`)
 > Dispatch subagents per task in this session with code review between tasks.

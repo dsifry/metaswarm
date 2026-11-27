@@ -270,6 +270,9 @@ When user input is needed, ALWAYS:
 ```text
 [Describe what happened]
 
+**Decision 1: [the choice to make]**
+<one or two lines of context>
+
 **Option A: [name]** (Recommended)
 [What it involves]
 - Pros: [benefits]
@@ -286,7 +289,7 @@ When user input is needed, ALWAYS:
 - Pros: [benefits]
 - Cons: [drawbacks]
 
-Reply with a letter (or describe a different approach). If there's no answer: [what proceeds by default].
+Reply with the decision number and a letter, like `1 A` (or describe a different approach). If there's no answer: [what proceeds by default].
 ```
 
 ### After User Responds
@@ -306,6 +309,9 @@ Current status:
 - Threads: [X] resolved, [Y] unresolved
 - Commits: [N] fix commits pushed
 
+**Decision 1: Keep monitoring, hand off or check in sooner?**
+<one or two lines of context>
+
 **Option A: Keep monitoring** (Recommended)
 Continue for another 4 hours.
 - Pros: PR may get reviewed soon
@@ -322,7 +328,7 @@ Check back in 1 hour instead of 4.
 - Pros: More frequent checkpoints
 - Cons: More interruptions
 
-Reply with a letter (or describe a different approach). If there's no answer: keep monitoring for another 4 hours.
+Reply with the decision number and a letter, like `1 A` (or describe a different approach). If there's no answer: keep monitoring for another 4 hours.
 ```
 
 ## Exit Conditions

@@ -165,6 +165,9 @@ Each phase runs as its own agent type with a default model in its frontmatter, s
 |---|---|
 | `design-reviewer`, `plan-reviewer`, `adversarial-reviewer`, `planner` | opus |
 | `researcher`, `coder`, `pr-shepherd-agent`, `knowledge-curator-agent` | sonnet |
+| `mechanical-coder` | haiku |
+| `supercoder` | opus |
+| `security-coder`, `debugger` | fable |
 | `issue-orchestrator`, `swarm-coordinator-agent` | inherit (your session model) |
 
 - **Override:** edit `.metaswarm/models.yaml`, then run `/update` to regenerate the `.claude/agents/metaswarm-<role>.md` files. Restart Claude Code after `.claude/agents/` is first created. `issue-orchestrator` and `swarm-coordinator-agent` are plugin-only (they inherit the session model) and are not configurable in `models.yaml`.

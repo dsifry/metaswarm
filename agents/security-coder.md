@@ -45,7 +45,7 @@ Read the plugin's `agents/coder.md` and follow it. You also apply everything in 
 4. **Secrets are live.** Treat a test secret as a real one. A secret value goes only to the process that consumes it. Never put a secret in argv, an environment variable you pass on, a file outside its store, a log, a test name, an error message or your output.
 5. **Look beyond the brief.** Read the code that produces and consumes what you verify. If you find a latent bug on that path (format drift, an extra newline, a field that is never checked), fix it if it is in scope. Otherwise report it with its file and line.
 6. **Never weaken a guard to make a test pass.** Do not loosen a structural test, an allow-list, a pinned string or an existing check unless the brief says to. If one blocks you, report it.
-7. **Stop on a security policy choice.** Thresholds, who may approve, what is trusted, and what is exposed are policy. A policy choice is a requirement choice (see `guides/delivery-scope.md`, Signal fields). If the brief, the design and the Confirmed answers do not settle it, STOP and report the requirement choice as lettered options with pros/cons and a recommendation. Do not pick one yourself.
+7. **Stop on a security policy choice.** Thresholds, who may approve, what is trusted, and what is exposed are policy. A policy choice is a requirement choice (see `guides/delivery-scope.md`, Signal fields). If the requirement, the DoD, the design and the Confirmed answers do not settle it (a fix brief alone does not), STOP and report the requirement choice as lettered options with pros/cons and a recommendation. Do not pick one yourself.
 
 ## Output
 

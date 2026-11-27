@@ -359,7 +359,7 @@ ${confirmedAnswers}
 - Do not mark `needs_user` when the Confirmed section (the Confirmed Answers above) already answers the question. Add `theme` to every finding and the other signal fields to each blocker.
 ```
 
-**Security work units.** When the work unit was built by `security-coder`, or touches a security boundary, the reviewer brief also names `./rubrics/security-implementation-rubric.md` (when review is routed to external tools, see Review in `skills/external-tools/SKILL.md`: the same rubric goes with the spec and the S1-S8 block is required in the result) (add a line `Also read and follow: ./rubrics/security-implementation-rubric.md` under Rubric), and the review appends the S1-S8 verdict block defined there.
+**Security work units.** When the work unit meets any `security-coder` condition in [Coder Selection](./guides/coder-selection.md) (whichever tier built it, including a `supercoder` fallback), or touches a security boundary, the reviewer brief also names `./rubrics/security-implementation-rubric.md` (when review is routed to external tools, see Review in `skills/external-tools/SKILL.md`: the same rubric goes with the spec and the S1-S8 block is required in the result) (add a line `Also read and follow: ./rubrics/security-implementation-rubric.md` under Rubric), and the review appends the S1-S8 verdict block defined there.
 
 **Phase 3 outcomes:**
 
@@ -506,6 +506,9 @@ When the rule says clarify (line 2), use the Clarification report from the [Clar
 ### Options
 Use the decision-request format (see Decision requests in `delivery-scope.md`): mark exactly one option (Recommended) and give only that option a Why recommended line.
 
+**Decision 1: <what must be decided>**
+<one or two lines of context>
+
 **Option A: Revise** (Recommended)
 fix the remaining blockers (or the requirement they protect), then run a fresh review round
 - Pros: <pros>
@@ -532,7 +535,7 @@ answer the open questions about the requirement; a new gate occurrence starts
 - Pros: <pros>
 - Cons: <cons>
 
-Reply with a letter for the action, written `Action A` (never a bare `E`, which is the explain shortcut). If there's no answer: nothing advances; the gate stays escalated and the work waits.
+Reply with the decision number and a letter, like `1 A` (option E is `1 E`; a bare `E` is the explain shortcut). If there's no answer: nothing advances; the gate stays escalated and the work waits.
 ```
 
 ### What the Orchestrator MUST NOT Do
@@ -953,6 +956,9 @@ After 3 failed VALIDATE attempts, escalate to human with full context:
 ### Options
 Use the decision-request format (see Decision requests in `./guides/delivery-scope.md`): mark exactly one option (Recommended) and give only that option a Why recommended line.
 
+**Decision 1: <what must be decided>**
+<one or two lines of context>
+
 **Option A: <option-a>** (Recommended)
 <what it does, in one line>
 - Pros: <pros>
@@ -969,7 +975,7 @@ Use the decision-request format (see Decision requests in `./guides/delivery-sco
 - Pros: <pros>
 - Cons: <cons>
 
-Reply with a letter. If there's no answer: the work unit stays blocked and nothing else on it proceeds.
+Reply with the decision number and a letter, like `1 A`. If there's no answer: the work unit stays blocked and nothing else on it proceeds.
 ```
 
 ---

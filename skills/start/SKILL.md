@@ -557,7 +557,7 @@ gh issue comment <number> --body "$(cat <<'EOF'
 ## 🤖 Agent Request: <type>
 
 **Task**: <task-id>
-**Question**: <clear question>
+**Decision 1**: <clear question>
 
 ### Options
 Every ask to the user uses the decision-request format (see Decision requests in `./guides/delivery-scope.md`): lettered options A, B, C (never numbers), each with pros and cons, and Why recommended on the recommended option only.
@@ -573,7 +573,7 @@ Every ask to the user uses the decision-request format (see Decision requests in
 - Pros: ...
 - Cons: ...
 
-Reply with a letter. If there's no answer: <what proceeds meanwhile, and what waits>.
+Reply with the decision number and a letter, like `1 A`. If there's no answer: <what proceeds meanwhile, and what waits>.
 
 ---
 Reply: `@beads approve <task-id>` or `@beads respond <task-id> <option>`

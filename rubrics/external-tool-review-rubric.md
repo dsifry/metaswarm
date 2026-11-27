@@ -45,7 +45,7 @@ Signal fields (see "Signal fields" in the guide) are added to the six core field
 - assumption: <ledger id such as A3, or a quoted decision>   # required when origin is assumption
 ```
 
-Mark `needs_user: yes` only for a requirement choice: a choice between behaviours the user would see or care about, that the requirement, DoD and Confirmed section do not settle. A purely technical choice with no user-visible difference is not one. Do not mark a question `needs_user` when the design's Confirmed section already answers it.
+Mark `needs_user: yes` only for a requirement choice or a fact only the user can provide: a choice between behaviours the user would see or care about, that the requirement, DoD and Confirmed section do not settle. A purely technical choice with no user-visible difference is not one. Do not mark a question `needs_user` when the design's Confirmed section already answers it.
 
 For a security work unit the spec also carries the security implementation rubric; apply it and end with its S1-S8 verdict block.
 

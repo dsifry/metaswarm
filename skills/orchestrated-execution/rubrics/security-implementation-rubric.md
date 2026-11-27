@@ -35,7 +35,7 @@
 
 | Check | What to look for |
 |---|---|
-| Where the key comes from | The key, certificate or allowed identity used to verify must come only from an already-trusted store, such as a verified record or pinned config. It must never come from the message being verified, or from anything that message names. |
+| Where the key comes from | The key, certificate or allowed identity used to verify must come only from an already-trusted store, such as a verified record or pinned config. It must never come from the message being verified, or from anything that message names. A message identifier (such as a key ID) may only choose among entries that already exist in the trusted store; it must not add, replace or define a key, certificate or allowed identity. |
 | Who can write the anchor | Name every writer of the trust store. Can any of them be driven by an unverified input, another tenant or another fleet? |
 | Bootstrap | The first key a system trusts (trust on first use, or a first status) must be explicit, narrow, and impossible to reach again after bootstrap. |
 | Version skew | An old release that lacks the new key or field must fail with a clear message that names the cause. It must never fall back to "unverified is fine". A new release that adds a signer must not break an older verifier's recovery path without a stated decision. |
@@ -97,7 +97,7 @@
 |---|---|
 | A rejection test per attack | There is a separate test for each of: wrong key, each wrong binding field, replay, unsigned, malformed, and unknown target. A single "invalid answer fails" test does not count. |
 | Real counterparties | At least one test runs against the real other side, in process: the real gate, signer or service, not only a fake. |
-| Tests first | The hand-back shows each new test failing before the code existed, and the mutation runs. |
+| Tests first | The hand-back shows each test of the new defense or the fixed defect failing before the code existed, and the mutation runs. Any other new test (for example a positive test of existing valid behaviour) needs only a stated reason in the hand-back. |
 | Nothing weakened | No structural test, allow-list, pinned string or existing assertion was loosened. Any change to one is justified in the hand-back. |
 
 ---

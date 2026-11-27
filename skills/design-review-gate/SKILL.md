@@ -619,6 +619,9 @@ When the severity rule says clarify (line 2), use the Clarification report from 
 ### Options
 Use the decision-request format (see Decision requests in `delivery-scope.md`): mark exactly one option (Recommended) and give only that option a Why recommended line.
 
+**Decision 1: <what must be decided>**
+<one or two lines of context>
+
 **Option A: Revise** (Recommended)
 fix the remaining blockers (or the requirement they protect), then run a fresh review round
 - Pros: <pros>
@@ -645,7 +648,7 @@ answer the open questions about the requirement; a new gate occurrence starts
 - Pros: <pros>
 - Cons: <cons>
 
-Reply with a letter for the action, written `Action A` (never a bare `E`, which is the explain shortcut). If there's no answer: nothing advances; the gate stays escalated and the work waits.
+Reply with the decision number and a letter, like `1 A` (option E is `1 E`; a bare `E` is the explain shortcut). If there's no answer: nothing advances; the gate stays escalated and the work waits.
 ```
 
 ---

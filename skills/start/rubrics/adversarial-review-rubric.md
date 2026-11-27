@@ -140,7 +140,7 @@ The primary check. For each DoD item:
 | Check | Classification | Criteria |
 | --- | --- | --- |
 | Sibling paths | BLOCKING if a sibling path is unhandled | For every fix or new behaviour, check the paths that handle the same data or event: replay or recovery after restart, resume, retry, rollback, restore. Why: an attachment fix covered live messages but not the restart replay |
-| Production wiring | BLOCKING if tests diverge from production | Tests exercise the production constants and wiring, not a hand-built config that differs from production. Why: a test set a concurrency limit of 1 while production used 2 |
+| Production wiring | BLOCKING if tests diverge from production | Tests exercise the production constants and wiring, not a hand-built config that differs from production. Why: a test set a concurrency limit of 1 while production used 2. A test of a supported non-default setting is fine when the production value is also tested |
 
 As with every blocker, `protects` must name the credible user scenario or requirement.
 
