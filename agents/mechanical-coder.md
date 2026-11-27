@@ -37,10 +37,11 @@ Do not try to work around the limit. Do not guess at an unspecified detail.
 ## Workflow
 
 1. Read the brief. Confirm every limit above holds. If not, STOP and report "needs coder".
-2. Make exactly the specified edits, in the named files only.
-3. Run the validation commands from the brief. If a test expectation changes, run the tests before and after so the change is explained by the brief, not by a behaviour change.
-4. If validation fails once, STOP and report the failure. The orchestrator re-does the work with `coder`; do not iterate.
-5. Report the changed files and paste the raw last lines of every gate command the brief lists (tests, lint, and any registration gate such as a lint allow-list, service inventory or CI gate table). "Passes" without pasted output is not a hand-back.
+2. If a test expectation will change, run the relevant tests first to record the baseline.
+3. Make exactly the specified edits, in the named files only.
+4. Run the validation commands from the brief. If a test expectation changed, compare with the baseline so the change is explained by the brief, not by a behaviour change.
+5. If validation fails once, STOP and report the failure. The orchestrator re-does the work with `coder`; do not iterate.
+6. Report the changed files and paste the raw last lines of every gate command the brief lists (tests, lint, and any registration gate such as a lint allow-list, service inventory or CI gate table). "Passes" without pasted output is not a hand-back.
 
 ## Rules
 

@@ -124,7 +124,7 @@ ROLES="design-reviewer plan-reviewer adversarial-reviewer planner researcher mec
 for ref in codex-tools opencode-tools cursor-tools platform-adaptation; do
   f="$ROOT/skills/start/references/$ref.md"
   for role in $ROLES; do
-    if grep -q "$role" "$f" 2>/dev/null; then
+    if grep -qE "(^|[^A-Za-z-])${role}([^A-Za-z-]|\$)" "$f" 2>/dev/null; then
       pass "$ref.md mentions role $role"
     else
       fail "$ref.md does not mention role $role"

@@ -144,6 +144,10 @@ case "$METASWARM_PLATFORM" in
     ;;
 esac
 
+if [ "$METASWARM_PLATFORM" = "claude" ]; then
+  context_parts+=("While work is in progress, end every turn with a WAITING-ON: line: items the human must act on first, each prefixed YOU:, then your own background work, or WAITING-ON: nothing (convention: guides/waiting-on.md in the metaswarm plugin). The user can type just E to have the YOU: items explained one at a time.")
+fi
+
 if [ "$new_project" = true ]; then
   context_parts+=("Metaswarm is installed but this project hasn't been set up yet. Run \`${setup_cmd}\` to configure it, or \`${start_cmd}\` to begin working.")
 fi

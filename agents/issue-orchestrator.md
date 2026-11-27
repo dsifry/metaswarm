@@ -69,7 +69,7 @@ When Team tools are available:
 2. **Spawn specialists as named teammates**:
    - `researcher` (type `roleType("researcher")`) — persistent across research phase
    - `architect` (type `roleType("planner")`) — persistent across planning phase
-   - `coder` (type `roleType("coder")`) — **fresh instance per work unit and per review-fix round**, chosen by tier (see [coder selection](../guides/coder-selection.md))
+   - `coder` (type: the role of the tier the rubric picks, one of `roleType("mechanical-coder")`, `roleType("coder")`, `roleType("supercoder")` or `roleType("security-coder")`) — **fresh instance per work unit and per review-fix round**, chosen by tier (see [coder selection](../guides/coder-selection.md)); `roleType("debugger")` is spawned first, with one narrow question, when a debugger condition in that rubric holds, and its fix design goes to a fresh coder of the tier the rubric picks
    - `shepherd` (type `roleType("pr-shepherd-agent")`) — persistent through PR lifecycle, sends async status updates via `SendMessage`
 3. **Direct handoffs**: Researcher sends findings directly to architect via `SendMessage` (no orchestrator bottleneck)
 4. **Async updates**: Teammates report progress via `SendMessage`; orchestrator receives and coordinates
@@ -129,7 +129,11 @@ bd dep add <plan-task> <research-task>
 # 7. Spawn Architect Agent for planning (role type roleType("planner"))
 #    The plan must carry an "Assumptions (unconfirmed)" section (ids A1, A2, ...) and a "Confirmed" section
 #    (what the user confirmed, in the user's words). Never label an agent proposal as a user decision.
-# Wait for plan output
+# Wait for plan output. If the planner instead STOPs on a requirement choice, that is a Clarify stop,
+#   not plan output: post the choice as a Clarification report (decision request: options, pros, cons,
+#   recommendation), mark the planning task waiting on the user (bd label add <plan-task> waiting:human),
+#   do NOT run the Plan Review Gate, and when the user answers record it in the plan's Confirmed section
+#   and resume planning with the same planner.
 
 # 8. Plan Review Gate (blocked by planning): run the plan-review-gate skill
 #    3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment),

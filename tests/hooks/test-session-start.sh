@@ -134,6 +134,7 @@ echo '{"distribution":"plugin"}' > "$TEST_CWD/.metaswarm/project-profile.json"
 output=$(cd "$TEST_CWD" && bash "$HOOK_SCRIPT" 2>/dev/null || true)
 assert_json_valid "Output is valid JSON" "$output"
 assert_not_contains "No setup nudge" "$output" '/setup'
+assert_contains "Loads the WAITING-ON convention for the E shortcut" "$output" "WAITING-ON:"
 
 # --- Test 2b: Codex self-heal writes Codex files only ---
 echo "Test 2b: Codex self-heal is platform-aware"

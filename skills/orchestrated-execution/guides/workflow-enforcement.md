@@ -73,7 +73,7 @@ The plan is ready; the options differ in cost, speed and how much independent re
 **Option B: Subagent-driven development** (`superpowers:subagent-driven-development`)
 Dispatch subagents per task in this session with code review between tasks.
 - Pros: faster, lighter-weight, lower token cost; still has review between tasks.
-- Cons: less independent review and no coverage or knowledge-capture gates.
+- Cons: less independent review (no fresh adversarial reviewer per work unit or independent VALIDATE phase); the coverage gate and pre-PR knowledge capture still apply.
 
 **Option C: Native inline execution** (`superpowers:executing-plans`)
 I implement every task myself in this session, then one fresh reviewer checks the whole branch.

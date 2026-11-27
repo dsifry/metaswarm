@@ -98,6 +98,8 @@ adapters/gemini.sh review \
   --timeout 300
 ```
 
+For a security work unit (built by `security-coder` or touching a security boundary), also append the contents of `rubrics/security-implementation-rubric.md` to the spec file and require the S1-S8 verdict block in the review; an external review without it is incomplete.
+
 All commands return a uniform JSON envelope with facts only (exit code, files changed, cost, duration). The orchestrator interprets results -- adapters never self-judge.
 
 ---

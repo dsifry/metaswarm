@@ -65,8 +65,12 @@ grep -qF -- '(d) require the coder to hunt for further members and report every 
   && pass "requirement (d) present" || fail "requirement (d) missing"
 grep -qF -- 'the next fix brief must' <<<"$P" \
   && pass "paragraph binds the next fix brief" || fail "paragraph does not bind the next fix brief"
-grep -qF -- 'If the user picks it (or the default stands)' <<<"$P" \
-  && pass "paragraph states the pick-or-default condition" || fail "paragraph missing the pick-or-default condition"
+grep -qF -- 'If the user picks it, the next fix brief must' <<<"$P" \
+  && pass "paragraph requires the user's pick" || fail "paragraph missing the user-pick condition"
+! grep -qF -- 'default stands' <<<"$P" \
+  && pass "paragraph has no default path" || fail "paragraph still has a default path"
+grep -qF -- 'Closing the class means the smallest guard that covers the credible scenarios, not an exhaustive model of every state.' <<<"$P" \
+  && pass "paragraph carries the smallest-guard sentence" || fail "paragraph missing the smallest-guard sentence"
 
 echo "Test 4: the paragraph states that two recurrences do not trigger it"
 grep -qiF -- 'Two recurrences alone do not trigger this' <<<"$P" \

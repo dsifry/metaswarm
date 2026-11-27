@@ -69,12 +69,12 @@ When Team tools are available:
 2. **Spawn specialists as named teammates**:
    - `researcher` (type `roleType("researcher")`) — persistent across research phase
    - `architect` (type `roleType("planner")`) — persistent across planning phase
-   - `coder` (type `roleType("coder")`) — **fresh instance per work unit and per review-fix round**, chosen by tier (see [coder selection](../guides/coder-selection.md))
+   - `coder` (type: the role of the tier the rubric picks, one of `roleType("mechanical-coder")`, `roleType("coder")`, `roleType("supercoder")` or `roleType("security-coder")`) — **fresh instance per work unit and per review-fix round**, chosen by tier (see [coder selection](../guides/coder-selection.md)); `roleType("debugger")` is spawned first, with one narrow question, when a debugger condition in that rubric holds, and its fix design goes to a fresh coder of the tier the rubric picks
    - `shepherd` (type `roleType("pr-shepherd-agent")`) — persistent through PR lifecycle, sends async status updates via `SendMessage`
 3. **Direct handoffs**: Researcher sends findings directly to architect via `SendMessage` (no orchestrator bottleneck)
 4. **Async updates**: Teammates report progress via `SendMessage`; orchestrator receives and coordinates
 
-**MANDATORY**: Adversarial reviewers are ALWAYS fresh `Task()` instances (role type `roleType("adversarial-reviewer")`, resolved per [Role type resolution](../guides/agent-coordination.md#role-type-resolution)) — never teammates, never resumed, never given prior context. This applies in BOTH modes without exception. See `./guides/agent-coordination.md` for details.
+**MANDATORY**: Adversarial reviewers are ALWAYS fresh `Task()` instances (role type `roleType("adversarial-reviewer")`, resolved per [Role type resolution](../guides/agent-coordination.md#role-type-resolution)) — never teammates, never resumed, never given prior context. This applies in BOTH modes without exception. See `guides/agent-coordination.md` for details.
 
 ### BEADS + Team TaskList Bridging (Team Mode Only)
 
@@ -129,7 +129,11 @@ bd dep add <plan-task> <research-task>
 # 7. Spawn Architect Agent for planning (role type roleType("planner"))
 #    The plan must carry an "Assumptions (unconfirmed)" section (ids A1, A2, ...) and a "Confirmed" section
 #    (what the user confirmed, in the user's words). Never label an agent proposal as a user decision.
-# Wait for plan output
+# Wait for plan output. If the planner instead STOPs on a requirement choice, that is a Clarify stop,
+#   not plan output: post the choice as a Clarification report (decision request: options, pros, cons,
+#   recommendation), mark the planning task waiting on the user (bd label add <plan-task> waiting:human),
+#   do NOT run the Plan Review Gate, and when the user answers record it in the plan's Confirmed section
+#   and resume planning with the same planner.
 
 # 8. Plan Review Gate (blocked by planning): run the plan-review-gate skill
 #    3 adversarial reviewers (Feasibility, Completeness, Scope & Alignment),
@@ -278,7 +282,7 @@ You are the ADVERSARIAL REVIEWER for work unit ${wuId}.
 Adversarial — your job is to FIND FAILURES, not to approve.
 
 ## Rubric
-Read and follow: ./rubrics/adversarial-review-rubric.md
+Read and follow: .claude/rubrics/adversarial-review-rubric.md
 
 ## Spec
 ${spec}
@@ -290,7 +294,7 @@ ${dodItems.map((item, i) => `${i+1}. ${item}`).join('\n')}
 Run: git diff main..HEAD -- ${fileScope.join(' ')}
 
 ## Findings
-Report every finding with the 6 fields defined in `./guides/delivery-scope.md`:
+Report every finding with the 6 fields defined in `guides/delivery-scope.md`:
 - title: <short label, ≤ ~80 chars>
 - description: <1-3 sentences: what is wrong and why it matters>
 - severity: critical | major | minor | nit
@@ -324,7 +328,7 @@ Do not mark a question `needs_user` when the Confirmed Answers above already ans
 
 1. **Never trust self-reports**: Run tsc, eslint, vitest YOURSELF — do not ask the coder
 2. **Fresh reviewer on re-review**: Spawn a NEW adversarial reviewer (role type roleType("adversarial-reviewer")) after each FAIL
-3. **Severity-gated iteration on review FAIL**: After each review round, apply the severity rule (cap 10 rounds; see `./guides/delivery-scope.md` and the `orchestrated-execution` skill's On FAIL protocol). It decides whether to iterate, advance, clarify or escalate. Minor/nit findings become follow-ups
+3. **Severity-gated iteration on review FAIL**: After each review round, apply the severity rule (cap 10 rounds; see `guides/delivery-scope.md` and the `orchestrated-execution` skill's On FAIL protocol). It decides whether to iterate, advance, clarify or escalate. Minor/nit findings become follow-ups
 4. **Respect file scope**: Verify with `git diff --name-only` after each implementation
 5. **Parallel where possible**: Independent work units can run Phase 3.1 simultaneously
 6. **Maintain project context**: After each work unit COMMIT, update the project context document with:
@@ -579,11 +583,11 @@ Stop for the user (not an escalation) when:
 
 ### Escalation Format
 
-**Every ask to the user uses the decision-request format**: lettered options (A, B, C) under numbered questions (reply `1 A 2 C`), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `./guides/delivery-scope.md`). The Agent Request below, the Clarification report and the Review Escalation report all use those option blocks. Questions that only collect a fact are exempt.
+**Every ask to the user uses the decision-request format**: lettered options (A, B, C) under numbered questions (reply `1 A 2 C`), each with its pros and cons, the recommended option marked, and why it is recommended (see Decision requests in `guides/delivery-scope.md`). The Agent Request below, the Clarification report and the Review Escalation report all use those option blocks. Questions that only collect a fact are exempt.
 
-**Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), still mark the task waiting (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), then post the Review Escalation report from the Escalation template in `./guides/delivery-scope.md` instead. Its options are **Revise**, **Clarify the requirement / re-brainstorm**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. There is no `@beads approve` for an escalated review gate: escalation never approves.
+**Severity-rule escalations never use this template.** When a review gate escalates (the 10-round cap, or a recurring or disputed blocker), still mark the task waiting (`bd update <task-id> --status blocked` and `bd label add <task-id> waiting:human`), then post the Review Escalation report from the Escalation template in `guides/delivery-scope.md` instead. Its options are **Revise**, **Clarify the requirement / re-brainstorm**, **Narrow scope**, **Defer** and **Cancel**, and any revised or narrowed work gets a fresh review round that it must pass. There is no `@beads approve` for an escalated review gate: escalation never approves.
 
-**A Clarify signal (rule line 2) is a stop, not an escalation.** Run the misunderstanding analysis, post the Clarification report from the Clarify section of `./guides/delivery-scope.md`, mark the task waiting the same way, and wait for the user.
+**A Clarify signal (rule line 2) is a stop, not an escalation.** Run the misunderstanding analysis, post the Clarification report from the Clarify section of `guides/delivery-scope.md`, mark the task waiting the same way, and wait for the user.
 
 - **Standing instructions.** "Keep going", "use your judgment" and similar instructions never acknowledge a signal, answer a question or default a `needs_user` question. Only an answer to the specific question counts. While you wait, keep working on parts the questions do not affect.
 - **Restate the answers.** When the user answers, restate the user's answer in your own words and get it confirmed before it goes in the Confirmed list. A one-word acknowledgement of a message with several parts confirms nothing.
@@ -604,7 +608,7 @@ gh issue comment <number> --body "$(cat <<'EOF'
 **Question**: <clear question>
 
 ### Options
-Every ask to the user uses the decision-request format (see Decision requests in `./guides/delivery-scope.md`): lettered options A, B, C (never numbers), each with pros and cons, and Why recommended on the recommended option only.
+Every ask to the user uses the decision-request format (see Decision requests in `guides/delivery-scope.md`): lettered options A, B, C (never numbers), each with pros and cons, and Why recommended on the recommended option only.
 
 **Option A: <name>** (Recommended)
 <one line on what it does>
@@ -660,7 +664,7 @@ During the 4-phase execution loop, follow the structured recovery protocol defin
 
 1. **DIAGNOSE**: Identify which phase failed and gather evidence
 2. **CLASSIFY**: Fixable (clear error) / Ambiguous (unclear cause) / External (dependency issue)
-3. **RETRY**: VALIDATE failures (tests, coverage, lint, typecheck) get up to 3 attempts per work unit, with escalating approaches. VALIDATE attempts count consecutive failed VALIDATE runs for the work unit; a VALIDATE PASS resets the count to 0, so each review round's re-validation starts fresh. The number of review rounds is governed separately by the severity rule and its 10-round cap. Review FAILs follow severity-gated iteration instead (cap 10 rounds; see `./guides/delivery-scope.md`)
+3. **RETRY**: VALIDATE failures (tests, coverage, lint, typecheck) get up to 3 attempts per work unit, with escalating approaches. VALIDATE attempts count consecutive failed VALIDATE runs for the work unit; a VALIDATE PASS resets the count to 0, so each review round's re-validation starts fresh. The number of review rounds is governed separately by the severity rule and its 10-round cap. Review FAILs follow severity-gated iteration instead (cap 10 rounds; see `guides/delivery-scope.md`)
 4. **ESCALATE**: After 3 VALIDATE failures, or when the severity rule says escalate, escalate to human with full failure history; when it says clarify, stop for the user with the Clarification report (a Clarify stop is not an escalation)
 
 Track VALIDATE attempts with labels, and remove the `retry:N` label when VALIDATE passes (review rounds are tracked in `.beads/context/execution-state.md`, not labels):

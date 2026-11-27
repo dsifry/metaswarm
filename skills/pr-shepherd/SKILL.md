@@ -77,7 +77,7 @@ MONITORING → FIXING → MONITORING → WAITING_FOR_USER → FIXING → MONITOR
 | `MONITORING`       | Poll CI and reviews every 60s in background | CI fails, new comments, all done, or need help |
 | `FIXING`           | Fix issues using TDD, run local validation  | Local validation passes OR need user guidance  |
 | `HANDLING_REVIEWS` | Invoke `handling-pr-comments` skill         | Comments handled OR need user input            |
-| `WAITING_FOR_USER` | Present a decision request, wait for the answer | User responds                              |
+| `WAITING_FOR_USER` | Present a decision request; only the blocked failure waits, monitoring and review handling continue | User responds                              |
 | `DONE`             | All CI green + all threads resolved         | Exit successfully                              |
 
 ## Phase 1: Initialize

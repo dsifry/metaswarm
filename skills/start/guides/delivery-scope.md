@@ -118,9 +118,9 @@ Line 2 fires when any of C1–C4 holds. They are evaluated per gate occurrence, 
 - **C3** (fix-induced). At least 2 distinct blockers in the round have `fix_induced: yes`. It applies only to rounds at or after `windowStart`.
 - **C4** (recurring theme). One canonical theme that is not in `ackThemes` appears among the blockers of at least three rounds of the occurrence. The rounds do not need to be consecutive. `windowStart` does not reset C4; only `ackThemes` does. A blocker with no theme counts toward no theme.
 
-**C4 and class closure.** When C4 fires, the Clarification report's options include **close the whole class**, and it is the recommended option unless the misunderstanding analysis shows the theme rests on a requirement choice (then C1's question comes first). If the user picks it (or the default stands), the next fix brief must: (a) name the class in one sentence, independent of the instances; (b) list every instance seen so far; (c) require a structural test that fails for any member of the class, not only the named ones, with a negative test; and (d) require the coder to hunt for further members and report every source it checked. Two recurrences alone do not trigger this; only C4's three-round threshold does.
+**C4 and class closure.** When C4 fires, the Clarification report's options include **close the whole class**, and it is the recommended option unless the misunderstanding analysis shows the theme rests on a requirement choice (then C1's question comes first). Closing the class means the smallest guard that covers the credible scenarios, not an exhaustive model of every state. If the user picks it, the next fix brief must: (a) name the class in one sentence, independent of the instances; (b) list every instance seen so far; (c) require a structural test that fails for any member of the class, not only the named ones, with a negative test; and (d) require the coder to hunt for further members and report every source it checked. Two recurrences alone do not trigger this; only C4's three-round threshold does. No default applies: the class-wide fix starts only after the user answers.
 
-**Orchestrator duty: classify requirement choices before the helper runs.** The orchestrator classifies; it does not only trust the reviewers' tags. Each round, before running the helper, check every blocker against the Requirement choice definition in Signal fields. If a blocker is one, set `needs_user: yes` and `origin: requirement` on the recorded finding and add `classifiedBy: orchestrator`, even when the reviewer said no. C1 fires that same round, so the user is asked at the first round that shows the choice, not after C4 sees the theme three times. The Clarification report states the choice as a decision request (see [Decision requests](#decision-requests)): lettered options, each with its pros and cons, and the recommended default with its Why recommended. Founder working style still holds: questions never block other independent work. State the recommended default and continue the work that does not depend on the answer; "keep going" never defaults a `needs_user` question for the blocked item (see Options and re-entry). Never edit a recorded round afterwards; classify before the round is written.
+**Orchestrator duty: classify requirement choices before the helper runs.** The orchestrator classifies; it does not only trust the reviewers' tags. Each round, before running the helper, check every blocker against the Requirement choice definition in Signal fields. If a blocker is one, set `needs_user: yes` and `origin: requirement` on the recorded finding and add `classifiedBy: orchestrator`, even when the reviewer said no. Remove any `assumption` id from that finding, so its acknowledgement key is `<theme>:needs_user`; if the original assumption is still unconfirmed, record it as a separate `origin: assumption` finding with its own `assumption` id, so C1 tracks it under its own key. C1 fires that same round, so the user is asked at the first round that shows the choice, not after C4 sees the theme three times. The Clarification report states the choice as a decision request (see [Decision requests](#decision-requests)): lettered options, each with its pros and cons, and the recommended default with its Why recommended. Founder working style still holds: questions never block other independent work. State the recommended default and continue the work that does not depend on the answer; "keep going" never defaults a `needs_user` question for the blocked item (see Options and re-entry). Never edit a recorded round afterwards; classify before the round is written.
 
 C1 and C4 usually fire before C3 would. The history fields `windowStart`, `ackThemes` and `ackFindings` record what the user acknowledged (see Options and re-entry).
 
@@ -128,7 +128,7 @@ C1 and C4 usually fire before C3 would. The history fields `windowStart`, `ackTh
 
 Each finding has a free-text `theme`. From round 2 on, reviewers get the list of earlier canonical theme labels and reuse one when it fits. They do not see the earlier findings, so each review stays fresh. After each round the orchestrator maps every blocker's theme to a canonical theme id, by judgement, and records it as `canonicalTheme`. C4 counts `canonicalTheme`, and falls back to `theme` when it is missing.
 
-Canonical themes also decide what an acknowledgement clears, because the `ackFindings` key is built from the theme. So the orchestrator gives a `needs_user` blocker that asks a **different question** from the acknowledged one its own new canonical theme. Only a re-raise of the same question keeps the acknowledged theme. The same applies to assumptions: a new assumption gets a new ledger id, and only the same id is cleared.
+Canonical themes also decide what an acknowledgement clears, because the `ackFindings` key is built from the theme. So the orchestrator gives a `needs_user` blocker that asks a **different question** from the acknowledged one its own new canonical theme. Only a re-raise of the same question keeps the acknowledged theme. Before running the helper, the orchestrator checks that a new requirement-choice blocker's canonical theme is not already in `ackFindings` unless it re-asks the answered question; the helper does not check this. The same applies to assumptions: a new assumption gets a new ledger id, and only the same id is cleared.
 
 ### Round history
 
@@ -212,7 +212,8 @@ Required parts:
 - **Decision N:** a one-line question, then one or two lines of context. Number the decisions 1, 2, 3 when one message asks several; a message with a single decision is still `Decision 1`.
 - **Option X: <name>** blocks, at least two, lettered A, B, C one after another. Each has one line on what it does, then **Pros** and **Cons**. Include "do nothing" or "defer" when it is a real option. Never leave a pro or con out because it is awkward for the recommended option.
 - **(Recommended)** on exactly one option, and it is listed first (Option A). Only that option carries **Why recommended**, tied to the user's stated goals or constraints (quote or point to them), not a general preference. If it rests on an assumption the user has not confirmed, say so.
-- **Reply with** the decision number and the option letter, like `1 A 2 C` (just the letter when there is one decision), then **If there's no answer:** what proceeds meanwhile. Questions never block independent work: state the default and continue the work the answer does not affect. For a `needs_user` question the default never applies to the blocked item (see Standing instructions).
+- **Write in plain language:** no internal ids, class names or jargon the user would not use.
+- **Reply with** the decision number and the option letter, like `1 A 2 C` (just the letter when there is one decision, except that a bare `E` is always the explain shortcut, so choose option E with `1 E`), then **If there's no answer:** what proceeds meanwhile. Questions never block independent work: state the default and continue the work the answer does not affect. For a `needs_user` question the default never applies to the blocked item (see Standing instructions).
 
 **Numbering rule.** Questions or items are numbered 1, 2, 3; the options inside each are lettered A, B, C. Never numbers for options, and never letters for the questions. This holds everywhere: the `Option X` headings, the reply instruction, and any options relayed from a reviewer or a coder. An agent that produces options for the orchestrator to relay letters them too, so the user sees letters and replies with letters.
 
@@ -296,11 +297,13 @@ Letter the options A, B, C (see Decision requests): one block each, with Pros an
 - Cons: <cons>
 
 **Option C: close the whole class** (C4 only)
-<the class in one sentence, and the instances it covers> — removes <blockers>
+<the class in one sentence, and the instances it covers; when C4 fired and no requirement choice is behind the theme, this is the recommended option, so move the recommended tag and the Why recommended line here from Option A> — removes <blockers>
 - Pros: <pros>
 - Cons: <cons>
 
 Reply with each question's number and your letter, like `1 A 2 C`. If there's no answer: the blocked item waits; other independent work continues.
+
+The choice among the Options below is a separate reply, written `Action` and a letter (for example `Action B`), so it is never confused with a question's letter, and a bare `E` stays the explain shortcut.
 
 ### Round history
 | Round | Verdict | Blockers (critical/major) | Fixed this round | Signals (C1–C4) | Themes | Rule decision |
@@ -336,7 +339,7 @@ abandon this work
 - Pros: <pros>
 - Cons: <cons>
 
-Reply with a letter, like `B`. If there's no answer: nothing advances; the gate stays open and the work waits.
+Reply with a letter for the action, written `Action B`. If there's no answer: nothing advances; the gate stays open and the work waits.
 ```
 
 ### Options and re-entry

@@ -46,7 +46,7 @@ If no PR number is provided, uses the PR associated with the current branch.
 
 4. **Handle issues as they arise**:
    - Simple CI failures -> auto-fix with TDD
-   - Complex failures -> present a decision request (lettered options, pros/cons, recommended and why; Decision requests in `guides/delivery-scope.md`), wait for approval
+   - Complex failures -> present a decision request (lettered options, pros/cons, recommended and why; Decision requests in `guides/delivery-scope.md`); only the blocked failure waits for approval, and monitoring and review-comment handling continue meanwhile
    - New comments -> invoke `handling-pr-comments` skill
 
 5. **Exit when done**:

@@ -27,7 +27,7 @@ The coder implements features and fixes following strict TDD (Test-Driven Develo
 
 ## Requirement Choices
 
-If a fix or plan decision requires a requirement choice (see `guides/delivery-scope.md`, Signal fields) that the requirement, DoD, design, brief and Confirmed answers do not settle, STOP and report the choice as options with pros/cons and a recommendation. Do not pick silently.
+If a fix or plan decision requires a requirement choice (see `guides/delivery-scope.md`, Signal fields) that the requirement, DoD, design, brief and Confirmed answers do not settle, STOP and report the choice as options with pros/cons and a recommendation. Do not pick silently. The orchestrator treats that report as a Clarify stop and asks the user.
 
 ---
 

@@ -36,15 +36,26 @@ cnt() { grep -cE -- "$1" <<<"$2" || true; }
 # template_ok <text>: per-option blocks with Pros and Cons each, Why recommended on the
 # recommended option only, lettered options, a reply instruction and a no-answer default.
 template_ok() {
-  local t="$1" heads pros cons why tag
+  local t="$1" heads tag
   heads="$(cnt "$OPT_HEAD" "$t")"
-  pros="$(cnt '^[> ]*- Pros:' "$t")"
-  cons="$(cnt '^[> ]*- Cons:' "$t")"
-  why="$(cnt '^[> ]*- Why recommended:' "$t")"
   tag="$(cnt "${OPT_HEAD} .*\(Recommended\)" "$t")"
   [ "$heads" -ge 2 ] || return 1
-  [ "$pros" = "$heads" ] && [ "$cons" = "$heads" ] || return 1
-  [ "$tag" -ge 1 ] && [ "$why" = "$tag" ] || return 1
+  [ "$tag" -ge 1 ] || return 1
+  # Per option block: exactly one Pros and one Cons; Why recommended only on a recommended option, and on each.
+  OPT_HEAD_RE="$OPT_HEAD" awk '
+    function close_block() {
+      if (!inb) return
+      if (pros != 1 || cons != 1) bad = 1
+      if (rec && why != 1) bad = 1
+      if (!rec && why != 0) bad = 1
+    }
+    $0 ~ ENVIRON["OPT_HEAD_RE"] { close_block(); inb = 1; pros = cons = why = 0; rec = ($0 ~ /\(Recommended\)/); next }
+    /^[> ]*Reply with/ { close_block(); inb = 0 }
+    inb && /^[> ]*- Pros:/ { pros++ }
+    inb && /^[> ]*- Cons:/ { cons++ }
+    inb && /^[> ]*- Why recommended:/ { why++ }
+    END { close_block(); exit bad }
+  ' <<<"$t" || return 1
   grep -qE '^[> ]*\*\*Option A:' <<<"$t" || return 1
   grep -qE '^[> ]*\*\*Option [0-9]+|^[> ]*\*\*Option [A-Z][a-z]|^[> ]*\*\*Option [a-z]\b' <<<"$t" && return 1
   grep -qE '^[> ]*Reply with .*letter' <<<"$t" || return 1
@@ -97,6 +108,7 @@ neg "an option without Pros" '!/- Pros: x/ || seen++'
 neg "numbered options" '{ sub(/Option A:/, "Option 1:"); sub(/Option B:/, "Option 2:"); print }'
 neg "no reply-with-a-letter line" '!/Reply with a letter/'
 neg "no no-answer default" '{ sub(/ If there.s no answer: wait\./, ""); print }'
+neg "Why recommended moved to a non-recommended option" '/^- Why recommended/ { next } { print } /^- Cons: y$/ && ++n == 2 { print "- Why recommended: q" }'
 neg "Why recommended on a non-recommended option" '{ print } /^- Cons: y$/ && ++n == 2 { print "- Why recommended: q" }'
 neg "old Choices/Recommended/Rationale layout" '/^\*\*Option A:/ { print "**Choices:**"; print "1. A"; next } /^\*\*Option B:/ { print "2. B"; next } !/^- (Pros|Cons|Why)/'
 
